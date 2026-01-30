@@ -15,86 +15,86 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-const eslintConfig = defineConfig(tseslint.configs.recommended, [
-  ...compat.extends('plugin:prettier/recommended'),
-  ...nextVitals,
-  globalIgnores([
-    '.next/**',
-    'out/**',
-    'build/**',
-    'next-env.d.ts',
-    'postcss.config.mjs',
-  ]),
-  {
-    files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
-    extends: [
-      ...tseslint.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
-    ],
-    plugins: {
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-      unicorn: unicornPlugin,
-      prettier: prettierPlugin,
+const eslintConfig = defineConfig(
+  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  [
+    ...compat.extends('plugin:prettier/recommended'),
+    ...nextVitals,
+    globalIgnores([
+      '.next/**',
+      'out/**',
+      'build/**',
+      'next-env.d.ts',
+      'postcss.config.mjs',
+    ]),
+    {
+      files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
+      plugins: {
+        react: reactPlugin,
+        'react-hooks': reactHooksPlugin,
+        unicorn: unicornPlugin,
+        prettier: prettierPlugin,
+      },
+      rules: {
+        '@typescript-eslint/array-type': 'off',
+        '@typescript-eslint/consistent-type-definitions': 'off',
+        '@typescript-eslint/no-deprecated': 'warn',
+        '@typescript-eslint/consistent-type-imports': [
+          'warn',
+          { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+        ],
+        '@typescript-eslint/no-unused-vars': [
+          'warn',
+          { argsIgnorePattern: '^_' },
+        ],
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-misused-promises': [
+          'error',
+          { checksVoidReturn: { attributes: false } },
+        ],
+        'react/jsx-key': 'error',
+        'react/react-in-jsx-scope': 'off',
+        'react/prop-types': 'off',
+        'react-hooks/rules-of-hooks': 'error',
+        'react-hooks/exhaustive-deps': 'warn',
+        'jsx-a11y/alt-text': 'warn',
+        'jsx-a11y/anchor-is-valid': 'warn',
+        'unicorn/prevent-abbreviations': 'off',
+        'unicorn/consistent-function-scoping': 'warn',
+        'unicorn/prefer-ternary': 'warn',
+        'unicorn/no-null': 'warn',
+        'unicorn/explicit-length-check': 'warn',
+        'prettier/prettier': 'error',
+      },
+      languageOptions: {
+        parserOptions: {
+          projectService: true,
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+        },
+      },
+      settings: {
+        react: {
+          version: 'detect',
+        },
+      },
     },
-    rules: {
-      '@typescript-eslint/array-type': 'off',
-      '@typescript-eslint/consistent-type-definitions': 'off',
-      '@typescript-eslint/no-deprecated': 'warn',
-      '@typescript-eslint/consistent-type-imports': [
-        'warn',
-        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-      ],
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_' },
-      ],
-      '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': [
-        'error',
-        { checksVoidReturn: { attributes: false } },
-      ],
-      'react/jsx-key': 'error',
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'jsx-a11y/alt-text': 'warn',
-      'jsx-a11y/anchor-is-valid': 'warn',
-      'unicorn/prevent-abbreviations': 'off',
-      'unicorn/consistent-function-scoping': 'warn',
-      'unicorn/prefer-ternary': 'warn',
-      'unicorn/no-null': 'warn',
-      'unicorn/explicit-length-check': 'warn',
-      'prettier/prettier': 'error',
-    },
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
+    {
+      linterOptions: {
+        reportUnusedDisableDirectives: true,
+      },
+      languageOptions: {
+        parser: tseslint.parser,
         ecmaVersion: 'latest',
         sourceType: 'module',
+        parserOptions: {
+          projectService: true,
+        },
       },
     },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-  },
-  {
-    linterOptions: {
-      reportUnusedDisableDirectives: true,
-    },
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      parserOptions: {
-        projectService: true,
-      },
-    },
-  },
-  ...pluginQuery.configs['flat/recommended'],
-]);
+    ...pluginQuery.configs['flat/recommended'],
+  ]
+);
 
 export default eslintConfig;
