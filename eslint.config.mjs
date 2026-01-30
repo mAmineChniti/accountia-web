@@ -1,25 +1,21 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
 import pluginQuery from '@tanstack/eslint-plugin-query';
-import prettierPlugin from 'eslint-plugin-prettier';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import reactHooks from 'eslint-plugin-react-hooks';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import parser from '@typescript-eslint/parser';
 import nextVitals from 'eslint-config-next/core-web-vitals';
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
-
 const eslintConfig = defineConfig(
   tseslint.configs.recommendedTypeChecked,
   tseslint.configs.stylisticTypeChecked,
+  reactHooks.configs.flat.recommended,
+  eslintPluginPrettierRecommended,
+  reactPlugin.configs.flat.recommended,
+  reactPlugin.configs.flat['jsx-runtime'],
+  unicornPlugin.configs.all,
   [
-    ...compat.extends('plugin:prettier/recommended'),
     ...nextVitals,
     globalIgnores([
       '.next/**',
@@ -30,12 +26,6 @@ const eslintConfig = defineConfig(
     ]),
     {
       files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
-      plugins: {
-        react: reactPlugin,
-        'react-hooks': reactHooksPlugin,
-        unicorn: unicornPlugin,
-        prettier: prettierPlugin,
-      },
       rules: {
         '@typescript-eslint/array-type': 'off',
         '@typescript-eslint/consistent-type-definitions': 'off',
@@ -53,26 +43,11 @@ const eslintConfig = defineConfig(
           'error',
           { checksVoidReturn: { attributes: false } },
         ],
-        'react/jsx-key': 'error',
-        'react/react-in-jsx-scope': 'off',
-        'react/prop-types': 'off',
-        'react-hooks/rules-of-hooks': 'error',
-        'react-hooks/exhaustive-deps': 'warn',
         'jsx-a11y/alt-text': 'warn',
         'jsx-a11y/anchor-is-valid': 'warn',
-        'unicorn/prevent-abbreviations': 'off',
-        'unicorn/consistent-function-scoping': 'warn',
-        'unicorn/prefer-ternary': 'warn',
-        'unicorn/no-null': 'warn',
-        'unicorn/explicit-length-check': 'warn',
         'prettier/prettier': 'error',
-      },
-      languageOptions: {
-        parserOptions: {
-          projectService: true,
-          ecmaVersion: 'latest',
-          sourceType: 'module',
-        },
+        'unicorn/no-keyword-prefix': 'off',
+        'unicorn/prevent-abbreviations': 'off',
       },
       settings: {
         react: {
@@ -85,11 +60,11 @@ const eslintConfig = defineConfig(
         reportUnusedDisableDirectives: true,
       },
       languageOptions: {
-        parser: tseslint.parser,
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        parser: parser,
         parserOptions: {
           projectService: true,
+          ecmaVersion: 'latest',
+          sourceType: 'module',
         },
       },
     },

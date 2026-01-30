@@ -33,11 +33,11 @@ const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
-  ...props
+  ...properties
 }: ControllerProps<TFieldValues, TName>) => {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+    <FormFieldContext.Provider value={{ name: properties.name }}>
+      <Controller {...properties} />
     </FormFieldContext.Provider>
   );
 };
@@ -73,7 +73,7 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
 );
 
-function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
+function FormItem({ className, ...properties }: React.ComponentProps<'div'>) {
   const id = React.useId();
 
   return (
@@ -81,7 +81,7 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
       <div
         data-slot="form-item"
         className={cn('grid gap-2', className)}
-        {...props}
+        {...properties}
       />
     </FormItemContext.Provider>
   );
@@ -89,7 +89,7 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 
 function FormLabel({
   className,
-  ...props
+  ...properties
 }: React.ComponentProps<typeof LabelPrimitive.Root>) {
   const { error, formItemId } = useFormField();
 
@@ -99,12 +99,12 @@ function FormLabel({
       data-error={!!error}
       className={cn('data-[error=true]:text-destructive', className)}
       htmlFor={formItemId}
-      {...props}
+      {...properties}
     />
   );
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+function FormControl({ ...properties }: React.ComponentProps<typeof Slot>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
 
@@ -113,17 +113,18 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
       data-slot="form-control"
       id={formItemId}
       aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
+        error ? `${formDescriptionId} ${formMessageId}` : `${formDescriptionId}`
       }
       aria-invalid={!!error}
-      {...props}
+      {...properties}
     />
   );
 }
 
-function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
+function FormDescription({
+  className,
+  ...properties
+}: React.ComponentProps<'p'>) {
   const { formDescriptionId } = useFormField();
 
   return (
@@ -131,17 +132,17 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
       data-slot="form-description"
       id={formDescriptionId}
       className={cn('text-muted-foreground text-sm', className)}
-      {...props}
+      {...properties}
     />
   );
 }
 
-function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
+function FormMessage({ className, ...properties }: React.ComponentProps<'p'>) {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message ?? '') : props.children;
+  const body = error ? String(error?.message ?? '') : properties.children;
 
   if (!body) {
-    return undefined;
+    return;
   }
 
   return (
@@ -149,7 +150,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
       data-slot="form-message"
       id={formMessageId}
       className={cn('text-destructive text-sm', className)}
-      {...props}
+      {...properties}
     >
       {body}
     </p>
