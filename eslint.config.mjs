@@ -13,7 +13,13 @@ const eslintConfig = defineConfig([
   ...nextTs,
   eslintPluginPrettierRecommended,
   prettier,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'components/ui/**',
+  ]),
   {
     files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
     rules: {
@@ -37,6 +43,7 @@ const eslintConfig = defineConfig([
       'jsx-a11y/anchor-is-valid': 'warn',
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/prevent-abbreviations': 'off',
+      'unicorn/filename-case': 'off',
     },
     settings: {
       react: {

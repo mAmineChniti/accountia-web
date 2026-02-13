@@ -1,0 +1,185 @@
+{
+  "pages": {
+    "home": {
+      "navigation": {
+        "features": "Features",
+        "solutions": "Solutions",
+        "pricing": "Pricing",
+        "getStarted": "Get Started",
+        "login": "Login",
+        "register": "Register"
+      },
+      "hero": {
+        "badge": "AI-Powered Business Management",
+        "title": "Your AI Accountant",
+        "subtitle": "24/7 Business Partner",
+        "description": "Transform your business with intelligent automation. Accountia replaces traditional accounting with AI-driven insights, automated bookkeeping, and real-time financial guidance.",
+        "startTrial": "Start Free Trial",
+        "watchDemo": "Watch Demo"
+      },
+      "stats": {
+        "businesses": "Businesses",
+        "transactions": "Transactions",
+        "accuracy": "Accuracy",
+        "support": "Support"
+      },
+      "features": {
+        "title": "Everything You Need to Manage Your Business",
+        "description": "Powerful features designed to streamline your financial operations",
+        "aiInsights": {
+          "title": "AI-Powered Insights",
+          "description": "Get intelligent financial recommendations and predictions based on your business data"
+        },
+        "automatedBookkeeping": {
+          "title": "Automated Bookkeeping",
+          "description": "Eliminate manual data entry with smart categorization and real-time reconciliation"
+        },
+        "realtimeAnalytics": {
+          "title": "Real-time Analytics",
+          "description": "Monitor your business performance with live dashboards and custom reports"
+        },
+        "smartInvoicing": {
+          "title": "Smart Invoicing",
+          "description": "Create, send, and track invoices automatically with AI-powered payment reminders"
+        },
+        "taxOptimization": {
+          "title": "Tax Optimization",
+          "description": "Maximize deductions and minimize tax liability with intelligent tax planning"
+        },
+        "security": {
+          "title": "Bank-level Security",
+          "description": "Your financial data is protected with enterprise-grade encryption and security"
+        }
+      },
+      "solutions": {
+        "title": "Built for Every Business Type",
+        "description": "Whether you're a startup or enterprise, we've got you covered",
+        "mostPopular": "Most Popular",
+        "viewAllSolutions": "View all solutions",
+        "startups": {
+          "title": "Startups",
+          "description": "Perfect for new businesses looking to establish solid financial foundations",
+          "features": [
+            "Easy setup and onboarding",
+            "Investor-ready reports",
+            "Burn rate tracking"
+          ]
+        },
+        "smallBusiness": {
+          "title": "Small Business",
+          "description": "Comprehensive tools for growing businesses with expanding needs",
+          "features": [
+            "Multi-currency support",
+            "Payroll integration",
+            "Inventory management"
+          ]
+        },
+        "enterprise": {
+          "title": "Enterprise",
+          "description": "Advanced features for large organizations with complex requirements",
+          "features": [
+            "Custom workflows",
+            "Advanced compliance",
+            "Dedicated support"
+          ]
+        }
+      },
+      "cta": {
+        "title": "Ready to Transform Your Business?",
+        "description": "Join thousands of businesses that have already made the switch to AI-powered financial management.",
+        "startTrial": "Start Free Trial",
+        "scheduleDemo": "Schedule Demo"
+      },
+      "footer": {
+        "tagline": "Your AI-powered business management platform.",
+        "product": "Product",
+        "company": "Company",
+        "support": "Support",
+        "features": "Features",
+        "pricing": "Pricing",
+        "security": "Security",
+        "about": "About",
+        "blog": "Blog",
+        "careers": "Careers",
+        "helpCenter": "Help Center",
+        "contact": "Contact",
+        "status": "Status",
+        "copyright": "© 2024 Accountia. All rights reserved."
+      }
+    },
+    "login": {
+      "title": "Welcome back",
+      "description": "Sign in to your Accountia account to continue",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "signInButton": "Login",
+      "signingInButton": "Signing in...",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Join Accountia to manage your business finances efficiently",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "registerButton": "Register",
+      "creatingAccountButton": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "errors": {
+        "nameRequired": "Name is required",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "passwordsNotMatch": "Passwords do not match"
+      }
+    }
+  },
+  "tooltips": {
+    "aiInsights": "Learn more about AI-powered insights",
+    "automatedBookkeeping": "Automated bookkeeping features",
+    "realtimeAnalytics": "Real-time analytics dashboard",
+    "smartInvoicing": "Smart invoicing system",
+    "taxOptimization": "Tax optimization features",
+    "security": "Bank-level security features",
+    "changeLanguage": "Change language",
+    "toggleTheme": "Toggle theme",
+    "getStarted": "Get started with Accountia",
+    "signIn": "Sign in to your account",
+    "createAccount": "Create a new account",
+    "perfectForNewBusinesses": "Perfect for new businesses",
+    "mostPopularChoice": "Most popular choice",
+    "advancedFeatures": "Advanced features for large organizations"
+  },
+  "brand": {
+    "name": "Accountia",
+    "logoAlt": "Accountia Logo"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "pageNotFound": "Oops! This page vanished into thin air.",
+    "pageNotFoundDescription": "The page you are looking for doesn't exist or has been moved.",
+    "pageNotFoundHelp": "Let's get you back on track.",
+    "goHome": "Take Me Home"
+  }
+}
