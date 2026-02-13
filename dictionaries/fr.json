@@ -1,0 +1,185 @@
+{
+  "pages": {
+    "home": {
+      "navigation": {
+        "features": "Fonctionnalités",
+        "solutions": "Solutions",
+        "pricing": "Tarifs",
+        "getStarted": "Commencer",
+        "login": "Connexion",
+        "register": "S'inscrire"
+      },
+      "hero": {
+        "badge": "Gestion d'Entreprise Alimentée par l'IA",
+        "title": "Votre Comptable IA",
+        "subtitle": "Partenaire d'Affaires 24/7",
+        "description": "Transformez votre entreprise avec l'automatisation intelligente. Accountia remplace la comptabilité traditionnelle par des aperçus alimentés par l'IA, une comptabilité automatisée et des conseils financiers en temps réel.",
+        "startTrial": "Essai Gratuit",
+        "watchDemo": "Voir la Démo"
+      },
+      "stats": {
+        "businesses": "Entreprises",
+        "transactions": "Transactions",
+        "accuracy": "Précision",
+        "support": "Support"
+      },
+      "features": {
+        "title": "Tout Ce Dont Vous Avez Besoin pour Gérer Votre Entreprise",
+        "description": "Fonctionnalités puissantes conçues pour rationaliser vos opérations financières",
+        "aiInsights": {
+          "title": "Aperçus Alimentés par l'IA",
+          "description": "Obtenez des recommandations financières intelligentes et des prédictions basées sur vos données d'entreprise"
+        },
+        "automatedBookkeeping": {
+          "title": "Comptabilité Automatisée",
+          "description": "Éliminez la saisie de données manuelle avec une catégorisation intelligente et une réconciliation en temps réel"
+        },
+        "realtimeAnalytics": {
+          "title": "Analytiques en Temps Réel",
+          "description": "Surveillez les performances de votre entreprise avec des tableaux de bord en direct et des rapports personnalisés"
+        },
+        "smartInvoicing": {
+          "title": "Facturation Intelligente",
+          "description": "Créez, envoyez et suivez les factures automatiquement avec des rappels de paiement alimentés par l'IA"
+        },
+        "taxOptimization": {
+          "title": "Optimisation Fiscale",
+          "description": "Maximisez les déductions et minimisez le passif fiscal avec une planification fiscale intelligente"
+        },
+        "security": {
+          "title": "Sécurité Niveau Bancaire",
+          "description": "Vos données financières sont protégées par un cryptage et une sécurité de niveau entreprise"
+        }
+      },
+      "solutions": {
+        "title": "Conçu pour Chaque Type d'Entreprise",
+        "description": "Que vous soyez une startup ou une entreprise, nous vous couvrons",
+        "mostPopular": "Le plus populaire",
+        "viewAllSolutions": "Voir toutes les solutions",
+        "startups": {
+          "title": "Startups",
+          "description": "Parfait pour les nouvelles entreprises cherchant à établir des fondations financières solides",
+          "features": [
+            "Configuration et intégration faciles",
+            "Rapports prêts pour les investisseurs",
+            "Suivi du taux de burn"
+          ]
+        },
+        "smallBusiness": {
+          "title": "Petites Entreprises",
+          "description": "Outils complets pour les entreprises en croissance avec des besoins croissants",
+          "features": [
+            "Support multi-devises",
+            "Intégration de la paie",
+            "Gestion des stocks"
+          ]
+        },
+        "enterprise": {
+          "title": "Entreprise",
+          "description": "Fonctionnalités avancées pour les grandes organisations avec des exigences complexes",
+          "features": [
+            "Workflows personnalisés",
+            "Conformité avancée",
+            "Support dédié"
+          ]
+        }
+      },
+      "cta": {
+        "title": "Prêt à Transformer Votre Entreprise ?",
+        "description": "Rejoignez des milliers d'entreprises qui ont déjà fait le passage à la gestion financière alimentée par l'IA.",
+        "startTrial": "Essai Gratuit",
+        "scheduleDemo": "Planifier une Démo"
+      },
+      "footer": {
+        "tagline": "Votre plateforme de gestion d'entreprise alimentée par l'IA.",
+        "product": "Produit",
+        "company": "Entreprise",
+        "support": "Support",
+        "features": "Fonctionnalités",
+        "pricing": "Tarifs",
+        "security": "Sécurité",
+        "about": "À Propos",
+        "blog": "Blog",
+        "careers": "Carrières",
+        "helpCenter": "Centre d'Aide",
+        "contact": "Contact",
+        "status": "Statut",
+        "copyright": "© 2024 Accountia. Tous droits réservés."
+      }
+    },
+    "login": {
+      "title": "Bon retour",
+      "description": "Connectez-vous à votre compte Accountia pour continuer",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "signInButton": "Connexion",
+      "signingInButton": "Connexion...",
+      "forgotPassword": "Mot de passe oublié?",
+      "noAccount": "Pas de compte?",
+      "signUp": "S'inscrire"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "description": "Rejoignez Accountia pour gérer efficacement les finances de votre entreprise",
+      "nameLabel": "Nom Complet",
+      "namePlaceholder": "Entrez votre nom complet",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Créer un mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "registerButton": "S'inscrire",
+      "creatingAccountButton": "Création du compte...",
+      "hasAccount": "Vous avez déjà un compte?",
+      "signIn": "Se connecter",
+      "errors": {
+        "nameRequired": "Le nom est requis",
+        "emailRequired": "L'email est requis",
+        "emailInvalid": "Adresse email invalide",
+        "passwordRequired": "Le mot de passe est requis",
+        "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+        "passwordsNotMatch": "Les mots de passe ne correspondent pas"
+      }
+    }
+  },
+  "tooltips": {
+    "aiInsights": "En savoir plus sur les aperçus alimentés par l'IA",
+    "automatedBookkeeping": "Fonctionnalités de comptabilité automatisée",
+    "realtimeAnalytics": "Tableau de bord analytique en temps réel",
+    "smartInvoicing": "Système de facturation intelligent",
+    "taxOptimization": "Fonctionnalités d'optimisation fiscale",
+    "security": "Fonctionnalités de sécurité niveau bancaire",
+    "changeLanguage": "Changer de langue",
+    "toggleTheme": "Basculer le thème",
+    "getStarted": "Commencer avec Accountia",
+    "signIn": "Se connecter à votre compte",
+    "createAccount": "Créer un nouveau compte",
+    "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",
+    "mostPopularChoice": "Le choix le plus populaire",
+    "advancedFeatures": "Fonctionnalités avancées pour les grandes organisations"
+  },
+  "brand": {
+    "name": "Accountia",
+    "logoAlt": "Logo Accountia"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "pageNotFound": "Oups! Cette page a disparu dans les airs.",
+    "pageNotFoundDescription": "La page que vous cherchez n'existe pas ou a été déplacée.",
+    "pageNotFoundHelp": "Remettons-nous sur la bonne voie.",
+    "goHome": "Retour à l'accueil"
+  }
+}

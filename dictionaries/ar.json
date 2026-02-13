@@ -1,0 +1,177 @@
+{
+  "pages": {
+    "home": {
+      "navigation": {
+        "features": "الميزات",
+        "solutions": "الحلول",
+        "pricing": "الأسعار",
+        "getStarted": "ابدأ الآن",
+        "login": "تسجيل الدخول",
+        "register": "إنشاء حساب"
+      },
+      "hero": {
+        "badge": "إدارة الأعمال المدعومة بالذكاء الاصطناعي",
+        "title": "محاسبك بالذكاء الاصطناعي",
+        "subtitle": "شريك أعمال على مدار الساعة",
+        "description": "حول أعمالك بالأتمتة الذكية. Accountia يحل المحاسبة التقليدية برؤى مدعومة بالذكاء الاصطناعي، ومحاسبة آلية، وإرشادات مالية في الوقت الفعلي.",
+        "startTrial": "تجربة مجانية",
+        "watchDemo": "شاهد العرض التوضيحي"
+      },
+      "stats": {
+        "businesses": "الشركات",
+        "transactions": "المعاملات",
+        "accuracy": "الدقة",
+        "support": "الدعم"
+      },
+      "features": {
+        "title": "ميزات قوية للأعمال الحديثة",
+        "description": "كل ما تحتاجه لإدارة شؤونك المالية بكفاءة في منصة واحدة",
+        "aiInsights": {
+          "title": "رؤى الذكاء الاصطناعي",
+          "description": "احصل على توصيات وتنبؤات ذكية بناءً على بياناتك المالية"
+        },
+        "automatedBookkeeping": {
+          "title": "محاسبة آلية",
+          "description": "تخلص من إدخال البيانات اليدوي مع التصنيف الذكي والمصالحة في الوقت الفعلي"
+        },
+        "realtimeAnalytics": {
+          "title": "تحليلات في الوقت الفعلي",
+          "description": "راقب أداء عملك مع لوحات معلومات مباشرة وتقارير مخصصة"
+        },
+        "smartInvoicing": {
+          "title": "فواتير ذكية",
+          "description": "أنشئ وأرسل وتتبع الفواتير تلقائيًا مع تذكيرات الدفع المدعومة بالذكاء الاصطناعي"
+        },
+        "taxOptimization": {
+          "title": "تحسين الضرائب",
+          "description": "عظم الخصوم وقلل الالتزام الضريبي مع التخطيط الضريبي الذكي"
+        },
+        "security": {
+          "title": "أمان على مستوى البنوك",
+          "description": "بياناتك المالية محمية بالتشفير والأمان على مستوى المؤسسات"
+        }
+      },
+      "solutions": {
+        "title": "مصمم لكل نوع من الأعمال",
+        "description": "سواء كنت شركة ناشئة أو مؤسسة، نحن نغطيك",
+        "mostPopular": "الأكثر شعبية",
+        "viewAllSolutions": "عرض جميع الحلول",
+        "startups": {
+          "title": "الشركات الناشئة",
+          "description": "مثالي للشركات الجديدة التي تسعى لإنشاء أسس مالية قوية",
+          "features": [
+            "إعداد وتكوين سهل",
+            "تقارير جاهزة للمستثمرين",
+            "تتبع معدل الحرق"
+          ]
+        },
+        "smallBusiness": {
+          "title": "الشركات الصغيرة",
+          "description": "أدوات شاملة للشركات النامية باحتياجات متزايدة",
+          "features": ["دعم متعدد العملات", "تكامل الرواتب", "إدارة المخزون"]
+        },
+        "enterprise": {
+          "title": "المؤسسات الكبيرة",
+          "description": "ميزات متقدمة للمؤسسات الكبيرة بمتطلبات معقدة",
+          "features": ["سير عمل مخصص", "امتثال متقدم", "دعم مخصص"]
+        }
+      },
+      "cta": {
+        "title": "هل أنت مستعد لتحويل أعمالك؟",
+        "description": "انضم إلى آلاف الشركات التي قامت بالفعل بالتحول إلى الإدارة المالية المدعومة بالذكاء الاصطناعي.",
+        "startTrial": "تجربة مجانية",
+        "scheduleDemo": "جد عرض توضيحي"
+      },
+      "footer": {
+        "tagline": "منصة إدارة الأعمال المدعومة بالذكاء الاصطناعي الخاصة بك.",
+        "product": "المنتج",
+        "company": "الشركة",
+        "support": "الدعم",
+        "features": "الميزات",
+        "pricing": "الأسعار",
+        "security": "الأمان",
+        "about": "من نحن",
+        "blog": "المدونة",
+        "careers": "الوظائف",
+        "helpCenter": "مركز المساعدة",
+        "contact": "اتصل بنا",
+        "status": "الحالة",
+        "copyright": "© 2024 Accountia. جميع الحقوق محفوظة."
+      }
+    },
+    "login": {
+      "title": "مرحباً بعودتك",
+      "description": "سجل الدخول إلى حساب Accountia للمتابعة",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "signInButton": "تسجيل الدخول",
+      "signingInButton": "جاري تسجيل الدخول...",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "noAccount": "ليس لديك حساب؟",
+      "signUp": "إنشاء حساب"
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "description": "انضم إلى Accountia لإدارة شؤونك المالية بكفاءة",
+      "nameLabel": "الاسم الكامل",
+      "namePlaceholder": "أدخل اسمك الكامل",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "إنشاء كلمة مرور",
+      "confirmPasswordLabel": "تأكيد كلمة المرور",
+      "confirmPasswordPlaceholder": "أكد كلمة المرور",
+      "registerButton": "إنشاء حساب",
+      "creatingAccountButton": "جاري إنشاء الحساب...",
+      "hasAccount": "لديك حساب بالفعل؟",
+      "signIn": "تسجيل الدخول",
+      "errors": {
+        "nameRequired": "الاسم مطلوب",
+        "emailRequired": "البريد الإلكتروني مطلوب",
+        "emailInvalid": "عنوان بريد إلكتروني غير صالح",
+        "passwordRequired": "كلمة المرور مطلوبة",
+        "passwordTooShort": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+        "passwordsNotMatch": "كلمات المرور غير متطابقة"
+      }
+    }
+  },
+  "tooltips": {
+    "aiInsights": "تعرف المزيد حول الرؤى المدعومة بالذكاء الاصطناعي",
+    "automatedBookkeeping": "ميزات المحاسبة الآلية",
+    "realtimeAnalytics": "لوحة معلومات تحليلية في الوقت الفعلي",
+    "smartInvoicing": "نظام الفواتير الذكي",
+    "taxOptimization": "ميزات تحسين الضرائب",
+    "security": "ميزات الأمان على مستوى البنوك",
+    "changeLanguage": "تغيير اللغة",
+    "toggleTheme": "تبديل المظهر",
+    "getStarted": "ابدأ مع Accountia",
+    "signIn": "تسجيل الدخول إلى حسابك",
+    "createAccount": "إنشاء حساب جديد",
+    "perfectForNewBusinesses": "مثالي للشركات الجديدة",
+    "mostPopularChoice": "الخيار الأكثر شعبية",
+    "advancedFeatures": "ميزات متقدمة للمؤسسات الكبيرة"
+  },
+  "brand": {
+    "name": "Accountia",
+    "logoAlt": "شعار Accountia"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "pageNotFound": "أوبس! هذه الصفحة اختفت في الهواء.",
+    "pageNotFoundDescription": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    "pageNotFoundHelp": "دعنا نعيدك إلى المسار الصحيح.",
+    "goHome": "العودة إلى الصفحة الرئيسية"
+  }
+}
