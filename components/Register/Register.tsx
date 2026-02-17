@@ -70,7 +70,7 @@ export default function Register({
   };
 
   return (
-    <div className="bg-muted/30 flex min-h-screen items-center justify-center">
+    <div className="bg-muted/30 flex min-h-[calc(100vh-200px)] items-center justify-center">
       <Card className="mx-4 w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">
