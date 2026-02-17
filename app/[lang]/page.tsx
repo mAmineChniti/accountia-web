@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
@@ -29,7 +28,6 @@ import {
   HelpCircle,
   Info,
 } from 'lucide-react';
-import Image from 'next/image';
 
 export default async function IndexPage({
   params,
@@ -42,7 +40,6 @@ export default async function IndexPage({
 
   return (
     <>
-      {/* Hero Section */}
       <section className="container mx-auto max-w-7xl px-6 py-24 lg:px-8 xl:py-32">
         <div className="mx-auto max-w-4xl text-center">
           <Badge variant="secondary" className="mb-6 px-3 py-1 text-sm">
@@ -62,18 +59,11 @@ export default async function IndexPage({
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-12 px-8 text-lg transition-all hover:scale-105"
-            >
+            <Button size="lg" className="h-12 px-8 text-lg">
               {dictionary.pages.home.hero.startTrial}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-12 px-8 text-lg transition-all hover:scale-105"
-            >
+            <Button variant="outline" size="lg" className="h-12 px-8 text-lg">
               {dictionary.pages.home.hero.watchDemo}
             </Button>
           </div>
@@ -115,7 +105,6 @@ export default async function IndexPage({
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="bg-muted/30 py-24">
         <div className="container mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto mb-20 max-w-3xl text-center">
@@ -130,7 +119,7 @@ export default async function IndexPage({
           <div className="grid-auto-rows-fr grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <Bot className="text-primary h-6 w-6" />
@@ -151,7 +140,7 @@ export default async function IndexPage({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <Calculator className="text-primary h-6 w-6" />
@@ -183,7 +172,7 @@ export default async function IndexPage({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <BarChart3 className="text-primary h-6 w-6" />
@@ -209,7 +198,7 @@ export default async function IndexPage({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <FileText className="text-primary h-6 w-6" />
@@ -235,7 +224,7 @@ export default async function IndexPage({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <PieChart className="text-primary h-6 w-6" />
@@ -261,7 +250,7 @@ export default async function IndexPage({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Card className="group bg-background hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
+                <Card className="group hover:border-primary/20 hover:shadow-primary/5 h-full cursor-pointer border p-6 transition-all duration-300 hover:shadow-lg">
                   <CardHeader className="p-0">
                     <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                       <Shield className="text-primary h-6 w-6" />
@@ -283,7 +272,6 @@ export default async function IndexPage({
         </div>
       </section>
 
-      {/* Solutions Section */}
       <section id="solutions" className="py-24">
         <div className="container mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto mb-20 max-w-3xl text-center">
@@ -422,7 +410,6 @@ export default async function IndexPage({
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="bg-primary text-primary-foreground py-24">
         <div className="container mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
@@ -436,7 +423,7 @@ export default async function IndexPage({
               <Button
                 size="lg"
                 variant="secondary"
-                className="h-12 px-8 text-lg transition-all hover:scale-105"
+                className="h-12 px-8 text-lg"
               >
                 {dictionary.pages.home.cta.startTrial}
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -444,7 +431,7 @@ export default async function IndexPage({
               <Button
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground bg-primary/10 text-primary-foreground hover:bg-primary-foreground hover:text-primary h-12 px-8 text-lg transition-all hover:scale-105"
+                className="border-primary-foreground bg-primary/10 text-primary-foreground hover:bg-primary-foreground hover:text-primary h-12 px-8 text-lg"
               >
                 {dictionary.pages.home.cta.scheduleDemo}
               </Button>
@@ -452,135 +439,6 @@ export default async function IndexPage({
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-muted/30 border-t">
-        <div className="container mx-auto max-w-7xl px-6 py-16 lg:px-8">
-          <div className="grid gap-12 md:grid-cols-4">
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3">
-                <div className="relative h-8 w-8 flex-shrink-0">
-                  <Image
-                    src="/logo.png"
-                    alt={dictionary.brand.logoAlt}
-                    fill
-                    className="object-contain"
-                    sizes="32px"
-                  />
-                </div>
-                <span className="text-xl font-bold">
-                  {dictionary.brand.name}
-                </span>
-              </div>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                {dictionary.pages.home.footer.tagline}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="mb-6 text-lg font-semibold">
-                {dictionary.pages.home.footer.product}
-              </h3>
-              <ul className="space-y-3 text-base">
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.features}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.pricing}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.security}
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-6 text-lg font-semibold">
-                {dictionary.pages.home.footer.company}
-              </h3>
-              <ul className="space-y-3 text-base">
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.about}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.blog}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.careers}
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-6 text-lg font-semibold">
-                {dictionary.pages.home.footer.support}
-              </h3>
-              <ul className="space-y-3 text-base">
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.helpCenter}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.contact}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {dictionary.pages.home.footer.status}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <Separator className="my-12" />
-
-          <div className="text-muted-foreground text-center text-base">
-            <p>{dictionary.pages.home.footer.copyright}</p>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }
