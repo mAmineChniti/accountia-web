@@ -29,6 +29,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
+    "prettier.config.js",
     "eslint.config.mjs",
     "postcss.config.mjs"
   ],
