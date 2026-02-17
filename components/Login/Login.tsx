@@ -29,7 +29,7 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 
 const loginSchema = z.object({
-  email: z.email().min(1, 'Email is required'),
+  email: z.email('Email is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -61,7 +61,7 @@ export default function Login({
   };
 
   return (
-    <div className="bg-muted/30 flex min-h-[calc(100vh-200px)] items-center justify-center">
+    <div className="bg-muted/30 flex min-h-[calc(100vh-var(--header-footer-height))] items-center justify-center">
       <Card className="mx-4 w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">

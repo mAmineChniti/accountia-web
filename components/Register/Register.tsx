@@ -31,7 +31,7 @@ import { type Dictionary } from '@/get-dictionary';
 const registerSchema = z
   .object({
     name: z.string().min(1, 'Name is required'),
-    email: z.email().min(1, 'Email is required'),
+    email: z.email('Email is required'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
@@ -70,7 +70,7 @@ export default function Register({
   };
 
   return (
-    <div className="bg-muted/30 flex min-h-[calc(100vh-200px)] items-center justify-center">
+    <div className="bg-muted/30 flex min-h-[calc(100vh-var(--header-footer-height))] items-center justify-center">
       <Card className="mx-4 w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">
