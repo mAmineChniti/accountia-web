@@ -57,28 +57,9 @@ export default function Login({
         const now = Date.now();
         let expiresAtMs: number = 0;
 
-        if (response.expiresAt || response.accessTokenExpiresIn) {
-          // Parse server expiry (could be timestamp or relative time)
-          if (response.expiresAt) {
-            expiresAtMs = new Date(response.expiresAt).getTime();
-          } else if (response.accessTokenExpiresIn) {
-            // Parse relative time like "24h", "7d"
-            const match =
-              response.accessTokenExpiresIn?.match(/(\d+)([dhmwy])/);
-            if (match) {
-              const value = Number.parseInt(match?.[1] ?? '', 10);
-              const unit = match?.[2];
-              const multipliers = {
-                h: 3_600_000,
-                d: 86_400_000,
-                w: 604_800_000,
-                m: 2_629_746_000,
-                y: 31_536_000_000,
-              };
-              expiresAtMs =
-                now + value * multipliers[unit as keyof typeof multipliers];
-            }
-          }
+        if (response.accessTokenExpiresAt) {
+          // Parse server expiry (ISO date string)
+          expiresAtMs = new Date(response.accessTokenExpiresAt).getTime();
         }
 
         const maxAge =
@@ -90,7 +71,7 @@ export default function Login({
         await setAuthCookies({
           token: response.accessToken,
           refreshToken: response.refreshToken,
-          expiresAt: response.expiresAt,
+          expiresAt: response.accessTokenExpiresAt,
           expiresAtMs,
           userId: response.user.id,
           maxAge,

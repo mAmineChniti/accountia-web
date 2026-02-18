@@ -242,34 +242,9 @@ export const AuthService = {
     const token = authHeaders();
     if (!token.Authorization) throw new Error('Token not found');
 
-    const raw = getCookie('token');
-    if (!raw || typeof raw !== 'string') throw new Error('Token not found');
-
-    let refreshTokenValue: string | undefined;
-    try {
-      const parsed = JSON.parse(raw);
-      if (isTokenCookie(parsed)) {
-        refreshTokenValue = parsed.refreshToken;
-      }
-    } catch {
-      // Try to decode and parse as fallback
-      try {
-        const decoded = decodeURIComponent(raw);
-        const fallbackParsed = JSON.parse(decoded);
-        if (isTokenCookie(fallbackParsed)) {
-          refreshTokenValue = fallbackParsed.refreshToken;
-        }
-      } catch {
-        // Leave undefined if all parsing attempts fail
-      }
-    }
-
-    if (!refreshTokenValue) throw new Error('Refresh token not found');
-
     try {
       const result = await client
         .post(API_CONFIG.AUTH.REFRESH, {
-          json: { refreshToken: refreshTokenValue },
           headers: token,
         })
         .json<RefreshTokenResponse>();
