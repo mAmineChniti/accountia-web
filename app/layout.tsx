@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Arabic } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { Providers } from '@/components/providers';
-/*import { TokenExpiration } from '@/components/token-expiration';*/
+import { TokenExpiration } from '@/components/token-expiration';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -35,8 +35,10 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansArabic.variable} h-full antialiased`}
       >
-        {/* <TokenExpiration /> */}
-        <Providers>{children}</Providers>
+        <Providers>
+          <TokenExpiration />
+          {children}
+        </Providers>
       </body>
     </html>
   );

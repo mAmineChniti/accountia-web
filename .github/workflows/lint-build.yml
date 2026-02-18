@@ -38,4 +38,6 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Build project
+        env:
+          NEXT_PUBLIC_BACKEND: ${{ secrets.NEXT_PUBLIC_BACKEND || 'http://127.0.0.1:4789/api' }}
         run: bun run build

@@ -1,5 +1,36 @@
 {
   "pages": {
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "sendButton": "Send Reset Email",
+      "sendingButton": "Sending...",
+      "successTitle": "Check Your Email",
+      "successDescription": "We've sent you an email with instructions to reset your password.",
+      "successMessage": "If account exists, check your email for reset link",
+      "checkEmailMessage": "If an account with that email exists, you'll receive a password reset link shortly.",
+      "backToLogin": "Back to Login"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Enter your new password below.",
+      "tokenLabel": "Reset Token",
+      "tokenPlaceholder": "Enter your reset token",
+      "passwordLabel": "New Password",
+      "passwordPlaceholder": "Enter your new password",
+      "resetButton": "Reset Password",
+      "resettingButton": "Resetting...",
+      "successMessage": "Password reset successfully",
+      "errorMessage": "Failed to reset password",
+      "invalidTokenTitle": "Invalid or Expired Link",
+      "invalidTokenDescription": "This password reset link is no longer valid.",
+      "invalidTokenMessage": "The reset token may have expired or was already used. Please request a new password reset link.",
+      "requestNewLink": "Request a new reset link",
+      "tokenDetected": "Reset token detected from email link.",
+      "backToLogin": "Back to Login"
+    },
     "home": {
       "navigation": {
         "features": "Features",
@@ -114,35 +145,64 @@
       "emailPlaceholder": "Enter your email",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Enter your password",
-      "signInButton": "Login",
+      "signInButton": "Sign In",
       "signingInButton": "Signing in...",
-      "forgotPassword": "Forgot your password?",
+      "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up"
+      "signUp": "Sign up",
+      "signInAriaLabel": "Sign in to your account",
+      "resetPasswordAriaLabel": "Reset your password",
+      "createAccountAriaLabel": "Create a new account",
+      "authNavigationLabel": "Authentication navigation",
+      "unexpectedError": "An error occurred during login. Please try again."
     },
     "register": {
       "title": "Create account",
       "description": "Join Accountia to manage your business finances efficiently",
-      "nameLabel": "Full Name",
-      "namePlaceholder": "Enter your full name",
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Choose a username",
+      "birthdateLabel": "Birth Date",
       "emailLabel": "Email",
       "emailPlaceholder": "Enter your email",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Create a password",
       "confirmPasswordLabel": "Confirm Password",
       "confirmPasswordPlaceholder": "Confirm your password",
+      "termsAndConditions": "I accept terms and conditions",
       "registerButton": "Register",
       "creatingAccountButton": "Creating account...",
       "hasAccount": "Already have an account?",
       "signIn": "Sign in",
+      "dialog": {
+        "emailNotConfirmedTitle": "Email Not Confirmed",
+        "emailNotConfirmedDescription": "An account with email {email} already exists but the email has not been confirmed yet.",
+        "cancelButton": "Cancel",
+        "resendConfirmationButton": "Resend Confirmation Email",
+        "resendingButton": "Sending..."
+      },
       "errors": {
         "nameRequired": "Name is required",
         "emailRequired": "Email is required",
         "emailInvalid": "Invalid email address",
         "passwordRequired": "Password is required",
         "passwordTooShort": "Password must be at least 8 characters",
-        "passwordsNotMatch": "Passwords do not match"
-      }
+        "passwordsNotMatch": "Passwords do not match",
+        "confirmPasswordRequired": "Please confirm your password",
+        "acceptTermsRequired": "You must accept the terms and conditions"
+      },
+      "resendSuccessMessage": "Confirmation email sent successfully",
+      "resendErrorMessage": "Failed to resend confirmation email",
+      "unexpectedError": "An error occurred during login. Please try again.",
+      "registrationFailed": "Registration failed. Please try again.",
+      "emailAlreadyRegistered": "This email is already registered",
+      "accountExists": "An account with this email already exists",
+      "personalInfoLabel": "Personal information",
+      "accountInfoLabel": "Account information",
+      "authNavLabel": "Authentication navigation"
     }
   },
   "tooltips": {

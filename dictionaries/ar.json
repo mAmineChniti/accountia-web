@@ -1,5 +1,36 @@
 {
   "pages": {
+    "forgotPassword": {
+      "title": "نسيت كلمة المرور",
+      "description": "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "sendButton": "إرسال بريد إعادة التعيين",
+      "sendingButton": "جاري الإرسال...",
+      "successTitle": "تحقق من بريدك الإلكتروني",
+      "successDescription": "لقد أرسلنا لك بريدًا إلكترونيًا يحتوي على تعليمات لإعادة تعيين كلمة المرور.",
+      "successMessage": "إذا كان الحساب موجودًا، تحقق من بريدك الإلكتروني للحصول على رابط إعادة التعيين",
+      "checkEmailMessage": "إذا كان حساب بهذا البريد الإلكتروني موجودًا، ستتلقى رابط إعادة تعيين كلمة المرور قريبًا.",
+      "backToLogin": "العودة إلى تسجيل الدخول"
+    },
+    "resetPassword": {
+      "title": "إعادة تعيين كلمة المرور",
+      "description": "أدخل كلمة المرور الجديدة أدناه.",
+      "tokenLabel": "رمز إعادة التعيين",
+      "tokenPlaceholder": "أدخل رمز إعادة التعيين",
+      "passwordLabel": "كلمة المرور الجديدة",
+      "passwordPlaceholder": "أدخل كلمة المرور الجديدة",
+      "resetButton": "إعادة تعيين كلمة المرور",
+      "resettingButton": "جاري إعادة التعيين...",
+      "successMessage": "تم إعادة تعيين كلمة المرور بنجاح",
+      "errorMessage": "فشل في إعادة تعيين كلمة المرور",
+      "invalidTokenTitle": "رابط غير صالح أو منتهي الصلاحية",
+      "invalidTokenDescription": "هذا الرابط لإعادة تعيين كلمة المرور لم يعد صالحًا.",
+      "invalidTokenMessage": "قد يكون رمز إعادة التعيين قد انتهت صلاحيته أو تم استخدامه بالفعل. يرجى طلب رابط جديد لإعادة تعيين كلمة المرور.",
+      "requestNewLink": "طلب رابط إعادة تعيين جديد",
+      "tokenDetected": "تم اكتشاف رمز إعادة التعيين من رابط البريد الإلكتروني.",
+      "backToLogin": "العودة إلى تسجيل الدخول"
+    },
     "home": {
       "navigation": {
         "features": "الميزات",
@@ -110,31 +141,60 @@
       "signingInButton": "جاري تسجيل الدخول...",
       "forgotPassword": "نسيت كلمة المرور؟",
       "noAccount": "ليس لديك حساب؟",
-      "signUp": "إنشاء حساب"
+      "signUp": "إنشاء حساب",
+      "signInAriaLabel": "تسجيل الدخول إلى حسابك",
+      "resetPasswordAriaLabel": "إعادة تعيين كلمة المرور",
+      "createAccountAriaLabel": "إنشاء حساب جديد",
+      "authNavigationLabel": "التنقل في المصادقة",
+      "unexpectedError": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى."
     },
     "register": {
       "title": "إنشاء حساب",
       "description": "انضم إلى Accountia لإدارة شؤونك المالية بكفاءة",
-      "nameLabel": "الاسم الكامل",
-      "namePlaceholder": "أدخل اسمك الكامل",
+      "firstNameLabel": "الاسم الأول",
+      "firstNamePlaceholder": "أدخل اسمك الأول",
+      "lastNameLabel": "اسم العائلة",
+      "lastNamePlaceholder": "أدخل اسم عائلتك",
+      "usernameLabel": "اسم المستخدم",
+      "usernamePlaceholder": "اختر اسم مستخدم",
+      "birthdateLabel": "تاريخ الميلاد",
       "emailLabel": "البريد الإلكتروني",
       "emailPlaceholder": "أدخل بريدك الإلكتروني",
       "passwordLabel": "كلمة المرور",
       "passwordPlaceholder": "إنشاء كلمة مرور",
       "confirmPasswordLabel": "تأكيد كلمة المرور",
       "confirmPasswordPlaceholder": "أكد كلمة المرور",
+      "termsAndConditions": "أوافق على الشروط والأحكام",
       "registerButton": "إنشاء حساب",
       "creatingAccountButton": "جاري إنشاء الحساب...",
       "hasAccount": "لديك حساب بالفعل؟",
       "signIn": "تسجيل الدخول",
+      "dialog": {
+        "emailNotConfirmedTitle": "البريد الإلكتروني غير مؤكد",
+        "emailNotConfirmedDescription": "حساب بالبريد الإلكتروني {email} موجود بالفعل لكن لم يتم تأكيد البريد الإلكتروني بعد.",
+        "cancelButton": "إلغاء",
+        "resendConfirmationButton": "إعادة إرسال بريد التأكيد",
+        "resendingButton": "جاري الإرسال..."
+      },
       "errors": {
         "nameRequired": "الاسم مطلوب",
         "emailRequired": "البريد الإلكتروني مطلوب",
         "emailInvalid": "عنوان بريد إلكتروني غير صالح",
         "passwordRequired": "كلمة المرور مطلوبة",
         "passwordTooShort": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
-        "passwordsNotMatch": "كلمات المرور غير متطابقة"
-      }
+        "passwordsNotMatch": "كلمات المرور غير متطابقة",
+        "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+        "acceptTermsRequired": "يجب عليك قبول الشروط والأحكام"
+      },
+      "resendSuccessMessage": "تم إرسال بريد التأكيد بنجاح",
+      "resendErrorMessage": "فشل في إرسال بريد التأكيد",
+      "unexpectedError": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+      "registrationFailed": "فشل في التسجيل. يرجى المحاولة مرة أخرى.",
+      "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل",
+      "accountExists": "حساب بهذا البريد الإلكتروني موجود بالفعل",
+      "personalInfoLabel": "المعلومات الشخصية",
+      "accountInfoLabel": "معلومات الحساب",
+      "authNavLabel": "الملاحة المصادقة"
     }
   },
   "tooltips": {

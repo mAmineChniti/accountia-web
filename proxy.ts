@@ -34,8 +34,45 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check authentication status
+  const user = await getCookie('user', { req: request });
+  const token = await getCookie('token', { req: request });
+  const isLoggedIn = !!(user && token);
+
+  const protectedRoutes: string[] = [];
+
+  if (pathname === '/') {
+    const locale = getLocale(request) || 'en';
+    return isLoggedIn
+      ? NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
+      : NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  }
+
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const lastSegment = pathSegments.at(-1);
+  const firstSegment = pathSegments[0];
+  const isValidLocale =
+    firstSegment && i18n.locales.includes(firstSegment as Locale);
+  const locale = isValidLocale ? firstSegment : 'en';
+
+  if ((lastSegment === 'login' || lastSegment === 'register') && isLoggedIn) {
+    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+  }
+
+  const localeStrippedPath = isValidLocale
+    ? pathname.replace(`/${locale}`, '') || '/'
+    : pathname;
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    localeStrippedPath.startsWith(route)
+  );
+
+  if (isProtectedRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  }
+
   const pathnameIsMissingLocale = i18n.locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+    (loc) => !pathname.startsWith(`/${loc}/`) && pathname !== `/${loc}`
   );
 
   if (pathnameIsMissingLocale) {

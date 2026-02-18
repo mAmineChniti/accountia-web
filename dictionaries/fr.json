@@ -1,5 +1,36 @@
 {
   "pages": {
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "description": "Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "sendButton": "Envoyer l'email de réinitialisation",
+      "sendingButton": "Envoi en cours...",
+      "successTitle": "Vérifiez votre email",
+      "successDescription": "Nous vous avons envoyé un email avec des instructions pour réinitialiser votre mot de passe.",
+      "successMessage": "Si le compte existe, vérifiez votre email pour le lien de réinitialisation",
+      "checkEmailMessage": "Si un compte avec cet email existe, vous recevrez un lien de réinitialisation de mot de passe sous peu.",
+      "backToLogin": "Retour à la connexion"
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "description": "Entrez votre nouveau mot de passe ci-dessous.",
+      "tokenLabel": "Jeton de réinitialisation",
+      "tokenPlaceholder": "Entrez votre jeton de réinitialisation",
+      "passwordLabel": "Nouveau mot de passe",
+      "passwordPlaceholder": "Entrez votre nouveau mot de passe",
+      "resetButton": "Réinitialiser le mot de passe",
+      "resettingButton": "Réinitialisation...",
+      "successMessage": "Mot de passe réinitialisé avec succès",
+      "errorMessage": "Échec de la réinitialisation du mot de passe",
+      "invalidTokenTitle": "Lien invalide ou expiré",
+      "invalidTokenDescription": "Ce lien de réinitialisation de mot de passe n'est plus valide.",
+      "invalidTokenMessage": "Le jeton de réinitialisation a peut-être expiré ou a déjà été utilisé. Veuillez demander un nouveau lien de réinitialisation de mot de passe.",
+      "requestNewLink": "Demander un nouveau lien de réinitialisation",
+      "tokenDetected": "Jeton de réinitialisation détecté depuis le lien email.",
+      "backToLogin": "Retour à la connexion"
+    },
     "home": {
       "navigation": {
         "features": "Fonctionnalités",
@@ -114,35 +145,64 @@
       "emailPlaceholder": "Entrez votre email",
       "passwordLabel": "Mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
-      "signInButton": "Connexion",
+      "signInButton": "Se connecter",
       "signingInButton": "Connexion...",
-      "forgotPassword": "Mot de passe oublié?",
-      "noAccount": "Pas de compte?",
-      "signUp": "S'inscrire"
+      "forgotPassword": "Mot de passe oublié ?",
+      "noAccount": "Pas de compte ?",
+      "signUp": "S'inscrire",
+      "signInAriaLabel": "Se connecter à votre compte",
+      "resetPasswordAriaLabel": "Réinitialiser le mot de passe",
+      "createAccountAriaLabel": "Créer un nouveau compte",
+      "authNavigationLabel": "Navigation d'authentification",
+      "unexpectedError": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
     },
     "register": {
       "title": "Créer un compte",
       "description": "Rejoignez Accountia pour gérer efficacement les finances de votre entreprise",
-      "nameLabel": "Nom Complet",
-      "namePlaceholder": "Entrez votre nom complet",
+      "firstNameLabel": "Prénom",
+      "firstNamePlaceholder": "Entrez votre prénom",
+      "lastNameLabel": "Nom de famille",
+      "lastNamePlaceholder": "Entrez votre nom de famille",
+      "usernameLabel": "Nom d'utilisateur",
+      "usernamePlaceholder": "Choisissez un nom d'utilisateur",
+      "birthdateLabel": "Date de naissance",
       "emailLabel": "Email",
       "emailPlaceholder": "Entrez votre email",
       "passwordLabel": "Mot de passe",
       "passwordPlaceholder": "Créer un mot de passe",
       "confirmPasswordLabel": "Confirmer le mot de passe",
       "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "termsAndConditions": "J'accepte les termes et conditions",
       "registerButton": "S'inscrire",
       "creatingAccountButton": "Création du compte...",
       "hasAccount": "Vous avez déjà un compte?",
       "signIn": "Se connecter",
+      "dialog": {
+        "emailNotConfirmedTitle": "Email non confirmé",
+        "emailNotConfirmedDescription": "Un compte avec l'email {email} existe déjà mais l'email n'a pas encore été confirmé.",
+        "cancelButton": "Annuler",
+        "resendConfirmationButton": "Renvoyer l'email de confirmation",
+        "resendingButton": "Envoi en cours..."
+      },
       "errors": {
         "nameRequired": "Le nom est requis",
         "emailRequired": "L'email est requis",
         "emailInvalid": "Adresse email invalide",
         "passwordRequired": "Le mot de passe est requis",
         "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
-        "passwordsNotMatch": "Les mots de passe ne correspondent pas"
-      }
+        "passwordsNotMatch": "Les mots de passe ne correspondent pas",
+        "confirmPasswordRequired": "Veuillez confirmer votre mot de passe",
+        "acceptTermsRequired": "Vous devez accepter les termes et conditions"
+      },
+      "resendSuccessMessage": "Email de confirmation envoyé avec succès",
+      "resendErrorMessage": "Échec de l'envoi de l'email de confirmation",
+      "unexpectedError": "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
+      "registrationFailed": "L'inscription a échoué. Veuillez réessayer.",
+      "emailAlreadyRegistered": "Cet email est déjà enregistré",
+      "accountExists": "Un compte avec cet email existe déjà",
+      "personalInfoLabel": "Informations personnelles",
+      "accountInfoLabel": "Informations du compte",
+      "authNavLabel": "Navigation d'authentification"
     }
   },
   "tooltips": {
