@@ -25,8 +25,8 @@ export interface UserPayload {
   id: string;
   email: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   phoneNumber?: string;
 }
 
@@ -45,8 +45,8 @@ export interface AuthTokens {
 export interface AuthResponseDto {
   accessToken: string;
   refreshToken: string;
-  accessTokenExpiresIn: string; // "24h"
-  refreshTokenExpiresIn: string; // "7d"
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
   user: {
     id: string;
     username: string;
@@ -60,7 +60,6 @@ export interface AuthResponseDto {
 export interface RegistrationResponseDto {
   message: string;
   email: string;
-  requiresEmailConfirmation: boolean;
 }
 
 export interface LoginDto {
@@ -72,13 +71,15 @@ export interface RefreshTokenDto {
   refreshToken: string;
 }
 
+export interface ResendConfirmationDto {
+  email: string;
+}
+
 export interface AuthResponse extends BaseResponse {
   accessToken: string;
   refreshToken: string;
-  accessTokenExpiresIn: string;
-  refreshTokenExpiresIn: string;
-  expiresAt?: string;
-  expiresAt_ts?: number;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
   user: UserPayload;
 }
 
@@ -207,9 +208,7 @@ export interface EmailAlreadyConfirmedResponse extends BaseErrorResponse {
 
 export interface HealthResponse {
   status: 'ok' | 'error';
-  timestamp: string;
-  uptime: number;
-  version?: string;
+  details?: Record<string, unknown>;
 }
 
 // TODO: Consider extending these type aliases to unions for error variants
@@ -241,8 +240,8 @@ export enum HttpStatus {
 export interface TokenExpiryInfo {
   accessToken: string;
   refreshToken: string;
-  accessTokenExpiresIn: string;
-  refreshTokenExpiresIn: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
 }
 
 export enum ErrorType {
