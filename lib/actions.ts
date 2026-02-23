@@ -2,19 +2,18 @@
 
 import { setCookie } from 'cookies-next/server';
 
-export interface SetAuthCookiesData {
+export async function setAuthCookies(data: {
   token: string;
   refreshToken: string;
   expiresAt: string | undefined;
   expiresAtMs: number;
-  userId: string;
+  user: {
+    id: string;
+  };
   maxAge: number;
-}
+}) {
+  const { token, refreshToken, expiresAt, expiresAtMs, user, maxAge } = data;
 
-export async function setAuthCookies(data: SetAuthCookiesData) {
-  const { token, refreshToken, expiresAt, expiresAtMs, userId, maxAge } = data;
-
-  // Set token cookie
   await setCookie(
     'token',
     JSON.stringify({
@@ -32,11 +31,10 @@ export async function setAuthCookies(data: SetAuthCookiesData) {
     }
   );
 
-  // Set user cookie with only session ID
   await setCookie(
     'user',
     JSON.stringify({
-      sessionId: userId,
+      userId: user.id,
       loginTime: new Date().toISOString(),
     }),
     {
