@@ -28,12 +28,12 @@ export interface UserPayload {
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
+  birthdate?: string;
+  profilePicture?: string;
 }
 
 export interface UserProfile extends UserPayload {
-  birthdate: string;
   dateJoined: string;
-  profilePicture?: string;
   emailConfirmed: boolean;
 }
 
@@ -54,6 +54,8 @@ export interface AuthResponseDto {
     firstName?: string;
     lastName?: string;
     phoneNumber?: string;
+    birthdate?: string;
+    profilePicture?: string;
   };
 }
 
