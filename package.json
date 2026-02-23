@@ -62,6 +62,7 @@
     "typescript": "^5"
   },
   "trustedDependencies": [
+    "sharp",
     "unrs-resolver"
   ]
 }
