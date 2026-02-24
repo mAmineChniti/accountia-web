@@ -54,6 +54,7 @@ export default function AdminUsersTable({
         }
       );
       setModalUser(undefined);
+      setDeleteError(undefined);
     },
     onError: (err: unknown) => {
       setDeleteError(
@@ -110,9 +111,10 @@ export default function AdminUsersTable({
                   <TableCell>
                     <Dialog
                       open={modalUser?.id === user.id}
-                      onOpenChange={(open) =>
-                        setModalUser(open ? user : undefined)
-                      }
+                      onOpenChange={(open) => {
+                        setModalUser(open ? user : undefined);
+                        setDeleteError(undefined);
+                      }}
                     >
                       <DialogTrigger asChild>
                         <Button
