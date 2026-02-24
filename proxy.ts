@@ -68,8 +68,11 @@ export async function proxy(request: NextRequest) {
 
   const lastSegment = pathSegments.at(-1);
 
-  if ((lastSegment === 'login' || lastSegment === 'register') && isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+  if (lastSegment === 'login' || lastSegment === 'register') {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+    }
+    return NextResponse.next();
   }
 
   const isAdminRoute = adminOnlyRoutes.some((route) =>
