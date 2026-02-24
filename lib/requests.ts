@@ -22,6 +22,7 @@ import type {
   ResetPasswordResponse,
   ResendConfirmationResponse,
   HealthResponse,
+  UsersListResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -106,6 +107,8 @@ const API_CONFIG = {
     UPDATE: 'auth/update',
     DELETE: 'auth/delete',
     RESEND_CONFIRMATION: 'auth/resend-confirmation-email',
+    FETCH_ALL_USERS: 'auth/users',
+    DELETE_USER_BY_ADMIN: 'auth/users',
   },
 } as const;
 
@@ -499,6 +502,58 @@ export const AuthService = {
           json: data,
         })
         .json<ResendConfirmationResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async fetchAllUsers(): Promise<UsersListResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) throw new Error('Token not found');
+
+    try {
+      const result = await client
+        .get(API_CONFIG.AUTH.FETCH_ALL_USERS, {
+          headers: token,
+        })
+        .json<UsersListResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async deleteUserByAdmin(userId: string): Promise<DeleteUserResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) throw new Error('Token not found');
+
+    try {
+      const result = await client
+        .delete(`${API_CONFIG.AUTH.DELETE_USER_BY_ADMIN}/${userId}`, {
+          headers: token,
+        })
+        .json<DeleteUserResponse>();
       return result;
     } catch (error: unknown) {
       if (

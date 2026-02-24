@@ -28,9 +28,11 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
-import { setAuthCookies } from '@/lib/actions';
+// cookie setting is moved to a server API route
+
 import { LoginSchema, type LoginInput } from '@/types/RequestSchemas';
 import { toast } from 'sonner';
+import ky from 'ky';
 
 export default function Login({
   dictionary,
@@ -84,15 +86,25 @@ export default function Login({
           ...restUser,
           birthdate: parsedBirthdate,
         };
-        await setAuthCookies({
-          token: response.accessToken,
-          refreshToken: response.refreshToken,
-          expiresAt: response.accessTokenExpiresAt,
-          expiresAtMs,
-          user: userWithoutProfilePicture,
-          maxAge,
+        await ky.post('/api/auth/set-cookies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            token: response.accessToken,
+            refreshToken: response.refreshToken,
+            expiresAt: response.accessTokenExpiresAt,
+            expiresAtMs,
+            user: userWithoutProfilePicture,
+            maxAge,
+          }),
         });
-        router.push(`/${lang}`);
+
+        if (response.user.isAdmin) {
+          router.push(`/${lang}/admin`);
+        } else {
+          router.push(`/${lang}`);
+        }
       } else {
         console.error('Invalid login response shape:', response);
         toast.error(dictionary.pages.login.unexpectedError);
