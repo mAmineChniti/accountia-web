@@ -38,7 +38,9 @@
         "pricing": "Pricing",
         "getStarted": "Get Started",
         "login": "Login",
-        "register": "Register"
+        "register": "Register",
+        "profile": "Profile",
+        "logout": "Logout"
       },
       "hero": {
         "badge": "AI-Powered Business Management",
@@ -203,6 +205,50 @@
       "personalInfoLabel": "Personal information",
       "accountInfoLabel": "Account information",
       "authNavLabel": "Authentication navigation"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal information",
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "successMessage": "Profile updated successfully",
+      "errorMessage": "Failed to update profile",
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "passwordSection": "Change Password",
+      "currentPasswordLabel": "Current Password",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password"
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Update your password to keep your account secure",
+      "currentPasswordLabel": "Current Password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your new password",
+      "successMessage": "Password changed successfully",
+      "errorMessage": "Failed to change password",
+      "updateButton": "Update Password",
+      "updatingButton": "Updating..."
+    },
+    "profileOverview": {
+      "welcomeTitle": "Welcome, {name}! 👋",
+      "welcomeDescription": "Manage your Accountia account",
+      "editProfileCard": "📝 Edit Profile",
+      "editProfileDescription": "Update your personal information",
+      "editProfileDetails": "Change your first name, last name and email",
+      "editProfileButton": "Go to Edit",
+      "changePasswordCard": "🔐 Change Password",
+      "changePasswordDescription": "Secure your account",
+      "changePasswordDetails": "Update your password for more security",
+      "changePasswordButton": "Change Password"
     }
   },
   "tooltips": {

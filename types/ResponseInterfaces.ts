@@ -3,6 +3,8 @@ import type {
   LoginInput,
   RefreshTokenInput,
   UpdateUserInput,
+  UpdateProfileInput,
+  ChangePasswordInput,
 } from '@/types/RequestSchemas';
 
 export interface BaseResponse {
@@ -28,12 +30,12 @@ export interface UserPayload {
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
-  birthdate?: string;
-  profilePicture?: string;
 }
 
 export interface UserProfile extends UserPayload {
+  birthdate: string;
   dateJoined: string;
+  profilePicture?: string;
   emailConfirmed: boolean;
 }
 
@@ -54,8 +56,6 @@ export interface AuthResponseDto {
     firstName?: string;
     lastName?: string;
     phoneNumber?: string;
-    birthdate?: string;
-    profilePicture?: string;
   };
 }
 
@@ -168,6 +168,14 @@ export interface UpdateUserSuccessResponse extends BaseResponse {
   user: UserProfile;
 }
 
+export interface UpdateProfileSuccessResponse extends BaseResponse {
+  user: UserProfile;
+}
+
+export interface ChangePasswordSuccessResponse extends BaseResponse {
+  message: 'Password changed successfully';
+}
+
 export interface UsernameTakenResponse extends BaseErrorResponse {
   type: 'USERNAME_TAKEN';
   message: 'Username is already taken';
@@ -221,6 +229,8 @@ export type RefreshTokenResponse = AuthResponse;
 export type FetchUserResponse = FetchUserSuccessResponse;
 export type FetchUserByIdResponse = FetchUserByIdSuccessResponse;
 export type UpdateUserResponse = UpdateUserSuccessResponse;
+export type UpdateProfileResponse = UpdateProfileSuccessResponse;
+export type ChangePasswordResponse = ChangePasswordSuccessResponse;
 export type DeleteUserResponse = DeleteUserSuccessResponse;
 export type ForgotPasswordResponse = ForgotPasswordSuccessResponse;
 export type ResetPasswordResponse = ResetPasswordSuccessResponse;
@@ -273,3 +283,5 @@ export type RegisterRequestBody = RegisterInput;
 export type LoginRequestBody = LoginInput;
 export type LogoutRequestBody = RefreshTokenInput;
 export type UpdateUserRequestBody = UpdateUserInput;
+export type UpdateProfileRequestBody = UpdateProfileInput;
+export type ChangePasswordRequestBody = ChangePasswordInput;

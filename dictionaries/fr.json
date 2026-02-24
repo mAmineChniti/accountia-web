@@ -38,7 +38,9 @@
         "pricing": "Tarifs",
         "getStarted": "Commencer",
         "login": "Connexion",
-        "register": "S'inscrire"
+        "register": "S'inscrire",
+        "profile": "Profil",
+        "logout": "Déconnexion"
       },
       "hero": {
         "badge": "Gestion d'Entreprise Alimentée par l'IA",
@@ -203,6 +205,50 @@
       "personalInfoLabel": "Informations personnelles",
       "accountInfoLabel": "Informations du compte",
       "authNavLabel": "Navigation d'authentification"
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Mettez à jour vos informations personnelles",
+      "firstNameLabel": "Prénom",
+      "firstNamePlaceholder": "Entrez votre prénom",
+      "lastNameLabel": "Nom",
+      "lastNamePlaceholder": "Entrez votre nom",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "successMessage": "Profil mis à jour avec succès",
+      "errorMessage": "Échec de la mise à jour du profil",
+      "saveButton": "Enregistrer les modifications",
+      "savingButton": "Enregistrement...",
+      "passwordSection": "Changer le mot de passe",
+      "currentPasswordLabel": "Mot de passe actuel",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le nouveau mot de passe"
+    },
+    "changePassword": {
+      "title": "Changer le mot de passe",
+      "description": "Mettez à jour votre mot de passe pour sécuriser votre compte",
+      "currentPasswordLabel": "Mot de passe actuel",
+      "currentPasswordPlaceholder": "Entrez votre mot de passe actuel",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Entrez votre nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre nouveau mot de passe",
+      "successMessage": "Mot de passe modifié avec succès",
+      "errorMessage": "Erreur lors de la modification du mot de passe",
+      "updateButton": "Mettre à jour le mot de passe",
+      "updatingButton": "Mise à jour..."
+    },
+    "profileOverview": {
+      "welcomeTitle": "Bienvenue, {name}! 👋",
+      "welcomeDescription": "Gérez votre compte Accountia",
+      "editProfileCard": "📝 Modifier le Profil",
+      "editProfileDescription": "Mettez à jour vos informations personnelles",
+      "editProfileDetails": "Changez votre prénom, nom et email",
+      "editProfileButton": "Aller à la modification",
+      "changePasswordCard": "🔐 Changer le Mot de Passe",
+      "changePasswordDescription": "Sécurisez votre compte",
+      "changePasswordDetails": "Modifiez votre mot de passe pour plus de sécurité",
+      "changePasswordButton": "Changer le mot de passe"
     }
   },
   "tooltips": {

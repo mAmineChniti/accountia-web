@@ -40,7 +40,7 @@ export function Footer({ dictionary }: FooterProps) {
         <div className="grid gap-12 md:grid-cols-4">
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="relative h-8 w-8 shrink-0">
+              <div className="relative h-8 w-8 flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt={dictionary.brand.logoAlt}

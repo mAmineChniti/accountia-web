@@ -6,6 +6,8 @@ import type {
   ResetPasswordInput,
   FetchUserByIdInput,
   UpdateUserInput,
+  UpdateProfileInput,
+  ChangePasswordInput,
   ResendConfirmationInput,
   ForgotPasswordInput,
 } from '@/types/RequestSchemas';
@@ -17,6 +19,8 @@ import type {
   FetchUserResponse,
   FetchUserByIdResponse,
   UpdateUserResponse,
+  UpdateProfileResponse,
+  ChangePasswordResponse,
   DeleteUserResponse,
   ForgotPasswordResponse,
   ResetPasswordResponse,
@@ -107,6 +111,10 @@ const API_CONFIG = {
     DELETE: 'auth/delete',
     RESEND_CONFIRMATION: 'auth/resend-confirmation-email',
   },
+  USERS: {
+    PROFILE: 'users/profile',
+    CHANGE_PASSWORD: 'users/change-password',
+  },
 } as const;
 
 type TokenCookie = {
@@ -166,6 +174,7 @@ const authHeaders = (): Record<string, string> => {
 
 const client = ky.create({
   prefixUrl: API_CONFIG.BASE_URL,
+  credentials: 'include', // Send cookies with cross-origin requests
 });
 
 export const AuthService = {
@@ -362,7 +371,6 @@ export const AuthService = {
 
   async fetchUser(): Promise<FetchUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
     try {
       const result = await client
         .get(API_CONFIG.AUTH.FETCH_USER, {
@@ -389,7 +397,6 @@ export const AuthService = {
     data: FetchUserByIdInput
   ): Promise<FetchUserByIdResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
     try {
       const result = await client
         .post(API_CONFIG.AUTH.FETCH_USER_BY_ID, {
@@ -415,7 +422,6 @@ export const AuthService = {
 
   async updateUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
     try {
       const result = await client
         .put(API_CONFIG.AUTH.UPDATE, {
@@ -441,7 +447,6 @@ export const AuthService = {
 
   async patchUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
     try {
       const result = await client
         .patch(API_CONFIG.AUTH.UPDATE, {
@@ -467,7 +472,6 @@ export const AuthService = {
 
   async deleteUser(): Promise<DeleteUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
     try {
       const result = await client
         .delete(API_CONFIG.AUTH.DELETE, {
@@ -499,6 +503,60 @@ export const AuthService = {
           json: data,
         })
         .json<ResendConfirmationResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async updateProfile(
+    data: UpdateProfileInput
+  ): Promise<UpdateProfileResponse> {
+    const token = authHeaders();
+    try {
+      const result = await client
+        .put(API_CONFIG.USERS.PROFILE, {
+          json: data,
+          headers: token,
+        })
+        .json<UpdateProfileResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async changePassword(
+    data: ChangePasswordInput
+  ): Promise<ChangePasswordResponse> {
+    const token = authHeaders();
+    try {
+      const result = await client
+        .post(API_CONFIG.USERS.CHANGE_PASSWORD, {
+          json: data,
+          headers: token,
+        })
+        .json<ChangePasswordResponse>();
       return result;
     } catch (error: unknown) {
       if (

@@ -1,19 +1,20 @@
 'use server';
 
-import { setCookie } from 'cookies-next/server';
+import { getCookie, setCookie, deleteCookie } from 'cookies-next/server';
 
-export async function setAuthCookies(data: {
+export interface SetAuthCookiesData {
   token: string;
   refreshToken: string;
   expiresAt: string | undefined;
   expiresAtMs: number;
-  user: {
-    id: string;
-  };
+  userId: string;
   maxAge: number;
-}) {
-  const { token, refreshToken, expiresAt, expiresAtMs, user, maxAge } = data;
+}
 
+export async function setAuthCookies(data: SetAuthCookiesData) {
+  const { token, refreshToken, expiresAt, expiresAtMs, userId, maxAge } = data;
+
+  // Set token cookie using cookies-next
   await setCookie(
     'token',
     JSON.stringify({
@@ -23,26 +24,37 @@ export async function setAuthCookies(data: {
       expires_at_ts: expiresAtMs,
     }),
     {
-      path: '/',
       maxAge,
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
     }
   );
 
+  // Set user cookie with only session ID
   await setCookie(
     'user',
     JSON.stringify({
-      userId: user.id,
+      sessionId: userId,
       loginTime: new Date().toISOString(),
     }),
     {
-      path: '/',
       maxAge,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
     }
   );
+}
+
+export async function isUserAuthenticated(): Promise<boolean> {
+  const tokenCookie = await getCookie('token');
+  return !!tokenCookie;
+}
+
+export async function logoutUser(): Promise<void> {
+  await deleteCookie('token');
+  await deleteCookie('user');
 }

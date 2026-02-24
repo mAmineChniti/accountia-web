@@ -28,7 +28,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
-import { setAuthCookies } from '@/lib/actions';
+import { setCookie } from 'cookies-next';
 import { LoginSchema, type LoginInput } from '@/types/RequestSchemas';
 import { toast } from 'sonner';
 
@@ -49,54 +49,53 @@ export default function Login({
     },
   });
 
-  const loginMutation = useMutation<
-    Awaited<ReturnType<typeof AuthService.login>>,
-    unknown,
-    LoginInput
-  >({
+  const loginMutation = useMutation({
     mutationFn: AuthService.login,
     onSuccess: async (response) => {
       if ('accessToken' in response && 'user' in response) {
+        // Use server-provided expiry information
         const now = Date.now();
         let expiresAtMs: number = 0;
+
         if (response.accessTokenExpiresAt) {
+          // Parse server expiry (ISO date string)
           expiresAtMs = new Date(response.accessTokenExpiresAt).getTime();
         }
+
         const maxAge =
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
-        const { profilePicture, ...rest } = response.user;
-        if (profilePicture) {
-          try {
-            localStorage.setItem('profilePicture', profilePicture);
-          } catch {}
-        }
-        const { birthdate, ...restUser } = rest;
-        let parsedBirthdate: string | undefined;
-        if (birthdate && typeof birthdate === 'string') {
-          const date = new Date(birthdate);
-          parsedBirthdate = Number.isNaN(date.getTime())
-            ? undefined
-            : date.toISOString();
-        }
-        const userWithoutProfilePicture = {
-          ...restUser,
-          birthdate: parsedBirthdate,
-        };
-        await setAuthCookies({
-          token: response.accessToken,
-          refreshToken: response.refreshToken,
-          expiresAt: response.accessTokenExpiresAt,
-          expiresAtMs,
-          user: userWithoutProfilePicture,
-          maxAge,
-        });
+
+        // Set token cookie client-side; middleware uses token for auth
+        setCookie(
+          'token',
+          JSON.stringify({
+            token: response.accessToken,
+            refreshToken: response.refreshToken,
+            expires_at: response.accessTokenExpiresAt
+              ? new Date(response.accessTokenExpiresAt).toISOString()
+              : undefined,
+            expires_at_ts: expiresAtMs,
+          }),
+          {
+            maxAge,
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+          }
+        );
+
         router.push(`/${lang}`);
       } else {
+        // Handle unexpected response shape
         console.error('Invalid login response shape:', response);
         toast.error(dictionary.pages.login.unexpectedError);
       }
+    },
+    onError: (_err: unknown) => {
+      // Error is displayed via inline alert, no toast needed
     },
   });
 
@@ -189,7 +188,7 @@ export default function Login({
                   id="login-error"
                 >
                   <AlertCircle
-                    className="mt-0.5 h-4 w-4 shrink-0"
+                    className="mt-0.5 h-4 w-4 flex-shrink-0"
                     aria-hidden="true"
                   />
                   <span className="text-sm">{loginErrorMessage}</span>

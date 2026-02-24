@@ -53,6 +53,23 @@ export const UpdateUserSchema = z.object({
   profilePicture: z.string().optional(),
 });
 
+export const UpdateProfileSchema = z.object({
+  firstName: z.string().min(1).max(50),
+  lastName: z.string().min(1).max(50),
+  email: z.email(),
+});
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(6),
+    confirmPassword: z.string().min(6),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 export const PublicUserSchema = z.object({
   username: z.string(),
   firstName: z.string(),
@@ -101,6 +118,8 @@ export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;
 export type FetchUserByIdInput = z.infer<typeof FetchUserByIdSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
 export type PublicUser = z.infer<typeof PublicUserSchema>;
 export type UserResponse = z.infer<typeof UserResponseSchema>;
 export type AuthResponseZod = z.infer<typeof AuthResponseSchema>;
