@@ -11,7 +11,6 @@ function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
   for (const [key, value] of request.headers.entries())
     negotiatorHeaders[key] = value;
-
   const locales = [...i18n.locales];
   const languages = new Negotiator({ headers: negotiatorHeaders }).languages(
     locales
@@ -34,30 +33,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check authentication status
   const user = await getCookie('user', { req: request });
   const token = await getCookie('token', { req: request });
   const isLoggedIn = !!(user && token);
-
-  const protectedRoutes: string[] = [];
-
-  if (pathname === '/') {
-    const locale = getLocale(request) || 'en';
-    return isLoggedIn
-      ? NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
-      : NextResponse.redirect(new URL(`/${locale}/login`, request.url));
-  }
+  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+  const adminOnlyRoutes = ['/admin'];
 
   const pathSegments = pathname.split('/').filter(Boolean);
-  const lastSegment = pathSegments.at(-1);
   const firstSegment = pathSegments[0];
   const isValidLocale =
     firstSegment && i18n.locales.includes(firstSegment as Locale);
-  const locale = isValidLocale ? firstSegment : 'en';
-
-  if ((lastSegment === 'login' || lastSegment === 'register') && isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
-  }
+  const locale = isValidLocale ? firstSegment : getLocale(request) || 'en';
 
   const localeStrippedPath = isValidLocale
     ? pathname.replace(`/${locale}`, '') || '/'
@@ -66,9 +52,45 @@ export async function proxy(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     localeStrippedPath.startsWith(route)
   );
-
   if (isProtectedRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  }
+
+  if (pathname === '/') {
+    // If user is logged in, redirect to their home (e.g., dashboard or locale root)
+    // If not logged in, show the landing page (do not redirect to login)
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+    }
+    // Allow access to landing page for non-logged-in users
+    return NextResponse.next();
+  }
+
+  const lastSegment = pathSegments.at(-1);
+
+  if ((lastSegment === 'login' || lastSegment === 'register') && isLoggedIn) {
+    return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+  }
+
+  const isAdminRoute = adminOnlyRoutes.some((route) =>
+    localeStrippedPath.startsWith(route)
+  );
+  if (isAdminRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+    let isAdmin = false;
+    try {
+      if (typeof user === 'string') {
+        const parsed = JSON.parse(user);
+        isAdmin =
+          parsed.isAdmin === true ||
+          (parsed.user && parsed.user.isAdmin === true);
+      }
+    } catch {}
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+    }
   }
 
   const pathnameIsMissingLocale = i18n.locales.every(

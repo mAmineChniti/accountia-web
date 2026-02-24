@@ -225,6 +225,19 @@
     "name": "Accountia",
     "logoAlt": "Logo Accountia"
   },
+  "admin": {
+    "tableCaption": "Liste de tous les utilisateurs",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "isAdmin": "Admin",
+    "dateJoined": "Date d'inscription",
+    "actions": "Actions",
+    "confirmDeleteTitle": "Confirmer la suppression",
+    "confirmDeleteDescription": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
+    "noUsers": "Aucun utilisateur trouvé."
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
