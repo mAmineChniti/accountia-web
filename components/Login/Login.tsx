@@ -28,9 +28,10 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
-import { setAuthCookies } from '@/lib/actions';
+
 import { LoginSchema, type LoginInput } from '@/types/RequestSchemas';
 import { toast } from 'sonner';
+import { setCookie } from 'cookies-next/client';
 
 export default function Login({
   dictionary,
@@ -66,33 +67,45 @@ export default function Login({
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
-        const { profilePicture, ...rest } = response.user;
+        const { profilePicture, ...userWithoutProfilePicture } = response.user;
         if (profilePicture) {
           try {
             localStorage.setItem('profilePicture', profilePicture);
           } catch {}
         }
-        const { birthdate, ...restUser } = rest;
-        let parsedBirthdate: string | undefined;
-        if (birthdate && typeof birthdate === 'string') {
-          const date = new Date(birthdate);
-          parsedBirthdate = Number.isNaN(date.getTime())
-            ? undefined
-            : date.toISOString();
+        setCookie(
+          'token',
+          JSON.stringify({
+            token: response.accessToken,
+            refreshToken: response.refreshToken,
+            expires_at: response.accessTokenExpiresAt,
+            expires_at_ts: expiresAtMs,
+          }),
+          {
+            path: '/',
+            maxAge,
+            sameSite: 'lax',
+          }
+        );
+        setCookie(
+          'user',
+          JSON.stringify({
+            userId: userWithoutProfilePicture.id,
+            isAdmin: userWithoutProfilePicture.isAdmin,
+            loginTime: new Date().toISOString(),
+          }),
+          {
+            path: '/',
+            maxAge,
+            sameSite: 'lax',
+          }
+        );
+
+        if (response.user.isAdmin) {
+          router.push(`/${lang}/admin`);
+        } else {
+          router.push(`/${lang}`);
         }
-        const userWithoutProfilePicture = {
-          ...restUser,
-          birthdate: parsedBirthdate,
-        };
-        await setAuthCookies({
-          token: response.accessToken,
-          refreshToken: response.refreshToken,
-          expiresAt: response.accessTokenExpiresAt,
-          expiresAtMs,
-          user: userWithoutProfilePicture,
-          maxAge,
-        });
-        router.push(`/${lang}`);
       } else {
         console.error('Invalid login response shape:', response);
         toast.error(dictionary.pages.login.unexpectedError);

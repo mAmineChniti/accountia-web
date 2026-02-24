@@ -225,6 +225,19 @@
     "name": "Accountia",
     "logoAlt": "Accountia Logo"
   },
+  "admin": {
+    "tableCaption": "List of all users",
+    "username": "Username",
+    "email": "Email",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "isAdmin": "Admin",
+    "dateJoined": "Date Joined",
+    "actions": "Actions",
+    "confirmDeleteTitle": "Confirm Deletion",
+    "confirmDeleteDescription": "Are you sure you want to delete user {username}? This action cannot be undone.",
+    "noUsers": "No users found."
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

@@ -53,46 +53,6 @@ export const UpdateUserSchema = z.object({
   profilePicture: z.string().optional(),
 });
 
-export const PublicUserSchema = z.object({
-  username: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  birthdate: DateSchema,
-  dateJoined: DateSchema,
-  profilePicture: z.string().optional(),
-  emailConfirmed: z.boolean(),
-});
-
-export const UserResponseSchema = z.object({
-  message: z.string(),
-  user: PublicUserSchema,
-});
-
-export const AuthResponseSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  user: z.object({
-    id: z.string(),
-    username: z.string(),
-    email: z.string(),
-  }),
-});
-
-export const HealthResponseSchema = z.object({
-  status: z.string(),
-  details: z.record(z.string(), z.any()).optional(),
-});
-
-export const MessageResponseSchema = z.object({
-  message: z.string(),
-});
-
-export const ApiErrorSchema = z.object({
-  message: z.string(),
-  status: z.number().optional(),
-  code: z.string().optional(),
-});
-
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
@@ -101,9 +61,3 @@ export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;
 export type FetchUserByIdInput = z.infer<typeof FetchUserByIdSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
-export type PublicUser = z.infer<typeof PublicUserSchema>;
-export type UserResponse = z.infer<typeof UserResponseSchema>;
-export type AuthResponseZod = z.infer<typeof AuthResponseSchema>;
-export type HealthResponseZod = z.infer<typeof HealthResponseSchema>;
-export type MessageResponse = z.infer<typeof MessageResponseSchema>;
-export type ApiErrorZod = z.infer<typeof ApiErrorSchema>;

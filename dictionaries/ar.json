@@ -217,6 +217,19 @@
     "name": "Accountia",
     "logoAlt": "شعار Accountia"
   },
+  "admin": {
+    "tableCaption": "قائمة جميع المستخدمين",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "isAdmin": "مسؤول",
+    "dateJoined": "تاريخ الانضمام",
+    "actions": "إجراءات",
+    "confirmDeleteTitle": "تأكيد الحذف",
+    "confirmDeleteDescription": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
+    "noUsers": "لم يتم العثور على مستخدمين."
+  },
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",

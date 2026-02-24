@@ -30,6 +30,7 @@ export interface UserPayload {
   phoneNumber?: string;
   birthdate?: string;
   profilePicture?: string;
+  isAdmin: boolean;
 }
 
 export interface UserProfile extends UserPayload {
@@ -56,6 +57,7 @@ export interface AuthResponseDto {
     phoneNumber?: string;
     birthdate?: string;
     profilePicture?: string;
+    isAdmin: boolean;
   };
 }
 
@@ -164,6 +166,25 @@ export interface FetchUserByIdRequestBody {
   userId: string;
 }
 
+// administrative user summary/list types
+export interface UserSummary {
+  id: string;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  birthdate?: string;
+  profilePicture?: string;
+  phoneNumber?: string;
+  isAdmin: boolean;
+  dateJoined: string;
+}
+
+export interface UsersListResponse {
+  message: string;
+  users: UserSummary[];
+}
+
 export interface UpdateUserSuccessResponse extends BaseResponse {
   user: UserProfile;
 }
@@ -225,6 +246,7 @@ export type DeleteUserResponse = DeleteUserSuccessResponse;
 export type ForgotPasswordResponse = ForgotPasswordSuccessResponse;
 export type ResetPasswordResponse = ResetPasswordSuccessResponse;
 export type ResendConfirmationResponse = ResendConfirmationSuccessResponse;
+export type FetchAllUsersResponse = UsersListResponse;
 
 export enum HttpStatus {
   OK = 200,
