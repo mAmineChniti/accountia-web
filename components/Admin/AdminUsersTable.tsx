@@ -27,7 +27,7 @@ import type {
 } from '@/types/ResponseInterfaces';
 import { AuthService } from '@/lib/requests';
 
-import type { Dictionary } from '@/types/Dictionary'; // Assuming you have a Dictionary type
+import type { Dictionary } from '@/get-dictionary';
 
 export default function AdminUsersTable({
   dictionary,
