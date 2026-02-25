@@ -1,5 +1,52 @@
 {
   "pages": {
+    "profile": {
+      "title": "الملف الشخصي",
+      "editButton": "تعديل الملف الشخصي",
+      "tabs": {
+        "overview": "نظرة عامة",
+        "account": "الحساب",
+        "security": "الأمان"
+      },
+      "personalInfoSection": "المعلومات الشخصية",
+      "accountSection": "تعديل بيانات الحساب",
+      "securitySection": "تغيير كلمة المرور",
+      "twoFactor": {
+        "title": "المصادقة الثنائية (2FA)",
+        "description": "أضف طبقة أمان إضافية بطلب رمز المصادقة عند تسجيل الدخول.",
+        "setupButton": "إعداد المصادقة الثنائية",
+        "settingUp": "جارٍ الإعداد...",
+        "scanQr": "امسح رمز QR هذا في تطبيق المصادقة لديك",
+        "qrAlt": "رمز QR للمصادقة الثنائية",
+        "manualKey": "مفتاح الإعداد اليدوي",
+        "enterCode": "أدخل الرمز المكون من 6 أرقام",
+        "codePlaceholder": "123456",
+        "enableButton": "تفعيل المصادقة الثنائية",
+        "verifying": "جارٍ التحقق...",
+        "setupSuccess": "بدأ إعداد المصادقة الثنائية",
+        "setupError": "فشل بدء إعداد المصادقة الثنائية",
+        "enableSuccess": "تم تفعيل المصادقة الثنائية",
+        "verifyError": "فشل التحقق من رمز المصادقة الثنائية",
+        "invalidCode": "رمز غير صالح"
+      },
+      "saveButton": "حفظ",
+      "cancelButton": "إلغاء",
+      "username": "اسم المستخدم",
+      "email": "البريد الإلكتروني",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "birthdate": "تاريخ الميلاد",
+      "phoneNumber": "رقم الهاتف",
+      "dateJoined": "تاريخ الانضمام",
+      "notFound": "المستخدم غير موجود",
+      "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+      "updateError": "فشل في تحديث الملف الشخصي",
+      "deleteButton": "حذف الحساب",
+      "deleteTitle": "حذف الحساب",
+      "deleteDescription": "هل أنت متأكد أنك تريد حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteConfirmButton": "حذف",
+      "deleteError": "فشل في حذف الحساب"
+    },
     "forgotPassword": {
       "title": "نسيت كلمة المرور",
       "description": "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.",
@@ -38,7 +85,10 @@
         "pricing": "الأسعار",
         "getStarted": "ابدأ الآن",
         "login": "تسجيل الدخول",
-        "register": "إنشاء حساب"
+        "register": "إنشاء حساب",
+        "profile": "الملف الشخصي",
+        "adminDashboard": "لوحة تحكم المدير",
+        "logout": "تسجيل الخروج"
       },
       "hero": {
         "badge": "إدارة الأعمال المدعومة بالذكاء الاصطناعي",
@@ -146,7 +196,11 @@
       "resetPasswordAriaLabel": "إعادة تعيين كلمة المرور",
       "createAccountAriaLabel": "إنشاء حساب جديد",
       "authNavigationLabel": "التنقل في المصادقة",
-      "unexpectedError": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى."
+      "unexpectedError": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+      "twoFactorLabel": "رمز التحقق الثنائي",
+      "twoFactorPlaceholder": "أدخل رمز التحقق الثنائي",
+      "verify2FAButton": "تحقق من 2FA",
+      "verifying2FAButton": "جاري التحقق..."
     },
     "register": {
       "title": "إنشاء حساب",
@@ -209,6 +263,9 @@
     "getStarted": "ابدأ مع Accountia",
     "signIn": "تسجيل الدخول إلى حسابك",
     "createAccount": "إنشاء حساب جديد",
+    "profile": "عرض ملفك الشخصي",
+    "adminDashboard": "الانتقال إلى لوحة تحكم المدير",
+    "logout": "تسجيل الخروج من حسابك",
     "perfectForNewBusinesses": "مثالي للشركات الجديدة",
     "mostPopularChoice": "الخيار الأكثر شعبية",
     "advancedFeatures": "ميزات متقدمة للمؤسسات الكبيرة"
@@ -218,6 +275,31 @@
     "logoAlt": "شعار Accountia"
   },
   "admin": {
+    "title": "لوحة تحكم المدير",
+    "subtitle": "إدارة المستخدمين وصلاحيات الوصول",
+    "stats": {
+      "totalUsers": "إجمالي المستخدمين",
+      "totalAdmins": "المسؤولون",
+      "lastUpdated": "مزامنة المستخدمين",
+      "placeholder": "—",
+      "syncButton": "مزامنة",
+      "refreshing": "جارٍ التحديث...",
+      "upToDate": "محدّث"
+    },
+    "usersTitle": "المستخدمون",
+    "searchPlaceholder": "ابحث عن مستخدمين...",
+    "loadError": "فشل تحميل المستخدمين",
+    "deleteError": "فشل حذف المستخدم",
+    "noResults": "لم يتم العثور على نتائج.",
+    "adminBadge": "مسؤول",
+    "userBadge": "مستخدم",
+    "manageButton": "إدارة",
+    "deleteDialog": {
+      "title": "حذف المستخدم",
+      "description": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirm": "حذف",
+      "deleting": "جارٍ الحذف..."
+    },
     "tableCaption": "قائمة جميع المستخدمين",
     "username": "اسم المستخدم",
     "email": "البريد الإلكتروني",
@@ -235,6 +317,9 @@
     "error": "خطأ",
     "retry": "إعادة المحاولة",
     "cancel": "إلغاء",
+    "na": "غير متاح",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
     "save": "حفظ",
     "delete": "حذف",
     "edit": "تعديل",

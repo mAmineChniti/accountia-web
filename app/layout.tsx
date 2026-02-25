@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Arabic } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
-import { Providers } from '@/components/providers';
-import { TokenExpiration } from '@/components/token-expiration';
+import { Providers } from '@/components/reusable/providers';
+import { TokenExpiration } from '@/components/reusable/token-expiration';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
