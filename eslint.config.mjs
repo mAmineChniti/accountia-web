@@ -6,6 +6,7 @@ import parser from '@typescript-eslint/parser';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
+import reactCompiler from 'eslint-plugin-react-compiler';
 
 const eslintConfig = defineConfig([
   unicornPlugin.configs.all,
@@ -13,6 +14,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   eslintPluginPrettierRecommended,
   prettier,
+  reactCompiler.configs.recommended,
   globalIgnores([
     '.next/**',
     'out/**',

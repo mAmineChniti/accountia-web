@@ -2,7 +2,7 @@ import { type Locale, i18n } from '@/i18n-config';
 import { getDictionary } from '@/get-dictionary';
 import Navbar from '@/components/reusable/navbar';
 import { type ReactNode } from 'react';
-import { Footer } from '@/components/footer';
+import { Footer } from '@/components/reusable/footer';
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ lang: locale }));

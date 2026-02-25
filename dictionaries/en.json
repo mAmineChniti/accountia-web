@@ -1,5 +1,52 @@
 {
   "pages": {
+    "profile": {
+      "title": "Profile",
+      "editButton": "Edit Profile",
+      "tabs": {
+        "overview": "Overview",
+        "account": "Account",
+        "security": "Security"
+      },
+      "personalInfoSection": "Personal Information",
+      "accountSection": "Edit Account Details",
+      "securitySection": "Change your password",
+      "twoFactor": {
+        "title": "Two-Factor Authentication (2FA)",
+        "description": "Add an extra layer of security by requiring an authenticator code during login.",
+        "setupButton": "Set up 2FA",
+        "settingUp": "Setting up...",
+        "scanQr": "Scan this QR code in your authenticator app",
+        "qrAlt": "2FA QR code",
+        "manualKey": "Manual setup key",
+        "enterCode": "Enter the 6-digit code",
+        "codePlaceholder": "123456",
+        "enableButton": "Enable 2FA",
+        "verifying": "Verifying...",
+        "setupSuccess": "2FA setup started",
+        "setupError": "Failed to start 2FA setup",
+        "enableSuccess": "Two-factor authentication enabled",
+        "verifyError": "Failed to verify 2FA code",
+        "invalidCode": "Invalid code"
+      },
+      "saveButton": "Save",
+      "cancelButton": "Cancel",
+      "username": "Username",
+      "email": "Email",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "birthdate": "Birthdate",
+      "phoneNumber": "Phone Number",
+      "dateJoined": "Date Joined",
+      "notFound": "User not found",
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Failed to update profile",
+      "deleteButton": "Delete Account",
+      "deleteTitle": "Delete Account",
+      "deleteDescription": "Are you sure you want to delete your account? This action cannot be undone.",
+      "deleteConfirmButton": "Delete",
+      "deleteError": "Failed to delete account"
+    },
     "forgotPassword": {
       "title": "Forgot Password",
       "description": "Enter your email address and we'll send you a link to reset your password.",
@@ -38,7 +85,10 @@
         "pricing": "Pricing",
         "getStarted": "Get Started",
         "login": "Login",
-        "register": "Register"
+        "register": "Register",
+        "profile": "Profile",
+        "adminDashboard": "Admin Dashboard",
+        "logout": "Logout"
       },
       "hero": {
         "badge": "AI-Powered Business Management",
@@ -154,7 +204,11 @@
       "resetPasswordAriaLabel": "Reset your password",
       "createAccountAriaLabel": "Create a new account",
       "authNavigationLabel": "Authentication navigation",
-      "unexpectedError": "An error occurred during login. Please try again."
+      "unexpectedError": "An error occurred during login. Please try again.",
+      "twoFactorLabel": "Two-Factor Code",
+      "twoFactorPlaceholder": "Enter your 2FA code",
+      "verify2FAButton": "Verify 2FA",
+      "verifying2FAButton": "Verifying..."
     },
     "register": {
       "title": "Create account",
@@ -217,6 +271,9 @@
     "getStarted": "Get started with Accountia",
     "signIn": "Sign in to your account",
     "createAccount": "Create a new account",
+    "profile": "View your profile",
+    "adminDashboard": "Go to the admin dashboard",
+    "logout": "Sign out of your account",
     "perfectForNewBusinesses": "Perfect for new businesses",
     "mostPopularChoice": "Most popular choice",
     "advancedFeatures": "Advanced features for large organizations"
@@ -226,6 +283,31 @@
     "logoAlt": "Accountia Logo"
   },
   "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage users and access controls",
+    "stats": {
+      "totalUsers": "Total users",
+      "totalAdmins": "Admins",
+      "lastUpdated": "Sync Users",
+      "placeholder": "—",
+      "syncButton": "Sync",
+      "refreshing": "Refreshing...",
+      "upToDate": "Up to date"
+    },
+    "usersTitle": "Users",
+    "searchPlaceholder": "Search users...",
+    "loadError": "Failed to load users",
+    "deleteError": "Failed to delete user",
+    "noResults": "No results found.",
+    "adminBadge": "Admin",
+    "userBadge": "User",
+    "manageButton": "Manage",
+    "deleteDialog": {
+      "title": "Delete user",
+      "description": "Are you sure you want to delete user {username}? This action cannot be undone.",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    },
     "tableCaption": "List of all users",
     "username": "Username",
     "email": "Email",
@@ -243,6 +325,9 @@
     "error": "Error",
     "retry": "Retry",
     "cancel": "Cancel",
+    "na": "N/A",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",

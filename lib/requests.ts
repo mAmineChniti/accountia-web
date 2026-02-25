@@ -8,6 +8,8 @@ import type {
   UpdateUserInput,
   ResendConfirmationInput,
   ForgotPasswordInput,
+  TwoFAVerifyInput,
+  TwoFALoginInput,
 } from '@/types/RequestSchemas';
 import type {
   RegisterResponse,
@@ -21,8 +23,10 @@ import type {
   ForgotPasswordResponse,
   ResetPasswordResponse,
   ResendConfirmationResponse,
-  HealthResponse,
   UsersListResponse,
+  TwoFASetupResponse,
+  TwoFAVerifyResponse,
+  TwoFALoginResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -78,21 +82,16 @@ const safeParseJson = async (
     if (contentType?.includes('application/json')) {
       return await response.json();
     } else {
-      // Fallback to text for non-JSON responses
       const text = await response.text();
       return { message: text || 'Unknown error' };
     }
   } catch {
-    // If even text() fails, return a generic error
     return { message: 'Failed to parse error response' };
   }
 };
 
 const API_CONFIG = {
-  BASE_URL: (() => {
-    const baseUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789/api';
-    return baseUrl.replace(/\/+$/, '') + '/';
-  })(),
+  BASE_URL: env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789/api',
   AUTH: {
     REGISTER: 'auth/register',
     LOGIN: 'auth/login',
@@ -100,8 +99,6 @@ const API_CONFIG = {
     REFRESH: 'auth/refresh',
     FORGOT_PASSWORD: 'auth/forgot-password',
     RESET_PASSWORD: 'auth/reset-password',
-    HEALTH: 'auth/health',
-    PUBLIC_HEALTH: 'auth/public-health',
     FETCH_USER: 'auth/fetchuser',
     FETCH_USER_BY_ID: 'auth/fetchuserbyid',
     UPDATE: 'auth/update',
@@ -109,6 +106,9 @@ const API_CONFIG = {
     RESEND_CONFIRMATION: 'auth/resend-confirmation-email',
     FETCH_ALL_USERS: 'auth/users',
     DELETE_USER_BY_ADMIN: 'auth/users',
+    TWO_FA_SETUP: 'auth/2fa/setup',
+    TWO_FA_VERIFY: 'auth/2fa/verify',
+    TWO_FA_LOGIN: 'auth/2fa/login',
   },
 } as const;
 
@@ -172,6 +172,83 @@ const client = ky.create({
 });
 
 export const AuthService = {
+  async setupTwoFactor(): Promise<TwoFASetupResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.TWO_FA_SETUP, {
+          headers: token,
+        })
+        .json<TwoFASetupResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async verifyTwoFactor(data: TwoFAVerifyInput): Promise<TwoFAVerifyResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.TWO_FA_VERIFY, {
+          json: data,
+          headers: token,
+        })
+        .json<TwoFAVerifyResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async twoFactorLogin(data: TwoFALoginInput): Promise<TwoFALoginResponse> {
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.TWO_FA_LOGIN, {
+          json: data,
+        })
+        .json<TwoFALoginResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
   async register(data: RegisterInput): Promise<RegisterResponse> {
     try {
       const result = await client
@@ -195,13 +272,19 @@ export const AuthService = {
     }
   },
 
-  async login(data: LoginInput): Promise<LoginResponse> {
+  async login(
+    data: LoginInput
+  ): Promise<
+    LoginResponse | { tempToken: string; twoFactorRequired: boolean }
+  > {
     try {
       const result = await client
         .post(API_CONFIG.AUTH.LOGIN, {
           json: data,
         })
-        .json<LoginResponse>();
+        .json<
+          LoginResponse | { tempToken: string; twoFactorRequired: boolean }
+        >();
       return result;
     } catch (error: unknown) {
       if (
@@ -219,10 +302,15 @@ export const AuthService = {
   },
 
   async logout(refreshToken: string): Promise<LogoutResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .post(API_CONFIG.AUTH.LOGOUT, {
           json: { refreshToken },
+          headers: token,
         })
         .json<LogoutResponse>();
       return result;
@@ -243,7 +331,9 @@ export const AuthService = {
 
   async refreshToken(): Promise<RefreshTokenResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
 
     try {
       const result = await client
@@ -317,55 +407,11 @@ export const AuthService = {
     }
   },
 
-  async healthCheck(): Promise<HealthResponse> {
-    const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
-    try {
-      const result = await client
-        .get(API_CONFIG.AUTH.HEALTH, {
-          headers: token,
-        })
-        .json<HealthResponse>();
-      return result;
-    } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const errorLike = error as HTTPErrorLike;
-        const errorData = await safeParseJson(errorLike.response);
-        throw ApiError.fromResponse(errorData);
-      }
-      throw error;
-    }
-  },
-
-  async publicHealthCheck(): Promise<HealthResponse> {
-    try {
-      const result = await client
-        .get(API_CONFIG.AUTH.PUBLIC_HEALTH)
-        .json<HealthResponse>();
-      return result;
-    } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const errorLike = error as HTTPErrorLike;
-        const errorData = await safeParseJson(errorLike.response);
-        throw ApiError.fromResponse(errorData);
-      }
-      throw error;
-    }
-  },
-
   async fetchUser(): Promise<FetchUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .get(API_CONFIG.AUTH.FETCH_USER, {
@@ -392,7 +438,9 @@ export const AuthService = {
     data: FetchUserByIdInput
   ): Promise<FetchUserByIdResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .post(API_CONFIG.AUTH.FETCH_USER_BY_ID, {
@@ -418,7 +466,9 @@ export const AuthService = {
 
   async updateUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .put(API_CONFIG.AUTH.UPDATE, {
@@ -444,7 +494,9 @@ export const AuthService = {
 
   async patchUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .patch(API_CONFIG.AUTH.UPDATE, {
@@ -470,7 +522,9 @@ export const AuthService = {
 
   async deleteUser(): Promise<DeleteUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
     try {
       const result = await client
         .delete(API_CONFIG.AUTH.DELETE, {
@@ -520,7 +574,9 @@ export const AuthService = {
 
   async fetchAllUsers(): Promise<UsersListResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
 
     try {
       const result = await client
@@ -546,7 +602,9 @@ export const AuthService = {
 
   async deleteUserByAdmin(userId: string): Promise<DeleteUserResponse> {
     const token = authHeaders();
-    if (!token.Authorization) throw new Error('Token not found');
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
 
     try {
       const result = await client

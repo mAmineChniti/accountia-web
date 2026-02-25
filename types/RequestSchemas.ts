@@ -42,6 +42,21 @@ export const FetchUserByIdSchema = z.object({
   userId: z.string(),
 });
 
+export const TwoFAVerifySchema = z.object({
+  code: z
+    .string()
+    .regex(/^\d{6}$/, 'Invalid authentication code')
+    .length(6),
+});
+
+export const TwoFALoginSchema = z.object({
+  tempToken: z.string().min(1, 'Temporary token is required'),
+  code: z
+    .string()
+    .regex(/^\d{6}$/, 'Invalid authentication code')
+    .length(6),
+});
+
 export const UpdateUserSchema = z.object({
   username: z.string().min(5).max(20).optional(),
   email: z.email().optional(),
@@ -61,3 +76,6 @@ export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;
 export type FetchUserByIdInput = z.infer<typeof FetchUserByIdSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+
+export type TwoFAVerifyInput = z.infer<typeof TwoFAVerifySchema>;
+export type TwoFALoginInput = z.infer<typeof TwoFALoginSchema>;

@@ -1,13 +1,13 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Admin from '@/components/Admin/Admin';
+import Profile from '@/components/Profile/Profile';
 
-export default async function AdminPage({
+export default async function ProfilePage({
   params,
 }: {
   params: Promise<{ lang: Locale }>;
 }) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
-  return <Admin dictionary={dictionary} />;
+  return <Profile dictionary={dictionary} />;
 }

@@ -61,6 +61,17 @@ export interface AuthResponseDto {
   };
 }
 
+export interface TwoFASetupResponse {
+  qrCode: string;
+  secret: string;
+}
+
+export interface TwoFAVerifyResponse {
+  enabled: boolean;
+}
+
+export type TwoFALoginResponse = AuthResponseDto;
+
 export interface RegistrationResponseDto {
   message: string;
   email: string;
@@ -229,12 +240,6 @@ export interface EmailAlreadyConfirmedResponse extends BaseErrorResponse {
   message: 'Email is already confirmed';
 }
 
-export interface HealthResponse {
-  status: 'ok' | 'error';
-  details?: Record<string, unknown>;
-}
-
-// TODO: Consider extending these type aliases to unions for error variants
 export type RegisterResponse = RegisterSuccessResponse;
 export type LoginResponse = AuthResponse;
 export type LogoutResponse = LogoutSuccessResponse;
@@ -260,7 +265,6 @@ export enum HttpStatus {
   INTERNAL_SERVER_ERROR = 500,
 }
 
-// Token Management Utility Types
 export interface TokenExpiryInfo {
   accessToken: string;
   refreshToken: string;

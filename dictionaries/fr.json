@@ -1,5 +1,52 @@
 {
   "pages": {
+    "profile": {
+      "title": "Profil",
+      "editButton": "Modifier le profil",
+      "tabs": {
+        "overview": "Aperçu",
+        "account": "Compte",
+        "security": "Sécurité"
+      },
+      "personalInfoSection": "Informations personnelles",
+      "accountSection": "Modifier les informations du compte",
+      "securitySection": "Changer votre mot de passe",
+      "twoFactor": {
+        "title": "Authentification à deux facteurs (2FA)",
+        "description": "Ajoutez une couche de sécurité en exigeant un code d'authentification lors de la connexion.",
+        "setupButton": "Configurer le 2FA",
+        "settingUp": "Configuration...",
+        "scanQr": "Scannez ce QR code dans votre application d'authentification",
+        "qrAlt": "QR code 2FA",
+        "manualKey": "Clé de configuration manuelle",
+        "enterCode": "Entrez le code à 6 chiffres",
+        "codePlaceholder": "123456",
+        "enableButton": "Activer le 2FA",
+        "verifying": "Vérification...",
+        "setupSuccess": "Configuration du 2FA démarrée",
+        "setupError": "Échec du démarrage de la configuration du 2FA",
+        "enableSuccess": "Authentification à deux facteurs activée",
+        "verifyError": "Échec de la vérification du code 2FA",
+        "invalidCode": "Code invalide"
+      },
+      "saveButton": "Enregistrer",
+      "cancelButton": "Annuler",
+      "username": "Nom d'utilisateur",
+      "email": "Email",
+      "firstName": "Prénom",
+      "lastName": "Nom de famille",
+      "birthdate": "Date de naissance",
+      "phoneNumber": "Numéro de téléphone",
+      "dateJoined": "Date d'inscription",
+      "notFound": "Utilisateur non trouvé",
+      "updateSuccess": "Profil mis à jour avec succès",
+      "updateError": "Échec de la mise à jour du profil",
+      "deleteButton": "Supprimer le compte",
+      "deleteTitle": "Supprimer le compte",
+      "deleteDescription": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+      "deleteConfirmButton": "Supprimer",
+      "deleteError": "Échec de la suppression du compte"
+    },
     "forgotPassword": {
       "title": "Mot de passe oublié",
       "description": "Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
@@ -38,7 +85,10 @@
         "pricing": "Tarifs",
         "getStarted": "Commencer",
         "login": "Connexion",
-        "register": "S'inscrire"
+        "register": "S'inscrire",
+        "profile": "Profil",
+        "adminDashboard": "Tableau de bord admin",
+        "logout": "Déconnexion"
       },
       "hero": {
         "badge": "Gestion d'Entreprise Alimentée par l'IA",
@@ -154,7 +204,11 @@
       "resetPasswordAriaLabel": "Réinitialiser le mot de passe",
       "createAccountAriaLabel": "Créer un nouveau compte",
       "authNavigationLabel": "Navigation d'authentification",
-      "unexpectedError": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+      "unexpectedError": "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
+      "twoFactorLabel": "Code de vérification",
+      "twoFactorPlaceholder": "Entrez votre code 2FA",
+      "verify2FAButton": "Vérifier 2FA",
+      "verifying2FAButton": "Vérification..."
     },
     "register": {
       "title": "Créer un compte",
@@ -217,6 +271,9 @@
     "getStarted": "Commencer avec Accountia",
     "signIn": "Se connecter à votre compte",
     "createAccount": "Créer un nouveau compte",
+    "profile": "Voir votre profil",
+    "adminDashboard": "Accéder au tableau de bord admin",
+    "logout": "Se déconnecter de votre compte",
     "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",
     "mostPopularChoice": "Le choix le plus populaire",
     "advancedFeatures": "Fonctionnalités avancées pour les grandes organisations"
@@ -226,6 +283,31 @@
     "logoAlt": "Logo Accountia"
   },
   "admin": {
+    "title": "Tableau de bord administrateur",
+    "subtitle": "Gérez les utilisateurs et les accès",
+    "stats": {
+      "totalUsers": "Total des utilisateurs",
+      "totalAdmins": "Administrateurs",
+      "lastUpdated": "Synchroniser les utilisateurs",
+      "placeholder": "—",
+      "syncButton": "Synchroniser",
+      "refreshing": "Actualisation...",
+      "upToDate": "À jour"
+    },
+    "usersTitle": "Utilisateurs",
+    "searchPlaceholder": "Rechercher des utilisateurs...",
+    "loadError": "Échec du chargement des utilisateurs",
+    "deleteError": "Échec de la suppression de l'utilisateur",
+    "noResults": "Aucun résultat trouvé.",
+    "adminBadge": "Admin",
+    "userBadge": "Utilisateur",
+    "manageButton": "Gérer",
+    "deleteDialog": {
+      "title": "Supprimer l'utilisateur",
+      "description": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
+      "confirm": "Supprimer",
+      "deleting": "Suppression..."
+    },
     "tableCaption": "Liste de tous les utilisateurs",
     "username": "Nom d'utilisateur",
     "email": "Email",
@@ -243,6 +325,9 @@
     "error": "Erreur",
     "retry": "Réessayer",
     "cancel": "Annuler",
+    "na": "N/D",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "save": "Enregistrer",
     "delete": "Supprimer",
     "edit": "Modifier",
