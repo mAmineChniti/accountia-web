@@ -25,6 +25,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.1",
+    "firebase": "^12.9.0",
     "ky": "^1.14.3",
     "lucide-react": "^0.575.0",
     "negotiator": "^1.0.0",
