@@ -9,5 +9,5 @@ export default async function AdminPage({
 }) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
-  return <Admin dictionary={dictionary} />;
+  return <Admin dictionary={dictionary} lang={lang} />;
 }

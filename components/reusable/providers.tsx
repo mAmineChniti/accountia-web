@@ -7,7 +7,7 @@ import { type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
 import { type Locale, i18n } from '@/i18n-config';
-import { useEffect } from 'react';
+import { DirectionProvider } from '@/components/ui/direction';
 
 const queryClient = new QueryClient();
 
@@ -17,7 +17,7 @@ function isRtl(locale: Locale): boolean {
   return RTL_LANGUAGES.has(locale);
 }
 
-function RtlProvider({ children }: { children: React.ReactNode }) {
+function RtlProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const getCurrentLocale = (): Locale => {
@@ -29,12 +29,7 @@ function RtlProvider({ children }: { children: React.ReactNode }) {
   const currentLocale = getCurrentLocale();
   const direction = isRtl(currentLocale) ? 'rtl' : 'ltr';
 
-  useEffect(() => {
-    document.documentElement.dir = direction;
-    document.documentElement.lang = currentLocale;
-  }, [direction, currentLocale]);
-
-  return <>{children}</>;
+  return <DirectionProvider dir={direction}>{children}</DirectionProvider>;
 }
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -49,29 +44,30 @@ export function Providers({ children }: { children: ReactNode }) {
         <RtlProvider>
           <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
           <Toaster
-            position="top-right"
+            position="top-center"
             closeButton
             expand={true}
-            duration={3000}
+            duration={4000}
             richColors
             theme="system"
             className="toaster group"
             toastOptions={{
               classNames: {
                 toast:
-                  'group toast group-[.toaster]:bg-white/80 group-[.toaster]:dark:bg-slate-800/80 group-[.toaster]:backdrop-blur-sm group-[.toaster]:border-border/50 group-[.toaster]:text-foreground group-[.toaster]:shadow-lg group-[.toaster]:rounded-xl',
-                description: 'group-[.toast]:text-muted-foreground',
+                  'group toast group-[.toaster]:bg-white/95 group-[.toaster]:dark:bg-slate-900/95 group-[.toaster]:backdrop-blur-md group-[.toaster]:border-border/70 group-[.toaster]:text-foreground group-[.toaster]:shadow-2xl group-[.toaster]:rounded-2xl group-[.toaster]:min-w-[380px] group-[.toaster]:p-5 group-[.toaster]:text-base group-[.toaster]:font-medium group-[.toaster]:border-2 group-[.toaster]:transform group-[.toaster]:transition-all group-[.toaster]:duration-300 group-[.toaster]:hover:scale-105',
+                description:
+                  'group-[.toast]:text-muted-foreground group-[.toast]:text-sm group-[.toast]:mt-2 group-[.toast]:font-normal',
                 actionButton:
-                  'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg',
+                  'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg group-[.toast]:px-4 group-[.toast]:py-2 group-[.toast]:font-semibold group-[.toast]:transition-colors group-[.toast]:hover:opacity-90',
                 cancelButton:
-                  'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-lg',
+                  'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-lg group-[.toast]:px-4 group-[.toast]:py-2 group-[.toast]:font-semibold group-[.toast]:transition-colors group-[.toast]:hover:opacity-90',
                 success:
-                  'group-[.toaster]:bg-green-50/80 group-[.toaster]:dark:bg-green-900/20 group-[.toaster]:backdrop-blur-sm group-[.toaster]:border-green-200/50 group-[.toaster]:dark:border-green-800/50 group-[.toaster]:text-green-800 group-[.toaster]:dark:text-green-200',
+                  'group-[.toaster]:bg-gradient-to-r group-[.toaster]:from-green-50/95 group-[.toaster]:to-emerald-50/95 group-[.toaster]:dark:from-green-900/95 group-[.toaster]:dark:to-emerald-900/95 group-[.toaster]:backdrop-blur-md group-[.toaster]:border-green-300/70 group-[.toaster]:dark:border-green-700/70 group-[.toaster]:text-green-900 group-[.toaster]:dark:text-green-100 group-[.toaster]:border-2',
                 error:
-                  'group-[.toaster]:bg-red-50/80 group-[.toaster]:dark:bg-red-900/20 group-[.toaster]:backdrop-blur-sm group-[.toaster]:border-red-200/50 group-[.toaster]:dark:border-red-800/50 group-[.toaster]:text-red-800 group-[.toaster]:dark:text-red-200',
+                  'group-[.toaster]:bg-gradient-to-r group-[.toaster]:from-red-50/95 group-[.toaster]:to-rose-50/95 group-[.toaster]:dark:from-red-900/95 group-[.toaster]:dark:to-rose-900/95 group-[.toaster]:backdrop-blur-md group-[.toaster]:border-red-300/70 group-[.toaster]:dark:border-red-700/70 group-[.toaster]:text-red-900 group-[.toaster]:dark:text-red-100 group-[.toaster]:border-2',
                 warning:
-                  'group-[.toaster]:bg-yellow-50/80 group-[.toaster]:dark:bg-yellow-900/20 group-[.toaster]:backdrop-blur-sm group-[.toaster]:border-yellow-200/50 group-[.toaster]:dark:border-yellow-800/50 group-[.toaster]:text-yellow-800 group-[.toaster]:dark:text-yellow-200',
-                info: 'group-[.toaster]:bg-blue-50/80 group-[.toaster]:dark:bg-blue-900/20 group-[.toaster]:backdrop-blur-sm group-[.toaster]:border-blue-200/50 group-[.toaster]:dark:border-blue-800/50 group-[.toaster]:text-blue-800 group-[.toaster]:dark:text-blue-200',
+                  'group-[.toaster]:bg-gradient-to-r group-[.toaster]:from-yellow-50/95 group-[.toaster]:to-amber-50/95 group-[.toaster]:dark:from-yellow-900/95 group-[.toaster]:dark:to-amber-900/95 group-[.toaster]:backdrop-blur-md group-[.toaster]:border-yellow-300/70 group-[.toaster]:dark:border-yellow-700/70 group-[.toaster]:text-yellow-900 group-[.toaster]:dark:text-yellow-100 group-[.toaster]:border-2',
+                info: 'group-[.toaster]:bg-gradient-to-r group-[.toaster]:from-blue-50/95 group-[.toaster]:to-cyan-50/95 group-[.toaster]:dark:from-blue-900/95 group-[.toaster]:dark:to-cyan-900/95 group-[.toaster]:backdrop-blur-md group-[.toaster]:border-blue-300/70 group-[.toaster]:dark:border-blue-700/70 group-[.toaster]:text-blue-900 group-[.toaster]:dark:text-blue-100 group-[.toaster]:border-2',
               },
             }}
           />

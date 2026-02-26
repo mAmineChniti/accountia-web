@@ -1,6 +1,28 @@
 import { z } from 'zod';
 
-const DateSchema = z.iso.date();
+const DateSchema = z.string().refine(
+  (date) => {
+    const parsedDate = new Date(date);
+    return !Number.isNaN(parsedDate.getTime());
+  },
+  {
+    message: 'Invalid ISO date',
+  }
+);
+
+const OptionalDateSchema = z
+  .string()
+  .optional()
+  .refine(
+    (date) => {
+      if (!date || date === '') return true; // Allow empty strings
+      const parsedDate = new Date(date);
+      return !Number.isNaN(parsedDate.getTime());
+    },
+    {
+      message: 'Invalid ISO date',
+    }
+  );
 
 export const RegisterSchema = z.object({
   username: z.string().min(5).max(20),
@@ -63,7 +85,7 @@ export const UpdateUserSchema = z.object({
   password: z.string().min(6).optional(),
   firstName: z.string().min(2).max(50).optional(),
   lastName: z.string().min(2).max(50).optional(),
-  birthdate: DateSchema.optional(),
+  birthdate: OptionalDateSchema,
   phoneNumber: z.string().optional(),
   profilePicture: z.string().optional(),
 });

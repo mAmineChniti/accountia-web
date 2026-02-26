@@ -46,9 +46,31 @@ import { UpdateUserSchema, type UpdateUserInput } from '@/types/RequestSchemas';
 import type { TwoFASetupResponse } from '@/types/ResponseInterfaces';
 import { toast } from 'sonner';
 import { deleteCookie } from 'cookies-next';
-import { z } from 'zod';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  formatDateLong,
+  getCalendarLocale,
+  getCalendarDirection,
+  dateToISOString,
+  isoToDate,
+} from '@/lib/date-utils';
+import { type Locale } from '@/i18n-config';
+import { useRouter } from 'next/navigation';
 
-export default function Profile({ dictionary }: { dictionary: Dictionary }) {
+export default function Profile({
+  dictionary,
+  lang,
+}: {
+  dictionary: Dictionary;
+  lang: Locale;
+}) {
   const [accountEditMode, setAccountEditMode] = useState(false);
   const [securityEditMode, setSecurityEditMode] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -60,7 +82,8 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
   >();
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFADialogOpen, setTwoFADialogOpen] = useState(false);
-
+  const router = useRouter();
+  const [justEnteredEditMode, setJustEnteredEditMode] = useState(false);
   const accountForm = useForm<UpdateUserInput>({
     resolver: zodResolver(UpdateUserSchema),
     defaultValues: {},
@@ -68,22 +91,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
     reValidateMode: 'onSubmit',
   });
 
-  const securitySchema = z
-    .object({
-      password: z
-        .string()
-        .min(8, dictionary.pages.register.errors.passwordTooShort),
-      confirmPassword: z
-        .string()
-        .min(1, dictionary.pages.register.errors.confirmPasswordRequired),
-    })
-    .refine((v) => v.password === v.confirmPassword, {
-      path: ['confirmPassword'],
-      message: dictionary.pages.register.errors.passwordsNotMatch,
-    });
-
   const securityForm = useForm<{ password: string; confirmPassword: string }>({
-    resolver: zodResolver(securitySchema),
     defaultValues: { password: '', confirmPassword: '' },
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
@@ -138,17 +146,37 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
 
   useEffect(() => {
     if (userData) {
-      accountForm.reset({
-        username: userData.username,
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        birthdate: userData.birthdate,
-        phoneNumber: userData.phoneNumber,
-        profilePicture: userData.profilePicture,
-      });
+      accountForm.reset(
+        {
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          birthdate: userData.birthdate || '',
+          phoneNumber: userData.phoneNumber || '',
+          profilePicture: userData.profilePicture || '',
+        },
+        { keepDefaultValues: true }
+      );
     }
-  }, [userData, accountForm]);
+  }, [userData, accountEditMode, accountForm]);
+
+  useEffect(() => {
+    if (userData && accountEditMode) {
+      accountForm.reset(
+        {
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          birthdate: userData.birthdate || '',
+          phoneNumber: userData.phoneNumber || '',
+          profilePicture: userData.profilePicture || '',
+        },
+        { keepDefaultValues: true }
+      );
+    }
+  }, [userData, accountEditMode, accountForm]);
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateUserInput) => {
@@ -163,7 +191,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
       securityForm.clearErrors();
       toast.success(dictionary.pages.profile.updateSuccess);
     },
-    onError: () => {
+    onError: (_error) => {
       toast.error(dictionary.pages.profile.updateError);
     },
   });
@@ -174,7 +202,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
     onSuccess: () => {
       deleteCookie('token');
       deleteCookie('user');
-      globalThis.location.reload();
+      router.refresh();
     },
     onError: () => {
       toast.error(dictionary.pages.profile.deleteError);
@@ -182,7 +210,23 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
   });
 
   const onSubmitAccount = (data: UpdateUserInput) => {
-    if (!accountEditMode) return;
+    if (!accountEditMode || justEnteredEditMode) {
+      return;
+    }
+
+    if (
+      userData &&
+      data.username === userData.username &&
+      data.email === userData.email &&
+      data.firstName === userData.firstName &&
+      data.lastName === userData.lastName &&
+      data.birthdate === userData.birthdate &&
+      data.phoneNumber === (userData.phoneNumber || '') &&
+      data.profilePicture === (userData.profilePicture || '')
+    ) {
+      return;
+    }
+
     mutation.mutate(data);
   };
 
@@ -376,7 +420,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                     </span>
                     <span className="font-medium">
                       {userData?.birthdate
-                        ? new Date(userData.birthdate).toLocaleDateString()
+                        ? formatDateLong(userData.birthdate)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -394,7 +438,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                     </span>
                     <span className="font-medium">
                       {userData?.dateJoined
-                        ? new Date(userData.dateJoined).toLocaleDateString()
+                        ? formatDateLong(userData.dateJoined)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -506,11 +550,65 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                               {dictionary.pages.profile.birthdate}
                             </FormLabel>
                             <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                disabled={!accountEditMode}
-                              />
+                              {accountEditMode ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground'
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        formatDateLong(field.value)
+                                      ) : (
+                                        <span>Select date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={
+                                        field.value
+                                          ? isoToDate(field.value)
+                                          : undefined
+                                      }
+                                      onSelect={(date) => {
+                                        // Only update if the date actually changed
+                                        const newValue = date
+                                          ? dateToISOString(date)
+                                          : '';
+                                        if (newValue !== field.value) {
+                                          field.onChange(newValue);
+                                        }
+                                      }}
+                                      disabled={(date) =>
+                                        date > new Date() ||
+                                        date < new Date('1900-01-01')
+                                      }
+                                      captionLayout="dropdown"
+                                      locale={getCalendarLocale(lang)}
+                                      dir={getCalendarDirection(lang)}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <Input
+                                  value={
+                                    field.value
+                                      ? formatDateLong(field.value)
+                                      : 'Not set'
+                                  }
+                                  disabled
+                                  readOnly
+                                />
+                              )}
                             </FormControl>
                             <FormMessage className="min-h-5" />
                           </FormItem>
@@ -538,9 +636,7 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                         <Input
                           value={
                             userData.dateJoined
-                              ? new Date(
-                                  userData.dateJoined
-                                ).toLocaleDateString()
+                              ? formatDateLong(userData.dateJoined)
                               : dictionary.common.na
                           }
                           disabled
@@ -587,7 +683,12 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                           type="button"
                           onClick={() => {
                             setAccountEditMode(true);
+                            setJustEnteredEditMode(true);
                             accountForm.clearErrors();
+                            setTimeout(
+                              () => setJustEnteredEditMode(false),
+                              500
+                            );
                           }}
                           size="lg"
                           className="px-8"
@@ -737,10 +838,13 @@ export default function Profile({ dictionary }: { dictionary: Dictionary }) {
                           type="button"
                           onClick={() => {
                             setSecurityEditMode(true);
-                            securityForm.reset({
-                              password: '',
-                              confirmPassword: '',
-                            });
+                            securityForm.reset(
+                              {
+                                password: '',
+                                confirmPassword: '',
+                              },
+                              { keepDefaultValues: true }
+                            );
                             securityForm.clearErrors();
                           }}
                           size="lg"
