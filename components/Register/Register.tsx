@@ -34,11 +34,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService, ApiError } from '@/lib/requests';
 import { RegisterSchema, type RegisterInput } from '@/types/RequestSchemas';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  formatDateLong,
+  getCalendarLocale,
+  getCalendarDirection,
+  dateToISOString,
+  isoToDate,
+} from '@/lib/date-utils';
 
 const makeRegisterFormSchema = (messages: {
   confirmPasswordRequired: string;
@@ -69,6 +84,7 @@ export default function Register({
   lang: Locale;
 }) {
   const router = useRouter();
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showEmailNotConfirmedDialog, setShowEmailNotConfirmedDialog] =
     useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
@@ -93,6 +109,7 @@ export default function Register({
       lastName: '',
       birthdate: '',
       acceptTerms: false,
+      phoneNumber: '',
     },
     mode: 'onChange',
   });
@@ -101,26 +118,21 @@ export default function Register({
     mutationFn: (data: RegisterInput) => AuthService.register(data),
     onSuccess: (response) => {
       setUnconfirmedEmail(response.email);
-      setShowEmailNotConfirmedDialog(true);
+      setShowSuccessDialog(true);
     },
     onError: (error: unknown) => {
       if (error instanceof ApiError) {
         switch (error.type) {
-          case 'EMAIL_ALREADY_REGISTERED':
           case 'ACCOUNT_EXISTS': {
-            router.push(`/${lang}/login`);
-
+            toast.error(dictionary.pages.register.emailAlreadyRegistered);
+            setTimeout(() => {
+              router.push(`/${lang}/login`);
+            }, 1500);
             break;
           }
           case 'EMAIL_NOT_CONFIRMED': {
             setUnconfirmedEmail(error.email || '');
             setShowEmailNotConfirmedDialog(true);
-
-            break;
-          }
-          case 'EMAIL_ALREADY_REGISTERED': {
-            toast.error(dictionary.pages.register.emailAlreadyRegistered);
-
             break;
           }
           default: {
@@ -303,18 +315,85 @@ export default function Register({
                       <FormLabel htmlFor="birthdate">
                         {dictionary.pages.register.birthdateLabel}
                       </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                'w-full pl-3 text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              {field.value ? (
+                                formatDateLong(field.value)
+                              ) : (
+                                <span>
+                                  {
+                                    dictionary.pages.register
+                                      .birthdatePlaceholder
+                                  }
+                                </span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? isoToDate(field.value) : undefined
+                            }
+                            onSelect={(date) => {
+                              const newValue = date
+                                ? dateToISOString(date)
+                                : '';
+                              if (newValue !== field.value) {
+                                field.onChange(newValue);
+                              }
+                            }}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date('1900-01-01')
+                            }
+                            captionLayout="dropdown"
+                            locale={getCalendarLocale(lang)}
+                            dir={getCalendarDirection(lang)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage
+                        id="birthdate-error"
+                        role="alert"
+                        aria-live="polite"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem className="gap-1.5">
+                      <FormLabel htmlFor="phoneNumber">
+                        {dictionary.pages.register.phoneNumberLabel}
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          id="birthdate"
-                          type="date"
-                          aria-describedby="birthdate-error"
-                          aria-invalid={!!form.formState.errors.birthdate}
-                          autoComplete="bday"
+                          id="phoneNumber"
+                          type="tel"
+                          placeholder={
+                            dictionary.pages.register.phoneNumberPlaceholder
+                          }
+                          aria-describedby="phoneNumber-error"
+                          aria-invalid={!!form.formState.errors.phoneNumber}
+                          autoComplete="tel"
                           {...field}
                         />
                       </FormControl>
                       <FormMessage
-                        id="birthdate-error"
+                        id="phoneNumber-error"
                         role="alert"
                         aria-live="polite"
                       />
@@ -453,6 +532,33 @@ export default function Register({
           </nav>
         </CardContent>
       </Card>
+
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-green-600">✓</span>
+              {dictionary.pages.register.dialog.registrationSuccessTitle}
+            </DialogTitle>
+            <DialogDescription>
+              {dictionary.pages.register.dialog.registrationSuccessMessage}
+              <br />
+              <span className="font-medium">{unconfirmedEmail}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                router.push(`/${lang}/login`);
+              }}
+              className="w-full"
+            >
+              {dictionary.pages.register.dialog.loginButton}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={showEmailNotConfirmedDialog}

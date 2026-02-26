@@ -57,13 +57,19 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === '/') {
-    // If user is logged in, redirect to their home (e.g., dashboard or locale root)
-    // If not logged in, show the landing page (do not redirect to login)
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
-    }
-    // Allow access to landing page for non-logged-in users
-    return NextResponse.next();
+    // Always redirect to preferred locale for both logged-in and non-logged-in users
+    const cookieLocale = await getCookie('preferred-locale', { req: request });
+    const detectedLocale = getLocale(request);
+
+    const preferredLocale =
+      (typeof cookieLocale === 'string' &&
+      i18n.locales.includes(cookieLocale as Locale)
+        ? cookieLocale
+        : undefined) ||
+      detectedLocale ||
+      i18n.defaultLocale;
+
+    return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
   }
 
   const lastSegment = pathSegments.at(-1);
