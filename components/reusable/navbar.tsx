@@ -5,7 +5,7 @@ import { type Locale } from '@/i18n-config';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
 import { ModeToggle } from '@/components/reusable/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/lib/requests';
 import { deleteCookie, getCookie } from 'cookies-next';
@@ -51,7 +51,13 @@ export default function Navbar({
   dictionary: Dictionary;
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<NavbarUser | undefined>(readUserFromCookies);
+  const [user, setUser] = useState<NavbarUser | undefined>(undefined);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setUser(readUserFromCookies());
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -200,81 +206,84 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {user ? (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={`/${lang}/profile`}
-                      className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
-                    >
-                      {dictionary.pages.home.navigation.profile}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{dictionary.tooltips.profile}</p>
-                  </TooltipContent>
-                </Tooltip>
-                {user.isAdmin && (
+            {/* Empêche l'hydratation côté serveur pour la zone utilisateur */}
+            {mounted ? (
+              user ? (
+                <>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href={`/${lang}/admin`}
+                        href={`/${lang}/profile`}
                         className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
                       >
-                        {dictionary.pages.home.navigation.adminDashboard}
+                        {dictionary.pages.home.navigation.profile}
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{dictionary.tooltips.adminDashboard}</p>
+                      <p>{dictionary.tooltips.profile}</p>
                     </TooltipContent>
                   </Tooltip>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      className="h-9 px-4"
-                      onClick={handleLogout}
-                    >
-                      {dictionary.pages.home.navigation.logout}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{dictionary.tooltips.logout}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            ) : user ? undefined : (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={`/${lang}/login`}
-                      className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
-                    >
-                      {dictionary.pages.home.navigation.login}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{dictionary.tooltips.signIn}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={`/${lang}/register`}
-                      className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
-                    >
-                      {dictionary.pages.home.navigation.register}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{dictionary.tooltips.createAccount}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            )}
+                  {user.isAdmin && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={`/${lang}/admin`}
+                          className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                        >
+                          {dictionary.pages.home.navigation.adminDashboard}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{dictionary.tooltips.adminDashboard}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="h-9 px-4"
+                        onClick={handleLogout}
+                      >
+                        {dictionary.pages.home.navigation.logout}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{dictionary.tooltips.logout}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              ) : (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/${lang}/login`}
+                        className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                      >
+                        {dictionary.pages.home.navigation.login}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{dictionary.tooltips.signIn}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/${lang}/register`}
+                        className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                      >
+                        {dictionary.pages.home.navigation.register}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{dictionary.tooltips.createAccount}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              )
+            ) : null}
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Tooltip>

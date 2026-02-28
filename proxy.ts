@@ -1,11 +1,20 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
 import { i18n, type Locale } from '@/i18n-config';
 import { getCookie } from 'cookies-next/server';
-
+import { Role, hasPermission } from '@/lib/rbac';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
+
+function parseJwt(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(Buffer.from(payload, 'base64').toString('utf-8'));
+  } catch {
+    return null;
+  }
+}
 
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
@@ -34,10 +43,8 @@ export async function proxy(request: NextRequest) {
   }
 
   const user = await getCookie('user', { req: request });
-  const token = await getCookie('token', { req: request });
-  const isLoggedIn = !!(user && token);
-  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
-  const adminOnlyRoutes = ['/admin'];
+  const tokenCookie = await getCookie('token', { req: request });
+  const isLoggedIn = !!tokenCookie;
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
@@ -49,11 +56,31 @@ export async function proxy(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname;
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    localeStrippedPath.startsWith(route)
-  );
-  if (isProtectedRoute && !isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+
+  // RBAC: Protéger les routes selon le rôle
+  const rbacRoutes = [
+    { prefix: '/admin', roles: [Role.PLATFORM_ADMIN, Role.PLATFORM_OWNER] },
+    { prefix: '/dashboard', roles: [Role.BUSINESS_OWNER, Role.BUSINESS_ADMIN] },
+    { prefix: '/invoices', roles: [Role.CLIENT, Role.BUSINESS_OWNER, Role.BUSINESS_ADMIN] },
+  ];
+  const rbacMatch = rbacRoutes.find((r) => localeStrippedPath.startsWith(r.prefix));
+  if (rbacMatch) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+    let role: Role | undefined = undefined;
+    try {
+      if (typeof tokenCookie === 'string') {
+        const tokenValue = JSON.parse(tokenCookie).token;
+        const payload = parseJwt(tokenValue);
+        if (payload && payload.role) {
+          role = payload.role as Role;
+        }
+      }
+    } catch {}
+    if (!role || !rbacMatch.roles.includes(role)) {
+      return NextResponse.redirect(new URL(`/${locale}/unauthorized`, request.url));
+    }
   }
 
   if (pathname === '/') {
@@ -69,7 +96,8 @@ export async function proxy(request: NextRequest) {
       detectedLocale ||
       i18n.defaultLocale;
 
-    return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
+    // Redirige vers /[locale] sans slash final
+    return NextResponse.redirect(new URL(`/${preferredLocale}`, request.url));
   }
 
   const lastSegment = pathSegments.at(-1);
@@ -81,26 +109,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isAdminRoute = adminOnlyRoutes.some((route) =>
-    localeStrippedPath.startsWith(route)
-  );
-  if (isAdminRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
-    }
-    let isAdmin = false;
-    try {
-      if (typeof user === 'string') {
-        const parsed = JSON.parse(user);
-        isAdmin =
-          parsed.isAdmin === true ||
-          (parsed.user && parsed.user.isAdmin === true);
-      }
-    } catch {}
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
-    }
-  }
 
   const pathnameIsMissingLocale = i18n.locales.every(
     (loc) => !pathname.startsWith(`/${loc}/`) && pathname !== `/${loc}`

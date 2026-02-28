@@ -119,6 +119,10 @@ export default function Register({
     onSuccess: (response) => {
       setUnconfirmedEmail(response.email);
       setShowSuccessDialog(true);
+      // Rediriger vers dashboard après succès (pas login)
+      setTimeout(() => {
+        router.push(`/${lang}/dashboard`);
+      }, 1500);
     },
     onError: (error: unknown) => {
       if (error instanceof ApiError) {
@@ -550,7 +554,7 @@ export default function Register({
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push(`/${lang}/login`);
+                router.push(`/${lang}/dashboard`);
               }}
               className="w-full"
             >

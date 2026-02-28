@@ -4,6 +4,7 @@ import type {
   RefreshTokenInput,
   UpdateUserInput,
 } from '@/types/RequestSchemas';
+import type { Role } from '@/lib/rbac';
 
 export interface BaseResponse {
   message: string;
@@ -31,6 +32,7 @@ export interface UserPayload {
   birthdate?: string;
   profilePicture?: string;
   isAdmin: boolean;
+  role: Role;
 }
 
 export interface UserProfile extends UserPayload {
@@ -43,6 +45,7 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+// ✅ CORRIGÉ : role ajouté dans AuthResponseDto
 export interface AuthResponseDto {
   accessToken: string;
   refreshToken: string;
@@ -58,6 +61,7 @@ export interface AuthResponseDto {
     birthdate?: string;
     profilePicture?: string;
     isAdmin: boolean;
+    role: Role; // ✅ AJOUTÉ
   };
 }
 
@@ -219,7 +223,7 @@ export interface ForgotPasswordSuccessResponse extends BaseResponse {
 }
 
 export interface ForgotPasswordRequestBody {
-  email: string; // Required, valid email
+  email: string;
 }
 
 export interface ResetPasswordSuccessResponse extends BaseResponse {
@@ -227,8 +231,8 @@ export interface ResetPasswordSuccessResponse extends BaseResponse {
 }
 
 export interface ResetPasswordRequestBody {
-  token: string; // Required, reset token
-  newPassword: string; // Required, new password
+  token: string;
+  newPassword: string;
 }
 
 export interface ResendConfirmationSuccessResponse extends BaseResponse {

@@ -33,6 +33,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
+import { getDefaultRoute } from '@/lib/rbac';
 import { useState } from 'react';
 import {
   LoginSchema,
@@ -94,12 +95,14 @@ export default function Login({
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
+
         const { profilePicture, ...userWithoutProfilePicture } = response.user;
         if (profilePicture) {
           try {
             localStorage.setItem('profilePicture', profilePicture);
           } catch {}
         }
+
         setCookie(
           'token',
           JSON.stringify({
@@ -114,11 +117,14 @@ export default function Login({
             sameSite: 'lax',
           }
         );
+
+        // ✅ CORRIGÉ : role stocké dans le cookie user
         setCookie(
           'user',
           JSON.stringify({
             userId: userWithoutProfilePicture.id,
             isAdmin: userWithoutProfilePicture.isAdmin,
+            role: userWithoutProfilePicture.role,
             loginTime: new Date().toISOString(),
           }),
           {
@@ -128,7 +134,9 @@ export default function Login({
           }
         );
 
-        if (response.user.isAdmin) {
+        if (response.user.role) {
+          router.push(getDefaultRoute(response.user.role, lang));
+        } else if (response.user.isAdmin) {
           router.push(`/${lang}/admin`);
         } else {
           router.push(`/${lang}`);
@@ -160,12 +168,14 @@ export default function Login({
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
+
         const { profilePicture, ...userWithoutProfilePicture } = response.user;
         if (profilePicture) {
           try {
             localStorage.setItem('profilePicture', profilePicture);
           } catch {}
         }
+
         setCookie(
           'token',
           JSON.stringify({
@@ -180,11 +190,14 @@ export default function Login({
             sameSite: 'lax',
           }
         );
+
+        // ✅ CORRIGÉ : role stocké dans le cookie user (2FA aussi)
         setCookie(
           'user',
           JSON.stringify({
             userId: userWithoutProfilePicture.id,
             isAdmin: userWithoutProfilePicture.isAdmin,
+            role: userWithoutProfilePicture.role,
             loginTime: new Date().toISOString(),
           }),
           {
@@ -194,7 +207,9 @@ export default function Login({
           }
         );
 
-        if (response.user.isAdmin) {
+        if (response.user.role) {
+          router.push(getDefaultRoute(response.user.role, lang));
+        } else if (response.user.isAdmin) {
           router.push(`/${lang}/admin`);
         } else {
           router.push(`/${lang}`);
