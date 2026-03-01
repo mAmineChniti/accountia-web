@@ -223,21 +223,6 @@ export default function Navbar({
                       <p>{dictionary.tooltips.profile}</p>
                     </TooltipContent>
                   </Tooltip>
-                  {user.isAdmin && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={`/${lang}/admin`}
-                          className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
-                        >
-                          {dictionary.pages.home.navigation.adminDashboard}
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{dictionary.tooltips.adminDashboard}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button

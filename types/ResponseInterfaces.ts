@@ -45,7 +45,6 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-// ✅ CORRIGÉ : role ajouté dans AuthResponseDto
 export interface AuthResponseDto {
   accessToken: string;
   refreshToken: string;
@@ -61,7 +60,7 @@ export interface AuthResponseDto {
     birthdate?: string;
     profilePicture?: string;
     isAdmin: boolean;
-    role: Role; // ✅ AJOUTÉ
+    role: Role;
   };
 }
 
@@ -192,6 +191,8 @@ export interface UserSummary {
   profilePicture?: string;
   phoneNumber?: string;
   isAdmin: boolean;
+  role?: Role;
+  isActive?: boolean;
   dateJoined: string;
 }
 
@@ -223,7 +224,7 @@ export interface ForgotPasswordSuccessResponse extends BaseResponse {
 }
 
 export interface ForgotPasswordRequestBody {
-  email: string;
+  email: string; // Required, valid email
 }
 
 export interface ResetPasswordSuccessResponse extends BaseResponse {
@@ -231,8 +232,8 @@ export interface ResetPasswordSuccessResponse extends BaseResponse {
 }
 
 export interface ResetPasswordRequestBody {
-  token: string;
-  newPassword: string;
+  token: string; // Required, reset token
+  newPassword: string; // Required, new password
 }
 
 export interface ResendConfirmationSuccessResponse extends BaseResponse {
