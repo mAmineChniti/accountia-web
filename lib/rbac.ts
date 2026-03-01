@@ -19,14 +19,17 @@ export function hasPermission(role: Role, pathname: string): boolean {
   return allowed.some((route) => pathname.startsWith(route));
 }
 
-export function getDefaultRoute(role: Role, lang: string): string {
+export function getDefaultRoute(role: Role, lang: string, userId?: string): string {
   switch (role) {
     case Role.PLATFORM_OWNER:
     case Role.PLATFORM_ADMIN:
-      return `/${lang}/admin`;      // ✅ ta page admin existante
+      return `/${lang}/admin`;
     case Role.CLIENT:
       return `/${lang}/invoices`;
+    case Role.BUSINESS_OWNER:
+    case Role.BUSINESS_ADMIN:
+      return userId ? `/${lang}/dashboard/${userId}` : `/${lang}/dashboard`;
     default:
-      return `/${lang}/dashboard`;  // BUSINESS_OWNER + BUSINESS_ADMIN
+      return userId ? `/${lang}/dashboard/${userId}` : `/${lang}/dashboard`;
   }
-}
+} 

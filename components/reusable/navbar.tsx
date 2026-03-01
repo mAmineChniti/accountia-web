@@ -26,7 +26,7 @@ import {
 import { Bot } from 'lucide-react';
 import { type Dictionary } from '@/get-dictionary';
 
-type NavbarUser = { userId: string; isAdmin: boolean };
+type NavbarUser = { userId: string; isAdmin: boolean; role?: string };
 
 const readUserFromCookies = (): NavbarUser | undefined => {
   const userCookie = getCookie('user');
@@ -46,16 +46,19 @@ const readUserFromCookies = (): NavbarUser | undefined => {
 export default function Navbar({
   lang,
   dictionary,
+  serverUser,
 }: {
   lang: Locale;
   dictionary: Dictionary;
+  serverUser?: NavbarUser;
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<NavbarUser | undefined>(undefined);
+  const [user, setUser] = useState<NavbarUser | undefined>(serverUser);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setUser(readUserFromCookies());
+    const cookieUser = readUserFromCookies();
+    setUser(cookieUser ?? serverUser);
     setMounted(true);
   }, []);
 
@@ -207,8 +210,7 @@ export default function Navbar({
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
             {/* Empêche l'hydratation côté serveur pour la zone utilisateur */}
-            {mounted ? (
-              user ? (
+            {user ? (
                 <>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -223,6 +225,21 @@ export default function Navbar({
                       <p>{dictionary.tooltips.profile}</p>
                     </TooltipContent>
                   </Tooltip>
+                  {user.isAdmin && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={`/${lang}/admin`}
+                          className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                        >
+                          {dictionary.pages.home.navigation.adminDashboard}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{dictionary.tooltips.adminDashboard}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -238,7 +255,7 @@ export default function Navbar({
                     </TooltipContent>
                   </Tooltip>
                 </>
-              ) : (
+            ) : (
                 <>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -267,8 +284,7 @@ export default function Navbar({
                     </TooltipContent>
                   </Tooltip>
                 </>
-              )
-            ) : null}
+            )}
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Tooltip>

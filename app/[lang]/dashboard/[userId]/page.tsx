@@ -1,5 +1,7 @@
 import { type Locale } from '@/i18n-config';
 import { getDictionary } from '@/get-dictionary';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -8,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, FileText, Users, TrendingUp } from 'lucide-react';
-import { cookies } from 'next/headers';
 
 function parseJwt(token: string) {
   try {
@@ -21,58 +22,69 @@ function parseJwt(token: string) {
 
 function getRoleLabel(role: string): string {
   switch (role) {
-    case 'PLATFORM_OWNER':   return 'Platform Owner';
-    case 'PLATFORM_ADMIN':   return 'Platform Admin';
-    case 'BUSINESS_OWNER':   return 'Business Owner';
-    case 'BUSINESS_ADMIN':   return 'Business Admin';
-    case 'CLIENT':           return 'Client';
-    default:                 return role;
+    case 'PLATFORM_OWNER':  return 'Platform Owner';
+    case 'PLATFORM_ADMIN':  return 'Platform Admin';
+    case 'BUSINESS_OWNER':  return 'Business Owner';
+    case 'BUSINESS_ADMIN':  return 'Business Admin';
+    case 'CLIENT':          return 'Client';
+    default:                return role;
   }
 }
 
 export default async function DashboardPage({
   params,
 }: {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: Locale; userId: string }>;
 }) {
-  const { lang } = await params;
+  const { lang, userId } = await params;
   const dictionary = await getDictionary(lang);
 
-  // Lire le rôle et le nom depuis le JWT
   const cookieStore = await cookies();
-  let firstName = '';
-  let role = '';
-
   const tokenCookie = cookieStore.get('token');
+
+  let firstName = '';
+  let lastName = '';
+  let email = '';
+  let role = '';
+  let tokenUserId = '';
+
   if (tokenCookie) {
     try {
       const parsed = JSON.parse(tokenCookie.value);
       const payload = parseJwt(parsed.token);
       if (payload) {
-        firstName = payload.firstName ?? '';
-        role = payload.role ?? '';
+        firstName   = payload.firstName ?? '';
+        lastName    = payload.lastName ?? '';
+        email       = payload.email ?? '';
+        role        = payload.role ?? '';
+        tokenUserId = payload.id ?? payload.sub ?? '';
       }
     } catch {}
   }
 
+  // ✅ Sécurité : un user ne peut pas accéder au dashboard d'un autre
+  if (tokenUserId && tokenUserId !== userId) {
+    redirect(`/${lang}/unauthorized`);
+  }
+
   return (
     <main className="flex min-h-[calc(100vh-var(--header-footer-height))] flex-col gap-8 p-8">
-      {/* Header avec nom + rôle */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            {firstName ? `Welcome, ${firstName}!` : 'Welcome to your business dashboard.'}
+            Welcome, {firstName} {lastName}!
           </p>
         </div>
-        {role && (
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            {getRoleLabel(role)}
-          </Badge>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {role && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {getRoleLabel(role)}
+            </Badge>
+          )}
+        </div>
       </div>
 
-      {/* Cards stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

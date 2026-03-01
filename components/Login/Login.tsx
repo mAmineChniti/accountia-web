@@ -95,14 +95,12 @@ export default function Login({
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
-
         const { profilePicture, ...userWithoutProfilePicture } = response.user;
         if (profilePicture) {
           try {
             localStorage.setItem('profilePicture', profilePicture);
           } catch {}
         }
-
         setCookie(
           'token',
           JSON.stringify({
@@ -117,14 +115,11 @@ export default function Login({
             sameSite: 'lax',
           }
         );
-
-        // ✅ CORRIGÉ : role stocké dans le cookie user
         setCookie(
           'user',
           JSON.stringify({
             userId: userWithoutProfilePicture.id,
             isAdmin: userWithoutProfilePicture.isAdmin,
-            role: userWithoutProfilePicture.role,
             loginTime: new Date().toISOString(),
           }),
           {
@@ -134,13 +129,12 @@ export default function Login({
           }
         );
 
-        if (response.user.role) {
-          router.push(getDefaultRoute(response.user.role, lang));
-        } else if (response.user.isAdmin) {
-          router.push(`/${lang}/admin`);
-        } else {
-          router.push(`/${lang}`);
-        }
+        // ✅ Redirection personnalisée avec userId
+        const userId = userWithoutProfilePicture.id;
+        const dest = response.user.role
+          ? getDefaultRoute(response.user.role, lang, userId)
+          : response.user.isAdmin ? `/${lang}/admin` : `/${lang}`;
+        window.location.href = dest;
       } else if ('tempToken' in response && response.twoFactorRequired) {
         setTwoFA({ tempToken: response.tempToken, email: variables.email });
         twoFAForm.reset({ tempToken: response.tempToken, code: '' });
@@ -168,14 +162,12 @@ export default function Login({
           expiresAtMs > 0
             ? Math.floor((expiresAtMs - now) / 1000)
             : 7 * 24 * 60 * 60;
-
         const { profilePicture, ...userWithoutProfilePicture } = response.user;
         if (profilePicture) {
           try {
             localStorage.setItem('profilePicture', profilePicture);
           } catch {}
         }
-
         setCookie(
           'token',
           JSON.stringify({
@@ -190,14 +182,11 @@ export default function Login({
             sameSite: 'lax',
           }
         );
-
-        // ✅ CORRIGÉ : role stocké dans le cookie user (2FA aussi)
         setCookie(
           'user',
           JSON.stringify({
             userId: userWithoutProfilePicture.id,
             isAdmin: userWithoutProfilePicture.isAdmin,
-            role: userWithoutProfilePicture.role,
             loginTime: new Date().toISOString(),
           }),
           {
@@ -207,13 +196,12 @@ export default function Login({
           }
         );
 
-        if (response.user.role) {
-          router.push(getDefaultRoute(response.user.role, lang));
-        } else if (response.user.isAdmin) {
-          router.push(`/${lang}/admin`);
-        } else {
-          router.push(`/${lang}`);
-        }
+        // ✅ Redirection personnalisée avec userId
+        const userId = userWithoutProfilePicture.id;
+        const dest = response.user.role
+          ? getDefaultRoute(response.user.role, lang, userId)
+          : response.user.isAdmin ? `/${lang}/admin` : `/${lang}`;
+        window.location.href = dest;
       } else {
         console.error('Invalid 2FA login response shape:', response);
         toast.error(dictionary.pages.login.unexpectedError);
