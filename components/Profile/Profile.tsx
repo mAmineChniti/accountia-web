@@ -63,6 +63,11 @@ import {
 } from '@/lib/date-utils';
 import { type Locale } from '@/i18n-config';
 import { useRouter } from 'next/navigation';
+import {
+  NotificationPreferencesCenter,
+  NotificationInbox,
+  UserActivityTimeline,
+} from '@/components/Profile/ProfileEnhancements';
 
 export default function Profile({
   dictionary,
@@ -369,6 +374,9 @@ export default function Profile({
             <TabsTrigger value="security">
               {dictionary.pages.profile.tabs.security}
             </TabsTrigger>
+            <TabsTrigger value="preferences">Notifications</TabsTrigger>
+            <TabsTrigger value="inbox">Inbox</TabsTrigger>
+            <TabsTrigger value="timeline">Activity Timeline</TabsTrigger>
           </TabsList>
           {/* Overview Tab */}
           <TabsContent value="overview">
@@ -1013,6 +1021,18 @@ export default function Profile({
                 </Dialog>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="timeline">
+            <UserActivityTimeline />
+          </TabsContent>
+
+          <TabsContent value="inbox">
+            <NotificationInbox />
+          </TabsContent>
+
+          <TabsContent value="preferences">
+            <NotificationPreferencesCenter />
           </TabsContent>
         </Tabs>
 
