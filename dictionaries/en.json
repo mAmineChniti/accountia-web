@@ -208,7 +208,8 @@
       "twoFactorLabel": "Two-Factor Code",
       "twoFactorPlaceholder": "Enter your 2FA code",
       "verify2FAButton": "Verify 2FA",
-      "verifying2FAButton": "Verifying..."
+      "verifying2FAButton": "Verifying...",
+      "continueWithGoogle": "Continue with Google"
     },
     "register": {
       "title": "Create account",
