@@ -114,7 +114,7 @@ export default function Login({
 
     const userData = {
       userId: userWithoutProfilePicture.id,
-      isAdmin: userWithoutProfilePicture.isAdmin,
+      isAdmin: userWithoutProfilePicture.isAdmin ?? false,
       loginTime: new Date().toISOString(),
     };
     await setUser(userData);

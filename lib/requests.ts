@@ -28,6 +28,9 @@ import type {
   TwoFASetupResponse,
   TwoFAVerifyResponse,
   TwoFALoginResponse,
+  FetchMonthlyStatsResponse,
+  FetchRevenuesStatsResponse,
+  FetchExpensesStatsResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -111,6 +114,11 @@ const API_CONFIG = {
     TWO_FA_VERIFY: 'auth/2fa/verify',
     TWO_FA_LOGIN: 'auth/2fa/login',
     GOOGLE: 'auth/google',
+  },
+  STATS: {
+    MONTHLY: 'revenues/statistics',
+    REVENUES: 'revenues/statistics',
+    EXPENSES: 'expenses/statistics',
   },
 } as const;
 
@@ -591,6 +599,90 @@ export const AuthService = {
           headers: token,
         })
         .json<DeleteUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async fetchMonthlyStats(): Promise<FetchMonthlyStatsResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+
+    try {
+      const result = await client
+        .get(API_CONFIG.STATS.MONTHLY, {
+          headers: token,
+        })
+        .json<FetchMonthlyStatsResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async fetchRevenuesStats(): Promise<FetchRevenuesStatsResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+
+    try {
+      const result = await client
+        .get(API_CONFIG.STATS.REVENUES, {
+          headers: token,
+        })
+        .json<FetchRevenuesStatsResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async fetchExpensesStats(): Promise<FetchExpensesStatsResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+
+    try {
+      const result = await client
+        .get(API_CONFIG.STATS.EXPENSES, {
+          headers: token,
+        })
+        .json<FetchExpensesStatsResponse>();
       return result;
     } catch (error: unknown) {
       if (

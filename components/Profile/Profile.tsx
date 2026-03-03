@@ -281,30 +281,13 @@ export default function Profile({
   });
 
   useEffect(() => {
-    if (userData) {
-      accountForm.reset(
-        {
-          username: userData.username,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          birthdate: userData.birthdate || '',
-          phoneNumber: userData.phoneNumber || '',
-          profilePicture: userData.profilePicture || '',
-        },
-        { keepDefaultValues: true }
-      );
-    }
-  }, [userData, accountEditMode, accountForm]);
-
-  useEffect(() => {
     if (userData && accountEditMode) {
       accountForm.reset(
         {
           username: userData.username,
           email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
           birthdate: userData.birthdate || '',
           phoneNumber: userData.phoneNumber || '',
           profilePicture: userData.profilePicture || '',
@@ -484,7 +467,9 @@ export default function Profile({
             </Avatar>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-2xl font-bold">
-                {userData?.firstName || userData?.username}
+                {userData?.firstName ??
+                  userData?.first_name ??
+                  userData?.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground truncate">
                 {userData?.email}
@@ -558,7 +543,7 @@ export default function Profile({
                     </span>
                     <span className="font-medium">
                       {userData?.birthdate
-                        ? formatDateLong(userData.birthdate)
+                        ? formatDateLong(userData.birthdate!)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -802,11 +787,11 @@ export default function Profile({
                               accountForm.reset({
                                 username: userData.username,
                                 email: userData.email,
-                                firstName: userData.firstName,
-                                lastName: userData.lastName,
-                                birthdate: userData.birthdate,
-                                phoneNumber: userData.phoneNumber,
-                                profilePicture: userData.profilePicture,
+                                firstName: userData.firstName || '',
+                                lastName: userData.lastName || '',
+                                birthdate: userData.birthdate || '',
+                                phoneNumber: userData.phoneNumber || '',
+                                profilePicture: userData.profilePicture || '',
                               });
                             }}
                             disabled={mutation.isPending}

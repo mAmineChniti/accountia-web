@@ -187,9 +187,9 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {isLoading ? (
+            {isLoading || user === undefined ? (
               <div className="bg-muted h-9 w-20 animate-pulse rounded" />
-            ) : isAuthenticated && user ? (
+            ) : user ? (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -208,7 +208,7 @@ export default function Navbar({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href={`/${lang}/admin`}
+                        href={`/${lang}/dashboard/admin`}
                         className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
                       >
                         {dictionary.pages.home.navigation.adminDashboard}

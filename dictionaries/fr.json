@@ -87,7 +87,7 @@
         "login": "Connexion",
         "register": "S'inscrire",
         "profile": "Profil",
-        "adminDashboard": "Tableau de bord admin",
+        "adminDashboard": "Admin",
         "logout": "Déconnexion"
       },
       "hero": {
@@ -292,9 +292,12 @@
   "admin": {
     "title": "Tableau de bord administrateur",
     "subtitle": "Gérez les utilisateurs et les accès",
+    "statisticsTitle": "Statistiques",
+    "statisticsSubtitle": "Aperçu des revenus et dépenses",
     "stats": {
       "totalUsers": "Total des utilisateurs",
       "totalAdmins": "Administrateurs",
+      "totalNormalUsers": "Utilisateurs normaux",
       "lastUpdated": "Synchroniser les utilisateurs",
       "placeholder": "—",
       "syncButton": "Synchroniser",
@@ -302,6 +305,12 @@
       "upToDate": "À jour"
     },
     "usersTitle": "Utilisateurs",
+    "monthlyRevenue": "Revenus totaux",
+    "monthlyExpenses": "Dépenses totales",
+    "netProfit": "Bénéfice net",
+    "netLoss": "Perte nette",
+    "loadingStatistics": "Chargement des statistiques...",
+    "errorLoadingStatistics": "Erreur lors du chargement des statistiques",
     "searchPlaceholder": "Rechercher des utilisateurs...",
     "dateFilterLabel": "Filtrer par date d'inscription:",
     "dateFilterPlaceholder": "Sélectionner une plage de dates",
