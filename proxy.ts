@@ -1,9 +1,21 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { i18n, type Locale } from '@/i18n-config';
+import { getCookie } from 'cookies-next/server';
+import { Role, hasPermission } from '@/lib/rbac';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 
 import Negotiator from 'negotiator';
+
+function parseJwt(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(Buffer.from(payload, 'base64').toString('utf-8'));
+  } catch {
+    return null;
+  }
+}
 
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
@@ -46,22 +58,31 @@ export async function proxy(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname;
 
-  let isAdmin = false;
-  if (user?.value) {
-    try {
-      const { verifySession } = await import('./actions/verify-session');
-      const verifiedSession = await verifySession();
-      isAdmin = verifiedSession?.isAdmin || false;
-    } catch {
-      isAdmin = false;
-    }
-  }
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    localeStrippedPath.startsWith(route)
-  );
-  if (isProtectedRoute && !isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  // RBAC: Protéger les routes selon le rôle
+  const rbacRoutes = [
+    { prefix: '/admin', roles: [Role.PLATFORM_ADMIN, Role.PLATFORM_OWNER] },
+    { prefix: '/dashboard', roles: [Role.BUSINESS_OWNER, Role.BUSINESS_ADMIN] },
+    { prefix: '/invoices', roles: [Role.CLIENT, Role.BUSINESS_OWNER, Role.BUSINESS_ADMIN] },
+  ];
+  const rbacMatch = rbacRoutes.find((r) => localeStrippedPath.startsWith(r.prefix));
+  if (rbacMatch) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+    let role: Role | undefined = undefined;
+    try {
+      if (typeof tokenCookie === 'string') {
+        const tokenValue = JSON.parse(tokenCookie).token;
+        const payload = parseJwt(tokenValue);
+        if (payload && payload.role) {
+          role = payload.role as Role;
+        }
+      }
+    } catch {}
+    if (!role || !rbacMatch.roles.includes(role)) {
+      return NextResponse.redirect(new URL(`/${locale}/unauthorized`, request.url));
+    }
   }
 
   const isAdminRoute = adminOnlyRoutes.some(
@@ -87,7 +108,8 @@ export async function proxy(request: NextRequest) {
         ? cookieLocale.value
         : detectedLocale || i18n.defaultLocale;
 
-    return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
+    // Redirige vers /[locale] sans slash final
+    return NextResponse.redirect(new URL(`/${preferredLocale}`, request.url));
   }
 
   const lastSegment = pathSegments.at(-1);

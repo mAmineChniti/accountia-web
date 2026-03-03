@@ -90,6 +90,13 @@ export const UpdateUserSchema = z.object({
   profilePicture: z.string().optional(),
 });
 
+export const BusinessApplicationSchema = z.object({
+  businessName: z.string().min(2).max(100),
+  businessType: z.string().min(1),
+  description: z.string().min(10).max(500),
+  website: z.string().url().optional().or(z.literal('')),
+});
+
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
@@ -98,6 +105,7 @@ export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;
 export type FetchUserByIdInput = z.infer<typeof FetchUserByIdSchema>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export type BusinessApplicationInput = z.infer<typeof BusinessApplicationSchema>;
 
 export type TwoFAVerifyInput = z.infer<typeof TwoFAVerifySchema>;
 export type TwoFALoginInput = z.infer<typeof TwoFALoginSchema>;

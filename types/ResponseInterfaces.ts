@@ -3,7 +3,9 @@ import type {
   LoginInput,
   RefreshTokenInput,
   UpdateUserInput,
+  BusinessApplicationInput,
 } from '@/types/RequestSchemas';
+import type { Role } from '@/lib/rbac';
 
 export interface BaseResponse {
   message: string;
@@ -50,14 +52,14 @@ export interface UserPayload {
   birthdate?: string;
   birth_date?: string;
   profilePicture?: string;
-  profile_picture?: string;
-  isAdmin?: boolean;
-  is_admin?: boolean;
+  isAdmin: boolean;
+  role: Role;
 }
 
 export interface UserProfile extends UserPayload {
   dateJoined: string;
   emailConfirmed: boolean;
+  hasApplied?: boolean;
 }
 
 export interface AuthTokens {
@@ -83,9 +85,8 @@ export interface AuthResponseDto {
     birthdate?: string;
     birth_date?: string;
     profilePicture?: string;
-    profile_picture?: string;
-    isAdmin?: boolean;
-    is_admin?: boolean;
+    isAdmin: boolean;
+    role: Role;
   };
 }
 
@@ -275,6 +276,26 @@ export interface EmailAlreadyConfirmedResponse extends BaseErrorResponse {
   message: 'Email is already confirmed';
 }
 
+export interface InvoiceItem {
+  id: string;
+  invoiceNumber: string;
+  description: string;
+  amount: number;
+  currency: string;
+  status: 'DRAFT' | 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  dueDate: string;
+  paidAt?: string;
+  notes?: string;
+  clientId: string;
+  businessOwnerId: string;
+  createdAt: string;
+}
+
+export interface InvoicesListResponse {
+  message: string;
+  invoices: InvoiceItem[];
+  total: number;
+}
 export type RegisterResponse = RegisterSuccessResponse;
 export type LoginResponse = AuthResponse;
 export type LogoutResponse = LogoutSuccessResponse;
@@ -290,6 +311,19 @@ export type FetchAllUsersResponse = UsersListResponse;
 export type FetchMonthlyStatsResponse = MonthlyStatsResponse;
 export type FetchRevenuesStatsResponse = BasicStatResponse;
 export type FetchExpensesStatsResponse = BasicStatResponse;
+
+export interface BusinessApplicationSuccessResponse extends BaseResponse {
+  message: string;
+}
+
+export type BusinessApplicationResponse = BusinessApplicationSuccessResponse;
+
+// Re-export Zod-inferred types as canonical request body types
+export type RegisterRequestBody = RegisterInput;
+export type LoginRequestBody = LoginInput;
+export type LogoutRequestBody = RefreshTokenInput;
+export type UpdateUserRequestBody = UpdateUserInput;
+export type BusinessApplicationRequestBody = BusinessApplicationInput;
 
 export enum HttpStatus {
   OK = 200,
@@ -331,9 +365,3 @@ export type ApiError = BaseErrorResponse | ValidationErrorResponse;
 export type SuccessResponse<T> = ApiResponse<T>;
 
 export type ErrorResponse = ApiError;
-
-// Re-export Zod-inferred types as canonical request body types
-export type RegisterRequestBody = RegisterInput;
-export type LoginRequestBody = LoginInput;
-export type LogoutRequestBody = RefreshTokenInput;
-export type UpdateUserRequestBody = UpdateUserInput;

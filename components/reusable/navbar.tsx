@@ -29,9 +29,11 @@ import { ModeToggle } from '@/components/reusable/theme-toggle';
 export default function Navbar({
   lang,
   dictionary,
+  serverUser,
 }: {
   lang: Locale;
   dictionary: Dictionary;
+  serverUser?: NavbarUser;
 }) {
   const router = useRouter();
   const { user, isAuthenticated, checkAuth, isLoading } = useAuth();
@@ -191,6 +193,21 @@ export default function Navbar({
               <div className="bg-muted h-9 w-20 animate-pulse rounded" />
             ) : user ? (
               <>
+                {!pathname.startsWith(`/${lang}/admin`) && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/${lang}/invoices`}
+                        className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                      >
+                        {dictionary.pages.home.navigation.invoices}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{dictionary.tooltips.invoices}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link
@@ -264,7 +281,7 @@ export default function Navbar({
                   </TooltipContent>
                 </Tooltip>
               </>
-            )}
+            ) : null}
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Tooltip>

@@ -33,6 +33,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
+import { getDefaultRoute } from '@/lib/rbac';
 import { useState } from 'react';
 import {
   LoginSchema,

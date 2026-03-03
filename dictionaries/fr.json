@@ -87,7 +87,8 @@
         "login": "Connexion",
         "register": "S'inscrire",
         "profile": "Profil",
-        "adminDashboard": "Admin",
+        "invoices": "Factures",
+        "adminDashboard": "Tableau de bord admin",
         "logout": "Déconnexion"
       },
       "hero": {
@@ -264,6 +265,59 @@
       "personalInfoLabel": "Informations personnelles",
       "accountInfoLabel": "Informations du compte",
       "authNavLabel": "Navigation d'authentification"
+    },
+    "businessApplication": {
+      "title": "Demander un accès Business",
+      "description": "Remplissez ce formulaire pour demander un compte Business Owner. Notre équipe examinera votre demande et vous contactera par email.",
+      "businessNameLabel": "Nom de l'entreprise",
+      "businessNamePlaceholder": "Entrez le nom de votre entreprise",
+      "businessTypeLabel": "Type d'entreprise",
+      "businessTypePlaceholder": "Sélectionnez votre type d'entreprise",
+      "businessTypes": {
+        "freelance": "Freelance / Auto-entrepreneur",
+        "startup": "Startup",
+        "sme": "Petite et Moyenne Entreprise (PME)",
+        "enterprise": "Grande Entreprise",
+        "nonprofit": "Organisation à but non lucratif",
+        "other": "Autre"
+      },
+      "descriptionLabel": "Description de l'entreprise",
+      "descriptionPlaceholder": "Décrivez brièvement votre entreprise et comment vous prévoyez d'utiliser Accountia...",
+      "websiteLabel": "Site web (optionnel)",
+      "websitePlaceholder": "https://votreentreprise.com",
+      "submitButton": "Soumettre la demande",
+      "submittingButton": "Envoi en cours...",
+      "successTitle": "Demande reçue !",
+      "successMessage": "Votre demande a été soumise avec succès. Notre équipe l'examinera et vous contactera par email dans 2-3 jours ouvrables.",
+      "closeButton": "Retour à l'accueil",
+      "errors": {
+        "businessNameRequired": "Le nom de l'entreprise est requis",
+        "businessTypeRequired": "Veuillez sélectionner un type d'entreprise",
+        "descriptionRequired": "La description est requise",
+        "descriptionTooShort": "La description doit contenir au moins 10 caractères",
+        "websiteInvalid": "Veuillez entrer une URL valide"
+      },
+      "submitError": "Échec de la soumission. Veuillez réessayer.",
+      "loginRequired": "Vous devez être connecté pour demander un accès business.",
+      "alreadyApplied": "Votre demande est déjà en cours d'examen.",
+      "authNavLabel": "Navigation demande business"
+    },
+    "invoices": {
+      "title": "Mes Factures",
+      "description": "Consultez et gérez vos factures",
+      "applyBusinessButton": "Demander un accès Business",
+      "totalInvoices": "Total des factures",
+      "totalPaid": "Total payé",
+      "totalPending": "Total en attente",
+      "invoiceList": "Liste des factures",
+      "noInvoices": "Aucune facture pour l'instant",
+      "dueDateLabel": "Échéance",
+      "refresh": "Actualiser",
+      "fetchError": "Impossible de charger les factures. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "noInvoicesHint": "Les factures envoyées apparaîtront ici",
+      "statusOverdue": "En retard",
+      "paidAtLabel": "Payé le"
     }
   },
   "tooltips": {
@@ -278,6 +332,7 @@
     "getStarted": "Commencer avec Accountia",
     "signIn": "Se connecter à votre compte",
     "createAccount": "Créer un nouveau compte",
+    "invoices": "Voir vos factures",
     "profile": "Voir votre profil",
     "adminDashboard": "Accéder au tableau de bord admin",
     "logout": "Se déconnecter de votre compte",

@@ -45,7 +45,7 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService, ApiError } from '@/lib/requests';
 import { RegisterSchema, type RegisterInput } from '@/types/RequestSchemas';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   formatDateLong,
@@ -513,7 +513,9 @@ export default function Register({
             </form>
           </Form>
 
-          <Separator className="my-6" />
+          <Separator className="my-4" />
+
+
 
           <nav
             className="text-center"
@@ -533,6 +535,7 @@ export default function Register({
         </CardContent>
       </Card>
 
+      {/* Dialog: inscription réussie → rediriger vers LOGIN (pas dashboard) */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -550,6 +553,7 @@ export default function Register({
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
+                // ✅ FIX: CLIENT doit aller vers login, pas dashboard
                 router.push(`/${lang}/login`);
               }}
               className="w-full"
