@@ -154,7 +154,8 @@ export default function Profile({
           lastName: userData.lastName ?? userData.last_name ?? '',
           birthdate: userData.birthdate ?? userData.birth_date ?? '',
           phoneNumber: userData.phoneNumber ?? userData.phone_number ?? '',
-          profilePicture: userData.profilePicture ?? userData.profile_picture ?? '',
+          profilePicture:
+            userData.profilePicture ?? userData.profile_picture ?? '',
         },
         { keepDefaultValues: true }
       );
@@ -171,7 +172,8 @@ export default function Profile({
           lastName: userData.lastName ?? userData.last_name ?? '',
           birthdate: userData.birthdate ?? userData.birth_date ?? '',
           phoneNumber: userData.phoneNumber ?? userData.phone_number ?? '',
-          profilePicture: userData.profilePicture ?? userData.profile_picture ?? '',
+          profilePicture:
+            userData.profilePicture ?? userData.profile_picture ?? '',
         },
         { keepDefaultValues: true }
       );
@@ -349,7 +351,9 @@ export default function Profile({
             </Avatar>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-2xl font-bold">
-                {userData?.firstName ?? userData?.first_name ?? userData?.username}
+                {userData?.firstName ??
+                  userData?.first_name ??
+                  userData?.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground truncate">
                 {userData?.email}
@@ -420,7 +424,9 @@ export default function Profile({
                     </span>
                     <span className="font-medium">
                       {(userData?.birthdate ?? userData?.birth_date)
-                        ? formatDateLong((userData?.birthdate ?? userData?.birth_date)!)
+                        ? formatDateLong(
+                            (userData?.birthdate ?? userData?.birth_date)!
+                          )
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -429,7 +435,9 @@ export default function Profile({
                       {dictionary.pages.profile.phoneNumber}
                     </span>
                     <span className="font-medium">
-                      {userData?.phoneNumber ?? userData?.phone_number ?? dictionary.common.na}
+                      {userData?.phoneNumber ??
+                        userData?.phone_number ??
+                        dictionary.common.na}
                     </span>
                   </div>
                   <div className="md:col-span-2">

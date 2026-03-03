@@ -173,7 +173,7 @@ export interface RateLimitResponse extends BaseErrorResponse {
 /**
  * LogoutSuccessResponse is intentionally left empty as a successful logout returns 200 OK with an empty body.
  */
-export interface LogoutSuccessResponse { } // eslint-disable-line @typescript-eslint/no-empty-object-type
+export interface LogoutSuccessResponse {} // eslint-disable-line @typescript-eslint/no-empty-object-type
 
 export interface LogoutErrorResponse extends BaseErrorResponse {
   statusCode: 401;
