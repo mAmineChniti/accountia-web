@@ -135,9 +135,16 @@ export default function Admin({
 
     if (dateRange?.from || dateRange?.to) {
       filtered = filtered.filter((u) => {
-        if (!u.dateJoined) return false;
-        const joinDate = new Date(u.dateJoined);
-        const joinDateOnly = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
+        const joinDate = u.dateJoined ?? u.date_joined;
+        if (!joinDate) return false;
+        const date = new Date(joinDate);
+
+        // Normalize dates to ignore time component
+        const joinDateOnly = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
         const fromDateOnly = dateRange.from
           ? new Date(dateRange.from.getFullYear(), dateRange.from.getMonth(), dateRange.from.getDate())
           : undefined;
@@ -153,12 +160,18 @@ export default function Admin({
     const sorted = filtered.toSorted((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1;
       if (sortKey === 'dateJoined') {
-        const aTime = a.dateJoined ? new Date(a.dateJoined).getTime() : 0;
-        const bTime = b.dateJoined ? new Date(b.dateJoined).getTime() : 0;
+        const aDate = a.dateJoined ?? a.date_joined;
+        const bDate = b.dateJoined ?? b.date_joined;
+        const aTime = aDate ? new Date(aDate).getTime() : 0;
+        const bTime = bDate ? new Date(bDate).getTime() : 0;
         return (aTime - bTime) * dir;
       }
-      const aVal = (a[sortKey] ?? '').toString().toLowerCase();
-      const bVal = (b[sortKey] ?? '').toString().toLowerCase();
+      const aVal = (a[sortKey] ?? a.dateJoined ?? a.date_joined ?? '')
+        .toString()
+        .toLowerCase();
+      const bVal = (b[sortKey] ?? b.dateJoined ?? b.date_joined ?? '')
+        .toString()
+        .toLowerCase();
       return aVal.localeCompare(bVal) * dir;
     });
 

@@ -18,6 +18,22 @@ export interface BaseErrorResponse {
   timestamp?: string;
 }
 
+export interface MonthlyStat {
+  month: string;
+  revenue: number;
+  expenses: number;
+}
+
+export interface BasicStatResponse {
+  totalAmount: number;
+  count: number;
+}
+
+export interface MonthlyStatsResponse {
+  message: string;
+  stats: MonthlyStat[];
+}
+
 export interface ValidationErrorResponse {
   message: string;
   errors: Record<string, string>;
@@ -28,9 +44,13 @@ export interface UserPayload {
   email: string;
   username: string;
   firstName?: string;
+  first_name?: string;
   lastName?: string;
+  last_name?: string;
   phoneNumber?: string;
+  phone_number?: string;
   birthdate?: string;
+  birth_date?: string;
   profilePicture?: string;
   isAdmin: boolean;
   role: Role;
@@ -57,9 +77,13 @@ export interface AuthResponseDto {
     username: string;
     email: string;
     firstName?: string;
+    first_name?: string;
     lastName?: string;
+    last_name?: string;
     phoneNumber?: string;
+    phone_number?: string;
     birthdate?: string;
+    birth_date?: string;
     profilePicture?: string;
     isAdmin: boolean;
     role: Role;
@@ -150,7 +174,7 @@ export interface RateLimitResponse extends BaseErrorResponse {
 /**
  * LogoutSuccessResponse is intentionally left empty as a successful logout returns 200 OK with an empty body.
  */
-export interface LogoutSuccessResponse { } // eslint-disable-line @typescript-eslint/no-empty-object-type
+export type LogoutSuccessResponse = Record<string, never>;
 
 export interface LogoutErrorResponse extends BaseErrorResponse {
   statusCode: 401;
@@ -188,14 +212,19 @@ export interface UserSummary {
   username: string;
   email: string;
   firstName?: string;
+  first_name?: string;
   lastName?: string;
+  last_name?: string;
   birthdate?: string;
+  birth_date?: string;
   profilePicture?: string;
+  profile_picture?: string;
   phoneNumber?: string;
-  isAdmin: boolean;
-  role?: Role;
-  isActive?: boolean;
+  phone_number?: string;
+  isAdmin?: boolean;
+  is_admin?: boolean;
   dateJoined: string;
+  date_joined?: string;
 }
 
 export interface UsersListResponse {
@@ -279,6 +308,9 @@ export type ForgotPasswordResponse = ForgotPasswordSuccessResponse;
 export type ResetPasswordResponse = ResetPasswordSuccessResponse;
 export type ResendConfirmationResponse = ResendConfirmationSuccessResponse;
 export type FetchAllUsersResponse = UsersListResponse;
+export type FetchMonthlyStatsResponse = MonthlyStatsResponse;
+export type FetchRevenuesStatsResponse = BasicStatResponse;
+export type FetchExpensesStatsResponse = BasicStatResponse;
 
 export interface BusinessApplicationSuccessResponse extends BaseResponse {
   message: string;

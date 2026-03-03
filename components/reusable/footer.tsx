@@ -87,7 +87,12 @@ export function Footer({ dictionary }: FooterProps) {
         <Separator className="my-12" />
 
         <div className="text-muted-foreground text-center text-base">
-          <p>{dictionary.pages.home.footer.copyright}</p>
+          <p>
+            {dictionary.pages.home.footer.copyright.replace(
+              '2024',
+              new Date().getFullYear().toString()
+            )}
+          </p>
         </div>
       </div>
     </footer>

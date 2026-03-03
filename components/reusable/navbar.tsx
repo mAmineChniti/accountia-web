@@ -1,14 +1,12 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type Locale } from '@/i18n-config';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
-import { ModeToggle } from '@/components/reusable/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { AuthService } from '@/lib/requests';
-import { deleteCookie, getCookie } from 'cookies-next';
+import { useAuth } from '@/hooks/useAuth';
+import { useMutation } from '@tanstack/react-query';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -25,23 +23,8 @@ import {
 } from '@/components/ui/tooltip';
 import { Bot } from 'lucide-react';
 import { type Dictionary } from '@/get-dictionary';
-
-type NavbarUser = { userId: string; isAdmin: boolean; role?: string };
-
-const readUserFromCookies = (): NavbarUser | undefined => {
-  const userCookie = getCookie('user');
-  const tokenCookie = getCookie('token');
-  if (!userCookie || !tokenCookie) return undefined;
-
-  try {
-    const parsed = JSON.parse(userCookie as string) as NavbarUser;
-    if (parsed && typeof parsed.userId === 'string') return parsed;
-  } catch {
-    return undefined;
-  }
-
-  return undefined;
-};
+import { serverLogout } from '@/actions/logout';
+import { ModeToggle } from '@/components/reusable/theme-toggle';
 
 export default function Navbar({
   lang,
@@ -53,33 +36,29 @@ export default function Navbar({
   serverUser?: NavbarUser;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const [user, setUser] = useState<NavbarUser | undefined>(undefined);
-  const [mounted, setMounted] = useState(false);
+  const { user, isAuthenticated, checkAuth, isLoading } = useAuth();
 
-  useEffect(() => {
-    const cookieUser = readUserFromCookies();
-    setUser(cookieUser ?? serverUser);
-    setMounted(true);
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const tokenCookie = getCookie('token');
-      let refreshToken = '';
-      if (tokenCookie) {
-        try {
-          const parsed = JSON.parse(tokenCookie as string);
-          refreshToken = parsed.refreshToken;
-        } catch { }
-      }
-      await AuthService.logout(refreshToken);
-    } catch { }
-    deleteCookie('token');
-    deleteCookie('user');
-    setUser(undefined);
+  const handlePostLogout = async () => {
+    checkAuth();
+    router.refresh();
     router.push(`/${lang}/login`);
   };
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const result = await serverLogout();
+      if (!result.success) {
+        throw new Error(result.error || 'Logout failed');
+      }
+      return result;
+    },
+    onSuccess: async () => {
+      await handlePostLogout();
+    },
+    onError: async () => {
+      await handlePostLogout();
+    },
+  });
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
@@ -210,8 +189,9 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Rendu uniquement côté client pour éviter l'hydratation mismatch */}
-            {mounted && user ? (
+            {isLoading || user === undefined ? (
+              <div className="bg-muted h-9 w-20 animate-pulse rounded" />
+            ) : user ? (
               <>
                 {!pathname.startsWith(`/${lang}/admin`) && (
                   <Tooltip>
@@ -245,7 +225,7 @@ export default function Navbar({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href={`/${lang}/admin`}
+                        href={`/${lang}/dashboard/admin`}
                         className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
                       >
                         {dictionary.pages.home.navigation.adminDashboard}
@@ -261,7 +241,8 @@ export default function Navbar({
                     <Button
                       size="sm"
                       className="h-9 px-4"
-                      onClick={handleLogout}
+                      onClick={() => logoutMutation.mutate()}
+                      disabled={logoutMutation.isPending}
                     >
                       {dictionary.pages.home.navigation.logout}
                     </Button>
@@ -271,7 +252,7 @@ export default function Navbar({
                   </TooltipContent>
                 </Tooltip>
               </>
-            ) : mounted ? (
+            ) : (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -319,7 +300,7 @@ export default function Navbar({
                 <p>{dictionary.tooltips.toggleTheme}</p>
               </TooltipContent>
             </Tooltip>
-            {!user && (
+            {!isLoading && !isAuthenticated && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button size="sm" className="h-9 px-4">
