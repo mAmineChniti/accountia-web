@@ -89,7 +89,7 @@
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
         "profile": "الملف الشخصي",
-        "adminDashboard": "Admin",
+        "adminDashboard": "لوحة تحكم المدير",
         "logout": "تسجيل الخروج"
       },
       "hero": {
@@ -285,8 +285,8 @@
   "admin": {
     "title": "لوحة تحكم المدير",
     "subtitle": "إدارة المستخدمين وصلاحيات الوصول",
-    "statisticsTitle": "Statistics",
-    "statisticsSubtitle": "Revenue and expenses overview",
+    "statisticsTitle": "الإحصائيات",
+    "statisticsSubtitle": "نظرة عامة على الإيرادات والمصاريف",
     "stats": {
       "totalUsers": "إجمالي المستخدمين",
       "totalAdmins": "المسؤولون",
@@ -298,6 +298,12 @@
       "upToDate": "محدّث"
     },
     "usersTitle": "المستخدمون",
+    "monthlyRevenue": "إجمالي الإيرادات",
+    "monthlyExpenses": "إجمالي المصروفات",
+    "netProfit": "صافي الربح",
+    "netLoss": "صافي الخسارة",
+    "loadingStatistics": "جاري تحميل الإحصائيات...",
+    "errorLoadingStatistics": "خطأ في تحميل الإحصائيات",
     "searchPlaceholder": "ابحث عن مستخدمين...",
     "dateFilterLabel": "تصفية حسب تاريخ التسجيل:",
     "dateFilterPlaceholder": "اختر نطاق التاريخ",

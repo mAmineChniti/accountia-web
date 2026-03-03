@@ -1,14 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Users,
-  BarChart3,
-  ChevronRight,
-  LayoutDashboard,
-  ShieldCheck,
-  Briefcase,
-} from 'lucide-react';
+import { Users, BarChart3, LayoutDashboard } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -45,14 +38,14 @@ export function AdminSidebar({
             <LayoutDashboard className="h-5 w-5" />
           </div>
           <span className="truncate text-lg group-data-[collapsible=icon]:hidden">
-            Accountia Admin
+            {dictionary.admin?.title || 'Accountia Admin'}
           </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/70 px-4 text-xs font-bold tracking-wider uppercase">
-            Statistics
+            {dictionary.admin?.statisticsTitle || 'Statistics'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -60,11 +53,15 @@ export function AdminSidebar({
                 <SidebarMenuButton
                   isActive={activeView === 'statistics'}
                   onClick={() => onViewChange('statistics')}
-                  tooltip="Business Statistics"
+                  tooltip={
+                    dictionary.admin?.statisticsTitle || 'Business Statistics'
+                  }
                   className="px-4"
                 >
                   <BarChart3 className="h-4 w-4" />
-                  <span>Statistics</span>
+                  <span>
+                    {dictionary.admin?.statisticsTitle || 'Statistics'}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -73,7 +70,7 @@ export function AdminSidebar({
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/70 px-4 text-xs font-bold tracking-wider uppercase">
-            Administration
+            {dictionary.admin?.usersTitle || 'Administration'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -81,11 +78,13 @@ export function AdminSidebar({
                 <SidebarMenuButton
                   isActive={activeView === 'users'}
                   onClick={() => onViewChange('users')}
-                  tooltip="User Management"
+                  tooltip={dictionary.admin?.usersTitle || 'User Management'}
                   className="px-4"
                 >
                   <Users className="h-4 w-4" />
-                  <span>Users Management</span>
+                  <span>
+                    {dictionary.admin?.usersTitle || 'Users Management'}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

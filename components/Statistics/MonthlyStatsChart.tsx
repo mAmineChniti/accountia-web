@@ -1,25 +1,16 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
-import { Bar } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-} from 'chart.js';
+  ResponsiveContainer,
+} from 'recharts';
 import { AuthService } from '@/lib/requests';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import {
@@ -31,6 +22,18 @@ import {
 } from '@/components/ui/card';
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
+
+// Helper functions for localization
+const formatCurrency = (value: number, lang: Locale): string => {
+  return new Intl.NumberFormat(lang, {
+    style: 'currency',
+    currency: 'USD',
+  }).format(value);
+};
+
+const formatNumber = (value: number, lang: Locale): string => {
+  return new Intl.NumberFormat(lang).format(value);
+};
 
 export default function MonthlyStatsChart({
   dictionary,
@@ -60,13 +63,13 @@ export default function MonthlyStatsChart({
   if (revLoading || expLoading)
     return (
       <div className="text-muted-foreground animate-pulse p-4 text-center">
-        Loading statistics...
+        {dictionary.admin?.loadingStatistics || 'Loading statistics...'}
       </div>
     );
   if (revError || expError)
     return (
       <div className="text-destructive p-4 text-center">
-        Error loading statistics
+        {dictionary.admin?.errorLoadingStatistics || 'Error loading statistics'}
       </div>
     );
 
@@ -75,62 +78,13 @@ export default function MonthlyStatsChart({
   const profitAmount = revAmount - expAmount;
   const isProfit = profitAmount >= 0;
 
-  const chartData = {
-    labels: ['Overview'],
-    datasets: [
-      {
-        label: 'Revenues',
-        data: [revAmount],
-        backgroundColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgb(34, 197, 94)',
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-      {
-        label: 'Expenses',
-        data: [expAmount],
-        backgroundColor: 'rgba(239, 68, 68, 0.6)',
-        borderColor: 'rgb(239, 68, 68)',
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        padding: 12,
-        titleFont: { size: 14, family: 'Inter, sans-serif' },
-        bodyFont: { size: 14, family: 'Inter, sans-serif' },
-        cornerRadius: 8,
-      },
+  const chartData = [
+    {
+      name: dictionary.admin?.statisticsTitle || 'Overview',
+      [dictionary.admin?.monthlyRevenue || 'Revenues']: revAmount,
+      [dictionary.admin?.monthlyExpenses || 'Expenses']: expAmount,
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(150, 150, 150, 0.1)',
-        },
-        border: { dash: [4, 4] },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-    },
-  };
+  ];
 
   return (
     <div className="md:col-span-3">
@@ -153,14 +107,10 @@ export default function MonthlyStatsChart({
                   <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-500" />
                 </div>
                 <p className="mb-2 text-sm font-medium text-green-700/80 dark:text-green-400">
-                  Total Revenues
+                  {dictionary.admin?.monthlyRevenue || 'Total Revenues'}
                 </p>
                 <p className="text-3xl font-bold text-green-700 dark:text-green-300">
-                  $
-                  {revAmount.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {formatCurrency(revAmount, lang)}
                 </p>
               </div>
 
@@ -180,17 +130,16 @@ export default function MonthlyStatsChart({
                 <p
                   className={`mb-2 text-sm font-medium ${isProfit ? 'text-emerald-700/80 dark:text-emerald-400' : 'text-rose-700/80 dark:text-rose-400'}`}
                 >
-                  {isProfit ? 'Net Profit' : 'Net Loss'}
+                  {isProfit
+                    ? dictionary.admin?.netProfit || 'Net Profit'
+                    : dictionary.admin?.netLoss || 'Net Loss'}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <span
                     className={`text-4xl font-extrabold tracking-tight ${isProfit ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}
                   >
-                    {isProfit ? '+' : '-'}$
-                    {Math.abs(profitAmount).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {isProfit ? '+' : '-'}
+                    {formatCurrency(Math.abs(profitAmount), lang)}
                   </span>
                 </div>
               </div>
@@ -201,21 +150,37 @@ export default function MonthlyStatsChart({
                   <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-500" />
                 </div>
                 <p className="mb-2 text-sm font-medium text-red-700/80 dark:text-red-400">
-                  Total Expenses
+                  {dictionary.admin?.monthlyExpenses || 'Total Expenses'}
                 </p>
                 <p className="text-3xl font-bold text-red-700 dark:text-red-300">
-                  $
-                  {expAmount.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {formatCurrency(expAmount, lang)}
                 </p>
               </div>
             </div>
 
             {/* Bar Chart Container */}
             <div className="mt-8 h-[300px] w-full rounded-2xl border border-zinc-100 bg-white/40 p-4 shadow-sm backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-900/40">
-              <Bar data={chartData} options={options} />
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number | undefined) =>
+                      value === undefined ? '' : formatCurrency(value, lang)
+                    }
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey={dictionary.admin?.monthlyRevenue || 'Revenues'}
+                    fill="#22c55e"
+                  />
+                  <Bar
+                    dataKey={dictionary.admin?.monthlyExpenses || 'Expenses'}
+                    fill="#ef4444"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </CardContent>

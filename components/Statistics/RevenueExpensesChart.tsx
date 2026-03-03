@@ -12,13 +12,35 @@ import {
 
 interface Props {
   data: { month: string; revenue: number; expenses: number }[];
+  translations?: {
+    monthlyStats?: string;
+    revenue?: string;
+    expenses?: string;
+    noData?: string;
+  };
 }
 
-export const RevenueExpensesChart = ({ data }: Props) => {
+export const RevenueExpensesChart = ({ data, translations }: Props) => {
+  // Empty state check
+  if (!data || data.length === 0) {
+    return (
+      <div className="dark:bg-card/90 w-full rounded-lg bg-white p-4 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold">
+          {translations?.monthlyStats || 'Monthly Stats'}
+        </h2>
+        <div className="text-muted-foreground flex h-64 w-full items-center justify-center">
+          {translations?.noData || 'No data available'}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dark:bg-card/90 w-full rounded-lg bg-white p-4 shadow-sm">
       {/* TITRE */}
-      <h2 className="mb-4 text-lg font-semibold">Monthly Stats</h2>
+      <h2 className="mb-4 text-lg font-semibold">
+        {translations?.monthlyStats || 'Monthly Stats'}
+      </h2>
 
       {/* GRAPHIQUE */}
       <div className="h-64 w-full">
@@ -36,13 +58,13 @@ export const RevenueExpensesChart = ({ data }: Props) => {
               type="monotone"
               dataKey="revenue"
               stroke="#82ca9d"
-              name="Revenue"
+              name={translations?.revenue || 'Revenue'}
             />
             <Line
               type="monotone"
               dataKey="expenses"
               stroke="#ff6b6b"
-              name="Expenses"
+              name={translations?.expenses || 'Expenses'}
             />
           </LineChart>
         </ResponsiveContainer>

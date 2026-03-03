@@ -51,7 +51,7 @@ export interface UserPayload {
   birth_date?: string;
   profilePicture?: string;
   profile_picture?: string;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   is_admin?: boolean;
 }
 
@@ -84,7 +84,7 @@ export interface AuthResponseDto {
     birth_date?: string;
     profilePicture?: string;
     profile_picture?: string;
-    isAdmin: boolean;
+    isAdmin?: boolean;
     is_admin?: boolean;
   };
 }
@@ -173,7 +173,7 @@ export interface RateLimitResponse extends BaseErrorResponse {
 /**
  * LogoutSuccessResponse is intentionally left empty as a successful logout returns 200 OK with an empty body.
  */
-export interface LogoutSuccessResponse {} // eslint-disable-line @typescript-eslint/no-empty-object-type
+export type LogoutSuccessResponse = Record<string, never>;
 
 export interface LogoutErrorResponse extends BaseErrorResponse {
   statusCode: 401;
@@ -220,7 +220,7 @@ export interface UserSummary {
   profile_picture?: string;
   phoneNumber?: string;
   phone_number?: string;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   is_admin?: boolean;
   dateJoined: string;
   date_joined?: string;

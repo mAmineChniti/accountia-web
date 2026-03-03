@@ -304,6 +304,12 @@
       "upToDate": "À jour"
     },
     "usersTitle": "Utilisateurs",
+    "monthlyRevenue": "Revenus totaux",
+    "monthlyExpenses": "Dépenses totales",
+    "netProfit": "Bénéfice net",
+    "netLoss": "Perte nette",
+    "loadingStatistics": "Chargement des statistiques...",
+    "errorLoadingStatistics": "Erreur lors du chargement des statistiques",
     "searchPlaceholder": "Rechercher des utilisateurs...",
     "dateFilterLabel": "Filtrer par date d'inscription:",
     "dateFilterPlaceholder": "Sélectionner une plage de dates",

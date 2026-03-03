@@ -187,9 +187,9 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {isLoading ? (
+            {isLoading || user === undefined ? (
               <div className="bg-muted h-9 w-20 animate-pulse rounded" />
-            ) : isAuthenticated && user ? (
+            ) : user ? (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
