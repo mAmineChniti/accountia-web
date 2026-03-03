@@ -202,7 +202,8 @@
       "twoFactorLabel": "رمز التحقق الثنائي",
       "twoFactorPlaceholder": "أدخل رمز التحقق الثنائي",
       "verify2FAButton": "تحقق من 2FA",
-      "verifying2FAButton": "جاري التحقق..."
+      "verifying2FAButton": "جاري التحقق...",
+      "continueWithGoogle": "المتابعة مع Google"
     },
     "register": {
       "title": "إنشاء حساب",
