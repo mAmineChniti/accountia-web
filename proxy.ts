@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
 import { i18n, type Locale } from '@/i18n-config';
-import { getCookie } from 'cookies-next/server';
-
 import { match as matchLocale } from '@formatjs/intl-localematcher';
+
 import Negotiator from 'negotiator';
 
 function getLocale(request: NextRequest): string | undefined {
@@ -20,7 +18,6 @@ function getLocale(request: NextRequest): string | undefined {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -33,9 +30,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = await getCookie('user', { req: request });
-  const token = await getCookie('token', { req: request });
-  const isLoggedIn = !!(user && token);
+  const user = request.cookies.get('user');
+  const token = request.cookies.get('token');
+  const isLoggedIn = !!(user?.value && token?.value);
   const protectedRoutes = ['/dashboard', '/profile', '/settings'];
   const adminOnlyRoutes = ['/admin'];
 
@@ -49,6 +46,17 @@ export async function proxy(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname;
 
+  let isAdmin = false;
+  if (user?.value) {
+    try {
+      const { verifySession } = await import('./actions/verify-session');
+      const verifiedSession = await verifySession();
+      isAdmin = verifiedSession?.isAdmin || false;
+    } catch {
+      isAdmin = false;
+    }
+  }
+
   const isProtectedRoute = protectedRoutes.some((route) =>
     localeStrippedPath.startsWith(route)
   );
@@ -56,24 +64,33 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 
+  const isAdminRoute = adminOnlyRoutes.some(
+    (route) =>
+      localeStrippedPath === route || localeStrippedPath.startsWith(route + '/')
+  );
+  if (isAdminRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+    }
+  }
+
   if (pathname === '/') {
-    // Always redirect to preferred locale for both logged-in and non-logged-in users
-    const cookieLocale = await getCookie('preferred-locale', { req: request });
+    const cookieLocale = request.cookies.get('preferred-locale');
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
-      (typeof cookieLocale === 'string' &&
-      i18n.locales.includes(cookieLocale as Locale)
-        ? cookieLocale
-        : undefined) ||
-      detectedLocale ||
-      i18n.defaultLocale;
+      typeof cookieLocale?.value === 'string' &&
+      i18n.locales.includes(cookieLocale.value as Locale)
+        ? cookieLocale.value
+        : detectedLocale || i18n.defaultLocale;
 
     return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
   }
 
   const lastSegment = pathSegments.at(-1);
-
   if (lastSegment === 'login' || lastSegment === 'register') {
     if (isLoggedIn) {
       return NextResponse.redirect(new URL(`/${locale}/`, request.url));
@@ -81,42 +98,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isAdminRoute = adminOnlyRoutes.some((route) =>
-    localeStrippedPath.startsWith(route)
-  );
-  if (isAdminRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
-    }
-    let isAdmin = false;
-    try {
-      if (typeof user === 'string') {
-        const parsed = JSON.parse(user);
-        isAdmin =
-          parsed.isAdmin === true ||
-          (parsed.user && parsed.user.isAdmin === true);
-      }
-    } catch {}
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
-    }
-  }
-
   const pathnameIsMissingLocale = i18n.locales.every(
     (loc) => !pathname.startsWith(`/${loc}/`) && pathname !== `/${loc}`
   );
 
   if (pathnameIsMissingLocale) {
-    const cookieLocale = await getCookie('preferred-locale', { req: request });
+    const cookieLocale = request.cookies.get('preferred-locale');
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
-      (typeof cookieLocale === 'string' &&
-      i18n.locales.includes(cookieLocale as Locale)
-        ? cookieLocale
-        : undefined) ||
-      detectedLocale ||
-      i18n.defaultLocale;
+      typeof cookieLocale?.value === 'string' &&
+      i18n.locales.includes(cookieLocale.value as Locale)
+        ? cookieLocale.value
+        : detectedLocale || i18n.defaultLocale;
 
     return NextResponse.redirect(
       new URL(

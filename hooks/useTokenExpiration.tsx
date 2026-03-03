@@ -1,12 +1,17 @@
-import { deleteCookie, getCookie } from 'cookies-next';
+import {
+  getToken,
+  clearAuthCookies,
+  type AuthCookieData,
+} from '@/actions/cookies';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const MAX_TIMEOUT = 2_147_483_647;
 
 export const useTokenExpiration = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const previousTokenRef = useRef<AuthCookieData | undefined>(undefined);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | undefined;
@@ -15,7 +20,6 @@ export const useTokenExpiration = () => {
       const timeUntilExpiry = tokenExpiresAt.getTime() - Date.now();
 
       if (timeUntilExpiry <= 0) {
-        // Token already expired, check immediately
         void checkToken();
         return;
       }
@@ -24,10 +28,8 @@ export const useTokenExpiration = () => {
 
       timeoutId = setTimeout(() => {
         if (timeUntilExpiry > MAX_TIMEOUT) {
-          // For long delays, reschedule when this timeout fires
           scheduleTokenCheck(tokenExpiresAt);
         } else {
-          // Final timeout, check token
           void checkToken();
         }
       }, delay);
@@ -35,68 +37,65 @@ export const useTokenExpiration = () => {
 
     const checkToken = async () => {
       try {
-        const tokenCookie = getCookie('token');
+        const tokenData = await getToken();
 
-        if (!tokenCookie) {
+        if (!tokenData) {
+          if (previousTokenRef.current) {
+            await clearAuthCookies();
+            const lang = pathname.split('/')[1] || 'en';
+            router.push(`/${lang}/login`);
+            previousTokenRef.current = undefined;
+          }
           return;
         }
 
+        previousTokenRef.current = tokenData;
+
         let tokenExpiresAt: Date | undefined;
         try {
-          const tokenObj = JSON.parse(tokenCookie as string) as {
-            expires_at?: string;
-            expires_at_ts?: number | string;
-          };
-
-          // Normalize timestamp to milliseconds
           let timestampMs: number;
-          if (tokenObj.expires_at_ts) {
-            timestampMs =
-              typeof tokenObj.expires_at_ts === 'string'
-                ? Number.parseFloat(tokenObj.expires_at_ts)
-                : tokenObj.expires_at_ts;
-
-            // If timestamp is in seconds (less than 1e12), convert to milliseconds
+          if (tokenData.expires_at_ts) {
+            timestampMs = tokenData.expires_at_ts;
             if (timestampMs < 1e12) {
               timestampMs *= 1000;
             }
-          } else if (tokenObj.expires_at) {
-            timestampMs = new Date(tokenObj.expires_at).getTime();
+          } else if (tokenData.expires_at) {
+            timestampMs = new Date(tokenData.expires_at).getTime();
           } else {
-            tokenExpiresAt = undefined;
+            await clearAuthCookies();
+            const lang = pathname.split('/')[1] || 'en';
+            router.push(`/${lang}/login`);
             return;
           }
 
-          // Validate timestampMs is finite and not NaN
           if (
             !Number.isFinite(timestampMs) ||
             new Date(timestampMs).getTime() !== timestampMs
           ) {
-            tokenExpiresAt = undefined;
             return;
           }
 
           tokenExpiresAt = new Date(timestampMs);
         } catch {
-          tokenExpiresAt = undefined;
+          return;
         }
 
         if (!tokenExpiresAt || tokenExpiresAt.getTime() <= Date.now()) {
-          await deleteCookie('user');
-          await deleteCookie('token');
+          await clearAuthCookies();
           const lang = pathname.split('/')[1] || 'en';
           router.push(`/${lang}/login`);
+          previousTokenRef.current = undefined;
           return;
         }
 
         scheduleTokenCheck(tokenExpiresAt);
       } catch {
-        const tokenCookie = getCookie('token');
-        if (tokenCookie) {
-          await deleteCookie('user');
-          await deleteCookie('token');
+        const tokenData = await getToken();
+        if (tokenData) {
+          await clearAuthCookies();
           const lang = pathname.split('/')[1] || 'en';
           router.push(`/${lang}/login`);
+          previousTokenRef.current = undefined;
         }
       }
     };

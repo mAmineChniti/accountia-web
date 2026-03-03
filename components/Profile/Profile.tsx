@@ -45,7 +45,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { UpdateUserSchema, type UpdateUserInput } from '@/types/RequestSchemas';
 import type { TwoFASetupResponse } from '@/types/ResponseInterfaces';
 import { toast } from 'sonner';
-import { deleteCookie } from 'cookies-next';
+import { clearAuthCookies } from '@/actions/cookies';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -335,9 +335,8 @@ export default function Profile({
     mutationFn: async () => {
       return await AuthService.deleteUser();
     },
-    onSuccess: () => {
-      deleteCookie('token');
-      deleteCookie('user');
+    onSuccess: async () => {
+      await clearAuthCookies();
       router.refresh();
     },
     onError: () => {

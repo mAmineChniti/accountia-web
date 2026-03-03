@@ -1,5 +1,6 @@
 import { env } from '@/env';
 import ky from 'ky';
+import { getToken } from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -113,59 +114,11 @@ const API_CONFIG = {
   },
 } as const;
 
-type TokenCookie = {
-  token: string;
-  refreshToken: string;
-  expires_at: string;
-  expires_at_ts: number;
-};
+const authHeaders = async (): Promise<Record<string, string>> => {
+  const tokenData = await getToken();
+  if (!tokenData) return {};
 
-const isTokenCookie = (v: unknown): v is TokenCookie =>
-  typeof v === 'object' &&
-  v !== null &&
-  typeof (v as Record<string, unknown>).token === 'string' &&
-  typeof (v as Record<string, unknown>).refreshToken === 'string' &&
-  typeof (v as Record<string, unknown>).expires_at === 'string' &&
-  typeof (v as Record<string, unknown>).expires_at_ts === 'number';
-
-const getCookie = (name: string): string | undefined => {
-  if (typeof document === 'undefined') return undefined;
-
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-
-  if (parts.length === 2) {
-    const cookieValue = parts.pop()?.split(';').shift();
-    return cookieValue ? decodeURIComponent(cookieValue) : undefined;
-  }
-
-  return undefined;
-};
-
-const authHeaders = (): Record<string, string> => {
-  const raw = getCookie('token');
-  if (!raw || typeof raw !== 'string') return {};
-
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (isTokenCookie(parsed)) {
-      const expMs =
-        parsed.expires_at_ts > 1e12
-          ? parsed.expires_at_ts
-          : parsed.expires_at_ts * 1000;
-      if (Date.now() >= expMs) return {};
-      return { Authorization: `Bearer ${parsed.token}` };
-    }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`Failed to parse cookie 'token':`, error);
-    }
-  }
-
-  if (raw.trim().length > 0) {
-    return { Authorization: `Bearer ${raw}` };
-  }
-  return {};
+  return { Authorization: `Bearer ${tokenData.token}` };
 };
 
 const client = ky.create({
@@ -199,7 +152,7 @@ export const AuthService = {
   },
 
   async setupTwoFactor(): Promise<TwoFASetupResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -226,7 +179,7 @@ export const AuthService = {
   },
 
   async verifyTwoFactor(data: TwoFAVerifyInput): Promise<TwoFAVerifyResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -328,7 +281,7 @@ export const AuthService = {
   },
 
   async logout(refreshToken: string): Promise<LogoutResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -356,7 +309,7 @@ export const AuthService = {
   },
 
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -434,7 +387,7 @@ export const AuthService = {
   },
 
   async fetchUser(): Promise<FetchUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -463,7 +416,7 @@ export const AuthService = {
   async fetchUserById(
     data: FetchUserByIdInput
   ): Promise<FetchUserByIdResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -491,7 +444,7 @@ export const AuthService = {
   },
 
   async updateUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -519,7 +472,7 @@ export const AuthService = {
   },
 
   async patchUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -547,7 +500,7 @@ export const AuthService = {
   },
 
   async deleteUser(): Promise<DeleteUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -599,7 +552,7 @@ export const AuthService = {
   },
 
   async fetchAllUsers(): Promise<UsersListResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -627,7 +580,7 @@ export const AuthService = {
   },
 
   async deleteUserByAdmin(userId: string): Promise<DeleteUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
