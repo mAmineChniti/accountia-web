@@ -110,6 +110,7 @@ const API_CONFIG = {
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
     TWO_FA_LOGIN: 'auth/2fa/login',
+    GOOGLE: 'auth/google',
   },
 } as const;
 
@@ -125,6 +126,31 @@ const client = ky.create({
 });
 
 export const AuthService = {
+  getGoogleAuthUrl(options: {
+    lang: string;
+    mode: 'login' | 'register';
+    redirectUri?: string;
+  }): string {
+    const baseUrl = API_CONFIG.BASE_URL.endsWith('/')
+      ? API_CONFIG.BASE_URL.slice(0, -1)
+      : API_CONFIG.BASE_URL;
+
+    const redirectUri =
+      options.redirectUri ??
+      (globalThis.window === undefined
+        ? undefined
+        : `${globalThis.location.origin}/${options.lang}/auth/callback`);
+
+    const url = new URL(`${baseUrl}/${API_CONFIG.AUTH.GOOGLE}`);
+    url.searchParams.set('mode', options.mode);
+    url.searchParams.set('lang', options.lang);
+    if (redirectUri) {
+      url.searchParams.set('redirectUri', redirectUri);
+    }
+
+    return url.toString();
+  },
+
   async setupTwoFactor(): Promise<TwoFASetupResponse> {
     const token = await authHeaders();
     if (!token.Authorization) {

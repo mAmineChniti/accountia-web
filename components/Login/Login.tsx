@@ -160,6 +160,14 @@ export default function Login({
     twoFAMutation.mutate(data);
   };
 
+  const handleGoogleLogin = () => {
+    const url = AuthService.getGoogleAuthUrl({
+      lang,
+      mode: 'login',
+    });
+    globalThis.location.assign(url);
+  };
+
   const loginErrorMessage =
     loginMutation.error instanceof Error
       ? loginMutation.error.message
@@ -342,6 +350,15 @@ export default function Login({
                   {loginMutation.isPending
                     ? dictionary.pages.login.signingInButton
                     : dictionary.pages.login.signInButton}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleLogin}
+                >
+                  {dictionary.pages.login.continueWithGoogle}
                 </Button>
               </Form>
             </form>
