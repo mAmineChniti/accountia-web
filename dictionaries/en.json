@@ -87,6 +87,7 @@
         "login": "Login",
         "register": "Register",
         "profile": "Profile",
+        "invoices": "Invoices",
         "adminDashboard": "Admin Dashboard",
         "logout": "Logout"
       },
@@ -263,6 +264,59 @@
       "personalInfoLabel": "Personal information",
       "accountInfoLabel": "Account information",
       "authNavLabel": "Authentication navigation"
+    },
+    "businessApplication": {
+      "title": "Apply for Business Access",
+      "description": "Fill in this form to apply for a Business Owner account. Our team will review your application and contact you by email.",
+      "businessNameLabel": "Business Name",
+      "businessNamePlaceholder": "Enter your business name",
+      "businessTypeLabel": "Business Type",
+      "businessTypePlaceholder": "Select your business type",
+      "businessTypes": {
+        "freelance": "Freelance / Self-employed",
+        "startup": "Startup",
+        "sme": "Small & Medium Enterprise (SME)",
+        "enterprise": "Large Enterprise",
+        "nonprofit": "Non-Profit Organization",
+        "other": "Other"
+      },
+      "descriptionLabel": "Business Description",
+      "descriptionPlaceholder": "Briefly describe your business and how you plan to use Accountia...",
+      "websiteLabel": "Website (optional)",
+      "websitePlaceholder": "https://yourbusiness.com",
+      "submitButton": "Submit Application",
+      "submittingButton": "Submitting...",
+      "successTitle": "Application Received!",
+      "successMessage": "Your application has been submitted successfully. Our team will review it and contact you by email within 2-3 business days.",
+      "closeButton": "Back to Home",
+      "errors": {
+        "businessNameRequired": "Business name is required",
+        "businessTypeRequired": "Please select a business type",
+        "descriptionRequired": "Description is required",
+        "descriptionTooShort": "Description must be at least 10 characters",
+        "websiteInvalid": "Please enter a valid URL"
+      },
+      "submitError": "Failed to submit application. Please try again.",
+      "loginRequired": "You must be logged in to apply for business access.",
+      "alreadyApplied": "Your application is already under review.",
+      "authNavLabel": "Business application navigation"
+    },
+    "invoices": {
+      "title": "My Invoices",
+      "description": "View and manage your invoices",
+      "applyBusinessButton": "Apply for Business Access",
+      "totalInvoices": "Total Invoices",
+      "totalPaid": "Total Paid",
+      "totalPending": "Total Pending",
+      "invoiceList": "Invoice List",
+      "noInvoices": "No invoices yet",
+      "dueDateLabel": "Due",
+      "refresh": "Refresh",
+      "fetchError": "Failed to load invoices. Please try again.",
+      "retry": "Try again",
+      "noInvoicesHint": "Invoices sent to you will appear here",
+      "statusOverdue": "Overdue",
+      "paidAtLabel": "Paid on"
     }
   },
   "tooltips": {
@@ -277,6 +331,7 @@
     "getStarted": "Get started with Accountia",
     "signIn": "Sign in to your account",
     "createAccount": "Create a new account",
+    "invoices": "View your invoices",
     "profile": "View your profile",
     "adminDashboard": "Go to the admin dashboard",
     "logout": "Sign out of your account",

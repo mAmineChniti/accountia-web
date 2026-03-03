@@ -87,6 +87,7 @@
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
         "profile": "الملف الشخصي",
+        "invoices": "الفواتير",
         "adminDashboard": "لوحة تحكم المدير",
         "logout": "تسجيل الخروج"
       },
@@ -149,12 +150,20 @@
         "smallBusiness": {
           "title": "الشركات الصغيرة",
           "description": "أدوات شاملة للشركات النامية باحتياجات متزايدة",
-          "features": ["دعم متعدد العملات", "تكامل الرواتب", "إدارة المخزون"]
+          "features": [
+            "دعم متعدد العملات",
+            "تكامل الرواتب",
+            "إدارة المخزون"
+          ]
         },
         "enterprise": {
           "title": "المؤسسات الكبيرة",
           "description": "ميزات متقدمة للمؤسسات الكبيرة بمتطلبات معقدة",
-          "features": ["سير عمل مخصص", "امتثال متقدم", "دعم مخصص"]
+          "features": [
+            "سير عمل مخصص",
+            "امتثال متقدم",
+            "دعم مخصص"
+          ]
         }
       },
       "cta": {
@@ -255,6 +264,59 @@
       "personalInfoLabel": "المعلومات الشخصية",
       "accountInfoLabel": "معلومات الحساب",
       "authNavLabel": "الملاحة المصادقة"
+    },
+    "businessApplication": {
+      "title": "طلب الوصول التجاري",
+      "description": "املأ هذا النموذج للتقدم بطلب حساب مالك الأعمال. سيراجع فريقنا طلبك ويتصل بك عبر البريد الإلكتروني.",
+      "businessNameLabel": "اسم الشركة",
+      "businessNamePlaceholder": "أدخل اسم شركتك",
+      "businessTypeLabel": "نوع العمل",
+      "businessTypePlaceholder": "اختر نوع عملك",
+      "businessTypes": {
+        "freelance": "مستقل / عمل حر",
+        "startup": "شركة ناشئة",
+        "sme": "شركة صغيرة ومتوسطة الحجم",
+        "enterprise": "مؤسسة كبيرة",
+        "nonprofit": "منظمة غير ربحية",
+        "other": "أخرى"
+      },
+      "descriptionLabel": "وصف النشاط التجاري",
+      "descriptionPlaceholder": "صف نشاطك التجاري باختصار وكيف تخطط لاستخدام Accountia...",
+      "websiteLabel": "الموقع الإلكتروني (اختياري)",
+      "websitePlaceholder": "https://شركتك.com",
+      "submitButton": "إرسال الطلب",
+      "submittingButton": "جارٍ الإرسال...",
+      "successTitle": "تم استلام الطلب!",
+      "successMessage": "تم إرسال طلبك بنجاح. سيراجعه فريقنا ويتصل بك عبر البريد الإلكتروني خلال 2-3 أيام عمل.",
+      "closeButton": "العودة إلى الرئيسية",
+      "errors": {
+        "businessNameRequired": "اسم الشركة مطلوب",
+        "businessTypeRequired": "يرجى اختيار نوع العمل",
+        "descriptionRequired": "الوصف مطلوب",
+        "descriptionTooShort": "يجب أن يكون الوصف 10 أحرف على الأقل",
+        "websiteInvalid": "يرجى إدخال عنوان URL صالح"
+      },
+      "submitError": "فشل إرسال الطلب. يرجى المحاولة مرة أخرى.",
+      "loginRequired": "يجب أن تكون مسجل الدخول للتقدم بطلب الوصول التجاري.",
+      "alreadyApplied": "طلبك قيد المراجعة بالفعل.",
+      "authNavLabel": "التنقل في طلب الأعمال"
+    },
+    "invoices": {
+      "title": "فواتيري",
+      "description": "عرض وإدارة فواتيرك",
+      "applyBusinessButton": "التقدّم للحصول على صلاحيات الأعمال",
+      "totalInvoices": "إجمالي الفواتير",
+      "totalPaid": "إجمالي المدفوع",
+      "totalPending": "إجمالي المعلّق",
+      "invoiceList": "قائمة الفواتير",
+      "noInvoices": "لا توجد فواتير بعد",
+      "dueDateLabel": "تاريخ الاستحقاق",
+      "refresh": "تحديث",
+      "fetchError": "فشل تحميل الفواتير. يرجى المحاولة مجدداً.",
+      "retry": "حاول مجدداً",
+      "noInvoicesHint": "ستظهر الفواتير المُرسلة إليك هنا",
+      "statusOverdue": "متأخر",
+      "paidAtLabel": "دُفع في"
     }
   },
   "tooltips": {
@@ -269,6 +331,7 @@
     "getStarted": "ابدأ مع Accountia",
     "signIn": "تسجيل الدخول إلى حسابك",
     "createAccount": "إنشاء حساب جديد",
+    "invoices": "عرض فواتيرك",
     "profile": "عرض ملفك الشخصي",
     "adminDashboard": "الانتقال إلى لوحة تحكم المدير",
     "logout": "تسجيل الخروج من حسابك",

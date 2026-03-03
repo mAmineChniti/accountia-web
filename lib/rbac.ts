@@ -11,7 +11,7 @@ const ROUTE_PERMISSIONS: Record<Role, string[]> = {
   [Role.PLATFORM_ADMIN]: ['/admin'],
   [Role.BUSINESS_OWNER]: ['/dashboard', '/clients', '/invoices', '/team'],
   [Role.BUSINESS_ADMIN]: ['/dashboard', '/clients', '/team'],
-  [Role.CLIENT]: ['/invoices'],
+  [Role.CLIENT]: ['/invoices', '/business-application', '/profile'],
 };
 
 export function hasPermission(role: Role, pathname: string): boolean {

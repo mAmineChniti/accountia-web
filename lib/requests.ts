@@ -10,6 +10,7 @@ import type {
   ForgotPasswordInput,
   TwoFAVerifyInput,
   TwoFALoginInput,
+  BusinessApplicationInput,
 } from '@/types/RequestSchemas';
 import type {
   RegisterResponse,
@@ -27,6 +28,9 @@ import type {
   TwoFASetupResponse,
   TwoFAVerifyResponse,
   TwoFALoginResponse,
+  BusinessApplicationResponse,
+  InvoicesListResponse,
+  InvoiceItem,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -109,6 +113,10 @@ const API_CONFIG = {
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
     TWO_FA_LOGIN: 'auth/2fa/login',
+    BUSINESS_APPLICATION: 'auth/business-application',
+  },
+  USERS: {
+    UPDATE_ROLE: (id: string) => `users/${id}/role`,
   },
 } as const;
 
@@ -169,6 +177,7 @@ const authHeaders = (): Record<string, string> => {
 
 const client = ky.create({
   prefixUrl: API_CONFIG.BASE_URL,
+  timeout: 30000,
 });
 
 export const AuthService = {
@@ -622,6 +631,98 @@ export const AuthService = {
       ) {
         const errorLike = error as HTTPErrorLike;
         const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async applyForBusiness(
+    data: BusinessApplicationInput
+  ): Promise<BusinessApplicationResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.BUSINESS_APPLICATION, {
+          json: data,
+          headers: token,
+        })
+        .json<BusinessApplicationResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+};
+
+export const UserService = {
+  async updateUserRoleByAdmin(userId: string, role: string): Promise<{ message: string; role: string }> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      return await client
+        .patch(API_CONFIG.USERS.UPDATE_ROLE(userId), {
+          json: { role },
+          headers: token,
+        })
+        .json<{ message: string; role: string }>();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+};
+
+export const InvoiceService = {
+  async getMyInvoices(): Promise<InvoicesListResponse> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      return await client
+        .get('invoices/my', { headers: token })
+        .json<InvoicesListResponse>();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getMyInvoiceById(id: string): Promise<InvoiceItem> {
+    const token = authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      return await client
+        .get(`invoices/my/${id}`, { headers: token })
+        .json<InvoiceItem>();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
         throw ApiError.fromResponse(errorData);
       }
       throw error;

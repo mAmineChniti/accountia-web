@@ -19,7 +19,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Trash2, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   Dialog,
@@ -35,6 +34,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -47,7 +53,7 @@ import type {
   UserSummary,
   UsersListResponse,
 } from '@/types/ResponseInterfaces';
-import { AuthService } from '@/lib/requests';
+import { AuthService, UserService } from '@/lib/requests';
 
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
@@ -55,36 +61,15 @@ import { type Locale } from '@/i18n-config';
 type SortKey = 'username' | 'email' | 'dateJoined';
 type SortDir = 'asc' | 'desc';
 
-// ✅ Statut actif/inactif basé sur dateJoined (connecté dans les 30 derniers jours = actif)
-function getUserStatus(user: UserSummary): 'active' | 'inactive' {
-  if (!user.dateJoined) return 'inactive';
-  const joined = new Date(user.dateJoined);
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  return joined >= thirtyDaysAgo ? 'active' : 'inactive';
-}
+const ROLES = [
+  { value: 'CLIENT', label: 'Client' },
+  { value: 'BUSINESS_ADMIN', label: 'Business Admin' },
+  { value: 'BUSINESS_OWNER', label: 'Business Owner' },
+  { value: 'PLATFORM_ADMIN', label: 'Platform Admin' },
+  { value: 'PLATFORM_OWNER', label: 'Platform Owner' },
+] as const;
 
-// ✅ Label du rôle
-function getRoleLabel(role?: string): string {
-  switch (role) {
-    case 'PLATFORM_OWNER':  return 'Platform Owner';
-    case 'PLATFORM_ADMIN':  return 'Platform Admin';
-    case 'BUSINESS_OWNER':  return 'Business Owner';
-    case 'BUSINESS_ADMIN':  return 'Business Admin';
-    case 'CLIENT':          return 'Client';
-    default:                return role ?? '—';
-  }
-}
-
-// ✅ Couleur du badge rôle
-function getRoleBadgeVariant(role?: string): 'default' | 'secondary' | 'outline' | 'destructive' {
-  switch (role) {
-    case 'PLATFORM_OWNER':
-    case 'PLATFORM_ADMIN':  return 'default';
-    case 'BUSINESS_OWNER':  return 'secondary';
-    case 'BUSINESS_ADMIN':  return 'outline';
-    default:                return 'outline';
-  }
-}
+type RoleValue = typeof ROLES[number]['value'];
 
 const formatDateOnly = (value?: string | null): string => {
   if (!value) return '-';
@@ -93,7 +78,6 @@ const formatDateOnly = (value?: string | null): string => {
 
 const EMPTY_USERS: UserSummary[] = [];
 
-// ✅ Composant icône de tri
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (sortKey !== col) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
   return sortDir === 'asc'
@@ -115,9 +99,7 @@ export default function Admin({
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
-  // ✅ Filtre par statut
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [pendingRoleUserId, setPendingRoleUserId] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch, isFetching } =
     useQuery<UsersListResponse>({
@@ -137,7 +119,6 @@ export default function Admin({
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
   const totalUsers = users.length;
   const totalAdmins = users.filter((u) => u.isAdmin).length;
-  const totalActive = users.filter((u) => getUserStatus(u) === 'active').length;
   const modalUsername = modalUser ? modalUser.username : '';
 
   const filteredUsers = useMemo(() => {
@@ -169,11 +150,6 @@ export default function Admin({
       });
     }
 
-    // ✅ Filtre par statut actif/inactif
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((u) => getUserStatus(u) === statusFilter);
-    }
-
     const sorted = filtered.toSorted((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1;
       if (sortKey === 'dateJoined') {
@@ -187,7 +163,7 @@ export default function Admin({
     });
 
     return sorted;
-  }, [users, search, sortKey, sortDir, dateRange, statusFilter]);
+  }, [users, search, sortKey, sortDir, dateRange]);
 
   const deleteMutation = useMutation({
     mutationFn: (userId: string) => AuthService.deleteUserByAdmin(userId),
@@ -207,6 +183,29 @@ export default function Admin({
     },
   });
 
+  const roleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: string }) =>
+      UserService.updateUserRoleByAdmin(userId, role),
+    onSuccess: (result, { userId }) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, role: result.role as RoleValue } : u
+            ),
+          };
+        }
+      );
+      setPendingRoleUserId(null);
+    },
+    onError: () => {
+      setPendingRoleUserId(null);
+    },
+  });
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-1">
@@ -216,8 +215,8 @@ export default function Admin({
         <div className="text-muted-foreground">{dictionary.admin.subtitle}</div>
       </div>
 
-      {/* ✅ Stats cards — ajout carte Active Users */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
             <CardDescription>{dictionary.admin.stats.totalUsers}</CardDescription>
@@ -236,19 +235,6 @@ export default function Admin({
             </CardTitle>
           </CardHeader>
           <CardContent />
-        </Card>
-
-        {/* ✅ Nouvelle carte : utilisateurs actifs */}
-        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardDescription>Active Users</CardDescription>
-            <CardTitle className="text-3xl">
-              {isLoading ? dictionary.admin.stats.placeholder : totalActive}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-xs">Last 30 days</p>
-          </CardContent>
         </Card>
 
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
@@ -303,7 +289,7 @@ export default function Admin({
             </div>
           </div>
 
-          {/* Filtres : date + statut */}
+          {/* Date filter only */}
           <div className="flex flex-wrap gap-2 md:items-center">
             <div className="text-muted-foreground text-sm font-medium">
               {dictionary.admin.dateFilterLabel}
@@ -346,22 +332,6 @@ export default function Admin({
             >
               {dictionary.common.clear}
             </Button>
-
-            {/* ✅ Filtre statut actif/inactif */}
-            <div className="flex gap-1 ml-2">
-              {(['all', 'active', 'inactive'] as const).map((s) => (
-                <Button
-                  key={s}
-                  type="button"
-                  size="sm"
-                  variant={statusFilter === s ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter(s)}
-                  className="capitalize"
-                >
-                  {s === 'all' ? 'All' : s === 'active' ? '🟢 Active' : '⚪ Inactive'}
-                </Button>
-              ))}
-            </div>
           </div>
         </CardHeader>
 
@@ -402,12 +372,7 @@ export default function Admin({
                   </TableHead>
                   <TableHead>{dictionary.admin.firstName}</TableHead>
                   <TableHead>{dictionary.admin.lastName}</TableHead>
-                  {/* ✅ Colonne Role */}
                   <TableHead>Role</TableHead>
-                  {/* ✅ Colonne Admin badge */}
-                  <TableHead>{dictionary.admin.isAdmin}</TableHead>
-                  {/* ✅ Colonne Status */}
-                  <TableHead>Status</TableHead>
                   <TableHead>
                     <Button type="button" variant="ghost" className="px-0" onClick={() => toggleSort('dateJoined')}>
                       {dictionary.admin.dateJoined}
@@ -419,7 +384,9 @@ export default function Admin({
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => {
-                  const status = getUserStatus(user);
+                  const currentRole = (user as any).role as RoleValue | undefined;
+                  const isChangingRole = pendingRoleUserId === user.id;
+
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
@@ -427,33 +394,27 @@ export default function Admin({
                       <TableCell>{user.firstName ?? '-'}</TableCell>
                       <TableCell>{user.lastName ?? '-'}</TableCell>
 
-                      {/* ✅ Role badge */}
+                      {/* Inline role selector */}
                       <TableCell>
-                        <Badge variant={getRoleBadgeVariant((user as any).role)}>
-                          {getRoleLabel((user as any).role)}
-                        </Badge>
-                      </TableCell>
-
-                      {/* Admin badge */}
-                      <TableCell>
-                        {user.isAdmin ? (
-                          <Badge variant="secondary">{dictionary.admin.adminBadge}</Badge>
-                        ) : (
-                          <Badge variant="outline">{dictionary.admin.userBadge}</Badge>
-                        )}
-                      </TableCell>
-
-                      {/* ✅ Status actif/inactif */}
-                      <TableCell>
-                        {status === 'active' ? (
-                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0">
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            Inactive
-                          </Badge>
-                        )}
+                        <Select
+                          value={currentRole ?? ''}
+                          onValueChange={(newRole) => {
+                            setPendingRoleUserId(user.id);
+                            roleMutation.mutate({ userId: user.id, role: newRole });
+                          }}
+                          disabled={isChangingRole}
+                        >
+                          <SelectTrigger className="h-8 w-[160px] text-xs">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ROLES.map((r) => (
+                              <SelectItem key={r.value} value={r.value} className="text-xs">
+                                {r.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
 
                       <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
