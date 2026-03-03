@@ -31,10 +31,6 @@ const formatCurrency = (value: number, lang: Locale): string => {
   }).format(value);
 };
 
-const formatNumber = (value: number, lang: Locale): string => {
-  return new Intl.NumberFormat(lang).format(value);
-};
-
 export default function MonthlyStatsChart({
   dictionary,
   lang,

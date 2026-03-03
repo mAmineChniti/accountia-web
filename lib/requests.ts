@@ -616,7 +616,7 @@ export const AuthService = {
   },
 
   async fetchMonthlyStats(): Promise<FetchMonthlyStatsResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -644,7 +644,7 @@ export const AuthService = {
   },
 
   async fetchRevenuesStats(): Promise<FetchRevenuesStatsResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -672,7 +672,7 @@ export const AuthService = {
   },
 
   async fetchExpensesStats(): Promise<FetchExpensesStatsResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }

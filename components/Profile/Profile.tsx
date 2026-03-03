@@ -284,14 +284,13 @@ export default function Profile({
     if (userData && accountEditMode) {
       accountForm.reset(
         {
-          username: userData.username || userData.user_name,
-          email: userData.email || userData.email_address,
-          firstName: userData.firstName || userData.first_name || '',
-          lastName: userData.lastName || userData.last_name || '',
-          birthdate: userData.birthdate || userData.birth_date || '',
-          phoneNumber: userData.phoneNumber || userData.phone_number || '',
-          profilePicture:
-            userData.profilePicture || userData.profile_picture || '',
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
+          birthdate: userData.birthdate || '',
+          phoneNumber: userData.phoneNumber || '',
+          profilePicture: userData.profilePicture || '',
         },
         { keepDefaultValues: true }
       );
@@ -543,10 +542,8 @@ export default function Profile({
                       {dictionary.pages.profile.birthdate}
                     </span>
                     <span className="font-medium">
-                      {(userData?.birthdate ?? userData?.birth_date)
-                        ? formatDateLong(
-                            (userData?.birthdate ?? userData?.birth_date)!
-                          )
+                      {userData?.birthdate
+                        ? formatDateLong(userData.birthdate!)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -555,9 +552,7 @@ export default function Profile({
                       {dictionary.pages.profile.phoneNumber}
                     </span>
                     <span className="font-medium">
-                      {userData?.phoneNumber ??
-                        userData?.phone_number ??
-                        dictionary.common.na}
+                      {userData?.phoneNumber ?? dictionary.common.na}
                     </span>
                   </div>
                   <div className="md:col-span-2">
@@ -790,27 +785,13 @@ export default function Profile({
                             onClick={() => {
                               setAccountEditMode(false);
                               accountForm.reset({
-                                username:
-                                  userData.username || userData.user_name,
-                                email: userData.email || userData.email_address,
-                                firstName:
-                                  userData.firstName ||
-                                  userData.first_name ||
-                                  '',
-                                lastName:
-                                  userData.lastName || userData.last_name || '',
-                                birthdate:
-                                  userData.birthdate ||
-                                  userData.birth_date ||
-                                  '',
-                                phoneNumber:
-                                  userData.phoneNumber ||
-                                  userData.phone_number ||
-                                  '',
-                                profilePicture:
-                                  userData.profilePicture ||
-                                  userData.profile_picture ||
-                                  '',
+                                username: userData.username,
+                                email: userData.email,
+                                firstName: userData.firstName || '',
+                                lastName: userData.lastName || '',
+                                birthdate: userData.birthdate || '',
+                                phoneNumber: userData.phoneNumber || '',
+                                profilePicture: userData.profilePicture || '',
                               });
                             }}
                             disabled={mutation.isPending}
