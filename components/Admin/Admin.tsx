@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, X, Users, ShieldCheck, User, RefreshCw } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -94,8 +94,7 @@ export default function Admin({
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) => u.isAdmin || u.is_admin).length;
-  const totalNormalUsers = totalUsers - totalAdmins;
+  const totalAdmins = users.filter((u) => u.isAdmin).length;
   const modalUsername = modalUser ? modalUser.username : '';
 
   const filteredUsers = useMemo(() => {
@@ -106,7 +105,7 @@ export default function Admin({
     if (q.length > 0) {
       filtered = filtered.filter((u) => {
         const haystack =
-          `${u.username} ${u.email} ${u.firstName ?? u.first_name ?? ''} ${u.lastName ?? u.last_name ?? ''}`.toLowerCase();
+          `${u.username} ${u.email} ${u.firstName ?? ''} ${u.lastName ?? ''}`.toLowerCase();
         return haystack.includes(q);
       });
     }
@@ -125,17 +124,17 @@ export default function Admin({
         );
         const fromDateOnly = dateRange.from
           ? new Date(
-            dateRange.from.getFullYear(),
-            dateRange.from.getMonth(),
-            dateRange.from.getDate()
-          )
+              dateRange.from.getFullYear(),
+              dateRange.from.getMonth(),
+              dateRange.from.getDate()
+            )
           : undefined;
         const toDateOnly = dateRange.to
           ? new Date(
-            dateRange.to.getFullYear(),
-            dateRange.to.getMonth(),
-            dateRange.to.getDate()
-          )
+              dateRange.to.getFullYear(),
+              dateRange.to.getMonth(),
+              dateRange.to.getDate()
+            )
           : undefined;
 
         if (fromDateOnly && joinDateOnly < fromDateOnly) return false;
@@ -187,78 +186,54 @@ export default function Admin({
         <div className="text-muted-foreground">{dictionary.admin.subtitle}</div>
       </div>
 
-      {/* Premium Stat Cards */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-
-        {/* Total Users */}
-        <div className="group relative overflow-hidden rounded-3xl border-0 bg-white/90 p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-card/90">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest">
-                {dictionary.admin.stats.totalUsers}
-              </p>
-              <div className="text-5xl font-extrabold tracking-tight leading-none mt-2">
-                {isLoading ? <Skeleton className="h-10 w-16 mt-1" /> : totalUsers}
-              </div>
-            </div>
-            <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
-              <Users className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="bg-primary/20 mt-5 h-2 w-full rounded-full">
-            <div className="bg-primary h-2 w-full rounded-full" />
-          </div>
-        </div>
-
-        {/* Admins */}
-        <div className="group relative overflow-hidden rounded-3xl border-0 bg-white/90 p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-card/90">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest">
-                {dictionary.admin.stats.totalAdmins}
-              </p>
-              <div className="text-5xl font-extrabold tracking-tight leading-none mt-2">
-                {isLoading ? <Skeleton className="h-10 w-16 mt-1" /> : totalAdmins}
-              </div>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="mt-5 h-2 w-full rounded-full bg-secondary/50">
-            <div
-              className="h-2 rounded-full bg-secondary-foreground/40 transition-all duration-500"
-              style={{ width: totalUsers > 0 ? `${(totalAdmins / totalUsers) * 100}%` : '0%' }}
-            />
-          </div>
-        </div>
-
-        {/* Normal Users */}
-        <div className="group relative overflow-hidden rounded-3xl border-0 bg-white/90 p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-card/90">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest">
-                {dictionary.admin.stats.totalNormalUsers}
-              </p>
-              <div className="text-5xl font-extrabold tracking-tight leading-none mt-2">
-                {isLoading ? <Skeleton className="h-10 w-16 mt-1" /> : totalNormalUsers}
-              </div>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
-              <User className="h-6 w-6" />
-            </div>
-          </div>
-          <div className="mt-5 h-2 w-full rounded-full bg-accent/50">
-            <div
-              className="h-2 rounded-full bg-accent-foreground/40 transition-all duration-500"
-              style={{ width: totalUsers > 0 ? `${(totalNormalUsers / totalUsers) * 100}%` : '0%' }}
-            />
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>
+              {dictionary.admin.stats.totalUsers}
+            </CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? dictionary.admin.stats.placeholder : totalUsers}
+            </CardTitle>
+          </CardHeader>
+          <CardContent />
+        </Card>
+        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>
+              {dictionary.admin.stats.totalAdmins}
+            </CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? dictionary.admin.stats.placeholder : totalAdmins}
+            </CardTitle>
+          </CardHeader>
+          <CardContent />
+        </Card>
+        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>
+              {dictionary.admin.stats.lastUpdated}
+            </CardDescription>
+            <CardTitle className="text-base font-medium">
+              {isFetching
+                ? dictionary.admin.stats.refreshing
+                : dictionary.admin.stats.upToDate}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              {dictionary.admin.stats.syncButton}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Users Table Card */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-2">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -266,14 +241,13 @@ export default function Admin({
               <CardTitle>{dictionary.admin.usersTitle}</CardTitle>
               <CardDescription>{dictionary.admin.tableCaption}</CardDescription>
             </div>
-            {/* Search + Sync inline */}
-            <div className="flex items-center gap-2 md:w-[400px]">
+            <div className="flex flex-col gap-2 md:w-[320px] md:flex-row md:items-center">
               <div className="relative flex-1">
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={dictionary.admin.searchPlaceholder}
-                  className="pr-10"
+                  className="flex-1 pr-10"
                 />
                 {search && (
                   <Button
@@ -288,17 +262,6 @@ export default function Admin({
                   </Button>
                 )}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => refetch()}
-                disabled={isFetching}
-                className="flex h-9 shrink-0 items-center gap-1.5"
-              >
-                <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
-                {dictionary.admin.stats.syncButton}
-              </Button>
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
@@ -327,7 +290,9 @@ export default function Admin({
                   <Calendar
                     mode="range"
                     selected={dateRange}
-                    onSelect={(range) => { setDateRange(range); }}
+                    onSelect={(range) => {
+                      setDateRange(range);
+                    }}
                     numberOfMonths={2}
                     disabled={(date) => date > new Date()}
                     captionLayout="dropdown"
@@ -423,10 +388,10 @@ export default function Admin({
                     <TableCell className="text-muted-foreground">
                       {user.email}
                     </TableCell>
-                    <TableCell>{user.firstName ?? user.first_name ?? '-'}</TableCell>
-                    <TableCell>{user.lastName ?? user.last_name ?? '-'}</TableCell>
+                    <TableCell>{user.firstName ?? '-'}</TableCell>
+                    <TableCell>{user.lastName ?? '-'}</TableCell>
                     <TableCell>
-                      {user.isAdmin || user.is_admin ? (
+                      {user.isAdmin ? (
                         <Badge variant="secondary">
                           {dictionary.admin.adminBadge}
                         </Badge>
