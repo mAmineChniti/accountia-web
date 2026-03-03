@@ -87,7 +87,7 @@
         "login": "Login",
         "register": "Register",
         "profile": "Profile",
-        "adminDashboard": "Admin Dashboard",
+        "adminDashboard": "Admin",
         "logout": "Logout"
       },
       "hero": {
@@ -291,9 +291,12 @@
   "admin": {
     "title": "Admin Dashboard",
     "subtitle": "Manage users and access controls",
+    "statisticsTitle": "Statistics",
+    "statisticsSubtitle": "Revenue and expenses overview",
     "stats": {
       "totalUsers": "Total users",
       "totalAdmins": "Admins",
+      "totalNormalUsers": "Normal Users",
       "lastUpdated": "Sync Users",
       "placeholder": "—",
       "syncButton": "Sync",

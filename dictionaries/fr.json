@@ -87,7 +87,7 @@
         "login": "Connexion",
         "register": "S'inscrire",
         "profile": "Profil",
-        "adminDashboard": "Tableau de bord admin",
+        "adminDashboard": "Admin",
         "logout": "Déconnexion"
       },
       "hero": {
@@ -291,9 +291,12 @@
   "admin": {
     "title": "Tableau de bord administrateur",
     "subtitle": "Gérez les utilisateurs et les accès",
+    "statisticsTitle": "Statistiques",
+    "statisticsSubtitle": "Aperçu des revenus et dépenses",
     "stats": {
       "totalUsers": "Total des utilisateurs",
       "totalAdmins": "Administrateurs",
+      "totalNormalUsers": "Utilisateurs normaux",
       "lastUpdated": "Synchroniser les utilisateurs",
       "placeholder": "—",
       "syncButton": "Synchroniser",

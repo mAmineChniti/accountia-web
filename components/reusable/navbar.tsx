@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { type Locale } from '@/i18n-config';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
@@ -51,7 +52,12 @@ export default function Navbar({
   dictionary: Dictionary;
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<NavbarUser | undefined>(readUserFromCookies);
+  const [user, setUser] = useState<NavbarUser | undefined>(undefined);
+
+  // Read cookies only on the client after mount to avoid SSR/client hydration mismatch
+  useEffect(() => {
+    setUser(readUserFromCookies());
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -61,10 +67,10 @@ export default function Navbar({
         try {
           const parsed = JSON.parse(tokenCookie as string);
           refreshToken = parsed.refreshToken;
-        } catch {}
+        } catch { }
       }
       await AuthService.logout(refreshToken);
-    } catch {}
+    } catch { }
     deleteCookie('token');
     deleteCookie('user');
     setUser(undefined);
@@ -219,7 +225,7 @@ export default function Navbar({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link
-                        href={`/${lang}/admin`}
+                        href={`/${lang}/dashboard/admin`}
                         className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
                       >
                         {dictionary.pages.home.navigation.adminDashboard}
@@ -245,7 +251,7 @@ export default function Navbar({
                   </TooltipContent>
                 </Tooltip>
               </>
-            ) : user ? undefined : (
+            ) : (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>

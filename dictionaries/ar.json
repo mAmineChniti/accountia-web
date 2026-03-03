@@ -83,11 +83,13 @@
         "features": "الميزات",
         "solutions": "الحلول",
         "pricing": "الأسعار",
+        "statisticsTitle": "الإحصائيات",
+        "statisticsSubtitle": "نظرة عامة على الإيرادات والمصاريف",
         "getStarted": "ابدأ الآن",
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
         "profile": "الملف الشخصي",
-        "adminDashboard": "لوحة تحكم المدير",
+        "adminDashboard": "Admin",
         "logout": "تسجيل الخروج"
       },
       "hero": {
@@ -149,12 +151,20 @@
         "smallBusiness": {
           "title": "الشركات الصغيرة",
           "description": "أدوات شاملة للشركات النامية باحتياجات متزايدة",
-          "features": ["دعم متعدد العملات", "تكامل الرواتب", "إدارة المخزون"]
+          "features": [
+            "دعم متعدد العملات",
+            "تكامل الرواتب",
+            "إدارة المخزون"
+          ]
         },
         "enterprise": {
           "title": "المؤسسات الكبيرة",
           "description": "ميزات متقدمة للمؤسسات الكبيرة بمتطلبات معقدة",
-          "features": ["سير عمل مخصص", "امتثال متقدم", "دعم مخصص"]
+          "features": [
+            "سير عمل مخصص",
+            "امتثال متقدم",
+            "دعم مخصص"
+          ]
         }
       },
       "cta": {
@@ -283,9 +293,12 @@
   "admin": {
     "title": "لوحة تحكم المدير",
     "subtitle": "إدارة المستخدمين وصلاحيات الوصول",
+    "statisticsTitle": "Statistics",
+    "statisticsSubtitle": "Revenue and expenses overview",
     "stats": {
       "totalUsers": "إجمالي المستخدمين",
       "totalAdmins": "المسؤولون",
+      "totalNormalUsers": "المستخدمون العاديون",
       "lastUpdated": "مزامنة المستخدمين",
       "placeholder": "—",
       "syncButton": "مزامنة",

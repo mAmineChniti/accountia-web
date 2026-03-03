@@ -150,11 +150,11 @@ export default function Profile({
         {
           username: userData.username,
           email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          birthdate: userData.birthdate || '',
-          phoneNumber: userData.phoneNumber || '',
-          profilePicture: userData.profilePicture || '',
+          firstName: userData.firstName ?? userData.first_name ?? '',
+          lastName: userData.lastName ?? userData.last_name ?? '',
+          birthdate: userData.birthdate ?? userData.birth_date ?? '',
+          phoneNumber: userData.phoneNumber ?? userData.phone_number ?? '',
+          profilePicture: userData.profilePicture ?? userData.profile_picture ?? '',
         },
         { keepDefaultValues: true }
       );
@@ -167,11 +167,11 @@ export default function Profile({
         {
           username: userData.username,
           email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          birthdate: userData.birthdate || '',
-          phoneNumber: userData.phoneNumber || '',
-          profilePicture: userData.profilePicture || '',
+          firstName: userData.firstName ?? userData.first_name ?? '',
+          lastName: userData.lastName ?? userData.last_name ?? '',
+          birthdate: userData.birthdate ?? userData.birth_date ?? '',
+          phoneNumber: userData.phoneNumber ?? userData.phone_number ?? '',
+          profilePicture: userData.profilePicture ?? userData.profile_picture ?? '',
         },
         { keepDefaultValues: true }
       );
@@ -349,7 +349,7 @@ export default function Profile({
             </Avatar>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-2xl font-bold">
-                {userData?.firstName || userData?.username}
+                {userData?.firstName ?? userData?.first_name ?? userData?.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground truncate">
                 {userData?.email}
@@ -419,8 +419,8 @@ export default function Profile({
                       {dictionary.pages.profile.birthdate}
                     </span>
                     <span className="font-medium">
-                      {userData?.birthdate
-                        ? formatDateLong(userData.birthdate)
+                      {(userData?.birthdate ?? userData?.birth_date)
+                        ? formatDateLong((userData?.birthdate ?? userData?.birth_date)!)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -429,7 +429,7 @@ export default function Profile({
                       {dictionary.pages.profile.phoneNumber}
                     </span>
                     <span className="font-medium">
-                      {userData?.phoneNumber ?? dictionary.common.na}
+                      {userData?.phoneNumber ?? userData?.phone_number ?? dictionary.common.na}
                     </span>
                   </div>
                   <div className="md:col-span-2">
