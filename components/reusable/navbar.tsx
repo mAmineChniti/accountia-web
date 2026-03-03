@@ -54,7 +54,7 @@ export default function Navbar({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<NavbarUser | undefined>(serverUser);
+  const [user, setUser] = useState<NavbarUser | undefined>(undefined);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -210,8 +210,8 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Empêche l'hydratation côté serveur pour la zone utilisateur */}
-            {user ? (
+            {/* Rendu uniquement côté client pour éviter l'hydratation mismatch */}
+            {mounted && user ? (
               <>
                 {!pathname.startsWith(`/${lang}/admin`) && (
                   <Tooltip>
@@ -271,7 +271,7 @@ export default function Navbar({
                   </TooltipContent>
                 </Tooltip>
               </>
-            ) : (
+            ) : mounted ? (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -300,7 +300,7 @@ export default function Navbar({
                   </TooltipContent>
                 </Tooltip>
               </>
-            )}
+            ) : null}
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Tooltip>

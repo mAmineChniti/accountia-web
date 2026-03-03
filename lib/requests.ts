@@ -113,7 +113,7 @@ const API_CONFIG = {
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
     TWO_FA_LOGIN: 'auth/2fa/login',
-    BUSINESS_APPLICATION: 'auth/business-application',
+    BUSINESS_APPLICATION: 'business-application',
   },
   USERS: {
     UPDATE_ROLE: (id: string) => `users/${id}/role`,
