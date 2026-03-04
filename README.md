@@ -1,6 +1,6 @@
 # Accountia
 
-![Accountia Logo](public/logo.png)
+<p align="center"><img src="public/logo.png" alt="Accountia Logo" width="200" /></p>
 
 Accountia is a revolutionary multitenant business management platform that transforms how companies handle their financial and operational needs. By harnessing the power of artificial intelligence, we're building the future of business automation—augmenting traditional accounting workflows while providing smarter, faster, and more accurate financial management.
 
