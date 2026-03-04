@@ -1,9 +1,9 @@
-import type {
-  RegisterInput,
-  LoginInput,
-  RefreshTokenInput,
-  UpdateUserInput,
-} from '@/types/RequestSchemas';
+export type Role =
+  | 'PLATFORM_OWNER'
+  | 'PLATFORM_ADMIN'
+  | 'BUSINESS_OWNER'
+  | 'BUSINESS_ADMIN'
+  | 'CLIENT';
 
 export interface BaseResponse {
   message: string;
@@ -16,9 +16,37 @@ export interface BaseErrorResponse {
   timestamp?: string;
 }
 
+export interface MonthlyStat {
+  month: string;
+  revenue: number;
+  expenses: number;
+}
+
+export interface BasicStatResponse {
+  totalAmount: number;
+  count: number;
+}
+
+export interface MonthlyStatsResponse {
+  message: string;
+  stats: MonthlyStat[];
+}
+
 export interface ValidationErrorResponse {
   message: string;
   errors: Record<string, string>;
+}
+
+export interface PublicUserProfile {
+  id: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  birthdate?: string;
+  dateJoined: string;
+  profilePicture?: string;
+  phoneNumber?: string;
+  role?: Role;
 }
 
 export interface UserPayload {
@@ -30,7 +58,7 @@ export interface UserPayload {
   phoneNumber?: string;
   birthdate?: string;
   profilePicture?: string;
-  isAdmin: boolean;
+  role?: Role;
 }
 
 export interface UserProfile extends UserPayload {
@@ -38,27 +66,12 @@ export interface UserProfile extends UserPayload {
   emailConfirmed: boolean;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
 export interface AuthResponseDto {
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: string;
   refreshTokenExpiresAt: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    phoneNumber?: string;
-    birthdate?: string;
-    profilePicture?: string;
-    isAdmin: boolean;
-  };
+  user: UserPayload;
 }
 
 export interface TwoFASetupResponse {
@@ -71,24 +84,6 @@ export interface TwoFAVerifyResponse {
 }
 
 export type TwoFALoginResponse = AuthResponseDto;
-
-export interface RegistrationResponseDto {
-  message: string;
-  email: string;
-}
-
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
-export interface RefreshTokenDto {
-  refreshToken: string;
-}
-
-export interface ResendConfirmationDto {
-  email: string;
-}
 
 export interface AuthResponse extends BaseResponse {
   accessToken: string;
@@ -105,7 +100,6 @@ export interface RegisterSuccessResponse extends BaseResponse {
 export interface EmailNotConfirmedResponse extends BaseErrorResponse {
   type: 'EMAIL_NOT_CONFIRMED';
   email: string;
-  userId: string;
 }
 
 export interface AccountExistsResponse extends BaseErrorResponse {
@@ -142,10 +136,7 @@ export interface RateLimitResponse extends BaseErrorResponse {
   message: 'Too many failed login attempts. Please try again later.';
 }
 
-/**
- * LogoutSuccessResponse is intentionally left empty as a successful logout returns 200 OK with an empty body.
- */
-export interface LogoutSuccessResponse {} // eslint-disable-line @typescript-eslint/no-empty-object-type
+export type LogoutSuccessResponse = BaseResponse;
 
 export interface LogoutErrorResponse extends BaseErrorResponse {
   statusCode: 401;
@@ -170,11 +161,11 @@ export interface FetchUserSuccessResponse extends BaseResponse {
 }
 
 export interface FetchUserByIdSuccessResponse extends BaseResponse {
-  user: UserProfile;
+  user: PublicUserProfile;
 }
 
-export interface FetchUserByIdRequestBody {
-  userId: string;
+export interface UpdateUserSuccessResponse extends BaseResponse {
+  user: UserProfile;
 }
 
 // administrative user summary/list types
@@ -187,17 +178,13 @@ export interface UserSummary {
   birthdate?: string;
   profilePicture?: string;
   phoneNumber?: string;
-  isAdmin: boolean;
+  role?: Role;
   dateJoined: string;
 }
 
 export interface UsersListResponse {
   message: string;
   users: UserSummary[];
-}
-
-export interface UpdateUserSuccessResponse extends BaseResponse {
-  user: UserProfile;
 }
 
 export interface UsernameTakenResponse extends BaseErrorResponse {
@@ -214,21 +201,22 @@ export interface DeleteUserSuccessResponse extends BaseResponse {
   message: 'Account deleted successfully';
 }
 
+export interface DeleteUserByAdminSuccessResponse extends BaseResponse {
+  message: 'User deleted successfully';
+}
+
+export interface ChangeRoleResponse extends BaseResponse {
+  userId: string;
+  newRole: Role;
+  previousRole: Role;
+}
+
 export interface ForgotPasswordSuccessResponse extends BaseResponse {
   message: 'If an account exists with this email, a reset link will be sent';
 }
 
-export interface ForgotPasswordRequestBody {
-  email: string; // Required, valid email
-}
-
 export interface ResetPasswordSuccessResponse extends BaseResponse {
   message: 'Password reset successfully';
-}
-
-export interface ResetPasswordRequestBody {
-  token: string; // Required, reset token
-  newPassword: string; // Required, new password
 }
 
 export interface ResendConfirmationSuccessResponse extends BaseResponse {
@@ -248,10 +236,98 @@ export type FetchUserResponse = FetchUserSuccessResponse;
 export type FetchUserByIdResponse = FetchUserByIdSuccessResponse;
 export type UpdateUserResponse = UpdateUserSuccessResponse;
 export type DeleteUserResponse = DeleteUserSuccessResponse;
+export type DeleteUserByAdminResponse = DeleteUserByAdminSuccessResponse;
 export type ForgotPasswordResponse = ForgotPasswordSuccessResponse;
 export type ResetPasswordResponse = ResetPasswordSuccessResponse;
 export type ResendConfirmationResponse = ResendConfirmationSuccessResponse;
 export type FetchAllUsersResponse = UsersListResponse;
+export type FetchMonthlyStatsResponse = MonthlyStatsResponse;
+export type FetchRevenuesStatsResponse = BasicStatResponse;
+export type FetchExpensesStatsResponse = BasicStatResponse;
+export type ChangeRoleApiResponse = ChangeRoleResponse;
+
+export interface BusinessApplicationResponse {
+  message: string;
+  application: BusinessApplicationItem;
+}
+
+export interface BusinessItem {
+  id: string;
+  name: string;
+  phone: string;
+  status: 'pending' | 'approved' | 'rejected';
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface BusinessDetailData {
+  id: string;
+  name: string;
+  description: string;
+  website?: string;
+  phone: string;
+  databaseName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  isActive: boolean;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessDetailResponse {
+  message: string;
+  business: BusinessDetailData;
+}
+
+export interface MyBusinessesResponse {
+  message: string;
+  businesses: BusinessItem[];
+}
+
+export interface AllBusinessesResponse {
+  message: string;
+  businesses: BusinessItem[];
+}
+
+export interface BusinessApplicationItem {
+  id: string;
+  businessName: string;
+  description: string;
+  website?: string;
+  phone: string;
+  applicantId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export interface BusinessApplicationsListResponse {
+  message: string;
+  applications: BusinessApplicationItem[];
+}
+
+export interface ReviewApplicationResponse {
+  message: string;
+  application: BusinessApplicationItem;
+}
+
+export interface AssignedBusinessUser {
+  id: string;
+  businessId: string;
+  userId: string;
+  role: string;
+  assignedBy: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AssignUserResponse {
+  message: string;
+  businessUser: AssignedBusinessUser;
+}
+
+export interface BusinessMessageResponse {
+  message: string;
+}
 
 export enum HttpStatus {
   OK = 200,
@@ -293,9 +369,3 @@ export type ApiError = BaseErrorResponse | ValidationErrorResponse;
 export type SuccessResponse<T> = ApiResponse<T>;
 
 export type ErrorResponse = ApiError;
-
-// Re-export Zod-inferred types as canonical request body types
-export type RegisterRequestBody = RegisterInput;
-export type LoginRequestBody = LoginInput;
-export type LogoutRequestBody = RefreshTokenInput;
-export type UpdateUserRequestBody = UpdateUserInput;

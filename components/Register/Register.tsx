@@ -123,6 +123,10 @@ export default function Register({
     onError: (error: unknown) => {
       if (error instanceof ApiError) {
         switch (error.type) {
+          case 'USERNAME_TAKEN': {
+            toast.error(dictionary.pages.register.usernameTaken);
+            break;
+          }
           case 'ACCOUNT_EXISTS': {
             toast.error(dictionary.pages.register.emailAlreadyRegistered);
             setTimeout(() => {
@@ -162,6 +166,11 @@ export default function Register({
     } finally {
       setIsResending(false);
     }
+  };
+
+  const handleGoogleRegister = () => {
+    const url = AuthService.getGoogleAuthUrl({ lang, mode: 'register' });
+    globalThis.location.assign(url);
   };
 
   return (
@@ -509,6 +518,15 @@ export default function Register({
                 {registerMutation.isPending
                   ? dictionary.pages.register.creatingAccountButton
                   : dictionary.pages.register.registerButton}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleRegister}
+              >
+                {dictionary.pages.register.continueWithGoogle}
               </Button>
             </form>
           </Form>

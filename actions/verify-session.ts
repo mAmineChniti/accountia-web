@@ -1,6 +1,7 @@
 'use server';
 
 import { getToken, getUser } from './cookies';
+import { isAdminRole } from '@/lib/auth';
 
 export async function verifySession() {
   try {
@@ -13,7 +14,7 @@ export async function verifySession() {
 
     return {
       authenticated: true,
-      isAdmin: userData.isAdmin,
+      isAdmin: isAdminRole(userData.role),
       user: userData,
     };
   } catch {

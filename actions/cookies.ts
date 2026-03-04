@@ -7,18 +7,26 @@ export interface AuthCookieData {
   refreshToken: string;
   expires_at: string;
   expires_at_ts: number;
+  refresh_expires_at: string;
+  refresh_expires_at_ts: number;
 }
 
 export interface UserCookieData {
   userId: string;
-  isAdmin: boolean;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  birthdate?: string;
+  role: string;
   loginTime: string;
 }
 
 export async function setTokens(tokenData: AuthCookieData): Promise<void> {
   const maxAge = Math.max(
-    tokenData.expires_at_ts > 0
-      ? Math.floor((tokenData.expires_at_ts - Date.now()) / 1000)
+    tokenData.refresh_expires_at_ts > 0
+      ? Math.floor((tokenData.refresh_expires_at_ts - Date.now()) / 1000)
       : 7 * 24 * 60 * 60,
     0
   );

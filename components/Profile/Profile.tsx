@@ -45,7 +45,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { UpdateUserSchema, type UpdateUserInput } from '@/types/RequestSchemas';
 import type { TwoFASetupResponse } from '@/types/ResponseInterfaces';
 import { toast } from 'sonner';
-import { clearAuthCookies } from '@/actions/cookies';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -63,6 +62,7 @@ import {
 } from '@/lib/date-utils';
 import { type Locale } from '@/i18n-config';
 import { useRouter } from 'next/navigation';
+import { clearAuthCookies } from '@/actions/cookies';
 
 export default function Profile({
   dictionary,
@@ -76,6 +76,7 @@ export default function Profile({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [tab, setTab] = useState('overview');
   const [twoFASetup, setTwoFASetup] = useState<
     TwoFASetupResponse | undefined
@@ -146,37 +147,17 @@ export default function Profile({
 
   useEffect(() => {
     if (userData) {
-      accountForm.reset(
-        {
-          username: userData.username,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          birthdate: userData.birthdate || '',
-          phoneNumber: userData.phoneNumber || '',
-          profilePicture: userData.profilePicture || '',
-        },
-        { keepDefaultValues: true }
-      );
+      accountForm.reset({
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        birthdate: userData.birthdate || '',
+        phoneNumber: userData.phoneNumber || '',
+        profilePicture: userData.profilePicture || '',
+      });
     }
-  }, [userData, accountEditMode, accountForm]);
-
-  useEffect(() => {
-    if (userData && accountEditMode) {
-      accountForm.reset(
-        {
-          username: userData.username,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          birthdate: userData.birthdate || '',
-          phoneNumber: userData.phoneNumber || '',
-          profilePicture: userData.profilePicture || '',
-        },
-        { keepDefaultValues: true }
-      );
-    }
-  }, [userData, accountEditMode, accountForm]);
+  }, [userData, accountForm]);
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateUserInput) => {
@@ -200,6 +181,7 @@ export default function Profile({
       return await AuthService.deleteUser();
     },
     onSuccess: async () => {
+      setShowDeleteDialog(false);
       await clearAuthCookies();
       router.refresh();
     },
@@ -239,7 +221,7 @@ export default function Profile({
 
   if (isLoading)
     return (
-      <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+      <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
             <CardHeader className="flex flex-row items-center gap-6 pb-4">
@@ -310,7 +292,7 @@ export default function Profile({
 
   if (isError || !userData)
     return (
-      <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+      <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
             <CardHeader className="flex flex-row items-center gap-6 pb-4">
@@ -332,7 +314,7 @@ export default function Profile({
     );
 
   return (
-    <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+    <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Profile Header */}
         <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
@@ -348,7 +330,7 @@ export default function Profile({
             </Avatar>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-2xl font-bold">
-                {userData?.firstName || userData?.username}
+                {userData?.firstName ?? userData?.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground truncate">
                 {userData?.email}
@@ -663,11 +645,11 @@ export default function Profile({
                               accountForm.reset({
                                 username: userData.username,
                                 email: userData.email,
-                                firstName: userData.firstName,
-                                lastName: userData.lastName,
-                                birthdate: userData.birthdate,
-                                phoneNumber: userData.phoneNumber,
-                                profilePicture: userData.profilePicture,
+                                firstName: userData.firstName || '',
+                                lastName: userData.lastName || '',
+                                birthdate: userData.birthdate || '',
+                                phoneNumber: userData.phoneNumber || '',
+                                profilePicture: userData.profilePicture || '',
                               });
                             }}
                             disabled={mutation.isPending}
@@ -1028,7 +1010,6 @@ export default function Profile({
                 variant="destructive"
                 onClick={() => {
                   deleteMutation.mutate();
-                  setShowDeleteDialog(false);
                 }}
                 disabled={deleteMutation.isPending}
               >

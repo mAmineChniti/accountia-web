@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
   {
     files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
     rules: {
+      '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/array-type': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/no-deprecated': 'warn',

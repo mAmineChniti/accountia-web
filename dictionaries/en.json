@@ -87,7 +87,8 @@
         "login": "Login",
         "register": "Register",
         "profile": "Profile",
-        "adminDashboard": "Admin Dashboard",
+        "invoices": "Invoices",
+        "adminDashboard": "Dashboard",
         "logout": "Logout"
       },
       "hero": {
@@ -208,7 +209,8 @@
       "twoFactorLabel": "Two-Factor Code",
       "twoFactorPlaceholder": "Enter your 2FA code",
       "verify2FAButton": "Verify 2FA",
-      "verifying2FAButton": "Verifying..."
+      "verifying2FAButton": "Verifying...",
+      "continueWithGoogle": "Continue with Google"
     },
     "register": {
       "title": "Create account",
@@ -258,11 +260,55 @@
       "resendErrorMessage": "Failed to resend confirmation email",
       "unexpectedError": "An error occurred during login. Please try again.",
       "registrationFailed": "Registration failed. Please try again.",
+      "usernameTaken": "This username is already taken",
       "emailAlreadyRegistered": "This email is already registered",
       "accountExists": "An account with this email already exists",
       "personalInfoLabel": "Personal information",
       "accountInfoLabel": "Account information",
+      "continueWithGoogle": "Sign up with Google",
       "authNavLabel": "Authentication navigation"
+    },
+    "oauthCallback": {
+      "loading": "Completing sign in…",
+      "errorTitle": "Sign in failed",
+      "errorDescription": "Something went wrong during Google sign in. Please try again.",
+      "backToLogin": "Back to Login"
+    },
+    "invoices": {
+      "title": "My Invoices",
+      "description": "View and manage your invoices",
+      "createBusinessButton": "Create a New Business",
+      "refresh": "Refresh",
+      "totalInvoices": "Total Invoices",
+      "totalPaid": "Total Paid",
+      "totalPending": "Total Pending",
+      "invoiceList": "Invoice List",
+      "noInvoices": "No invoices yet",
+      "noInvoicesHint": "Invoices sent to you will appear here",
+      "dueDateLabel": "Due",
+      "paidAtLabel": "Paid on",
+      "statusOverdue": "Overdue",
+      "retry": "Try again",
+      "fetchError": "Failed to load invoices. Please try again."
+    },
+    "businessApplication": {
+      "title": "Apply for Business Access",
+      "description": "Fill in the form below to apply for business access on Accountia",
+      "businessNameLabel": "Business Name",
+      "businessNamePlaceholder": "e.g. Acme Corp",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Briefly describe your business and what you do",
+      "websiteLabel": "Website (optional)",
+      "websitePlaceholder": "https://yourbusiness.com",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "+1 234 567 8901",
+      "submitButton": "Submit Application",
+      "submittingButton": "Submitting...",
+      "submitError": "Failed to submit application. Please try again.",
+      "successTitle": "Application Submitted!",
+      "successMessage": "Your application has been received. Our team will review it and get back to you shortly.",
+      "closeButton": "Back to Home",
+      "cancelButton": "Cancel"
     }
   },
   "tooltips": {
@@ -278,6 +324,7 @@
     "signIn": "Sign in to your account",
     "createAccount": "Create a new account",
     "profile": "View your profile",
+    "invoices": "Go to your invoices",
     "adminDashboard": "Go to the admin dashboard",
     "logout": "Sign out of your account",
     "perfectForNewBusinesses": "Perfect for new businesses",
@@ -291,9 +338,12 @@
   "admin": {
     "title": "Admin Dashboard",
     "subtitle": "Manage users and access controls",
+    "statisticsTitle": "Statistics",
+    "statisticsSubtitle": "Revenue and expenses overview",
     "stats": {
       "totalUsers": "Total users",
       "totalAdmins": "Admins",
+      "totalNormalUsers": "Normal Users",
       "lastUpdated": "Sync Users",
       "placeholder": "—",
       "syncButton": "Sync",
@@ -301,6 +351,12 @@
       "upToDate": "Up to date"
     },
     "usersTitle": "Users",
+    "monthlyRevenue": "Total Revenues",
+    "monthlyExpenses": "Total Expenses",
+    "netProfit": "Net Profit",
+    "netLoss": "Net Loss",
+    "loadingStatistics": "Loading statistics...",
+    "errorLoadingStatistics": "Error loading statistics",
     "searchPlaceholder": "Search users...",
     "dateFilterLabel": "Filter by registration date:",
     "dateFilterPlaceholder": "Select date range",
@@ -309,6 +365,16 @@
     "noResults": "No results found.",
     "adminBadge": "Admin",
     "userBadge": "User",
+    "roleColumn": "Role",
+    "changeRoleSuccess": "Role updated successfully",
+    "changeRoleError": "Failed to update role",
+    "roles": {
+      "PLATFORM_OWNER": "Platform Owner",
+      "PLATFORM_ADMIN": "Platform Admin",
+      "BUSINESS_OWNER": "Business Owner",
+      "BUSINESS_ADMIN": "Business Admin",
+      "CLIENT": "Client"
+    },
     "manageButton": "Manage",
     "deleteDialog": {
       "title": "Delete user",

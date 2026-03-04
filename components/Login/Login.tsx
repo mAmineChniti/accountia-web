@@ -33,7 +33,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
-import { useState } from 'react';
+import { type SyntheticEvent, useState } from 'react';
 import {
   LoginSchema,
   type LoginInput,
@@ -67,6 +67,7 @@ export default function Login({
       }
     | undefined
   >();
+  const [otpCode, setOtpCode] = useState('');
   const twoFAForm = useForm<TwoFALoginInput>({
     resolver: zodResolver(TwoFALoginSchema),
     defaultValues: {
@@ -75,18 +76,19 @@ export default function Login({
     },
   });
 
-  const isTwoFACodeValid = twoFAForm.formState.isValid;
+  const isTwoFACodeValid = otpCode.length === 6 && /^\d{6}$/.test(otpCode);
 
   const handleAuthSuccess = async (
     response:
       | AuthResponseDto
       | { tempToken: string; twoFactorRequired: boolean },
-    lang: string
+    email?: string
   ) => {
     if ('tempToken' in response) {
-      setTwoFA({ tempToken: response.tempToken, email: '' });
+      setTwoFA({ tempToken: response.tempToken, email: email ?? '' });
       twoFAForm.reset({ tempToken: response.tempToken, code: '' });
-      return false;
+      setOtpCode('');
+      return;
     }
 
     const authResponse = response as AuthResponseDto;
@@ -102,32 +104,47 @@ export default function Login({
     }
 
     await setTokens({
-      token: response.accessToken,
-      refreshToken: response.refreshToken,
+      token: authResponse.accessToken,
+      refreshToken: authResponse.refreshToken,
       expires_at:
-        response.accessTokenExpiresAt ||
+        authResponse.accessTokenExpiresAt ||
+        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      expires_at_ts: authResponse.accessTokenExpiresAt
+        ? new Date(authResponse.accessTokenExpiresAt).getTime()
+        : Date.now() + 24 * 60 * 60 * 1000,
+      refresh_expires_at:
+        authResponse.refreshTokenExpiresAt ||
         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      expires_at_ts: response.accessTokenExpiresAt
-        ? new Date(response.accessTokenExpiresAt).getTime()
+      refresh_expires_at_ts: authResponse.refreshTokenExpiresAt
+        ? new Date(authResponse.refreshTokenExpiresAt).getTime()
         : Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
 
-    const userData = {
+    await setUser({
       userId: userWithoutProfilePicture.id,
-      isAdmin: userWithoutProfilePicture.isAdmin,
+      username: userWithoutProfilePicture.username,
+      email: userWithoutProfilePicture.email,
+      firstName: userWithoutProfilePicture.firstName,
+      lastName: userWithoutProfilePicture.lastName,
+      phoneNumber: userWithoutProfilePicture.phoneNumber,
+      birthdate: userWithoutProfilePicture.birthdate,
+      role: userWithoutProfilePicture.role ?? 'CLIENT',
       loginTime: new Date().toISOString(),
-    };
-    await setUser(userData);
+    });
 
     globalThis.dispatchEvent(new CustomEvent('auth:changed'));
 
-    if (userWithoutProfilePicture.isAdmin) {
-      router.push(`/${lang}/admin`);
+    if (
+      ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
+        userWithoutProfilePicture.role ?? ''
+      )
+    ) {
+      router.push(`/${lang}/dashboard/admin`);
+    } else if (userWithoutProfilePicture.role === 'CLIENT') {
+      router.push(`/${lang}/invoices`);
     } else {
       router.push(`/${lang}`);
     }
-
-    return userWithoutProfilePicture.isAdmin;
   };
 
   const loginMutation = useMutation<
@@ -136,8 +153,8 @@ export default function Login({
     LoginInput
   >({
     mutationFn: AuthService.login,
-    onSuccess: async (response, _variables) => {
-      await handleAuthSuccess(response, lang);
+    onSuccess: async (response, variables) => {
+      await handleAuthSuccess(response, variables.email);
     },
   });
 
@@ -148,7 +165,7 @@ export default function Login({
   >({
     mutationFn: AuthService.twoFactorLogin,
     onSuccess: async (response) => {
-      await handleAuthSuccess(response, lang);
+      await handleAuthSuccess(response);
     },
   });
 
@@ -156,8 +173,15 @@ export default function Login({
     loginMutation.mutate(data);
   };
 
-  const on2FASubmit = async (data: TwoFALoginInput) => {
-    twoFAMutation.mutate(data);
+  const handleOtpSubmit = (e: SyntheticEvent) => {
+    e.preventDefault();
+    if (!twoFA || !isTwoFACodeValid) return;
+    twoFAMutation.mutate({ tempToken: twoFA.tempToken, code: otpCode });
+  };
+
+  const handleGoogleLogin = () => {
+    const url = AuthService.getGoogleAuthUrl({ lang, mode: 'login' });
+    globalThis.location.assign(url);
   };
 
   const loginErrorMessage =
@@ -194,42 +218,28 @@ export default function Login({
         </CardHeader>
         <CardContent className="space-y-4">
           {twoFA ? (
-            <form
-              onSubmit={twoFAForm.handleSubmit(on2FASubmit)}
-              className="space-y-4"
-            >
-              <Form {...twoFAForm}>
-                <fieldset className="space-y-4">
-                  <FormField
-                    control={twoFAForm.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel htmlFor="2fa-code">
-                          {dictionary.pages.login.twoFactorLabel}
-                        </FormLabel>
-                        <FormControl>
-                          <InputOTP
-                            maxLength={6}
-                            value={field.value}
-                            onChange={field.onChange}
-                            containerClassName="justify-center"
-                            inputMode="numeric"
-                            aria-describedby="2fa-error"
-                            aria-invalid={!!twoFAForm.formState.errors.code}
-                          >
-                            <InputOTPGroup>
-                              {[0, 1, 2, 3, 4, 5].map((i) => (
-                                <InputOTPSlot key={i} index={i} />
-                              ))}
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </FormControl>
-                        <FormMessage id="2fa-error" />
-                      </FormItem>
-                    )}
-                  />
-                </fieldset>
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm leading-none font-medium">
+                    {dictionary.pages.login.twoFactorLabel}
+                  </label>
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(v) => setOtpCode(v)}
+                      disabled={twoFAMutation.isPending}
+                      autoFocus
+                    >
+                      <InputOTPGroup>
+                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                          <InputOTPSlot key={i} index={i} />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
 
                 {twoFAErrorMessage && (
                   <div
@@ -250,15 +260,12 @@ export default function Login({
                   type="submit"
                   className="w-full"
                   disabled={twoFAMutation.isPending || !isTwoFACodeValid}
-                  aria-describedby={
-                    twoFAErrorMessage ? '2fa-error-msg' : undefined
-                  }
                 >
                   {twoFAMutation.isPending
                     ? dictionary.pages.login.verifying2FAButton
                     : dictionary.pages.login.verify2FAButton}
                 </Button>
-              </Form>
+              </div>
             </form>
           ) : (
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -342,6 +349,15 @@ export default function Login({
                   {loginMutation.isPending
                     ? dictionary.pages.login.signingInButton
                     : dictionary.pages.login.signInButton}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleLogin}
+                >
+                  {dictionary.pages.login.continueWithGoogle}
                 </Button>
               </Form>
             </form>

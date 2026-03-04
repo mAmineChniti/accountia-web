@@ -4,6 +4,7 @@ import { i18n, type Locale } from '@/i18n-config';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 
 import Negotiator from 'negotiator';
+import { isAdminRole } from '@/lib/auth';
 
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
@@ -30,11 +31,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = request.cookies.get('user');
-  const token = request.cookies.get('token');
-  const isLoggedIn = !!(user?.value && token?.value);
-  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
-  const adminOnlyRoutes = ['/admin'];
+  const user = request.cookies.get('user')?.value;
+  const token = request.cookies.get('token')?.value;
+  const isLoggedIn = !!(user && token);
+  const protectedRoutes = [
+    '/dashboard',
+    '/profile',
+    '/settings',
+    '/invoices',
+    '/business-application',
+  ];
+  const adminOnlyRoutes = ['/dashboard/admin'];
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
@@ -46,12 +53,22 @@ export async function proxy(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname;
 
+  const preferredLocaleCookie = request.cookies.get('preferred-locale')?.value;
+  if (
+    isValidLocale &&
+    typeof preferredLocaleCookie === 'string' &&
+    i18n.locales.includes(preferredLocaleCookie as Locale) &&
+    preferredLocaleCookie !== locale
+  ) {
+    const newPathname = `/${preferredLocaleCookie}${localeStrippedPath === '/' ? '' : localeStrippedPath}`;
+    return NextResponse.redirect(new URL(newPathname, request.url));
+  }
+
   let isAdmin = false;
-  if (user?.value) {
+  if (user) {
     try {
-      const { verifySession } = await import('./actions/verify-session');
-      const verifiedSession = await verifySession();
-      isAdmin = verifiedSession?.isAdmin || false;
+      const parsed = JSON.parse(user) as { role?: string };
+      isAdmin = isAdminRole(parsed.role);
     } catch {
       isAdmin = false;
     }
@@ -78,13 +95,13 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === '/') {
-    const cookieLocale = request.cookies.get('preferred-locale');
+    const cookieLocale = request.cookies.get('preferred-locale')?.value;
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
-      typeof cookieLocale?.value === 'string' &&
-      i18n.locales.includes(cookieLocale.value as Locale)
-        ? cookieLocale.value
+      typeof cookieLocale === 'string' &&
+      i18n.locales.includes(cookieLocale as Locale)
+        ? cookieLocale
         : detectedLocale || i18n.defaultLocale;
 
     return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
@@ -103,13 +120,13 @@ export async function proxy(request: NextRequest) {
   );
 
   if (pathnameIsMissingLocale) {
-    const cookieLocale = request.cookies.get('preferred-locale');
+    const cookieLocale = request.cookies.get('preferred-locale')?.value;
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
-      typeof cookieLocale?.value === 'string' &&
-      i18n.locales.includes(cookieLocale.value as Locale)
-        ? cookieLocale.value
+      typeof cookieLocale === 'string' &&
+      i18n.locales.includes(cookieLocale as Locale)
+        ? cookieLocale
         : detectedLocale || i18n.defaultLocale;
 
     return NextResponse.redirect(
@@ -120,7 +137,9 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('x-locale', locale);
+  return response;
 }
 
 export const config = {
