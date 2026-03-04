@@ -221,7 +221,7 @@ export default function Profile({
 
   if (isLoading)
     return (
-      <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+      <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
             <CardHeader className="flex flex-row items-center gap-6 pb-4">
@@ -292,7 +292,7 @@ export default function Profile({
 
   if (isError || !userData)
     return (
-      <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+      <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
             <CardHeader className="flex flex-row items-center gap-6 pb-4">
@@ -314,7 +314,7 @@ export default function Profile({
     );
 
   return (
-    <main className="from-muted/60 to-background min-h-[90vh] bg-gradient-to-br py-10">
+    <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
       <div className="mx-auto max-w-4xl space-y-8">
         {/* Profile Header */}
         <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">

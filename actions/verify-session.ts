@@ -1,6 +1,7 @@
 'use server';
 
 import { getToken, getUser } from './cookies';
+import { isAdminRole } from '@/lib/auth';
 
 export async function verifySession() {
   try {
@@ -11,10 +12,9 @@ export async function verifySession() {
       return;
     }
 
-    const ADMIN_ROLES = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'];
     return {
       authenticated: true,
-      isAdmin: ADMIN_ROLES.includes(userData.role ?? ''),
+      isAdmin: isAdminRole(userData.role),
       user: userData,
     };
   } catch {

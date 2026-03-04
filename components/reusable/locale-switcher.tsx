@@ -1,10 +1,9 @@
 'use client';
 
 import { Globe } from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import { setLocale } from '@/actions/cookies';
-import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { i18n, type Locale } from '@/i18n-config';
+import { setLocale } from '@/actions/cookies';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,18 +25,24 @@ const localeFlags: Record<Locale, string> = {
   ar: '🇸🇦',
 };
 
-const handleLocaleChange = (newLocale: Locale) => {
-  void setLocale(newLocale);
+const handleLocaleChange = async (newLocale: Locale) => {
+  await setLocale(newLocale);
 };
 
 export default function LocaleSwitcher() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const redirectedPathname = (locale: Locale) => {
     if (!pathname) return '/';
     const segments = pathname.split('/');
     segments[1] = locale;
     return segments.join('/');
+  };
+
+  const handleLocaleClick = async (locale: Locale, href: string) => {
+    handleLocaleChange(locale).catch(() => {});
+    router.push(href);
   };
 
   const getCurrentLocale = (): Locale => {
@@ -65,15 +70,12 @@ export default function LocaleSwitcher() {
           return (
             <DropdownMenuItem
               key={locale}
-              asChild
               className={isActive ? 'bg-accent text-accent-foreground' : ''}
+              onClick={() =>
+                handleLocaleClick(locale, redirectedPathname(locale))
+              }
             >
-              <Link
-                href={redirectedPathname(locale)}
-                className="flex items-center"
-                onClick={() => handleLocaleChange(locale)}
-                prefetch={true}
-              >
+              <div className="flex items-center">
                 <span className="mr-2">{localeFlags[locale]}</span>
                 <span>{localeNames[locale]}</span>
                 {isActive && (
@@ -81,7 +83,7 @@ export default function LocaleSwitcher() {
                     ✓
                   </span>
                 )}
-              </Link>
+              </div>
             </DropdownMenuItem>
           );
         })}

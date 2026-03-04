@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
 import { i18n, type Locale } from '@/i18n-config';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
+
 import Negotiator from 'negotiator';
+import { isAdminRole } from '@/lib/auth';
 
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
@@ -18,7 +19,6 @@ function getLocale(request: NextRequest): string | undefined {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -53,6 +53,27 @@ export async function proxy(request: NextRequest) {
     ? pathname.replace(`/${locale}`, '') || '/'
     : pathname;
 
+  const preferredLocaleCookie = request.cookies.get('preferred-locale')?.value;
+  if (
+    isValidLocale &&
+    typeof preferredLocaleCookie === 'string' &&
+    i18n.locales.includes(preferredLocaleCookie as Locale) &&
+    preferredLocaleCookie !== locale
+  ) {
+    const newPathname = `/${preferredLocaleCookie}${localeStrippedPath === '/' ? '' : localeStrippedPath}`;
+    return NextResponse.redirect(new URL(newPathname, request.url));
+  }
+
+  let isAdmin = false;
+  if (user) {
+    try {
+      const parsed = JSON.parse(user) as { role?: string };
+      isAdmin = isAdminRole(parsed.role);
+    } catch {
+      isAdmin = false;
+    }
+  }
+
   const isProtectedRoute = protectedRoutes.some((route) =>
     localeStrippedPath.startsWith(route)
   );
@@ -60,49 +81,38 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
   }
 
-  if (pathname === '/') {
-    // Always redirect to preferred locale for both logged-in and non-logged-in users
-    const cookieLocale = request.cookies.get('preferred-locale')?.value;
-    const detectedLocale = getLocale(request);
-
-    const preferredLocale =
-      (typeof cookieLocale === 'string' &&
-      i18n.locales.includes(cookieLocale as Locale)
-        ? cookieLocale
-        : undefined) ||
-      detectedLocale ||
-      i18n.defaultLocale;
-
-    return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
-  }
-
-  const lastSegment = pathSegments.at(-1);
-
-  if (lastSegment === 'login' || lastSegment === 'register') {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
-    }
-    return NextResponse.next();
-  }
-
-  const isAdminRoute = adminOnlyRoutes.some((route) =>
-    localeStrippedPath.startsWith(route)
+  const isAdminRoute = adminOnlyRoutes.some(
+    (route) =>
+      localeStrippedPath === route || localeStrippedPath.startsWith(route + '/')
   );
   if (isAdminRoute) {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }
-    const ADMIN_ROLES = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'];
-    let isAdmin = false;
-    try {
-      if (typeof user === 'string') {
-        const parsed = JSON.parse(user);
-        isAdmin = ADMIN_ROLES.includes(parsed.role ?? '');
-      }
-    } catch {}
     if (!isAdmin) {
       return NextResponse.redirect(new URL(`/${locale}/`, request.url));
     }
+  }
+
+  if (pathname === '/') {
+    const cookieLocale = request.cookies.get('preferred-locale')?.value;
+    const detectedLocale = getLocale(request);
+
+    const preferredLocale =
+      typeof cookieLocale === 'string' &&
+      i18n.locales.includes(cookieLocale as Locale)
+        ? cookieLocale
+        : detectedLocale || i18n.defaultLocale;
+
+    return NextResponse.redirect(new URL(`/${preferredLocale}/`, request.url));
+  }
+
+  const lastSegment = pathSegments.at(-1);
+  if (lastSegment === 'login' || lastSegment === 'register') {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(`/${locale}/`, request.url));
+    }
+    return NextResponse.next();
   }
 
   const pathnameIsMissingLocale = i18n.locales.every(
@@ -114,12 +124,10 @@ export async function proxy(request: NextRequest) {
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
-      (typeof cookieLocale === 'string' &&
+      typeof cookieLocale === 'string' &&
       i18n.locales.includes(cookieLocale as Locale)
         ? cookieLocale
-        : undefined) ||
-      detectedLocale ||
-      i18n.defaultLocale;
+        : detectedLocale || i18n.defaultLocale;
 
     return NextResponse.redirect(
       new URL(
@@ -129,7 +137,9 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('x-locale', locale);
+  return response;
 }
 
 export const config = {
