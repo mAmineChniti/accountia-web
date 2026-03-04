@@ -45,7 +45,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { UpdateUserSchema, type UpdateUserInput } from '@/types/RequestSchemas';
 import type { TwoFASetupResponse } from '@/types/ResponseInterfaces';
 import { toast } from 'sonner';
-import { deleteCookie } from 'cookies-next';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -63,6 +62,7 @@ import {
 } from '@/lib/date-utils';
 import { type Locale } from '@/i18n-config';
 import { useRouter } from 'next/navigation';
+import { clearAuthCookies } from '@/actions/cookies';
 
 export default function Profile({
   dictionary,
@@ -76,6 +76,7 @@ export default function Profile({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [tab, setTab] = useState('overview');
   const [twoFASetup, setTwoFASetup] = useState<
     TwoFASetupResponse | undefined
@@ -145,22 +146,18 @@ export default function Profile({
   });
 
   useEffect(() => {
-    if (userData && accountEditMode) {
-      accountForm.reset(
-        {
-          username: userData.username || userData.user_name,
-          email: userData.email || userData.email_address,
-          firstName: userData.firstName || userData.first_name || '',
-          lastName: userData.lastName || userData.last_name || '',
-          birthdate: userData.birthdate || userData.birth_date || '',
-          phoneNumber: userData.phoneNumber || userData.phone_number || '',
-          profilePicture:
-            userData.profilePicture || userData.profile_picture || '',
-        },
-        { keepDefaultValues: true }
-      );
+    if (userData) {
+      accountForm.reset({
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        birthdate: userData.birthdate || '',
+        phoneNumber: userData.phoneNumber || '',
+        profilePicture: userData.profilePicture || '',
+      });
     }
-  }, [userData, accountEditMode, accountForm]);
+  }, [userData, accountForm]);
 
   const mutation = useMutation({
     mutationFn: async (data: UpdateUserInput) => {
@@ -183,9 +180,9 @@ export default function Profile({
     mutationFn: async () => {
       return await AuthService.deleteUser();
     },
-    onSuccess: () => {
-      deleteCookie('token');
-      deleteCookie('user');
+    onSuccess: async () => {
+      setShowDeleteDialog(false);
+      await clearAuthCookies();
       router.refresh();
     },
     onError: () => {
@@ -333,9 +330,7 @@ export default function Profile({
             </Avatar>
             <div className="min-w-0 flex-1">
               <CardTitle className="truncate text-2xl font-bold">
-                {userData?.firstName ??
-                  userData?.first_name ??
-                  userData?.username}
+                {userData?.firstName ?? userData?.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground truncate">
                 {userData?.email}
@@ -405,10 +400,8 @@ export default function Profile({
                       {dictionary.pages.profile.birthdate}
                     </span>
                     <span className="font-medium">
-                      {(userData?.birthdate ?? userData?.birth_date)
-                        ? formatDateLong(
-                            (userData?.birthdate ?? userData?.birth_date)!
-                          )
+                      {userData?.birthdate
+                        ? formatDateLong(userData.birthdate)
                         : dictionary.common.na}
                     </span>
                   </div>
@@ -417,9 +410,7 @@ export default function Profile({
                       {dictionary.pages.profile.phoneNumber}
                     </span>
                     <span className="font-medium">
-                      {userData?.phoneNumber ??
-                        userData?.phone_number ??
-                        dictionary.common.na}
+                      {userData?.phoneNumber ?? dictionary.common.na}
                     </span>
                   </div>
                   <div className="md:col-span-2">
@@ -652,27 +643,13 @@ export default function Profile({
                             onClick={() => {
                               setAccountEditMode(false);
                               accountForm.reset({
-                                username:
-                                  userData.username || userData.user_name,
-                                email: userData.email || userData.email_address,
-                                firstName:
-                                  userData.firstName ||
-                                  userData.first_name ||
-                                  '',
-                                lastName:
-                                  userData.lastName || userData.last_name || '',
-                                birthdate:
-                                  userData.birthdate ||
-                                  userData.birth_date ||
-                                  '',
-                                phoneNumber:
-                                  userData.phoneNumber ||
-                                  userData.phone_number ||
-                                  '',
-                                profilePicture:
-                                  userData.profilePicture ||
-                                  userData.profile_picture ||
-                                  '',
+                                username: userData.username,
+                                email: userData.email,
+                                firstName: userData.firstName || '',
+                                lastName: userData.lastName || '',
+                                birthdate: userData.birthdate || '',
+                                phoneNumber: userData.phoneNumber || '',
+                                profilePicture: userData.profilePicture || '',
                               });
                             }}
                             disabled={mutation.isPending}
@@ -1033,7 +1010,6 @@ export default function Profile({
                 variant="destructive"
                 onClick={() => {
                   deleteMutation.mutate();
-                  setShowDeleteDialog(false);
                 }}
                 disabled={deleteMutation.isPending}
               >

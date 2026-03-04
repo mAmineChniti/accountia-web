@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { i18n, type Locale } from '@/i18n-config';
-import { getCookie } from 'cookies-next/server';
-
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
 
@@ -33,11 +31,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = await getCookie('user', { req: request });
-  const token = await getCookie('token', { req: request });
+  const user = request.cookies.get('user')?.value;
+  const token = request.cookies.get('token')?.value;
   const isLoggedIn = !!(user && token);
-  const protectedRoutes = ['/dashboard', '/profile', '/settings'];
-  const adminOnlyRoutes = ['/admin'];
+  const protectedRoutes = [
+    '/dashboard',
+    '/profile',
+    '/settings',
+    '/invoices',
+    '/business-application',
+  ];
+  const adminOnlyRoutes = ['/dashboard/admin'];
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
@@ -58,7 +62,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === '/') {
     // Always redirect to preferred locale for both logged-in and non-logged-in users
-    const cookieLocale = await getCookie('preferred-locale', { req: request });
+    const cookieLocale = request.cookies.get('preferred-locale')?.value;
     const detectedLocale = getLocale(request);
 
     const preferredLocale =
@@ -88,13 +92,12 @@ export async function proxy(request: NextRequest) {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }
+    const ADMIN_ROLES = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'];
     let isAdmin = false;
     try {
       if (typeof user === 'string') {
         const parsed = JSON.parse(user);
-        isAdmin =
-          parsed.isAdmin === true ||
-          (parsed.user && parsed.user.isAdmin === true);
+        isAdmin = ADMIN_ROLES.includes(parsed.role ?? '');
       }
     } catch {}
     if (!isAdmin) {
@@ -107,7 +110,7 @@ export async function proxy(request: NextRequest) {
   );
 
   if (pathnameIsMissingLocale) {
-    const cookieLocale = await getCookie('preferred-locale', { req: request });
+    const cookieLocale = request.cookies.get('preferred-locale')?.value;
     const detectedLocale = getLocale(request);
 
     const preferredLocale =

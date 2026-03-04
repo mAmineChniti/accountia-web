@@ -34,10 +34,10 @@ export default function Navbar({
   dictionary: Dictionary;
 }) {
   const router = useRouter();
-  const { user, isAuthenticated, checkAuth, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const handlePostLogout = async () => {
-    checkAuth();
+    globalThis.dispatchEvent(new Event('auth:changed'));
     router.refresh();
     router.push(`/${lang}/login`);
   };
@@ -187,8 +187,8 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
-            {isLoading || user === undefined ? (
-              <div className="bg-muted h-9 w-20 animate-pulse rounded" />
+            {isLoading ? (
+              <></>
             ) : user ? (
               <>
                 <Tooltip>
@@ -204,7 +204,24 @@ export default function Navbar({
                     <p>{dictionary.tooltips.profile}</p>
                   </TooltipContent>
                 </Tooltip>
-                {user.isAdmin && (
+                {user.role === 'CLIENT' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/${lang}/invoices`}
+                        className="text-muted-foreground hover:text-primary text-sm font-medium transition-colors"
+                      >
+                        {dictionary.pages.home.navigation.invoices}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{dictionary.tooltips.invoices}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
+                  user.role ?? ''
+                ) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link

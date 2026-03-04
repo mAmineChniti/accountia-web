@@ -40,8 +40,8 @@ import {
   TwoFALoginSchema,
   type TwoFALoginInput,
 } from '@/types/RequestSchemas';
-import { toast } from 'sonner';
-import { setCookie } from 'cookies-next/client';
+import { setTokens, setUser } from '@/actions/cookies';
+import type { AuthResponseDto } from '@/types/ResponseInterfaces';
 
 export default function Login({
   dictionary,
@@ -77,6 +77,74 @@ export default function Login({
 
   const isTwoFACodeValid = twoFAForm.formState.isValid;
 
+  const handleAuthSuccess = async (
+    response:
+      | AuthResponseDto
+      | { tempToken: string; twoFactorRequired: boolean },
+    email?: string
+  ) => {
+    if ('tempToken' in response) {
+      setTwoFA({ tempToken: response.tempToken, email: email ?? '' });
+      twoFAForm.reset({ tempToken: response.tempToken, code: '' });
+      return;
+    }
+
+    const authResponse = response as AuthResponseDto;
+    const { profilePicture, ...userWithoutProfilePicture } = authResponse.user;
+    if (profilePicture) {
+      try {
+        localStorage.setItem('profilePicture', profilePicture);
+      } catch {}
+    } else {
+      try {
+        localStorage.removeItem('profilePicture');
+      } catch {}
+    }
+
+    await setTokens({
+      token: authResponse.accessToken,
+      refreshToken: authResponse.refreshToken,
+      expires_at:
+        authResponse.accessTokenExpiresAt ||
+        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      expires_at_ts: authResponse.accessTokenExpiresAt
+        ? new Date(authResponse.accessTokenExpiresAt).getTime()
+        : Date.now() + 24 * 60 * 60 * 1000,
+      refresh_expires_at:
+        authResponse.refreshTokenExpiresAt ||
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      refresh_expires_at_ts: authResponse.refreshTokenExpiresAt
+        ? new Date(authResponse.refreshTokenExpiresAt).getTime()
+        : Date.now() + 7 * 24 * 60 * 60 * 1000,
+    });
+
+    await setUser({
+      userId: userWithoutProfilePicture.id,
+      username: userWithoutProfilePicture.username,
+      email: userWithoutProfilePicture.email,
+      firstName: userWithoutProfilePicture.firstName,
+      lastName: userWithoutProfilePicture.lastName,
+      phoneNumber: userWithoutProfilePicture.phoneNumber,
+      birthdate: userWithoutProfilePicture.birthdate,
+      role: userWithoutProfilePicture.role ?? 'CLIENT',
+      loginTime: new Date().toISOString(),
+    });
+
+    globalThis.dispatchEvent(new CustomEvent('auth:changed'));
+
+    if (
+      ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
+        userWithoutProfilePicture.role ?? ''
+      )
+    ) {
+      router.push(`/${lang}/dashboard/admin`);
+    } else if (userWithoutProfilePicture.role === 'CLIENT') {
+      router.push(`/${lang}/invoices`);
+    } else {
+      router.push(`/${lang}`);
+    }
+  };
+
   const loginMutation = useMutation<
     Awaited<ReturnType<typeof AuthService.login>>,
     unknown,
@@ -84,62 +152,7 @@ export default function Login({
   >({
     mutationFn: AuthService.login,
     onSuccess: async (response, variables) => {
-      if ('accessToken' in response && 'user' in response) {
-        const now = Date.now();
-        let expiresAtMs: number = 0;
-        if (response.accessTokenExpiresAt) {
-          expiresAtMs = new Date(response.accessTokenExpiresAt).getTime();
-        }
-        const maxAge =
-          expiresAtMs > 0
-            ? Math.floor((expiresAtMs - now) / 1000)
-            : 7 * 24 * 60 * 60;
-        const { profilePicture, ...userWithoutProfilePicture } = response.user;
-        if (profilePicture) {
-          try {
-            localStorage.setItem('profilePicture', profilePicture);
-          } catch {}
-        }
-        setCookie(
-          'token',
-          JSON.stringify({
-            token: response.accessToken,
-            refreshToken: response.refreshToken,
-            expires_at: response.accessTokenExpiresAt,
-            expires_at_ts: expiresAtMs,
-          }),
-          {
-            path: '/',
-            maxAge,
-            sameSite: 'lax',
-          }
-        );
-        setCookie(
-          'user',
-          JSON.stringify({
-            userId: userWithoutProfilePicture.id,
-            isAdmin: userWithoutProfilePicture.isAdmin,
-            loginTime: new Date().toISOString(),
-          }),
-          {
-            path: '/',
-            maxAge,
-            sameSite: 'lax',
-          }
-        );
-
-        if (response.user.isAdmin) {
-          router.push(`/${lang}/admin`);
-        } else {
-          router.push(`/${lang}`);
-        }
-      } else if ('tempToken' in response && response.twoFactorRequired) {
-        setTwoFA({ tempToken: response.tempToken, email: variables.email });
-        twoFAForm.reset({ tempToken: response.tempToken, code: '' });
-      } else {
-        console.error('Invalid login response shape:', response);
-        toast.error(dictionary.pages.login.unexpectedError);
-      }
+      await handleAuthSuccess(response, variables.email);
     },
   });
 
@@ -150,59 +163,7 @@ export default function Login({
   >({
     mutationFn: AuthService.twoFactorLogin,
     onSuccess: async (response) => {
-      if ('accessToken' in response && 'user' in response) {
-        const now = Date.now();
-        let expiresAtMs: number = 0;
-        if (response.accessTokenExpiresAt) {
-          expiresAtMs = new Date(response.accessTokenExpiresAt).getTime();
-        }
-        const maxAge =
-          expiresAtMs > 0
-            ? Math.floor((expiresAtMs - now) / 1000)
-            : 7 * 24 * 60 * 60;
-        const { profilePicture, ...userWithoutProfilePicture } = response.user;
-        if (profilePicture) {
-          try {
-            localStorage.setItem('profilePicture', profilePicture);
-          } catch {}
-        }
-        setCookie(
-          'token',
-          JSON.stringify({
-            token: response.accessToken,
-            refreshToken: response.refreshToken,
-            expires_at: response.accessTokenExpiresAt,
-            expires_at_ts: expiresAtMs,
-          }),
-          {
-            path: '/',
-            maxAge,
-            sameSite: 'lax',
-          }
-        );
-        setCookie(
-          'user',
-          JSON.stringify({
-            userId: userWithoutProfilePicture.id,
-            isAdmin: userWithoutProfilePicture.isAdmin,
-            loginTime: new Date().toISOString(),
-          }),
-          {
-            path: '/',
-            maxAge,
-            sameSite: 'lax',
-          }
-        );
-
-        if (response.user.isAdmin) {
-          router.push(`/${lang}/admin`);
-        } else {
-          router.push(`/${lang}`);
-        }
-      } else {
-        console.error('Invalid 2FA login response shape:', response);
-        toast.error(dictionary.pages.login.unexpectedError);
-      }
+      await handleAuthSuccess(response);
     },
   });
 
@@ -212,6 +173,11 @@ export default function Login({
 
   const on2FASubmit = async (data: TwoFALoginInput) => {
     twoFAMutation.mutate(data);
+  };
+
+  const handleGoogleLogin = () => {
+    const url = AuthService.getGoogleAuthUrl({ lang, mode: 'login' });
+    globalThis.location.assign(url);
   };
 
   const loginErrorMessage =
@@ -396,6 +362,15 @@ export default function Login({
                   {loginMutation.isPending
                     ? dictionary.pages.login.signingInButton
                     : dictionary.pages.login.signInButton}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleLogin}
+                >
+                  {dictionary.pages.login.continueWithGoogle}
                 </Button>
               </Form>
             </form>

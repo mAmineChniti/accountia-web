@@ -2,7 +2,7 @@
 
 import { Globe } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { setCookie } from 'cookies-next';
+import { setLocale } from '@/actions/cookies';
 import Link from 'next/link';
 import { i18n, type Locale } from '@/i18n-config';
 
@@ -27,11 +27,7 @@ const localeFlags: Record<Locale, string> = {
 };
 
 const handleLocaleChange = (newLocale: Locale) => {
-  setCookie('preferred-locale', newLocale, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-  });
+  void setLocale(newLocale);
 };
 
 export default function LocaleSwitcher() {

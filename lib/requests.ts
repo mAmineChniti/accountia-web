@@ -1,5 +1,6 @@
 import { env } from '@/env';
 import ky from 'ky';
+import { getToken } from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -10,6 +11,11 @@ import type {
   ForgotPasswordInput,
   TwoFAVerifyInput,
   TwoFALoginInput,
+  ChangeRoleInput,
+  BusinessApplicationInput,
+  ReviewApplicationInput,
+  UpdateBusinessInput,
+  AssignUserInput,
 } from '@/types/RequestSchemas';
 import type {
   RegisterResponse,
@@ -20,6 +26,7 @@ import type {
   FetchUserByIdResponse,
   UpdateUserResponse,
   DeleteUserResponse,
+  DeleteUserByAdminResponse,
   ForgotPasswordResponse,
   ResetPasswordResponse,
   ResendConfirmationResponse,
@@ -27,9 +34,15 @@ import type {
   TwoFASetupResponse,
   TwoFAVerifyResponse,
   TwoFALoginResponse,
-  FetchMonthlyStatsResponse,
-  FetchRevenuesStatsResponse,
-  FetchExpensesStatsResponse,
+  ChangeRoleResponse,
+  BusinessApplicationResponse,
+  MyBusinessesResponse,
+  AllBusinessesResponse,
+  BusinessDetailResponse,
+  BusinessApplicationsListResponse,
+  ReviewApplicationResponse,
+  AssignUserResponse,
+  BusinessMessageResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -109,70 +122,19 @@ const API_CONFIG = {
     RESEND_CONFIRMATION: 'auth/resend-confirmation-email',
     FETCH_ALL_USERS: 'auth/users',
     DELETE_USER_BY_ADMIN: 'auth/users',
+    CHANGE_ROLE: 'auth/change-role',
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
     TWO_FA_LOGIN: 'auth/2fa/login',
-  },
-  STATS: {
-    MONTHLY: 'revenues/statistics',
-    REVENUES: 'revenues/statistics',
-    EXPENSES: 'expenses/statistics',
+    GOOGLE: 'auth/google',
   },
 } as const;
 
-type TokenCookie = {
-  token: string;
-  refreshToken: string;
-  expires_at: string;
-  expires_at_ts: number;
-};
+const authHeaders = async (): Promise<Record<string, string>> => {
+  const tokenData = await getToken();
+  if (!tokenData) return {};
 
-const isTokenCookie = (v: unknown): v is TokenCookie =>
-  typeof v === 'object' &&
-  v !== null &&
-  typeof (v as Record<string, unknown>).token === 'string' &&
-  typeof (v as Record<string, unknown>).refreshToken === 'string' &&
-  typeof (v as Record<string, unknown>).expires_at === 'string' &&
-  typeof (v as Record<string, unknown>).expires_at_ts === 'number';
-
-const getCookie = (name: string): string | undefined => {
-  if (typeof document === 'undefined') return undefined;
-
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-
-  if (parts.length === 2) {
-    const cookieValue = parts.pop()?.split(';').shift();
-    return cookieValue ? decodeURIComponent(cookieValue) : undefined;
-  }
-
-  return undefined;
-};
-
-const authHeaders = (): Record<string, string> => {
-  const raw = getCookie('token');
-  if (!raw || typeof raw !== 'string') return {};
-
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (isTokenCookie(parsed)) {
-      const expMs =
-        parsed.expires_at_ts > 1e12
-          ? parsed.expires_at_ts
-          : parsed.expires_at_ts * 1000;
-      if (Date.now() >= expMs) return {};
-      return { Authorization: `Bearer ${parsed.token}` };
-    }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`Failed to parse cookie 'token':`, error);
-    }
-  }
-
-  if (raw.trim().length > 0) {
-    return { Authorization: `Bearer ${raw}` };
-  }
-  return {};
+  return { Authorization: `Bearer ${tokenData.token}` };
 };
 
 const client = ky.create({
@@ -180,8 +142,33 @@ const client = ky.create({
 });
 
 export const AuthService = {
+  getGoogleAuthUrl(options: {
+    lang: string;
+    mode: 'login' | 'register';
+    redirectUri?: string;
+  }): string {
+    const baseUrl = API_CONFIG.BASE_URL.endsWith('/')
+      ? API_CONFIG.BASE_URL.slice(0, -1)
+      : API_CONFIG.BASE_URL;
+
+    const redirectUri =
+      options.redirectUri ??
+      (globalThis.window === undefined
+        ? undefined
+        : `${globalThis.location.origin}/${options.lang}/auth/callback`);
+
+    const url = new URL(`${baseUrl}/${API_CONFIG.AUTH.GOOGLE}`);
+    url.searchParams.set('mode', options.mode);
+    url.searchParams.set('lang', options.lang);
+    if (redirectUri) {
+      url.searchParams.set('redirectUri', redirectUri);
+    }
+
+    return url.toString();
+  },
+
   async setupTwoFactor(): Promise<TwoFASetupResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -208,7 +195,7 @@ export const AuthService = {
   },
 
   async verifyTwoFactor(data: TwoFAVerifyInput): Promise<TwoFAVerifyResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -310,7 +297,7 @@ export const AuthService = {
   },
 
   async logout(refreshToken: string): Promise<LogoutResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -338,7 +325,7 @@ export const AuthService = {
   },
 
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -416,7 +403,7 @@ export const AuthService = {
   },
 
   async fetchUser(): Promise<FetchUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -445,7 +432,7 @@ export const AuthService = {
   async fetchUserById(
     data: FetchUserByIdInput
   ): Promise<FetchUserByIdResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -473,7 +460,7 @@ export const AuthService = {
   },
 
   async updateUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -501,7 +488,7 @@ export const AuthService = {
   },
 
   async patchUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -529,7 +516,7 @@ export const AuthService = {
   },
 
   async deleteUser(): Promise<DeleteUserResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -581,7 +568,7 @@ export const AuthService = {
   },
 
   async fetchAllUsers(): Promise<UsersListResponse> {
-    const token = authHeaders();
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -608,8 +595,8 @@ export const AuthService = {
     }
   },
 
-  async deleteUserByAdmin(userId: string): Promise<DeleteUserResponse> {
-    const token = authHeaders();
+  async deleteUserByAdmin(userId: string): Promise<DeleteUserByAdminResponse> {
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
@@ -619,7 +606,7 @@ export const AuthService = {
         .delete(`${API_CONFIG.AUTH.DELETE_USER_BY_ADMIN}/${userId}`, {
           headers: token,
         })
-        .json<DeleteUserResponse>();
+        .json<DeleteUserByAdminResponse>();
       return result;
     } catch (error: unknown) {
       if (
@@ -636,18 +623,19 @@ export const AuthService = {
     }
   },
 
-  async fetchMonthlyStats(): Promise<FetchMonthlyStatsResponse> {
-    const token = authHeaders();
+  async changeRole(data: ChangeRoleInput): Promise<ChangeRoleResponse> {
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
 
     try {
       const result = await client
-        .get(API_CONFIG.STATS.MONTHLY, {
+        .patch(API_CONFIG.AUTH.CHANGE_ROLE, {
+          json: data,
           headers: token,
         })
-        .json<FetchMonthlyStatsResponse>();
+        .json<ChangeRoleResponse>();
       return result;
     } catch (error: unknown) {
       if (
@@ -663,57 +651,230 @@ export const AuthService = {
       throw error;
     }
   },
+};
 
-  async fetchRevenuesStats(): Promise<FetchRevenuesStatsResponse> {
-    const token = authHeaders();
+export const BusinessService = {
+  async applyForBusiness(
+    data: BusinessApplicationInput
+  ): Promise<BusinessApplicationResponse> {
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
-
     try {
       const result = await client
-        .get(API_CONFIG.STATS.REVENUES, {
-          headers: token,
-        })
-        .json<FetchRevenuesStatsResponse>();
+        .post('business/apply', { json: data, headers: token })
+        .json<BusinessApplicationResponse>();
       return result;
     } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const errorLike = error as HTTPErrorLike;
-        const errorData = await safeParseJson(errorLike.response);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
     }
   },
 
-  async fetchExpensesStats(): Promise<FetchExpensesStatsResponse> {
-    const token = authHeaders();
+  async getApplications(): Promise<BusinessApplicationsListResponse> {
+    const token = await authHeaders();
     if (!token.Authorization) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
-
     try {
       const result = await client
-        .get(API_CONFIG.STATS.EXPENSES, {
-          headers: token,
-        })
-        .json<FetchExpensesStatsResponse>();
+        .get('business/applications', { headers: token })
+        .json<BusinessApplicationsListResponse>();
       return result;
     } catch (error: unknown) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const errorLike = error as HTTPErrorLike;
-        const errorData = await safeParseJson(errorLike.response);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async reviewApplication(
+    id: string,
+    data: ReviewApplicationInput
+  ): Promise<ReviewApplicationResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(`business/applications/${id}/review`, {
+          json: data,
+          headers: token,
+        })
+        .json<ReviewApplicationResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getMyBusinesses(): Promise<MyBusinessesResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .get('business/my', { headers: token })
+        .json<MyBusinessesResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getAllBusinesses(): Promise<AllBusinessesResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .get('business/all', { headers: token })
+        .json<AllBusinessesResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getBusinessById(id: string): Promise<BusinessDetailResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .get(`business/${id}`, { headers: token })
+        .json<BusinessDetailResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async updateBusiness(
+    id: string,
+    data: UpdateBusinessInput
+  ): Promise<BusinessDetailResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .put(`business/${id}`, { json: data, headers: token })
+        .json<BusinessDetailResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async deleteBusiness(id: string): Promise<BusinessMessageResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .delete(`business/${id}`, { headers: token })
+        .json<BusinessMessageResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async assignUser(
+    businessId: string,
+    data: AssignUserInput
+  ): Promise<AssignUserResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(`business/${businessId}/users`, { json: data, headers: token })
+        .json<AssignUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async unassignUser(
+    businessId: string,
+    userId: string
+  ): Promise<BusinessMessageResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .delete(`business/${businessId}/users/${userId}`, { headers: token })
+        .json<BusinessMessageResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;

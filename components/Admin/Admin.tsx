@@ -19,8 +19,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, X, ChevronDown, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +35,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import {
   formatDateLong,
@@ -44,10 +49,12 @@ import {
 } from '@/lib/date-utils';
 import type { DateRange } from 'react-day-picker';
 import type {
+  Role,
   UserSummary,
   UsersListResponse,
 } from '@/types/ResponseInterfaces';
 import { AuthService } from '@/lib/requests';
+import { toast } from 'sonner';
 
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
@@ -62,6 +69,14 @@ const formatDateOnly = (value?: string | null): string => {
 
 const EMPTY_USERS: UserSummary[] = [];
 
+const ALL_ROLES: Role[] = [
+  'PLATFORM_OWNER',
+  'PLATFORM_ADMIN',
+  'BUSINESS_OWNER',
+  'BUSINESS_ADMIN',
+  'CLIENT',
+];
+
 export default function Admin({
   dictionary,
   lang,
@@ -72,6 +87,9 @@ export default function Admin({
   const queryClient = useQueryClient();
   const [modalUser, setModalUser] = useState<UserSummary | undefined>();
   const [deleteError, setDeleteError] = useState<string | undefined>();
+  const [changingRoleUserId, setChangingRoleUserId] = useState<
+    string | undefined
+  >();
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -94,7 +112,9 @@ export default function Admin({
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) => u.isAdmin).length;
+  const totalAdmins = users.filter((u) =>
+    ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(u.role ?? '')
+  ).length;
   const modalUsername = modalUser ? modalUser.username : '';
 
   const filteredUsers = useMemo(() => {
@@ -113,7 +133,7 @@ export default function Admin({
     // Apply date range filter
     if (dateRange?.from || dateRange?.to) {
       filtered = filtered.filter((u) => {
-        const joinDate = u.dateJoined ?? u.date_joined;
+        const joinDate = u.dateJoined;
         if (!joinDate) return false;
         const date = new Date(joinDate);
 
@@ -148,23 +168,47 @@ export default function Admin({
     const sorted = filtered.toSorted((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1;
       if (sortKey === 'dateJoined') {
-        const aDate = a.dateJoined ?? a.date_joined;
-        const bDate = b.dateJoined ?? b.date_joined;
+        const aDate = a.dateJoined;
+        const bDate = b.dateJoined;
         const aTime = aDate ? new Date(aDate).getTime() : 0;
         const bTime = bDate ? new Date(bDate).getTime() : 0;
         return (aTime - bTime) * dir;
       }
-      const aVal = (a[sortKey] ?? a.dateJoined ?? a.date_joined ?? '')
-        .toString()
-        .toLowerCase();
-      const bVal = (b[sortKey] ?? b.dateJoined ?? b.date_joined ?? '')
-        .toString()
-        .toLowerCase();
+      const aVal = (a[sortKey] ?? a.dateJoined ?? '').toString().toLowerCase();
+      const bVal = (b[sortKey] ?? b.dateJoined ?? '').toString().toLowerCase();
       return aVal.localeCompare(bVal) * dir;
     });
 
     return sorted;
   }, [users, search, sortKey, sortDir, dateRange]);
+
+  const changeRoleMutation = useMutation({
+    mutationFn: (data: { userId: string; newRole: Role }) =>
+      AuthService.changeRole(data),
+    onMutate: ({ userId }) => {
+      setChangingRoleUserId(userId);
+    },
+    onSuccess: (result, variables) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === variables.userId ? { ...u, role: result.newRole } : u
+            ),
+          };
+        }
+      );
+      toast.success(dictionary.admin.changeRoleSuccess);
+      setChangingRoleUserId(undefined);
+    },
+    onError: () => {
+      toast.error(dictionary.admin.changeRoleError);
+      setChangingRoleUserId(undefined);
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (userId: string) => AuthService.deleteUserByAdmin(userId),
@@ -370,7 +414,7 @@ export default function Admin({
                   </TableHead>
                   <TableHead>{dictionary.admin.firstName}</TableHead>
                   <TableHead>{dictionary.admin.lastName}</TableHead>
-                  <TableHead>{dictionary.admin.isAdmin}</TableHead>
+                  <TableHead>{dictionary.admin.roleColumn}</TableHead>
                   <TableHead>
                     <Button
                       type="button"
@@ -398,15 +442,43 @@ export default function Admin({
                     <TableCell>{user.firstName ?? '-'}</TableCell>
                     <TableCell>{user.lastName ?? '-'}</TableCell>
                     <TableCell>
-                      {user.isAdmin ? (
-                        <Badge variant="secondary">
-                          {dictionary.admin.adminBadge}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          {dictionary.admin.userBadge}
-                        </Badge>
-                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={changingRoleUserId === user.id}
+                            className="h-8 gap-1.5 px-2 text-xs font-normal"
+                          >
+                            {changingRoleUserId === user.id && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
+                            {dictionary.admin.roles[user.role ?? 'CLIENT']}
+                            <ChevronDown className="h-3 w-3 opacity-60" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          {ALL_ROLES.map((role) => (
+                            <DropdownMenuItem
+                              key={role}
+                              onSelect={() => {
+                                if (role !== user.role) {
+                                  changeRoleMutation.mutate({
+                                    userId: user.id,
+                                    newRole: role,
+                                  });
+                                }
+                              }}
+                              className={cn(
+                                'text-xs',
+                                role === user.role && 'font-semibold'
+                              )}
+                            >
+                              {dictionary.admin.roles[role]}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                     <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
                     <TableCell className="text-right">

@@ -71,6 +71,40 @@ export const TwoFAVerifySchema = z.object({
     .length(6),
 });
 
+export const ChangeRoleSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  newRole: z.string().min(1, 'New role is required'),
+});
+
+export const BusinessApplicationSchema = z.object({
+  businessName: z
+    .string()
+    .min(2, 'Business name must be at least 2 characters'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  website: z
+    .url({ message: 'Must be a valid URL' })
+    .optional()
+    .or(z.literal('')),
+  phone: z.string().min(6, 'Phone number is required'),
+});
+
+export const ReviewApplicationSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  reviewNotes: z.string().min(1, 'Review notes are required'),
+});
+
+export const UpdateBusinessSchema = z.object({
+  name: z.string().min(2).optional(),
+  description: z.string().min(10).optional(),
+  website: z.url().optional().or(z.literal('')),
+  tags: z.array(z.string()).optional(),
+});
+
+export const AssignUserSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  role: z.string().min(1, 'Role is required'),
+});
+
 export const TwoFALoginSchema = z.object({
   tempToken: z.string().min(1, 'Temporary token is required'),
   code: z
@@ -101,3 +135,10 @@ export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 export type TwoFAVerifyInput = z.infer<typeof TwoFAVerifySchema>;
 export type TwoFALoginInput = z.infer<typeof TwoFALoginSchema>;
+export type ChangeRoleInput = z.infer<typeof ChangeRoleSchema>;
+export type BusinessApplicationInput = z.infer<
+  typeof BusinessApplicationSchema
+>;
+export type ReviewApplicationInput = z.infer<typeof ReviewApplicationSchema>;
+export type UpdateBusinessInput = z.infer<typeof UpdateBusinessSchema>;
+export type AssignUserInput = z.infer<typeof AssignUserSchema>;

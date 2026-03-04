@@ -87,6 +87,7 @@
         "login": "Connexion",
         "register": "S'inscrire",
         "profile": "Profil",
+        "invoices": "Factures",
         "adminDashboard": "Admin",
         "logout": "Déconnexion"
       },
@@ -208,7 +209,8 @@
       "twoFactorLabel": "Code de vérification",
       "twoFactorPlaceholder": "Entrez votre code 2FA",
       "verify2FAButton": "Vérifier 2FA",
-      "verifying2FAButton": "Vérification..."
+      "verifying2FAButton": "Vérification...",
+      "continueWithGoogle": "Continuer avec Google"
     },
     "register": {
       "title": "Créer un compte",
@@ -258,11 +260,55 @@
       "resendErrorMessage": "Échec de l'envoi de l'email de confirmation",
       "unexpectedError": "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
       "registrationFailed": "L'inscription a échoué. Veuillez réessayer.",
+      "usernameTaken": "Ce nom d'utilisateur est déjà pris",
       "emailAlreadyRegistered": "Cet email est déjà enregistré",
       "accountExists": "Un compte avec cet email existe déjà",
       "personalInfoLabel": "Informations personnelles",
       "accountInfoLabel": "Informations du compte",
+      "continueWithGoogle": "S'inscrire avec Google",
       "authNavLabel": "Navigation d'authentification"
+    },
+    "oauthCallback": {
+      "loading": "Finalisation de la connexion…",
+      "errorTitle": "Connexion échouée",
+      "errorDescription": "Une erreur est survenue lors de la connexion avec Google. Veuillez réessayer.",
+      "backToLogin": "Retour à la connexion"
+    },
+    "invoices": {
+      "title": "Mes Factures",
+      "description": "Consultez et gérez vos factures",
+      "createBusinessButton": "Créer une nouvelle entreprise",
+      "refresh": "Actualiser",
+      "totalInvoices": "Total des factures",
+      "totalPaid": "Total payé",
+      "totalPending": "Total en attente",
+      "invoiceList": "Liste des factures",
+      "noInvoices": "Aucune facture pour le moment",
+      "noInvoicesHint": "Les factures qui vous sont envoyées apparaîtront ici",
+      "dueDateLabel": "Échéance",
+      "paidAtLabel": "Payé le",
+      "statusOverdue": "En retard",
+      "retry": "Réessayer",
+      "fetchError": "Échec du chargement des factures. Veuillez réessayer."
+    },
+    "businessApplication": {
+      "title": "Demande d'accès entreprise",
+      "description": "Remplissez le formulaire ci-dessous pour demander un accès entreprise sur Accountia",
+      "businessNameLabel": "Nom de l'entreprise",
+      "businessNamePlaceholder": "ex. Acme Corp",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Décrivez brièvement votre entreprise et votre activité",
+      "websiteLabel": "Site web (optionnel)",
+      "websitePlaceholder": "https://votreentreprise.com",
+      "phoneLabel": "Numéro de téléphone",
+      "phonePlaceholder": "+33 6 12 34 56 78",
+      "submitButton": "Soumettre la demande",
+      "submittingButton": "Envoi en cours...",
+      "submitError": "Échec de la soumission. Veuillez réessayer.",
+      "successTitle": "Demande soumise !",
+      "successMessage": "Votre demande a bien été reçue. Notre équipe l'examinera et vous répondra prochainement.",
+      "closeButton": "Retour à l'accueil",
+      "cancelButton": "Annuler"
     }
   },
   "tooltips": {
@@ -278,6 +324,7 @@
     "signIn": "Se connecter à votre compte",
     "createAccount": "Créer un nouveau compte",
     "profile": "Voir votre profil",
+    "invoices": "Accéder à vos factures",
     "adminDashboard": "Accéder au tableau de bord admin",
     "logout": "Se déconnecter de votre compte",
     "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",
@@ -318,6 +365,16 @@
     "noResults": "Aucun résultat trouvé.",
     "adminBadge": "Admin",
     "userBadge": "Utilisateur",
+    "roleColumn": "Rôle",
+    "changeRoleSuccess": "Rôle mis à jour avec succès",
+    "changeRoleError": "Échec de la mise à jour du rôle",
+    "roles": {
+      "PLATFORM_OWNER": "Propriétaire de la plateforme",
+      "PLATFORM_ADMIN": "Admin de la plateforme",
+      "BUSINESS_OWNER": "Chef d'entreprise",
+      "BUSINESS_ADMIN": "Admin commercial",
+      "CLIENT": "Client"
+    },
     "manageButton": "Gérer",
     "deleteDialog": {
       "title": "Supprimer l'utilisateur",

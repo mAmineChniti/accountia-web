@@ -89,6 +89,7 @@
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
         "profile": "الملف الشخصي",
+        "invoices": "الفواتير",
         "adminDashboard": "لوحة تحكم المدير",
         "logout": "تسجيل الخروج"
       },
@@ -202,7 +203,8 @@
       "twoFactorLabel": "رمز التحقق الثنائي",
       "twoFactorPlaceholder": "أدخل رمز التحقق الثنائي",
       "verify2FAButton": "تحقق من 2FA",
-      "verifying2FAButton": "جاري التحقق..."
+      "verifying2FAButton": "جاري التحقق...",
+      "continueWithGoogle": "المتابعة مع Google"
     },
     "register": {
       "title": "إنشاء حساب",
@@ -252,11 +254,55 @@
       "resendErrorMessage": "فشل في إرسال بريد التأكيد",
       "unexpectedError": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.",
       "registrationFailed": "فشل في التسجيل. يرجى المحاولة مرة أخرى.",
+      "usernameTaken": "اسم المستخدم هذا مأخوذ بالفعل",
       "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل",
       "accountExists": "حساب بهذا البريد الإلكتروني موجود بالفعل",
       "personalInfoLabel": "المعلومات الشخصية",
       "accountInfoLabel": "معلومات الحساب",
+      "continueWithGoogle": "التسجيل مع Google",
       "authNavLabel": "الملاحة المصادقة"
+    },
+    "oauthCallback": {
+      "loading": "جارٍ إتمام تسجيل الدخول…",
+      "errorTitle": "فشل تسجيل الدخول",
+      "errorDescription": "حدث خطأ أثناء تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.",
+      "backToLogin": "العودة إلى تسجيل الدخول"
+    },
+    "invoices": {
+      "title": "فواتيري",
+      "description": "عرض وإدارة فواتيرك",
+      "createBusinessButton": "إنشاء نشاط تجاري جديد",
+      "refresh": "تحديث",
+      "totalInvoices": "إجمالي الفواتير",
+      "totalPaid": "المدفوع",
+      "totalPending": "قيد الانتظار",
+      "invoiceList": "قائمة الفواتير",
+      "noInvoices": "لا توجد فواتير حتى الآن",
+      "noInvoicesHint": "ستظهر الفواتير المرسلة إليك هنا",
+      "dueDateLabel": "تاريخ الاستحقاق",
+      "paidAtLabel": "دُفعت في",
+      "statusOverdue": "متأخرة",
+      "retry": "إعادة المحاولة",
+      "fetchError": "فشل تحميل الفواتير. يرجى المحاولة مرة أخرى."
+    },
+    "businessApplication": {
+      "title": "التقدم للحصول على صلاحية الأعمال",
+      "description": "املأ النموذج أدناه للتقدم بطلب الحصول على صلاحية الأعمال على Accountia",
+      "businessNameLabel": "اسم النشاط التجاري",
+      "businessNamePlaceholder": "مثال: شركة أكمي",
+      "descriptionLabel": "الوصف",
+      "descriptionPlaceholder": "صف نشاطك التجاري باختصار",
+      "websiteLabel": "الموقع الإلكتروني (اختياري)",
+      "websitePlaceholder": "https://yoursite.com",
+      "phoneLabel": "رقم الهاتف",
+      "phonePlaceholder": "+966 5 1234 5678",
+      "submitButton": "إرسال الطلب",
+      "submittingButton": "جارٍ الإرسال...",
+      "submitError": "فشل إرسال الطلب. يرجى المحاولة مرة أخرى.",
+      "successTitle": "تم إرسال الطلب!",
+      "successMessage": "استُلم طلبك بنجاح. سيراجعه فريقنا ويتواصل معك قريبًا.",
+      "closeButton": "العودة إلى الرئيسية",
+      "cancelButton": "إلغاء"
     }
   },
   "tooltips": {
@@ -272,6 +318,7 @@
     "signIn": "تسجيل الدخول إلى حسابك",
     "createAccount": "إنشاء حساب جديد",
     "profile": "عرض ملفك الشخصي",
+    "invoices": "الذهاب إلى فواتيرك",
     "adminDashboard": "الانتقال إلى لوحة تحكم المدير",
     "logout": "تسجيل الخروج من حسابك",
     "perfectForNewBusinesses": "مثالي للشركات الجديدة",
@@ -312,6 +359,16 @@
     "noResults": "لم يتم العثور على نتائج.",
     "adminBadge": "مسؤول",
     "userBadge": "مستخدم",
+    "roleColumn": "الدور",
+    "changeRoleSuccess": "تم تحديث الدور بنجاح",
+    "changeRoleError": "فشل تحديث الدور",
+    "roles": {
+      "PLATFORM_OWNER": "مالك المنصة",
+      "PLATFORM_ADMIN": "مسؤول المنصة",
+      "BUSINESS_OWNER": "صاحب العمل",
+      "BUSINESS_ADMIN": "مسؤول الأعمال",
+      "CLIENT": "عميل"
+    },
     "manageButton": "إدارة",
     "deleteDialog": {
       "title": "حذف المستخدم",
