@@ -382,6 +382,7 @@
     "profile": "Voir votre profil",
     "invoices": "Accéder à vos factures",
     "adminDashboard": "Accéder au tableau de bord admin",
+    "businessManagement": "Gérer les demandes et entreprises",
     "logout": "Se déconnecter de votre compte",
     "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",
     "mostPopularChoice": "Le choix le plus populaire",
@@ -394,6 +395,78 @@
   "admin": {
     "title": "Tableau de bord administrateur",
     "subtitle": "Gérez les utilisateurs et les accès",
+    "businessManagement": {
+      "navLabel": "Gestion des entreprises",
+      "title": "Gestion des entreprises",
+      "subtitle": "Examinez les demandes et gérez les entreprises approuvées.",
+      "refresh": "Actualiser",
+      "loadApplicationsError": "Échec du chargement des demandes d'entreprise",
+      "loadBusinessesError": "Échec du chargement des entreprises",
+      "reviewSuccess": "Demande examinée avec succès",
+      "reviewError": "Échec de l'examen de la demande d'entreprise",
+      "deleteSuccess": "Entreprise supprimée avec succès",
+      "deleteError": "Échec de la suppression de l'entreprise",
+      "defaultApprovalNote": "Approuvée par un administrateur de la plateforme",
+      "reviewNotesRequired": "Les notes de révision sont obligatoires",
+      "actions": {
+        "approve": "Approuver",
+        "reject": "Rejeter"
+      },
+      "status": {
+        "pending": "En attente",
+        "approved": "Approuvée",
+        "rejected": "Rejetée"
+      },
+      "stats": {
+        "pendingApplications": "Demandes en attente",
+        "totalBusinesses": "Total des entreprises",
+        "approvedBusinesses": "Entreprises approuvées"
+      },
+      "applications": {
+        "title": "Demandes d'entreprise",
+        "description": "Approuvez ou rejetez les demandes soumises par les utilisateurs.",
+        "searchPlaceholder": "Rechercher des demandes...",
+        "noResults": "Aucune demande trouvée.",
+        "reviewed": "Examinée",
+        "columns": {
+          "business": "Entreprise",
+          "applicantId": "ID du demandeur",
+          "phone": "Téléphone",
+          "status": "Statut",
+          "submitted": "Soumise",
+          "actions": "Actions"
+        }
+      },
+      "businesses": {
+        "title": "Entreprises",
+        "description": "Parcourez les entreprises approuvées et supprimez celles qui enfreignent la politique.",
+        "searchPlaceholder": "Rechercher des entreprises...",
+        "noResults": "Aucune entreprise trouvée.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "columns": {
+          "name": "Nom",
+          "phone": "Téléphone",
+          "status": "Statut",
+          "active": "Active",
+          "created": "Créée",
+          "actions": "Actions"
+        }
+      },
+      "rejectDialog": {
+        "title": "Rejeter la demande",
+        "description": "Ajoutez une raison pour rejeter {businessName}.",
+        "fallbackBusiness": "cette demande",
+        "notesPlaceholder": "Raison du rejet",
+        "rejecting": "Rejet en cours..."
+      },
+      "deleteDialog": {
+        "title": "Supprimer l'entreprise",
+        "description": "Cela supprimera définitivement {businessName} et ses affectations.",
+        "fallbackBusiness": "cette entreprise",
+        "deleting": "Suppression en cours..."
+      }
+    },
     "statisticsTitle": "Statistiques",
     "statisticsSubtitle": "Aperçu des revenus et dépenses",
     "stats": {

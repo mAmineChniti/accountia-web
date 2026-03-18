@@ -21,7 +21,7 @@ import type {
 } from '@/types/RequestSchemas';
 import type {
   RegisterResponse,
-  LoginResponse,
+  LoginResult,
   LogoutResponse,
   RefreshTokenResponse,
   FetchUserResponse,
@@ -276,19 +276,13 @@ export const AuthService = {
     }
   },
 
-  async login(
-    data: LoginInput
-  ): Promise<
-    LoginResponse | { tempToken: string; twoFactorRequired: boolean }
-  > {
+  async login(data: LoginInput): Promise<LoginResult> {
     try {
       const result = await client
         .post(API_CONFIG.AUTH.LOGIN, {
           json: data,
         })
-        .json<
-          LoginResponse | { tempToken: string; twoFactorRequired: boolean }
-        >();
+        .json<LoginResult>();
       return result;
     } catch (error: unknown) {
       if (
@@ -307,17 +301,13 @@ export const AuthService = {
 
   async exchangeGoogleOAuthCode(
     data: GoogleOAuthExchangeInput
-  ): Promise<
-    LoginResponse | { tempToken: string; twoFactorRequired: boolean }
-  > {
+  ): Promise<LoginResult> {
     try {
       const result = await client
         .post(API_CONFIG.AUTH.GOOGLE_EXCHANGE, {
           json: data,
         })
-        .json<
-          LoginResponse | { tempToken: string; twoFactorRequired: boolean }
-        >();
+        .json<LoginResult>();
       return result;
     } catch (error: unknown) {
       if (

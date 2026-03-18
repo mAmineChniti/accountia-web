@@ -80,6 +80,21 @@ export async function getUser(): Promise<UserCookieData | undefined> {
   }
 }
 
+export async function getAuthStatus(): Promise<{ authenticated: boolean }> {
+  try {
+    const tokenData = await getToken();
+    const userData = await getUser();
+
+    if (!tokenData || !userData) {
+      return { authenticated: false };
+    }
+
+    return { authenticated: true };
+  } catch {
+    return { authenticated: false };
+  }
+}
+
 export async function setLocale(locale: string): Promise<void> {
   const maxAge = 60 * 60 * 24 * 365;
 
@@ -89,26 +104,4 @@ export async function setLocale(locale: string): Promise<void> {
     maxAge,
     sameSite: 'lax',
   });
-}
-
-export async function getAuthStatus(): Promise<{ authenticated: boolean }> {
-  try {
-    const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get('token');
-    const userCookie = cookieStore.has('user');
-
-    if (!tokenCookie || !userCookie) {
-      return { authenticated: false };
-    }
-
-    const tokenData = JSON.parse(tokenCookie.value) as AuthCookieData;
-
-    if (tokenData.expires_at_ts && tokenData.expires_at_ts <= Date.now()) {
-      return { authenticated: false };
-    }
-
-    return { authenticated: true };
-  } catch {
-    return { authenticated: false };
-  }
 }

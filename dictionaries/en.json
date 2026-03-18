@@ -382,6 +382,7 @@
     "profile": "View your profile",
     "invoices": "Go to your invoices",
     "adminDashboard": "Go to the admin dashboard",
+    "businessManagement": "Manage business applications and businesses",
     "logout": "Sign out of your account",
     "perfectForNewBusinesses": "Perfect for new businesses",
     "mostPopularChoice": "Most popular choice",
@@ -394,6 +395,78 @@
   "admin": {
     "title": "Admin Dashboard",
     "subtitle": "Manage users and access controls",
+    "businessManagement": {
+      "navLabel": "Business Management",
+      "title": "Business Management",
+      "subtitle": "Review applications and manage approved businesses.",
+      "refresh": "Refresh",
+      "loadApplicationsError": "Failed to load business applications",
+      "loadBusinessesError": "Failed to load businesses",
+      "reviewSuccess": "Application reviewed successfully",
+      "reviewError": "Failed to review business application",
+      "deleteSuccess": "Business deleted successfully",
+      "deleteError": "Failed to delete business",
+      "defaultApprovalNote": "Approved by platform admin",
+      "reviewNotesRequired": "Review notes are required",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "stats": {
+        "pendingApplications": "Pending Applications",
+        "totalBusinesses": "Total Businesses",
+        "approvedBusinesses": "Approved Businesses"
+      },
+      "applications": {
+        "title": "Business Applications",
+        "description": "Approve or reject submitted applications from users.",
+        "searchPlaceholder": "Search applications...",
+        "noResults": "No applications found.",
+        "reviewed": "Reviewed",
+        "columns": {
+          "business": "Business",
+          "applicantId": "Applicant ID",
+          "phone": "Phone",
+          "status": "Status",
+          "submitted": "Submitted",
+          "actions": "Actions"
+        }
+      },
+      "businesses": {
+        "title": "Businesses",
+        "description": "Browse approved businesses and remove those that violate policy.",
+        "searchPlaceholder": "Search businesses...",
+        "noResults": "No businesses found.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "columns": {
+          "name": "Name",
+          "phone": "Phone",
+          "status": "Status",
+          "active": "Active",
+          "created": "Created",
+          "actions": "Actions"
+        }
+      },
+      "rejectDialog": {
+        "title": "Reject application",
+        "description": "Add a reason for rejecting {businessName}.",
+        "fallbackBusiness": "this application",
+        "notesPlaceholder": "Reason for rejection",
+        "rejecting": "Rejecting..."
+      },
+      "deleteDialog": {
+        "title": "Delete business",
+        "description": "This will permanently delete {businessName} and its assignments.",
+        "fallbackBusiness": "this business",
+        "deleting": "Deleting..."
+      }
+    },
     "statisticsTitle": "Statistics",
     "statisticsSubtitle": "Revenue and expenses overview",
     "stats": {

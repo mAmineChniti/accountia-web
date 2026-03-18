@@ -6,6 +6,21 @@ import { match as matchLocale } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
 import { isAdminRole } from '@/lib/utils';
 
+function isTokenExpired(tokenCookie: string): boolean {
+  try {
+    const tokenData = JSON.parse(tokenCookie);
+
+    let timestampMs = tokenData.expires_at_ts;
+    if (timestampMs && timestampMs < 1e12) {
+      timestampMs = timestampMs * 1000;
+    }
+
+    return timestampMs ? timestampMs <= Date.now() : false;
+  } catch {
+    return true;
+  }
+}
+
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
   for (const [key, value] of request.headers.entries())
@@ -33,7 +48,7 @@ export async function proxy(request: NextRequest) {
 
   const user = request.cookies.get('user')?.value;
   const token = request.cookies.get('token')?.value;
-  const isLoggedIn = !!(user && token);
+  const isLoggedIn = !!(user && token && !isTokenExpired(token));
   const protectedRoutes = [
     '/dashboard',
     '/profile',
@@ -41,7 +56,7 @@ export async function proxy(request: NextRequest) {
     '/invoices',
     '/business-application',
   ];
-  const adminOnlyRoutes = ['/dashboard/admin'];
+  const adminOnlyRoutes = ['/dashboard/admin', '/dashboard/businesses'];
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];

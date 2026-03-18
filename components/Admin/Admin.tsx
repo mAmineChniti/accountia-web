@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Table,
@@ -316,11 +317,20 @@ export default function Admin({
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-1">
-        <div className="text-2xl font-bold tracking-tight">
-          {dictionary.admin.title}
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-1">
+          <div className="text-2xl font-bold tracking-tight">
+            {dictionary.admin.title}
+          </div>
+          <div className="text-muted-foreground">
+            {dictionary.admin.subtitle}
+          </div>
         </div>
-        <div className="text-muted-foreground">{dictionary.admin.subtitle}</div>
+        <Button asChild variant="outline">
+          <Link href={`/${lang}/dashboard/businesses`}>
+            {dictionary.admin.businessManagement.navLabel}
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

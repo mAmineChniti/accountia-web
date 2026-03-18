@@ -5,39 +5,12 @@ export type Role =
   | 'BUSINESS_ADMIN'
   | 'CLIENT';
 
-export interface BaseResponse {
+interface BaseResponse {
   message: string;
   timestamp?: string;
 }
 
-export interface BaseErrorResponse {
-  message: string;
-  statusCode?: number;
-  timestamp?: string;
-}
-
-export interface MonthlyStat {
-  month: string;
-  revenue: number;
-  expenses: number;
-}
-
-export interface BasicStatResponse {
-  totalAmount: number;
-  count: number;
-}
-
-export interface MonthlyStatsResponse {
-  message: string;
-  stats: MonthlyStat[];
-}
-
-export interface ValidationErrorResponse {
-  message: string;
-  errors: Record<string, string>;
-}
-
-export interface PublicUserProfile {
+interface PublicUserProfile {
   id: string;
   username: string;
   firstName?: string;
@@ -61,7 +34,7 @@ export interface UserPayload {
   role?: Role;
 }
 
-export interface UserProfile extends UserPayload {
+interface UserProfile extends UserPayload {
   dateJoined: string;
   emailConfirmed: boolean;
   twoFactorEnabled?: boolean;
@@ -86,6 +59,13 @@ export interface TwoFAVerifyResponse {
 
 export type TwoFALoginResponse = AuthResponseDto;
 
+export interface TwoFactorRequiredResponse {
+  tempToken: string;
+  twoFactorRequired: true;
+}
+
+export type LoginResult = LoginResponse | TwoFactorRequiredResponse;
+
 export interface AuthResponse extends BaseResponse {
   accessToken: string;
   refreshToken: string;
@@ -98,64 +78,7 @@ export interface RegisterSuccessResponse extends BaseResponse {
   email: string;
 }
 
-export interface EmailNotConfirmedResponse extends BaseErrorResponse {
-  type: 'EMAIL_NOT_CONFIRMED';
-  email: string;
-}
-
-export interface AccountExistsResponse extends BaseErrorResponse {
-  type: 'ACCOUNT_EXISTS';
-}
-
-export interface InvalidCredentialsResponse extends BaseErrorResponse {
-  statusCode: 401;
-  type: 'INVALID_CREDENTIALS';
-  message: 'Invalid email or password';
-}
-
-export interface AccountLockedResponse extends BaseErrorResponse {
-  statusCode: 403;
-  type: 'ACCOUNT_LOCKED';
-  message: 'Account is temporarily locked due to too many failed attempts';
-}
-
-export interface AccountDeactivatedResponse extends BaseErrorResponse {
-  statusCode: 403;
-  type: 'ACCOUNT_DEACTIVATED';
-  message: 'Account is deactivated';
-}
-
-export interface EmailNotConfirmedLoginResponse extends BaseErrorResponse {
-  statusCode: 403;
-  type: 'EMAIL_NOT_CONFIRMED';
-  message: 'Email not confirmed. Please confirm your email before logging in.';
-}
-
-export interface RateLimitResponse extends BaseErrorResponse {
-  statusCode: 429;
-  type: 'RATE_LIMITED';
-  message: 'Too many failed login attempts. Please try again later.';
-}
-
 export type LogoutSuccessResponse = BaseResponse;
-
-export interface LogoutErrorResponse extends BaseErrorResponse {
-  statusCode: 401;
-  type: 'UNAUTHORIZED';
-  message: 'Unauthorized';
-}
-
-export interface InvalidRefreshTokenResponse extends BaseErrorResponse {
-  statusCode: 401;
-  type: 'INVALID_REFRESH_TOKEN';
-  message: 'Invalid refresh token';
-}
-
-export interface RefreshTokenExpiredResponse extends BaseErrorResponse {
-  statusCode: 401;
-  type: 'REFRESH_TOKEN_EXPIRED';
-  message: 'Refresh token has expired';
-}
 
 export interface FetchUserSuccessResponse extends BaseResponse {
   user: UserProfile;
@@ -190,16 +113,6 @@ export interface UsersListResponse {
   users: UserSummary[];
 }
 
-export interface UsernameTakenResponse extends BaseErrorResponse {
-  type: 'USERNAME_TAKEN';
-  message: 'Username is already taken';
-}
-
-export interface EmailAlreadyRegisteredResponse extends BaseErrorResponse {
-  type: 'EMAIL_ALREADY_REGISTERED';
-  message: 'Email is already registered';
-}
-
 export interface DeleteUserSuccessResponse extends BaseResponse {
   message: 'Account deleted successfully';
 }
@@ -226,11 +139,6 @@ export interface ResendConfirmationSuccessResponse extends BaseResponse {
   message: string;
 }
 
-export interface EmailAlreadyConfirmedResponse extends BaseErrorResponse {
-  type: 'EMAIL_ALREADY_CONFIRMED';
-  message: 'Email is already confirmed';
-}
-
 export type RegisterResponse = RegisterSuccessResponse;
 export type LoginResponse = AuthResponse;
 export type LogoutResponse = LogoutSuccessResponse;
@@ -243,11 +151,6 @@ export type DeleteUserByAdminResponse = DeleteUserByAdminSuccessResponse;
 export type ForgotPasswordResponse = ForgotPasswordSuccessResponse;
 export type ResetPasswordResponse = ResetPasswordSuccessResponse;
 export type ResendConfirmationResponse = ResendConfirmationSuccessResponse;
-export type FetchAllUsersResponse = UsersListResponse;
-export type FetchMonthlyStatsResponse = MonthlyStatsResponse;
-export type FetchRevenuesStatsResponse = BasicStatResponse;
-export type FetchExpensesStatsResponse = BasicStatResponse;
-export type ChangeRoleApiResponse = ChangeRoleResponse;
 
 export interface BusinessApplicationResponse {
   message: string;
@@ -343,44 +246,3 @@ export interface BanUserResponse extends BaseResponse {
 }
 
 export type UnbanUserResponse = BanUserResponse;
-
-export enum HttpStatus {
-  OK = 200,
-  CREATED = 201,
-  BAD_REQUEST = 400,
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403,
-  NOT_FOUND = 404,
-  CONFLICT = 409,
-  TOO_MANY_REQUESTS = 429,
-  INTERNAL_SERVER_ERROR = 500,
-}
-
-export interface TokenExpiryInfo {
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresAt: string;
-  refreshTokenExpiresAt: string;
-}
-
-export enum ErrorType {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
-  EMAIL_NOT_CONFIRMED = 'EMAIL_NOT_CONFIRMED',
-  ACCOUNT_EXISTS = 'ACCOUNT_EXISTS',
-  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
-  ACCOUNT_DEACTIVATED = 'ACCOUNT_DEACTIVATED',
-  RATE_LIMITED = 'RATE_LIMITED',
-  USERNAME_TAKEN = 'USERNAME_TAKEN',
-  EMAIL_ALREADY_REGISTERED = 'EMAIL_ALREADY_REGISTERED',
-  INVALID_REFRESH_TOKEN = 'INVALID_REFRESH_TOKEN',
-  REFRESH_TOKEN_EXPIRED = 'REFRESH_TOKEN_EXPIRED',
-}
-
-export type ApiResponse<T> = T & BaseResponse;
-
-export type ApiError = BaseErrorResponse | ValidationErrorResponse;
-
-export type SuccessResponse<T> = ApiResponse<T>;
-
-export type ErrorResponse = ApiError;

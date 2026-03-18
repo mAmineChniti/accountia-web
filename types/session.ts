@@ -5,10 +5,3 @@ export interface AuthenticatedSession {
   user: UserCookieData;
   isAdmin: boolean;
 }
-
-export interface UnauthenticatedSession {
-  authenticated: false;
-  isAdmin: false;
-}
-
-export type Session = AuthenticatedSession | UnauthenticatedSession;
