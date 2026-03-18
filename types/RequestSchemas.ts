@@ -24,6 +24,11 @@ const OptionalDateSchema = z
     }
   );
 
+const TwoFACodeSchema = z
+  .string()
+  .regex(/^\d{6}$/, 'Invalid authentication code')
+  .length(6);
+
 export const RegisterSchema = z.object({
   username: z.string().min(5).max(20),
   email: z.email(),
@@ -64,11 +69,16 @@ export const FetchUserByIdSchema = z.object({
   userId: z.string(),
 });
 
+export const GoogleOAuthExchangeSchema = z.object({
+  oauthCode: z.string().min(1, 'OAuth code is required'),
+});
+
 export const TwoFAVerifySchema = z.object({
-  code: z
-    .string()
-    .regex(/^\d{6}$/, 'Invalid authentication code')
-    .length(6),
+  code: TwoFACodeSchema,
+});
+
+export const TwoFADisableSchema = z.object({
+  code: TwoFACodeSchema,
 });
 
 export const ChangeRoleSchema = z.object({
@@ -107,10 +117,7 @@ export const AssignUserSchema = z.object({
 
 export const TwoFALoginSchema = z.object({
   tempToken: z.string().min(1, 'Temporary token is required'),
-  code: z
-    .string()
-    .regex(/^\d{6}$/, 'Invalid authentication code')
-    .length(6),
+  code: TwoFACodeSchema,
 });
 
 export const UpdateUserSchema = z.object({
@@ -131,9 +138,13 @@ export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;
 export type FetchUserByIdInput = z.infer<typeof FetchUserByIdSchema>;
+export type GoogleOAuthExchangeInput = z.infer<
+  typeof GoogleOAuthExchangeSchema
+>;
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 export type TwoFAVerifyInput = z.infer<typeof TwoFAVerifySchema>;
+export type TwoFADisableInput = z.infer<typeof TwoFADisableSchema>;
 export type TwoFALoginInput = z.infer<typeof TwoFALoginSchema>;
 export type ChangeRoleInput = z.infer<typeof ChangeRoleSchema>;
 export type BusinessApplicationInput = z.infer<

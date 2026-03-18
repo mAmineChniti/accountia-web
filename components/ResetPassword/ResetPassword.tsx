@@ -35,6 +35,7 @@ import {
   type ResetPasswordInput,
 } from '@/types/RequestSchemas';
 import ResetPasswordSkeleton from './ResetPasswordSkeleton';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function ResetPasswordPage({
   dictionary,
@@ -84,12 +85,11 @@ function ResetPasswordContent({
       router.push(`/${lang}/login`);
     },
     onError: (err: unknown) => {
-      const message =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'string'
-            ? err
-            : dictionary.pages.resetPassword.errorMessage;
+      const message = localizeErrorMessage(
+        err,
+        dictionary,
+        dictionary.pages.resetPassword.errorMessage
+      );
       toast.error(message);
     },
   });

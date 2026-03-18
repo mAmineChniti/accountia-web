@@ -328,7 +328,7 @@ export default async function IndexPage({
                     {dictionary.pages.home.solutions.startups.features.map(
                       (feature: string, index: number) => (
                         <li key={index} className="flex items-center text-base">
-                          <CheckCircle className="text-primary mr-3 h-5 w-5 flex-shrink-0" />
+                          <CheckCircle className="text-primary mr-3 h-5 w-5 shrink-0" />
                           <span>{feature}</span>
                         </li>
                       )
@@ -364,7 +364,7 @@ export default async function IndexPage({
                     {dictionary.pages.home.solutions.smallBusiness.features.map(
                       (feature: string, index: number) => (
                         <li key={index} className="flex items-center text-base">
-                          <CheckCircle className="text-primary mr-3 h-5 w-5 flex-shrink-0" />
+                          <CheckCircle className="text-primary mr-3 h-5 w-5 shrink-0" />
                           <span>{feature}</span>
                         </li>
                       )
@@ -397,7 +397,7 @@ export default async function IndexPage({
                     {dictionary.pages.home.solutions.enterprise.features.map(
                       (feature: string, index: number) => (
                         <li key={index} className="flex items-center text-base">
-                          <CheckCircle className="text-primary mr-3 h-5 w-5 flex-shrink-0" />
+                          <CheckCircle className="text-primary mr-3 h-5 w-5 shrink-0" />
                           <span>{feature}</span>
                         </li>
                       )

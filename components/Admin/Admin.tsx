@@ -19,7 +19,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Trash2, X, ChevronDown, Loader2 } from 'lucide-react';
+import {
+  Trash2,
+  X,
+  ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
+  Loader2,
+  Ban,
+  ShieldCheck,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +64,7 @@ import type {
 } from '@/types/ResponseInterfaces';
 import { AuthService } from '@/lib/requests';
 import { toast } from 'sonner';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
@@ -90,6 +100,9 @@ export default function Admin({
   const [changingRoleUserId, setChangingRoleUserId] = useState<
     string | undefined
   >();
+  const [banningUserId, setBanningUserId] = useState<string | undefined>();
+  const [banModalUser, setBanModalUser] = useState<UserSummary | undefined>();
+  const [banAction, setBanAction] = useState<'ban' | 'unban'>('ban');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -116,6 +129,9 @@ export default function Admin({
     ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(u.role ?? '')
   ).length;
   const modalUsername = modalUser ? modalUser.username : '';
+  const usersLoadErrorMessage = error
+    ? localizeErrorMessage(error, dictionary, dictionary.admin.loadError)
+    : dictionary.admin.loadError;
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -204,8 +220,14 @@ export default function Admin({
       toast.success(dictionary.admin.changeRoleSuccess);
       setChangingRoleUserId(undefined);
     },
-    onError: () => {
-      toast.error(dictionary.admin.changeRoleError);
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.admin.changeRoleError
+        )
+      );
       setChangingRoleUserId(undefined);
     },
   });
@@ -223,8 +245,72 @@ export default function Admin({
       setModalUser(undefined);
       setDeleteError(undefined);
     },
-    onError: () => {
-      setDeleteError(dictionary.admin.deleteError);
+    onError: (error: unknown) => {
+      setDeleteError(
+        localizeErrorMessage(error, dictionary, dictionary.admin.deleteError)
+      );
+    },
+  });
+
+  const banMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.banUser(userId),
+    onMutate: (userId) => {
+      setBanningUserId(userId);
+    },
+    onSuccess: (_: unknown, userId: string) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isBanned: true } : u
+            ),
+          };
+        }
+      );
+      setBanModalUser(undefined);
+      toast.success(dictionary.admin.banSuccess);
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(error, dictionary, dictionary.admin.banError)
+      );
+    },
+    onSettled: () => {
+      setBanningUserId(undefined);
+    },
+  });
+
+  const unbanMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.unbanUser(userId),
+    onMutate: (userId) => {
+      setBanningUserId(userId);
+    },
+    onSuccess: (_: unknown, userId: string) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isBanned: false } : u
+            ),
+          };
+        }
+      );
+      setBanModalUser(undefined);
+      toast.success(dictionary.admin.unbanSuccess);
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(error, dictionary, dictionary.admin.unbanError)
+      );
+    },
+    onSettled: () => {
+      setBanningUserId(undefined);
     },
   });
 
@@ -292,7 +378,7 @@ export default function Admin({
               <CardTitle>{dictionary.admin.usersTitle}</CardTitle>
               <CardDescription>{dictionary.admin.tableCaption}</CardDescription>
             </div>
-            <div className="flex flex-col gap-2 md:w-[320px] md:flex-row md:items-center">
+            <div className="flex flex-col gap-2 md:w-xs md:flex-row md:items-center">
               <div className="relative flex-1">
                 <Input
                   value={search}
@@ -369,7 +455,7 @@ export default function Admin({
           {error ? (
             <div className="space-y-3">
               <div className="text-destructive text-sm">
-                {dictionary.admin.loadError}
+                {usersLoadErrorMessage}
               </div>
               <Button type="button" variant="outline" onClick={() => refetch()}>
                 {dictionary.common.retry}
@@ -393,37 +479,61 @@ export default function Admin({
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="px-0"
+                      className="flex cursor-pointer items-center gap-1 select-none"
                       onClick={() => toggleSort('username')}
                     >
                       {dictionary.admin.username}
-                    </Button>
+                      {sortKey === 'username' ? (
+                        sortDir === 'asc' ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )
+                      ) : (
+                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                      )}
+                    </button>
                   </TableHead>
                   <TableHead>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="px-0"
+                      className="flex cursor-pointer items-center gap-1 select-none"
                       onClick={() => toggleSort('email')}
                     >
                       {dictionary.admin.email}
-                    </Button>
+                      {sortKey === 'email' ? (
+                        sortDir === 'asc' ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )
+                      ) : (
+                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                      )}
+                    </button>
                   </TableHead>
                   <TableHead>{dictionary.admin.firstName}</TableHead>
                   <TableHead>{dictionary.admin.lastName}</TableHead>
                   <TableHead>{dictionary.admin.roleColumn}</TableHead>
                   <TableHead>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="px-0"
+                      className="flex cursor-pointer items-center gap-1 select-none"
                       onClick={() => toggleSort('dateJoined')}
                     >
                       {dictionary.admin.dateJoined}
-                    </Button>
+                      {sortKey === 'dateJoined' ? (
+                        sortDir === 'asc' ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )
+                      ) : (
+                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                      )}
+                    </button>
                   </TableHead>
                   <TableHead className="text-right">
                     {dictionary.admin.actions}
@@ -482,20 +592,48 @@ export default function Admin({
                     </TableCell>
                     <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="rounded-full"
-                        onClick={() => {
-                          setModalUser(user);
-                          setDeleteError(undefined);
-                        }}
-                        disabled={deleteMutation.isPending}
-                        aria-label={dictionary.common.delete}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant={
+                            user.isBanned === true ? 'outline' : 'secondary'
+                          }
+                          size="icon"
+                          className="rounded-full"
+                          onClick={() => {
+                            setBanModalUser(user);
+                            setBanAction(
+                              user.isBanned === true ? 'unban' : 'ban'
+                            );
+                          }}
+                          disabled={banningUserId === user.id}
+                          aria-label={
+                            user.isBanned === true
+                              ? dictionary.admin.unbanUser
+                              : dictionary.admin.banUser
+                          }
+                        >
+                          {user.isBanned === true ? (
+                            <ShieldCheck className="h-4 w-4" />
+                          ) : (
+                            <Ban className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="rounded-full"
+                          onClick={() => {
+                            setModalUser(user);
+                            setDeleteError(undefined);
+                          }}
+                          disabled={deleteMutation.isPending}
+                          aria-label={dictionary.common.delete}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -548,6 +686,61 @@ export default function Admin({
               {deleteMutation.isPending
                 ? dictionary.admin.deleteDialog.deleting
                 : dictionary.admin.deleteDialog.confirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={banModalUser !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setBanModalUser(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {banAction === 'ban'
+                ? dictionary.admin.banDialog.title
+                : dictionary.admin.unbanDialog.title}
+            </DialogTitle>
+            <DialogDescription>
+              {(banAction === 'ban'
+                ? dictionary.admin.banDialog.description
+                : dictionary.admin.unbanDialog.description
+              ).replace('{username}', banModalUser?.username ?? '')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setBanModalUser(undefined)}
+              disabled={banMutation.isPending || unbanMutation.isPending}
+            >
+              {dictionary.common.cancel}
+            </Button>
+            <Button
+              type="button"
+              variant={banAction === 'ban' ? 'destructive' : 'default'}
+              onClick={() => {
+                if (!banModalUser) return;
+                if (banAction === 'ban') banMutation.mutate(banModalUser.id);
+                else unbanMutation.mutate(banModalUser.id);
+              }}
+              disabled={
+                banMutation.isPending ||
+                unbanMutation.isPending ||
+                !banModalUser
+              }
+            >
+              {banMutation.isPending || unbanMutation.isPending
+                ? banAction === 'ban'
+                  ? dictionary.admin.banDialog.banning
+                  : dictionary.admin.unbanDialog.unbanning
+                : banAction === 'ban'
+                  ? dictionary.admin.banDialog.confirm
+                  : dictionary.admin.unbanDialog.confirm}
             </Button>
           </DialogFooter>
         </DialogContent>

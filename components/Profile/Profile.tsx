@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/form';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Eye, EyeOff, Trash2, Pencil, Save } from 'lucide-react';
+import { Eye, EyeOff, Pencil, Save } from 'lucide-react';
 import {
   InputOTP,
   InputOTPGroup,
@@ -63,6 +63,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { useRouter } from 'next/navigation';
 import { clearAuthCookies } from '@/actions/cookies';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function Profile({
   dictionary,
@@ -83,6 +84,8 @@ export default function Profile({
   >();
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFADialogOpen, setTwoFADialogOpen] = useState(false);
+  const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
+  const [disable2FACode, setDisable2FACode] = useState('');
   const router = useRouter();
   const [justEnteredEditMode, setJustEnteredEditMode] = useState(false);
   const accountForm = useForm<UpdateUserInput>({
@@ -121,8 +124,14 @@ export default function Profile({
       setTwoFADialogOpen(true);
       toast.success(dictionary.pages.profile.twoFactor.setupSuccess);
     },
-    onError: () => {
-      toast.error(dictionary.pages.profile.twoFactor.setupError);
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.profile.twoFactor.setupError
+        )
+      );
     },
   });
 
@@ -136,12 +145,40 @@ export default function Profile({
         setTwoFASetup(undefined);
         setTwoFACode('');
         setTwoFADialogOpen(false);
+        refetch();
       } else {
         toast.error(dictionary.pages.profile.twoFactor.invalidCode);
       }
     },
-    onError: () => {
-      toast.error(dictionary.pages.profile.twoFactor.verifyError);
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.profile.twoFactor.verifyError
+        )
+      );
+    },
+  });
+
+  const disable2FAMutation = useMutation({
+    mutationFn: async (code: string) => {
+      return await AuthService.disableTwoFactor({ code });
+    },
+    onSuccess: () => {
+      toast.success(dictionary.pages.profile.twoFactor.disableSuccess);
+      setDisable2FADialogOpen(false);
+      setDisable2FACode('');
+      refetch();
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.profile.twoFactor.disableError
+        )
+      );
     },
   });
 
@@ -172,8 +209,14 @@ export default function Profile({
       securityForm.clearErrors();
       toast.success(dictionary.pages.profile.updateSuccess);
     },
-    onError: (_error) => {
-      toast.error(dictionary.pages.profile.updateError);
+    onError: (error) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.profile.updateError
+        )
+      );
     },
   });
   const deleteMutation = useMutation({
@@ -185,8 +228,14 @@ export default function Profile({
       await clearAuthCookies();
       router.refresh();
     },
-    onError: () => {
-      toast.error(dictionary.pages.profile.deleteError);
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.profile.deleteError
+        )
+      );
     },
   });
 
@@ -434,7 +483,6 @@ export default function Profile({
                     size="lg"
                     className="px-8"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
                     {dictionary.pages.profile.deleteButton}
                   </Button>
                 </div>
@@ -852,24 +900,105 @@ export default function Profile({
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (twoFASetup) setTwoFADialogOpen(true);
-                        else setup2FAMutation.mutate();
-                      }}
-                      disabled={
-                        setup2FAMutation.isPending ||
-                        verify2FAMutation.isPending
-                      }
-                    >
-                      {setup2FAMutation.isPending
-                        ? dictionary.pages.profile.twoFactor.settingUp
-                        : dictionary.pages.profile.twoFactor.setupButton}
-                    </Button>
+                    {userData.twoFactorEnabled ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => {
+                          setDisable2FACode('');
+                          setDisable2FADialogOpen(true);
+                        }}
+                        disabled={disable2FAMutation.isPending}
+                      >
+                        {dictionary.pages.profile.twoFactor.disableButton}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (twoFASetup) setTwoFADialogOpen(true);
+                          else setup2FAMutation.mutate();
+                        }}
+                        disabled={
+                          setup2FAMutation.isPending ||
+                          verify2FAMutation.isPending
+                        }
+                      >
+                        {setup2FAMutation.isPending
+                          ? dictionary.pages.profile.twoFactor.settingUp
+                          : dictionary.pages.profile.twoFactor.setupButton}
+                      </Button>
+                    )}
                   </div>
                 </div>
+
+                <Dialog
+                  open={disable2FADialogOpen}
+                  onOpenChange={(open) => {
+                    setDisable2FADialogOpen(open);
+                    if (!open) setDisable2FACode('');
+                  }}
+                >
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {dictionary.pages.profile.twoFactor.disableButton}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {dictionary.pages.profile.twoFactor.description}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="text-sm font-medium">
+                        {dictionary.pages.profile.twoFactor.enterCode}
+                      </div>
+                      <InputOTP
+                        maxLength={6}
+                        value={disable2FACode}
+                        onChange={(v) => setDisable2FACode(v)}
+                        disabled={disable2FAMutation.isPending}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          setDisable2FADialogOpen(false);
+                          setDisable2FACode('');
+                        }}
+                        disabled={disable2FAMutation.isPending}
+                      >
+                        {dictionary.pages.profile.cancelButton}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() =>
+                          disable2FAMutation.mutate(disable2FACode.trim())
+                        }
+                        disabled={
+                          disable2FAMutation.isPending ||
+                          disable2FACode.trim().length !== 6
+                        }
+                      >
+                        {disable2FAMutation.isPending
+                          ? dictionary.pages.profile.twoFactor.disabling
+                          : dictionary.pages.profile.twoFactor.disableButton}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <Dialog
                   open={twoFADialogOpen}

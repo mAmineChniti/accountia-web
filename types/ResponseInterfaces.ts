@@ -64,6 +64,7 @@ export interface UserPayload {
 export interface UserProfile extends UserPayload {
   dateJoined: string;
   emailConfirmed: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 export interface AuthResponseDto {
@@ -180,6 +181,8 @@ export interface UserSummary {
   phoneNumber?: string;
   role?: Role;
   dateJoined: string;
+  isBanned?: boolean;
+  bannedReason?: string;
 }
 
 export interface UsersListResponse {
@@ -328,6 +331,18 @@ export interface AssignUserResponse {
 export interface BusinessMessageResponse {
   message: string;
 }
+
+export interface TwoFADisableResponse extends BaseResponse {
+  disabled: boolean;
+}
+
+export interface BanUserResponse extends BaseResponse {
+  userId: string;
+  isBanned: boolean;
+  reason?: string;
+}
+
+export type UnbanUserResponse = BanUserResponse;
 
 export enum HttpStatus {
   OK = 200,

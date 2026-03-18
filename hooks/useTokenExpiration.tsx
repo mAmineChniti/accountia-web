@@ -1,9 +1,6 @@
 'use client';
-import {
-  getToken,
-  clearAuthCookies,
-  type AuthCookieData,
-} from '@/actions/cookies';
+import { getToken, clearAuthCookies } from '@/actions/cookies';
+import type { AuthCookieData } from '@/types/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 

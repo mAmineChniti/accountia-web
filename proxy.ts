@@ -4,7 +4,7 @@ import { i18n, type Locale } from '@/i18n-config';
 import { match as matchLocale } from '@formatjs/intl-localematcher';
 
 import Negotiator from 'negotiator';
-import { isAdminRole } from '@/lib/auth';
+import { isAdminRole } from '@/lib/utils';
 
 function getLocale(request: NextRequest): string | undefined {
   const negotiatorHeaders: Record<string, string> = {};
@@ -139,6 +139,7 @@ export async function proxy(request: NextRequest) {
 
   const response = NextResponse.next();
   response.headers.set('x-locale', locale);
+  response.headers.set('x-pathname', pathname);
   return response;
 }
 
