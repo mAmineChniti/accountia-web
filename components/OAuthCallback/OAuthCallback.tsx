@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,8 @@ export default function OAuthCallback({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasStartedRef = useRef(false);
+  const [runtimeError, setRuntimeError] = useState<string | undefined>();
 
   const { oauthCode, parseError } = useMemo<{
     oauthCode: string | undefined;
@@ -31,8 +32,8 @@ export default function OAuthCallback({
       return { oauthCode: undefined, parseError: errorMsg };
     }
 
-    // Backend callback returns a one-time oauthCode, which must be exchanged.
-    const code = searchParams.get('oauthCode');
+    // Backend callback returns a one-time oauthCode. Accept code as fallback.
+    const code = searchParams.get('oauthCode') ?? searchParams.get('code');
     if (code) {
       return { oauthCode: code, parseError: undefined };
     }
@@ -40,100 +41,111 @@ export default function OAuthCallback({
     return { oauthCode: undefined, parseError: errorMsg };
   }, [searchParams, dictionary]);
 
-  const oauthFinalizeQuery = useQuery({
-    queryKey: ['oauth-finalize', oauthCode, lang],
-    enabled: !parseError && Boolean(oauthCode),
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: 0,
-    queryFn: async () => {
-      if (!oauthCode) {
-        throw new Error('Missing OAuth code');
+  useEffect(() => {
+    if (parseError || !oauthCode || hasStartedRef.current) {
+      return;
+    }
+
+    hasStartedRef.current = true;
+    const consumedCodeKey = `oauth-code-consumed:${oauthCode}`;
+
+    if (globalThis.sessionStorage.getItem(consumedCodeKey) === '1') {
+      router.replace(`/${lang}/login`);
+      return;
+    }
+
+    // Mark the one-time code as consumed before any network exchange
+    globalThis.sessionStorage.setItem(consumedCodeKey, '1');
+
+    const finalizeOAuth = async () => {
+      try {
+        const authResult = await AuthService.exchangeGoogleOAuthCode({
+          oauthCode,
+        });
+
+        if ('tempToken' in authResult) {
+          const loginUrl = new URL(
+            `/${lang}/login`,
+            globalThis.location.origin
+          );
+          loginUrl.searchParams.set('tempToken', authResult.tempToken);
+          loginUrl.searchParams.set('oauth2fa', '1');
+          router.replace(loginUrl.pathname + loginUrl.search);
+          return;
+        }
+
+        const verifiedUserResponse = await AuthService.fetchUserWithAccessToken(
+          authResult.accessToken
+        );
+        const { user: verifiedUser } = verifiedUserResponse;
+        const { profilePicture, ...userWithoutProfilePicture } = verifiedUser;
+
+        if (profilePicture) {
+          try {
+            localStorage.setItem('profilePicture', profilePicture);
+          } catch {}
+        } else {
+          try {
+            localStorage.removeItem('profilePicture');
+          } catch {}
+        }
+
+        await setTokens({
+          token: authResult.accessToken,
+          refreshToken: authResult.refreshToken,
+          expires_at:
+            authResult.accessTokenExpiresAt ||
+            new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          expires_at_ts: authResult.accessTokenExpiresAt
+            ? new Date(authResult.accessTokenExpiresAt).getTime()
+            : Date.now() + 24 * 60 * 60 * 1000,
+          refresh_expires_at:
+            authResult.refreshTokenExpiresAt ||
+            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          refresh_expires_at_ts: authResult.refreshTokenExpiresAt
+            ? new Date(authResult.refreshTokenExpiresAt).getTime()
+            : Date.now() + 7 * 24 * 60 * 60 * 1000,
+        });
+
+        await setUser({
+          userId: userWithoutProfilePicture.id,
+          username: userWithoutProfilePicture.username,
+          email: userWithoutProfilePicture.email,
+          firstName: userWithoutProfilePicture.firstName,
+          lastName: userWithoutProfilePicture.lastName,
+          phoneNumber: userWithoutProfilePicture.phoneNumber,
+          birthdate: userWithoutProfilePicture.birthdate,
+          role: userWithoutProfilePicture.role ?? 'CLIENT',
+          loginTime: new Date().toISOString(),
+        });
+
+        globalThis.dispatchEvent(new CustomEvent('auth:changed'));
+
+        const role = userWithoutProfilePicture.role ?? '';
+        const redirectPath = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(role)
+          ? `/${lang}/dashboard/admin`
+          : role === 'CLIENT'
+            ? `/${lang}/invoices`
+            : `/${lang}`;
+
+        router.replace(redirectPath);
+      } catch (error: unknown) {
+        // Allow retrying the same callback URL only when exchange fails.
+        globalThis.sessionStorage.removeItem(consumedCodeKey);
+        setRuntimeError(
+          localizeErrorMessage(
+            error,
+            dictionary,
+            dictionary.pages.oauthCallback.errorDescription
+          )
+        );
       }
+    };
 
-      const authResult = await AuthService.exchangeGoogleOAuthCode({
-        oauthCode,
-      });
+    void finalizeOAuth();
+  }, [parseError, oauthCode, lang, router, dictionary]);
 
-      if ('tempToken' in authResult) {
-        const loginUrl = new URL(`/${lang}/login`, globalThis.location.origin);
-        loginUrl.searchParams.set('tempToken', authResult.tempToken);
-        loginUrl.searchParams.set('oauth2fa', '1');
-        router.replace(loginUrl.pathname + loginUrl.search);
-        return true;
-      }
-
-      const verifiedUserResponse = await AuthService.fetchUserWithAccessToken(
-        authResult.accessToken
-      );
-      const { user: verifiedUser } = verifiedUserResponse;
-      const { profilePicture, ...userWithoutProfilePicture } = verifiedUser;
-
-      if (profilePicture) {
-        try {
-          localStorage.setItem('profilePicture', profilePicture);
-        } catch {}
-      } else {
-        try {
-          localStorage.removeItem('profilePicture');
-        } catch {}
-      }
-
-      await setTokens({
-        token: authResult.accessToken,
-        refreshToken: authResult.refreshToken,
-        expires_at:
-          authResult.accessTokenExpiresAt ||
-          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        expires_at_ts: authResult.accessTokenExpiresAt
-          ? new Date(authResult.accessTokenExpiresAt).getTime()
-          : Date.now() + 24 * 60 * 60 * 1000,
-        refresh_expires_at:
-          authResult.refreshTokenExpiresAt ||
-          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        refresh_expires_at_ts: authResult.refreshTokenExpiresAt
-          ? new Date(authResult.refreshTokenExpiresAt).getTime()
-          : Date.now() + 7 * 24 * 60 * 60 * 1000,
-      });
-
-      await setUser({
-        userId: userWithoutProfilePicture.id,
-        username: userWithoutProfilePicture.username,
-        email: userWithoutProfilePicture.email,
-        firstName: userWithoutProfilePicture.firstName,
-        lastName: userWithoutProfilePicture.lastName,
-        phoneNumber: userWithoutProfilePicture.phoneNumber,
-        birthdate: userWithoutProfilePicture.birthdate,
-        role: userWithoutProfilePicture.role ?? 'CLIENT',
-        loginTime: new Date().toISOString(),
-      });
-
-      globalThis.dispatchEvent(new CustomEvent('auth:changed'));
-
-      const role = userWithoutProfilePicture.role ?? '';
-      const redirectPath = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(role)
-        ? `/${lang}/dashboard/admin`
-        : role === 'CLIENT'
-          ? `/${lang}/invoices`
-          : `/${lang}`;
-
-      router.replace(redirectPath);
-      return true;
-    },
-  });
-
-  const error =
-    parseError ||
-    (oauthFinalizeQuery.isError &&
-      localizeErrorMessage(
-        oauthFinalizeQuery.error,
-        dictionary,
-        dictionary.pages.oauthCallback.errorDescription
-      )) ||
-    undefined;
+  const error = parseError || runtimeError || undefined;
 
   if (error) {
     return (

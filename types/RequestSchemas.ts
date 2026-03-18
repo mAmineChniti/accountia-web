@@ -133,7 +133,6 @@ export const UpdateUserSchema = z.object({
 
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
-export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ResendConfirmationInput = z.infer<typeof ResendConfirmationSchema>;

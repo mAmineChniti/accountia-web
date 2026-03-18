@@ -376,6 +376,7 @@
     "profile": "عرض ملفك الشخصي",
     "invoices": "الذهاب إلى فواتيرك",
     "adminDashboard": "الانتقال إلى لوحة تحكم المدير",
+    "businessManagement": "إدارة طلبات الأعمال والشركات",
     "logout": "تسجيل الخروج من حسابك",
     "perfectForNewBusinesses": "مثالي للشركات الجديدة",
     "mostPopularChoice": "الخيار الأكثر شعبية",
@@ -388,6 +389,78 @@
   "admin": {
     "title": "لوحة تحكم المدير",
     "subtitle": "إدارة المستخدمين وصلاحيات الوصول",
+    "businessManagement": {
+      "navLabel": "إدارة الأعمال",
+      "title": "إدارة الأعمال",
+      "subtitle": "راجع الطلبات وأدر الشركات المعتمدة.",
+      "refresh": "تحديث",
+      "loadApplicationsError": "فشل تحميل طلبات الأعمال",
+      "loadBusinessesError": "فشل تحميل الشركات",
+      "reviewSuccess": "تمت مراجعة الطلب بنجاح",
+      "reviewError": "فشلت مراجعة طلب العمل",
+      "deleteSuccess": "تم حذف الشركة بنجاح",
+      "deleteError": "فشل حذف الشركة",
+      "defaultApprovalNote": "تمت الموافقة بواسطة مدير المنصة",
+      "reviewNotesRequired": "ملاحظات المراجعة مطلوبة",
+      "actions": {
+        "approve": "موافقة",
+        "reject": "رفض"
+      },
+      "status": {
+        "pending": "قيد الانتظار",
+        "approved": "موافق عليه",
+        "rejected": "مرفوض"
+      },
+      "stats": {
+        "pendingApplications": "الطلبات المعلقة",
+        "totalBusinesses": "إجمالي الشركات",
+        "approvedBusinesses": "الشركات المعتمدة"
+      },
+      "applications": {
+        "title": "طلبات الأعمال",
+        "description": "وافق أو ارفض الطلبات المقدمة من المستخدمين.",
+        "searchPlaceholder": "ابحث في الطلبات...",
+        "noResults": "لم يتم العثور على طلبات.",
+        "reviewed": "تمت المراجعة",
+        "columns": {
+          "business": "النشاط التجاري",
+          "applicantId": "معرف المتقدم",
+          "phone": "الهاتف",
+          "status": "الحالة",
+          "submitted": "تاريخ التقديم",
+          "actions": "الإجراءات"
+        }
+      },
+      "businesses": {
+        "title": "الشركات",
+        "description": "تصفح الشركات المعتمدة واحذف الشركات المخالفة للسياسات.",
+        "searchPlaceholder": "ابحث في الشركات...",
+        "noResults": "لم يتم العثور على شركات.",
+        "active": "نشطة",
+        "inactive": "غير نشطة",
+        "columns": {
+          "name": "الاسم",
+          "phone": "الهاتف",
+          "status": "الحالة",
+          "active": "النشاط",
+          "created": "تاريخ الإنشاء",
+          "actions": "الإجراءات"
+        }
+      },
+      "rejectDialog": {
+        "title": "رفض الطلب",
+        "description": "أضف سببًا لرفض {businessName}.",
+        "fallbackBusiness": "هذا الطلب",
+        "notesPlaceholder": "سبب الرفض",
+        "rejecting": "جارٍ الرفض..."
+      },
+      "deleteDialog": {
+        "title": "حذف الشركة",
+        "description": "سيؤدي هذا إلى حذف {businessName} وتعييناته نهائيًا.",
+        "fallbackBusiness": "هذه الشركة",
+        "deleting": "جارٍ الحذف..."
+      }
+    },
     "statisticsTitle": "الإحصائيات",
     "statisticsSubtitle": "نظرة عامة على الإيرادات والمصاريف",
     "stats": {

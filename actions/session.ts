@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation';
 import { isAdminRole } from '@/lib/utils';
 import type { AuthenticatedSession } from '@/types/session';
 
-export type { AuthenticatedSession, Session } from '@/types/session';
-
 export async function getSession(): Promise<AuthenticatedSession | undefined> {
   try {
     const [token, user] = await Promise.all([getToken(), getUser()]);

@@ -1,8 +1,9 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
@@ -28,8 +29,18 @@ export default function UserSidebar({
   user: UserCookieData;
 }) {
   const router = useRouter();
+  const [profilePicture] = useState<string | undefined>(() => {
+    try {
+      return localStorage.getItem('profilePicture') ?? undefined;
+    } catch {
+      return;
+    }
+  });
 
   const handlePostLogout = async () => {
+    try {
+      localStorage.removeItem('profilePicture');
+    } catch {}
     globalThis.dispatchEvent(new Event('auth:changed'));
     router.refresh();
     router.push(`/${lang}/login`);
@@ -88,6 +99,23 @@ export default function UserSidebar({
           </TooltipContent>
         </Tooltip>
 
+        {isAdmin && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={`/${lang}/dashboard/businesses`}
+                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+              >
+                <Building2 className="h-4 w-4 shrink-0" />
+                {dictionary.admin.businessManagement.navLabel}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{dictionary.tooltips.businessManagement}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Spacer pushes profile/logout to bottom */}
         <div className="flex-1" />
 
@@ -102,16 +130,13 @@ export default function UserSidebar({
             >
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src="" alt={displayName} />
+                  <AvatarImage src={profilePicture} alt={displayName} />
                   <AvatarFallback className="text-xs font-semibold">
                     {fallbackInitial}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col">
                   <span className="text-sm font-medium">{displayName}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {user.email}
-                  </span>
                 </div>
               </div>
             </Link>
