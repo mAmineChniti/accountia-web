@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
+import { formatDate } from '@/lib/date-utils';
 
 type InvoiceStatus = 'PAID' | 'PENDING' | 'OVERDUE' | 'DRAFT' | 'CANCELLED';
 
@@ -228,13 +229,11 @@ export default function Invoices({
                       <span className="text-sm">{invoice.description}</span>
                       <div className="text-muted-foreground flex gap-3 text-xs">
                         <span>
-                          {t.dueDateLabel}:{' '}
-                          {new Date(invoice.dueDate).toLocaleDateString()}
+                          {t.dueDateLabel}: {formatDate(invoice.dueDate, lang)}
                         </span>
                         {invoice.paidAt && (
                           <span className="text-green-600">
-                            {t.paidAtLabel}:{' '}
-                            {new Date(invoice.paidAt).toLocaleDateString()}
+                            {t.paidAtLabel}: {formatDate(invoice.paidAt, lang)}
                           </span>
                         )}
                       </div>
@@ -249,7 +248,7 @@ export default function Invoices({
                         {invoice.currency} {invoice.amount.toFixed(2)}
                       </span>
                       <p className="text-muted-foreground text-xs">
-                        {new Date(invoice.createdAt).toLocaleDateString()}
+                        {formatDate(invoice.createdAt, lang)}
                       </p>
                     </div>
                   </div>

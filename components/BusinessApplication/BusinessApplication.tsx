@@ -34,11 +34,12 @@ import {
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
-import { BusinessService, ApiError } from '@/lib/requests';
+import { BusinessService } from '@/lib/requests';
 import {
   BusinessApplicationSchema,
   type BusinessApplicationInput,
 } from '@/types/RequestSchemas';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function BusinessApplication({
   dictionary,
@@ -69,11 +70,7 @@ export default function BusinessApplication({
       setShowSuccessDialog(true);
     },
     onError: (error: unknown) => {
-      if (error instanceof ApiError) {
-        toast.error(error.message || t.submitError);
-      } else {
-        toast.error(t.submitError);
-      }
+      toast.error(localizeErrorMessage(error, dictionary, t.submitError));
     },
   });
 

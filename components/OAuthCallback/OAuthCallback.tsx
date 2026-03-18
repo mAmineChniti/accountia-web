@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { setTokens, setUser } from '@/actions/cookies';
-import type { AuthResponseDto } from '@/types/ResponseInterfaces';
+import { AuthService } from '@/lib/requests';
 import type { Locale } from '@/i18n-config';
 import type { Dictionary } from '@/get-dictionary';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function OAuthCallback({
   lang,
@@ -18,77 +20,57 @@ export default function OAuthCallback({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Only used for async errors (finalizeLogin failure); parse errors are derived below.
-  const [asyncError, setAsyncError] = useState<string | undefined>();
 
-  // Parse search params synchronously at render time so no setState is called
-  // inside the effect body (avoids react-hooks/set-state-in-effect).
-  const { parsedAuth, parseError } = useMemo<{
-    parsedAuth: AuthResponseDto | undefined;
+  const { oauthCode, parseError } = useMemo<{
+    oauthCode: string | undefined;
     parseError: string | undefined;
   }>(() => {
     const errorMsg = dictionary.pages.oauthCallback.errorDescription;
 
     if (searchParams.get('oauthError')) {
-      return { parsedAuth: undefined, parseError: errorMsg };
+      return { oauthCode: undefined, parseError: errorMsg };
     }
 
-    // Primary path: backend encodes the full AuthResponseDto as base64 JSON
-    const dataParam = searchParams.get('data');
-    if (dataParam) {
-      try {
-        return {
-          parsedAuth: JSON.parse(atob(dataParam)) as AuthResponseDto,
-          parseError: undefined,
-        };
-      } catch {
-        return { parsedAuth: undefined, parseError: errorMsg };
-      }
+    // Backend callback returns a one-time oauthCode, which must be exchanged.
+    const code = searchParams.get('oauthCode');
+    if (code) {
+      return { oauthCode: code, parseError: undefined };
     }
 
-    // Fallback: backend passes tokens as individual query params
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
-    const accessTokenExpiresAt = searchParams.get('accessTokenExpiresAt');
-    const refreshTokenExpiresAt = searchParams.get('refreshTokenExpiresAt');
-    const userParam = searchParams.get('user');
-
-    if (!accessToken || !refreshToken) {
-      return { parsedAuth: undefined, parseError: errorMsg };
-    }
-
-    let user: AuthResponseDto['user'] = { id: '', username: '', email: '' };
-    if (userParam) {
-      try {
-        user = JSON.parse(
-          userParam.startsWith('{') ? userParam : atob(userParam)
-        ) as AuthResponseDto['user'];
-      } catch {
-        // keep empty user stub; session will still be created with tokens
-      }
-    }
-
-    return {
-      parsedAuth: {
-        accessToken,
-        refreshToken,
-        accessTokenExpiresAt:
-          accessTokenExpiresAt ??
-          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        refreshTokenExpiresAt:
-          refreshTokenExpiresAt ??
-          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        user,
-      },
-      parseError: undefined,
-    };
+    return { oauthCode: undefined, parseError: errorMsg };
   }, [searchParams, dictionary]);
 
-  useEffect(() => {
-    if (!parsedAuth) return;
+  const oauthFinalizeQuery = useQuery({
+    queryKey: ['oauth-finalize', oauthCode, lang],
+    enabled: !parseError && Boolean(oauthCode),
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: 0,
+    queryFn: async () => {
+      if (!oauthCode) {
+        throw new Error('Missing OAuth code');
+      }
 
-    const finalizeLogin = async (res: AuthResponseDto) => {
-      const { profilePicture, ...userWithoutPfp } = res.user;
+      const authResult = await AuthService.exchangeGoogleOAuthCode({
+        oauthCode,
+      });
+
+      if ('tempToken' in authResult) {
+        const loginUrl = new URL(`/${lang}/login`, globalThis.location.origin);
+        loginUrl.searchParams.set('tempToken', authResult.tempToken);
+        loginUrl.searchParams.set('oauth2fa', '1');
+        router.replace(loginUrl.pathname + loginUrl.search);
+        return true;
+      }
+
+      const verifiedUserResponse = await AuthService.fetchUserWithAccessToken(
+        authResult.accessToken
+      );
+      const { user: verifiedUser } = verifiedUserResponse;
+      const { profilePicture, ...userWithoutProfilePicture } = verifiedUser;
 
       if (profilePicture) {
         try {
@@ -101,44 +83,57 @@ export default function OAuthCallback({
       }
 
       await setTokens({
-        token: res.accessToken,
-        refreshToken: res.refreshToken,
-        expires_at: res.accessTokenExpiresAt,
-        expires_at_ts: new Date(res.accessTokenExpiresAt).getTime(),
-        refresh_expires_at: res.refreshTokenExpiresAt,
-        refresh_expires_at_ts: new Date(res.refreshTokenExpiresAt).getTime(),
+        token: authResult.accessToken,
+        refreshToken: authResult.refreshToken,
+        expires_at:
+          authResult.accessTokenExpiresAt ||
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        expires_at_ts: authResult.accessTokenExpiresAt
+          ? new Date(authResult.accessTokenExpiresAt).getTime()
+          : Date.now() + 24 * 60 * 60 * 1000,
+        refresh_expires_at:
+          authResult.refreshTokenExpiresAt ||
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        refresh_expires_at_ts: authResult.refreshTokenExpiresAt
+          ? new Date(authResult.refreshTokenExpiresAt).getTime()
+          : Date.now() + 7 * 24 * 60 * 60 * 1000,
       });
 
       await setUser({
-        userId: userWithoutPfp.id,
-        username: userWithoutPfp.username,
-        email: userWithoutPfp.email,
-        firstName: userWithoutPfp.firstName,
-        lastName: userWithoutPfp.lastName,
-        phoneNumber: userWithoutPfp.phoneNumber,
-        birthdate: userWithoutPfp.birthdate,
-        role: userWithoutPfp.role ?? 'CLIENT',
+        userId: userWithoutProfilePicture.id,
+        username: userWithoutProfilePicture.username,
+        email: userWithoutProfilePicture.email,
+        firstName: userWithoutProfilePicture.firstName,
+        lastName: userWithoutProfilePicture.lastName,
+        phoneNumber: userWithoutProfilePicture.phoneNumber,
+        birthdate: userWithoutProfilePicture.birthdate,
+        role: userWithoutProfilePicture.role ?? 'CLIENT',
         loginTime: new Date().toISOString(),
       });
 
-      globalThis.dispatchEvent(new Event('auth:changed'));
+      globalThis.dispatchEvent(new CustomEvent('auth:changed'));
 
-      const role = userWithoutPfp.role ?? '';
-      if (['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(role)) {
-        router.replace(`/${lang}/dashboard/admin`);
-      } else if (role === 'CLIENT') {
-        router.replace(`/${lang}/invoices`);
-      } else {
-        router.replace(`/${lang}`);
-      }
-    };
+      const role = userWithoutProfilePicture.role ?? '';
+      const redirectPath = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(role)
+        ? `/${lang}/dashboard/admin`
+        : role === 'CLIENT'
+          ? `/${lang}/invoices`
+          : `/${lang}`;
 
-    finalizeLogin(parsedAuth).catch(() => {
-      setAsyncError(dictionary.pages.oauthCallback.errorDescription);
-    });
-  }, [parsedAuth, lang, router, dictionary]);
+      router.replace(redirectPath);
+      return true;
+    },
+  });
 
-  const error = parseError ?? asyncError;
+  const error =
+    parseError ||
+    (oauthFinalizeQuery.isError &&
+      localizeErrorMessage(
+        oauthFinalizeQuery.error,
+        dictionary,
+        dictionary.pages.oauthCallback.errorDescription
+      )) ||
+    undefined;
 
   if (error) {
     return (

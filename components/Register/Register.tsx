@@ -54,6 +54,7 @@ import {
   dateToISOString,
   isoToDate,
 } from '@/lib/date-utils';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 const makeRegisterFormSchema = (messages: {
   confirmPasswordRequired: string;
@@ -140,11 +141,23 @@ export default function Register({
             break;
           }
           default: {
-            toast.error(dictionary.pages.register.registrationFailed);
+            toast.error(
+              localizeErrorMessage(
+                error,
+                dictionary,
+                dictionary.pages.register.registrationFailed
+              )
+            );
           }
         }
       } else {
-        toast.error(dictionary.pages.register.registrationFailed);
+        toast.error(
+          localizeErrorMessage(
+            error,
+            dictionary,
+            dictionary.pages.register.registrationFailed
+          )
+        );
       }
     },
   });
@@ -161,8 +174,14 @@ export default function Register({
       await AuthService.resendConfirmationEmail({ email: unconfirmedEmail });
       setShowEmailNotConfirmedDialog(false);
       toast.success(dictionary.pages.register.resendSuccessMessage);
-    } catch {
-      toast.error(dictionary.pages.register.resendErrorMessage);
+    } catch (error: unknown) {
+      toast.error(
+        localizeErrorMessage(
+          error,
+          dictionary,
+          dictionary.pages.register.resendErrorMessage
+        )
+      );
     } finally {
       setIsResending(false);
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -42,6 +42,7 @@ import {
 } from '@/types/RequestSchemas';
 import { setTokens, setUser } from '@/actions/cookies';
 import type { AuthResponseDto } from '@/types/ResponseInterfaces';
+import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function Login({
   dictionary,
@@ -51,6 +52,11 @@ export default function Login({
   lang: Locale;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialOAuthTempToken =
+    searchParams.get('oauth2fa') === '1'
+      ? searchParams.get('tempToken')
+      : undefined;
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -66,12 +72,16 @@ export default function Login({
         email: string;
       }
     | undefined
-  >();
+  >(() =>
+    initialOAuthTempToken
+      ? { tempToken: initialOAuthTempToken, email: '' }
+      : undefined
+  );
   const [otpCode, setOtpCode] = useState('');
   const twoFAForm = useForm<TwoFALoginInput>({
     resolver: zodResolver(TwoFALoginSchema),
     defaultValues: {
-      tempToken: '',
+      tempToken: initialOAuthTempToken ?? '',
       code: '',
     },
   });
@@ -184,23 +194,21 @@ export default function Login({
     globalThis.location.assign(url);
   };
 
-  const loginErrorMessage =
-    loginMutation.error instanceof Error
-      ? loginMutation.error.message
-      : typeof loginMutation.error === 'string'
-        ? loginMutation.error
-        : loginMutation.error
-          ? dictionary.pages.login.unexpectedError
-          : undefined;
+  const loginErrorMessage = loginMutation.error
+    ? localizeErrorMessage(
+        loginMutation.error,
+        dictionary,
+        dictionary.pages.login.unexpectedError
+      )
+    : undefined;
 
-  const twoFAErrorMessage =
-    twoFAMutation.error instanceof Error
-      ? twoFAMutation.error.message
-      : typeof twoFAMutation.error === 'string'
-        ? twoFAMutation.error
-        : twoFAMutation.error
-          ? dictionary.pages.login.unexpectedError
-          : undefined;
+  const twoFAErrorMessage = twoFAMutation.error
+    ? localizeErrorMessage(
+        twoFAMutation.error,
+        dictionary,
+        dictionary.pages.login.unexpectedError
+      )
+    : undefined;
 
   return (
     <main

@@ -11,11 +11,13 @@ import type {
   ForgotPasswordInput,
   TwoFAVerifyInput,
   TwoFALoginInput,
+  TwoFADisableInput,
   ChangeRoleInput,
   BusinessApplicationInput,
   ReviewApplicationInput,
   UpdateBusinessInput,
   AssignUserInput,
+  GoogleOAuthExchangeInput,
 } from '@/types/RequestSchemas';
 import type {
   RegisterResponse,
@@ -43,6 +45,9 @@ import type {
   ReviewApplicationResponse,
   AssignUserResponse,
   BusinessMessageResponse,
+  TwoFADisableResponse,
+  BanUserResponse,
+  UnbanUserResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -125,8 +130,12 @@ const API_CONFIG = {
     CHANGE_ROLE: 'auth/change-role',
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
+    TWO_FA_DISABLE: 'auth/2fa/disable',
     TWO_FA_LOGIN: 'auth/2fa/login',
+    BAN_USER: 'auth/users/{userId}/ban',
+    UNBAN_USER: 'auth/users/{userId}/unban',
     GOOGLE: 'auth/google',
+    GOOGLE_EXCHANGE: 'auth/google/exchange',
   },
 } as const;
 
@@ -296,6 +305,35 @@ export const AuthService = {
     }
   },
 
+  async exchangeGoogleOAuthCode(
+    data: GoogleOAuthExchangeInput
+  ): Promise<
+    LoginResponse | { tempToken: string; twoFactorRequired: boolean }
+  > {
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.GOOGLE_EXCHANGE, {
+          json: data,
+        })
+        .json<
+          LoginResponse | { tempToken: string; twoFactorRequired: boolean }
+        >();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
   async logout(refreshToken: string): Promise<LogoutResponse> {
     const token = await authHeaders();
     if (!token.Authorization) {
@@ -411,6 +449,35 @@ export const AuthService = {
       const result = await client
         .get(API_CONFIG.AUTH.FETCH_USER, {
           headers: token,
+        })
+        .json<FetchUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async fetchUserWithAccessToken(
+    accessToken: string
+  ): Promise<FetchUserResponse> {
+    if (!accessToken) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+
+    try {
+      const result = await client
+        .get(API_CONFIG.AUTH.FETCH_USER, {
+          headers: { Authorization: `Bearer ${accessToken}` },
         })
         .json<FetchUserResponse>();
       return result;
@@ -646,6 +713,73 @@ export const AuthService = {
       ) {
         const errorLike = error as HTTPErrorLike;
         const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async disableTwoFactor(
+    data: TwoFADisableInput
+  ): Promise<TwoFADisableResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.TWO_FA_DISABLE, { json: data, headers: token })
+        .json<TwoFADisableResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async banUser(userId: string): Promise<BanUserResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const endpoint = API_CONFIG.AUTH.BAN_USER.replace('{userId}', userId);
+      const result = await client
+        .patch(endpoint, { headers: token })
+        .json<BanUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async unbanUser(userId: string): Promise<UnbanUserResponse> {
+    const token = await authHeaders();
+    if (!token.Authorization) {
+      throw new ApiError('Token not found', { statusCode: 401 });
+    }
+    try {
+      const endpoint = API_CONFIG.AUTH.UNBAN_USER.replace('{userId}', userId);
+      const result = await client
+        .patch(endpoint, { headers: token })
+        .json<UnbanUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;

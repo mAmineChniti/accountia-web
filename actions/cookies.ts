@@ -1,27 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-export interface AuthCookieData {
-  token: string;
-  refreshToken: string;
-  expires_at: string;
-  expires_at_ts: number;
-  refresh_expires_at: string;
-  refresh_expires_at_ts: number;
-}
-
-export interface UserCookieData {
-  userId: string;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  birthdate?: string;
-  role: string;
-  loginTime: string;
-}
+import type { AuthCookieData, UserCookieData } from '@/types/auth';
 
 export async function setTokens(tokenData: AuthCookieData): Promise<void> {
   const maxAge = Math.max(
@@ -115,7 +95,7 @@ export async function getAuthStatus(): Promise<{ authenticated: boolean }> {
   try {
     const cookieStore = await cookies();
     const tokenCookie = cookieStore.get('token');
-    const userCookie = cookieStore.get('user');
+    const userCookie = cookieStore.has('user');
 
     if (!tokenCookie || !userCookie) {
       return { authenticated: false };
