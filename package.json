@@ -47,7 +47,7 @@
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/eslint-plugin-query": "^5.91.4",
     "@types/negotiator": "^0.6.4",
-    "@types/node": "^25.3.2",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19",
     "@typescript-eslint/parser": "^8.57.1",
