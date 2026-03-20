@@ -74,6 +74,13 @@ export interface AuthResponse extends BaseResponse {
   user: UserPayload;
 }
 
+export interface RefreshTokenResponse extends BaseResponse {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
+}
+
 export interface RegisterSuccessResponse extends BaseResponse {
   email: string;
 }
@@ -142,7 +149,6 @@ export interface ResendConfirmationSuccessResponse extends BaseResponse {
 export type RegisterResponse = RegisterSuccessResponse;
 export type LoginResponse = AuthResponse;
 export type LogoutResponse = LogoutSuccessResponse;
-export type RefreshTokenResponse = AuthResponse;
 export type FetchUserResponse = FetchUserSuccessResponse;
 export type FetchUserByIdResponse = FetchUserByIdSuccessResponse;
 export type UpdateUserResponse = UpdateUserSuccessResponse;

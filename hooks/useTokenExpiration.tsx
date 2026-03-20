@@ -3,30 +3,44 @@ import { getToken, clearAuthCookies } from '@/actions/cookies';
 import type { AuthCookieData } from '@/types/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AuthService } from '@/lib/requests';
 
 const MAX_TIMEOUT = 2_147_483_647;
+const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutes before expiry
 
 export const useTokenExpiration = () => {
   const router = useRouter();
   const pathname = usePathname();
   const previousTokenRef = useRef<AuthCookieData | undefined>(undefined);
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined;
+  const { refetch: refreshToken } = useQuery({
+    queryKey: ['token-refresh'],
+    queryFn: () => AuthService.refreshToken(),
+    enabled: false,
+  });
 
-    const scheduleTokenCheck = (tokenExpiresAt: Date) => {
-      const timeUntilExpiry = tokenExpiresAt.getTime() - Date.now();
+  useEffect(() => {
+    const scheduleRefreshCheck = (
+      tokenExpiresAt: Date,
+      currentTime: number
+    ) => {
+      const timeUntilExpiry = tokenExpiresAt.getTime() - currentTime;
 
       if (timeUntilExpiry <= 0) {
         void checkToken();
         return;
       }
 
-      const delay = Math.min(timeUntilExpiry, MAX_TIMEOUT);
+      const refreshTime = timeUntilExpiry - REFRESH_BUFFER_MS;
+      const delay = Math.min(
+        refreshTime > 0 ? refreshTime : timeUntilExpiry,
+        MAX_TIMEOUT
+      );
 
-      timeoutId = setTimeout(() => {
-        if (timeUntilExpiry > MAX_TIMEOUT) {
-          scheduleTokenCheck(tokenExpiresAt);
+      setTimeout(() => {
+        if (refreshTime > 0 && refreshTime > MAX_TIMEOUT) {
+          scheduleRefreshCheck(tokenExpiresAt, Date.now());
         } else {
           void checkToken();
         }
@@ -78,7 +92,10 @@ export const useTokenExpiration = () => {
           return;
         }
 
-        if (!tokenExpiresAt || tokenExpiresAt.getTime() <= Date.now()) {
+        const now = Date.now();
+        const timeUntilExpiry = tokenExpiresAt.getTime() - now;
+
+        if (!tokenExpiresAt || timeUntilExpiry <= 0) {
           await clearAuthCookies();
           const lang = pathname.split('/')[1] || 'en';
           router.push(`/${lang}/login`);
@@ -86,7 +103,17 @@ export const useTokenExpiration = () => {
           return;
         }
 
-        scheduleTokenCheck(tokenExpiresAt);
+        if (timeUntilExpiry <= REFRESH_BUFFER_MS) {
+          try {
+            await refreshToken();
+            void checkToken();
+            return;
+          } catch {
+            // Refresh failed, continue with logout flow
+          }
+        }
+
+        scheduleRefreshCheck(tokenExpiresAt, now);
       } catch {
         const tokenData = await getToken();
         if (tokenData) {
@@ -99,9 +126,5 @@ export const useTokenExpiration = () => {
     };
 
     void checkToken();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [router, pathname]);
+  }, [router, pathname, refreshToken]);
 };

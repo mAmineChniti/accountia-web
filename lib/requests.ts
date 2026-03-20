@@ -1,6 +1,6 @@
 import { env } from '@/env';
 import ky from 'ky';
-import { getToken } from '@/actions/cookies';
+import { getToken, setTokens } from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -139,14 +139,24 @@ const API_CONFIG = {
   },
 } as const;
 
-const authHeaders = async (): Promise<Record<string, string>> => {
-  const tokenData = await getToken();
-  if (!tokenData) return {};
-
-  return { Authorization: `Bearer ${tokenData.token}` };
+const createAuthenticatedClient = () => {
+  return ky.create({
+    prefixUrl: API_CONFIG.BASE_URL,
+    hooks: {
+      beforeRequest: [
+        async (request) => {
+          const tokenData = await getToken();
+          if (tokenData) {
+            request.headers.set('Authorization', `Bearer ${tokenData.token}`);
+          }
+          return request;
+        },
+      ],
+    },
+  });
 };
 
-const client = ky.create({
+const publicClient = ky.create({
   prefixUrl: API_CONFIG.BASE_URL,
 });
 
@@ -177,15 +187,10 @@ export const AuthService = {
   },
 
   async setupTwoFactor(): Promise<TwoFASetupResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .post(API_CONFIG.AUTH.TWO_FA_SETUP, {
-          headers: token,
-        })
+        .post(API_CONFIG.AUTH.TWO_FA_SETUP)
         .json<TwoFASetupResponse>();
       return result;
     } catch (error: unknown) {
@@ -204,15 +209,11 @@ export const AuthService = {
   },
 
   async verifyTwoFactor(data: TwoFAVerifyInput): Promise<TwoFAVerifyResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .post(API_CONFIG.AUTH.TWO_FA_VERIFY, {
           json: data,
-          headers: token,
         })
         .json<TwoFAVerifyResponse>();
       return result;
@@ -233,7 +234,7 @@ export const AuthService = {
 
   async twoFactorLogin(data: TwoFALoginInput): Promise<TwoFALoginResponse> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.TWO_FA_LOGIN, {
           json: data,
         })
@@ -255,7 +256,7 @@ export const AuthService = {
   },
   async register(data: RegisterInput): Promise<RegisterResponse> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.REGISTER, {
           json: data,
         })
@@ -278,7 +279,7 @@ export const AuthService = {
 
   async login(data: LoginInput): Promise<LoginResult> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.LOGIN, {
           json: data,
         })
@@ -303,7 +304,7 @@ export const AuthService = {
     data: GoogleOAuthExchangeInput
   ): Promise<LoginResult> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.GOOGLE_EXCHANGE, {
           json: data,
         })
@@ -325,15 +326,11 @@ export const AuthService = {
   },
 
   async logout(refreshToken: string): Promise<LogoutResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .post(API_CONFIG.AUTH.LOGOUT, {
           json: { refreshToken },
-          headers: token,
         })
         .json<LogoutResponse>();
       return result;
@@ -353,17 +350,37 @@ export const AuthService = {
   },
 
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
+    const tokenData = await getToken();
+    if (!tokenData?.token) {
       throw new ApiError('Token not found', { statusCode: 401 });
     }
 
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.REFRESH, {
-          headers: token,
+          headers: {
+            Authorization: `Bearer ${tokenData.token}`,
+          },
         })
         .json<RefreshTokenResponse>();
+
+      await setTokens({
+        token: result.accessToken,
+        refreshToken: result.refreshToken || tokenData.refreshToken,
+        expires_at:
+          result.accessTokenExpiresAt ||
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        expires_at_ts: result.accessTokenExpiresAt
+          ? new Date(result.accessTokenExpiresAt).getTime()
+          : Date.now() + 24 * 60 * 60 * 1000,
+        refresh_expires_at:
+          result.refreshTokenExpiresAt ||
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        refresh_expires_at_ts: result.refreshTokenExpiresAt
+          ? new Date(result.refreshTokenExpiresAt).getTime()
+          : Date.now() + 7 * 24 * 60 * 60 * 1000,
+      });
+
       return result;
     } catch (error: unknown) {
       if (
@@ -384,7 +401,7 @@ export const AuthService = {
     data: ForgotPasswordInput
   ): Promise<ForgotPasswordResponse> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.FORGOT_PASSWORD, {
           json: data,
         })
@@ -409,7 +426,7 @@ export const AuthService = {
     data: ResetPasswordInput
   ): Promise<ResetPasswordResponse> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.RESET_PASSWORD, {
           json: data,
         })
@@ -431,15 +448,10 @@ export const AuthService = {
   },
 
   async fetchUser(): Promise<FetchUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get(API_CONFIG.AUTH.FETCH_USER, {
-          headers: token,
-        })
+        .get(API_CONFIG.AUTH.FETCH_USER)
         .json<FetchUserResponse>();
       return result;
     } catch (error: unknown) {
@@ -465,7 +477,7 @@ export const AuthService = {
     }
 
     try {
-      const result = await client
+      const result = await publicClient
         .get(API_CONFIG.AUTH.FETCH_USER, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
@@ -489,15 +501,11 @@ export const AuthService = {
   async fetchUserById(
     data: FetchUserByIdInput
   ): Promise<FetchUserByIdResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .post(API_CONFIG.AUTH.FETCH_USER_BY_ID, {
           json: data,
-          headers: token,
         })
         .json<FetchUserByIdResponse>();
       return result;
@@ -517,15 +525,11 @@ export const AuthService = {
   },
 
   async updateUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .put(API_CONFIG.AUTH.UPDATE, {
           json: data,
-          headers: token,
         })
         .json<UpdateUserResponse>();
       return result;
@@ -545,15 +549,11 @@ export const AuthService = {
   },
 
   async patchUser(data: UpdateUserInput): Promise<UpdateUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .patch(API_CONFIG.AUTH.UPDATE, {
           json: data,
-          headers: token,
         })
         .json<UpdateUserResponse>();
       return result;
@@ -573,15 +573,10 @@ export const AuthService = {
   },
 
   async deleteUser(): Promise<DeleteUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .delete(API_CONFIG.AUTH.DELETE, {
-          headers: token,
-        })
+        .delete(API_CONFIG.AUTH.DELETE)
         .json<DeleteUserResponse>();
       return result;
     } catch (error: unknown) {
@@ -603,7 +598,7 @@ export const AuthService = {
     data: ResendConfirmationInput
   ): Promise<ResendConfirmationResponse> {
     try {
-      const result = await client
+      const result = await publicClient
         .post(API_CONFIG.AUTH.RESEND_CONFIRMATION, {
           json: data,
         })
@@ -625,16 +620,10 @@ export const AuthService = {
   },
 
   async fetchAllUsers(): Promise<UsersListResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
-
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get(API_CONFIG.AUTH.FETCH_ALL_USERS, {
-          headers: token,
-        })
+        .get(API_CONFIG.AUTH.FETCH_ALL_USERS)
         .json<UsersListResponse>();
       return result;
     } catch (error: unknown) {
@@ -653,16 +642,10 @@ export const AuthService = {
   },
 
   async deleteUserByAdmin(userId: string): Promise<DeleteUserByAdminResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
-
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .delete(`${API_CONFIG.AUTH.DELETE_USER_BY_ADMIN}/${userId}`, {
-          headers: token,
-        })
+        .delete(`${API_CONFIG.AUTH.DELETE_USER_BY_ADMIN}/${userId}`)
         .json<DeleteUserByAdminResponse>();
       return result;
     } catch (error: unknown) {
@@ -681,16 +664,11 @@ export const AuthService = {
   },
 
   async changeRole(data: ChangeRoleInput): Promise<ChangeRoleResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
-
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .patch(API_CONFIG.AUTH.CHANGE_ROLE, {
           json: data,
-          headers: token,
         })
         .json<ChangeRoleResponse>();
       return result;
@@ -712,13 +690,12 @@ export const AuthService = {
   async disableTwoFactor(
     data: TwoFADisableInput
   ): Promise<TwoFADisableResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .post(API_CONFIG.AUTH.TWO_FA_DISABLE, { json: data, headers: token })
+        .post(API_CONFIG.AUTH.TWO_FA_DISABLE, {
+          json: data,
+        })
         .json<TwoFADisableResponse>();
       return result;
     } catch (error: unknown) {
@@ -733,15 +710,10 @@ export const AuthService = {
   },
 
   async banUser(userId: string): Promise<BanUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.AUTH.BAN_USER.replace('{userId}', userId);
-      const result = await client
-        .patch(endpoint, { headers: token })
-        .json<BanUserResponse>();
+      const result = await client.patch(endpoint).json<BanUserResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -755,15 +727,10 @@ export const AuthService = {
   },
 
   async unbanUser(userId: string): Promise<UnbanUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.AUTH.UNBAN_USER.replace('{userId}', userId);
-      const result = await client
-        .patch(endpoint, { headers: token })
-        .json<UnbanUserResponse>();
+      const result = await client.patch(endpoint).json<UnbanUserResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -781,13 +748,10 @@ export const BusinessService = {
   async applyForBusiness(
     data: BusinessApplicationInput
   ): Promise<BusinessApplicationResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .post('business/apply', { json: data, headers: token })
+        .post('business/apply', { json: data })
         .json<BusinessApplicationResponse>();
       return result;
     } catch (error: unknown) {
@@ -802,13 +766,10 @@ export const BusinessService = {
   },
 
   async getApplications(): Promise<BusinessApplicationsListResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get('business/applications', { headers: token })
+        .get('business/applications')
         .json<BusinessApplicationsListResponse>();
       return result;
     } catch (error: unknown) {
@@ -826,15 +787,11 @@ export const BusinessService = {
     id: string,
     data: ReviewApplicationInput
   ): Promise<ReviewApplicationResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
         .post(`business/applications/${id}/review`, {
           json: data,
-          headers: token,
         })
         .json<ReviewApplicationResponse>();
       return result;
@@ -850,13 +807,10 @@ export const BusinessService = {
   },
 
   async getMyBusinesses(): Promise<MyBusinessesResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get('business/my', { headers: token })
+        .get('business/my')
         .json<MyBusinessesResponse>();
       return result;
     } catch (error: unknown) {
@@ -871,13 +825,10 @@ export const BusinessService = {
   },
 
   async getAllBusinesses(): Promise<AllBusinessesResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get('business/all', { headers: token })
+        .get('business/all')
         .json<AllBusinessesResponse>();
       return result;
     } catch (error: unknown) {
@@ -892,13 +843,10 @@ export const BusinessService = {
   },
 
   async getBusinessById(id: string): Promise<BusinessDetailResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get(`business/${id}`, { headers: token })
+        .get(`business/${id}`)
         .json<BusinessDetailResponse>();
       return result;
     } catch (error: unknown) {
@@ -916,13 +864,10 @@ export const BusinessService = {
     id: string,
     data: UpdateBusinessInput
   ): Promise<BusinessDetailResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .put(`business/${id}`, { json: data, headers: token })
+        .put(`business/${id}`, { json: data })
         .json<BusinessDetailResponse>();
       return result;
     } catch (error: unknown) {
@@ -937,13 +882,10 @@ export const BusinessService = {
   },
 
   async deleteBusiness(id: string): Promise<BusinessMessageResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .delete(`business/${id}`, { headers: token })
+        .delete(`business/${id}`)
         .json<BusinessMessageResponse>();
       return result;
     } catch (error: unknown) {
@@ -961,13 +903,10 @@ export const BusinessService = {
     businessId: string,
     data: AssignUserInput
   ): Promise<AssignUserResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .post(`business/${businessId}/users`, { json: data, headers: token })
+        .post(`business/${businessId}/users`, { json: data })
         .json<AssignUserResponse>();
       return result;
     } catch (error: unknown) {
@@ -985,13 +924,10 @@ export const BusinessService = {
     businessId: string,
     userId: string
   ): Promise<BusinessMessageResponse> {
-    const token = await authHeaders();
-    if (!token.Authorization) {
-      throw new ApiError('Token not found', { statusCode: 401 });
-    }
+    const client = createAuthenticatedClient();
     try {
       const result = await client
-        .delete(`business/${businessId}/users/${userId}`, { headers: token })
+        .delete(`business/${businessId}/users/${userId}`)
         .json<BusinessMessageResponse>();
       return result;
     } catch (error: unknown) {
