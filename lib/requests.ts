@@ -139,7 +139,7 @@ const API_CONFIG = {
   },
 } as const;
 
-const createAuthenticatedClient = () => {
+export const createAuthenticatedClient = () => {
   return ky.create({
     prefixUrl: API_CONFIG.BASE_URL,
     hooks: {

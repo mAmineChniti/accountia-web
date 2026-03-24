@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { Building2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut, Activity } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/tooltip';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
 import { ModeToggle } from '@/components/reusable/theme-toggle';
+import { NotificationBell } from '@/components/Admin/NotificationBell';
 
 export default function UserSidebar({
   lang,
@@ -100,20 +101,37 @@ export default function UserSidebar({
         </Tooltip>
 
         {isAdmin && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={`/${lang}/dashboard/businesses`}
-                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-              >
-                <Building2 className="h-4 w-4 shrink-0" />
-                {dictionary.admin.businessManagement.navLabel}
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{dictionary.tooltips.businessManagement}</p>
-            </TooltipContent>
-          </Tooltip>
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/dashboard/businesses`}
+                  className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  {dictionary.admin.businessManagement.navLabel}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{dictionary.tooltips.businessManagement}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/dashboard/audit`}
+                  className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                >
+                  <Activity className="h-4 w-4 shrink-0" />
+                  System Compliance
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Audit Logs & Compliance</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
         )}
 
         {/* Spacer pushes profile/logout to bottom */}
@@ -175,6 +193,16 @@ export default function UserSidebar({
             <p>{dictionary.tooltips.changeLanguage}</p>
           </TooltipContent>
         </Tooltip>
+        {isAdmin && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NotificationBell />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>Notifications</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <ModeToggle />

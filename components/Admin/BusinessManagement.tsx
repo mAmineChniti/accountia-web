@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, Check, Loader2, Trash2, X, XCircle } from 'lucide-react';
+import { Building2, Check, Calendar, Loader2, Trash2, X, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { sendBusinessApprovalEmail, sendBusinessRejectionEmail } from '@/actions/email';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,6 +71,8 @@ export default function BusinessManagement({
 
   const [applicationSearch, setApplicationSearch] = useState('');
   const [businessSearch, setBusinessSearch] = useState('');
+  const [applicationDateFrom, setApplicationDateFrom] = useState<string>('');
+  const [applicationDateTo, setApplicationDateTo] = useState<string>('');
   const [pendingReviewAppIds, setPendingReviewAppIds] = useState<Set<string>>(
     new Set()
   );
@@ -122,24 +125,50 @@ export default function BusinessManagement({
   );
 
   const filteredApplications = useMemo(() => {
+    let filtered = applications;
+
+    // Text search filter
     const query = applicationSearch.trim().toLowerCase();
-    if (!query) return applications;
+    if (query) {
+      filtered = filtered.filter((app) => {
+        const haystack = [
+          app.businessName,
+          app.description,
+          app.phone,
+          app.website ?? '',
+          app.applicantId,
+          app.status,
+        ]
+          .join(' ')
+          .toLowerCase();
 
-    return applications.filter((app) => {
-      const haystack = [
-        app.businessName,
-        app.description,
-        app.phone,
-        app.website ?? '',
-        app.applicantId,
-        app.status,
-      ]
-        .join(' ')
-        .toLowerCase();
+        return haystack.includes(query);
+      });
+    }
 
-      return haystack.includes(query);
-    });
-  }, [applicationSearch, applications]);
+    // Date range filter
+    if (applicationDateFrom || applicationDateTo) {
+      const fromDate = applicationDateFrom
+        ? new Date(applicationDateFrom)
+        : null;
+      const toDate = applicationDateTo ? new Date(applicationDateTo) : null;
+
+      filtered = filtered.filter((app) => {
+        const appDate = new Date(app.createdAt);
+
+        if (fromDate && appDate < fromDate) return false;
+        if (toDate) {
+          const endOfToDate = new Date(toDate);
+          endOfToDate.setHours(23, 59, 59, 999);
+          if (appDate > endOfToDate) return false;
+        }
+
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [applicationSearch, applications, applicationDateFrom, applicationDateTo]);
 
   const filteredBusinesses = useMemo(() => {
     const query = businessSearch.trim().toLowerCase();
@@ -161,19 +190,47 @@ export default function BusinessManagement({
   ).length;
 
   const reviewMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       applicationId,
       status,
       reviewNotes,
+      application,
     }: {
       applicationId: string;
       status: ReviewAction;
       reviewNotes: string;
-    }) =>
-      BusinessService.reviewApplication(applicationId, {
+      application: BusinessApplicationItem;
+    }) => {
+      // First, review the application
+      const result = await BusinessService.reviewApplication(applicationId, {
         status,
         reviewNotes,
-      }),
+      });
+
+      // Then send the appropriate email if we have the applicant's email
+      if (application.applicantEmail) {
+        const applicantName = application.applicantName || application.applicantId;
+        if (status === 'approved') {
+          await sendBusinessApprovalEmail({
+            applicantEmail: application.applicantEmail,
+            applicantName,
+            businessName: application.businessName,
+            businessDescription: application.description,
+            businessPhone: application.phone,
+          });
+        } else if (status === 'rejected') {
+          await sendBusinessRejectionEmail({
+            applicantEmail: application.applicantEmail,
+            applicantName,
+            businessName: application.businessName,
+            rejectionReason: reviewNotes,
+            businessPhone: application.phone,
+          });
+        }
+      }
+
+      return result;
+    },
     onMutate: ({ applicationId }) => {
       setPendingReviewAppIds((prev) => new Set(prev).add(applicationId));
     },
@@ -234,6 +291,7 @@ export default function BusinessManagement({
       applicationId: application.id,
       status,
       reviewNotes: t.defaultApprovalNote,
+      application,
     });
   };
 
@@ -251,6 +309,7 @@ export default function BusinessManagement({
       applicationId: rejectModalApp.id,
       status: 'rejected',
       reviewNotes: notes,
+      application: rejectModalApp,
     });
   };
 
@@ -319,30 +378,73 @@ export default function BusinessManagement({
       </div>
 
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-        <CardHeader className="space-y-2">
+        <CardHeader className="space-y-3">
           <div>
             <CardTitle>{t.applications.title}</CardTitle>
             <CardDescription>{t.applications.description}</CardDescription>
           </div>
-          <div className="relative md:w-sm">
-            <Input
-              value={applicationSearch}
-              onChange={(event) => setApplicationSearch(event.target.value)}
-              placeholder={t.applications.searchPlaceholder}
-              className="pr-10"
-            />
-            {applicationSearch && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setApplicationSearch('')}
-                aria-label={dictionary.common.clear}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+          <div className="space-y-2">
+            <div className="relative md:w-sm">
+              <Input
+                value={applicationSearch}
+                onChange={(event) => setApplicationSearch(event.target.value)}
+                placeholder={t.applications.searchPlaceholder}
+                className="pr-10"
+              />
+              {applicationSearch && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setApplicationSearch('')}
+                  aria-label={dictionary.common.clear}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-col gap-2 md:flex-row md:items-end">
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor="date-from" className="text-xs font-medium text-muted-foreground">
+                  <Calendar className="mr-1 inline h-3 w-3" />
+                  {dictionary.admin.dateFilterLabel.replace(':', '')} From
+                </label>
+                <Input
+                  id="date-from"
+                  type="date"
+                  value={applicationDateFrom}
+                  onChange={(event) => setApplicationDateFrom(event.target.value)}
+                  className="text-sm"
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1">
+                <label htmlFor="date-to" className="text-xs font-medium text-muted-foreground">
+                  {dictionary.admin.dateFilterLabel.replace(':', '')} To
+                </label>
+                <Input
+                  id="date-to"
+                  type="date"
+                  value={applicationDateTo}
+                  onChange={(event) => setApplicationDateTo(event.target.value)}
+                  className="text-sm"
+                />
+              </div>
+              {(applicationDateFrom || applicationDateTo) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setApplicationDateFrom('');
+                    setApplicationDateTo('');
+                  }}
+                  className="text-xs"
+                >
+                  Clear dates
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -385,7 +487,8 @@ export default function BusinessManagement({
               </TableHeader>
               <TableBody>
                 {filteredApplications.map((application) => {
-                  const isPending = application.status === 'pending';
+                  const isReviewed = application.status === 'approved';
+                  const isRejected = application.status === 'rejected';
                   const isReviewing = pendingReviewAppIds.has(application.id);
 
                   return (
@@ -409,7 +512,29 @@ export default function BusinessManagement({
                       </TableCell>
                       <TableCell>{formatDate(application.createdAt)}</TableCell>
                       <TableCell className="text-right">
-                        {isPending ? (
+                        {isReviewed ? (
+                          <Badge variant={getStatusVariant(application.status)}>
+                            {t.status[application.status]}
+                          </Badge>
+                        ) : isRejected ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() =>
+                                reviewApplication(application, 'approved')
+                              }
+                              disabled={isReviewing}
+                            >
+                              {isReviewing ? (
+                                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check className="mr-1 h-4 w-4" />
+                              )}
+                              {t.actions.approve}
+                            </Button>
+                          </div>
+                        ) : (
                           <div className="flex justify-end gap-2">
                             <Button
                               type="button"
@@ -439,10 +564,6 @@ export default function BusinessManagement({
                               {t.actions.reject}
                             </Button>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            {t.applications.reviewed}
-                          </span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -529,7 +650,7 @@ export default function BusinessManagement({
                   return (
                     <TableRow key={business.id}>
                       <TableCell className="font-medium">
-                        {business.name}
+                        {business.name || `Business ${business.id.slice(-8)}`}
                       </TableCell>
                       <TableCell>{business.phone}</TableCell>
                       <TableCell>

@@ -208,6 +208,8 @@ export interface BusinessApplicationItem {
   website?: string;
   phone: string;
   applicantId: string;
+  applicantEmail?: string;
+  applicantName?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
