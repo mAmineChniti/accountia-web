@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
-    "@tanstack/eslint-plugin-query": "^5.91.5",
+    "@tanstack/eslint-plugin-query": "^5.95.2",
     "@types/negotiator": "^0.6.4",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
