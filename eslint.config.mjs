@@ -50,7 +50,7 @@ const eslintConfig = defineConfig([
     },
     settings: {
       react: {
-        version: 'detect',
+        version: '19',
       },
     },
   },
