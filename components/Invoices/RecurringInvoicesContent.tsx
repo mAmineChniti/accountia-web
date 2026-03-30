@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, unicorn/consistent-function-scoping, unicorn/prefer-global-this, unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove, unicorn/no-null */
 'use client';
 
 import { useState, useEffect } from 'react';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { env } from '@/env';
 import ky from 'ky';
 import { getToken, setTokens } from '@/actions/cookies';

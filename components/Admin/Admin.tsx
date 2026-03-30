@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable unicorn/no-null, unicorn/catch-error-name, unicorn/numeric-separators-style, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, unicorn/no-array-for-each, unicorn/consistent-function-scoping */
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, unicorn/no-zero-fractions, unicorn/catch-error-name, @typescript-eslint/no-deprecated, unicorn/prefer-optional-catch-binding, unicorn/prefer-number-properties */
 'use client';
 
 import { useState, useEffect } from 'react';

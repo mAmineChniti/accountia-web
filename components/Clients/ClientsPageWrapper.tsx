@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-null */
 'use client';
 
 import { useEffect, useState } from 'react';

@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable unicorn/no-null, unicorn/catch-error-name, unicorn/numeric-separators-style, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-misused-promises, @typescript-eslint/no-deprecated */
 'use client';
 
 import { useState, useEffect } from 'react';

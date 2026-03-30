@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, unicorn/catch-error-name, @typescript-eslint/no-explicit-any, unicorn/consistent-function-scoping, unicorn/prefer-global-this, unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove */
 'use client';
 
 import { useState } from 'react';

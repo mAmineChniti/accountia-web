@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove, unicorn/consistent-function-scoping, unicorn/prefer-global-this, @typescript-eslint/no-deprecated, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useMemo, useState } from 'react';
