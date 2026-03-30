@@ -126,7 +126,8 @@ const API_CONFIG = {
     DELETE: 'auth/delete',
     RESEND_CONFIRMATION: 'auth/resend-confirmation-email',
     FETCH_ALL_USERS: 'auth/users',
-    DELETE_USER_BY_ADMIN: 'auth/users',
+    DEACTIVATE_USER_BY_ADMIN: 'auth/users/{userId}/deactivate',
+    REACTIVATE_USER_BY_ADMIN: 'auth/users/{userId}/reactivate',
     CHANGE_ROLE: 'auth/change-role',
     TWO_FA_SETUP: 'auth/2fa/setup',
     TWO_FA_VERIFY: 'auth/2fa/verify',
@@ -641,12 +642,42 @@ export const AuthService = {
     }
   },
 
-  async deleteUserByAdmin(userId: string): Promise<DeleteUserByAdminResponse> {
+  async deactivateUserByAdmin(userId: string): Promise<DeleteUserByAdminResponse> {
     const client = createAuthenticatedClient();
     try {
+      const endpoint = API_CONFIG.AUTH.DEACTIVATE_USER_BY_ADMIN.replace(
+        '{userId}',
+        userId
+      );
       const result = await client
-        .delete(`${API_CONFIG.AUTH.DELETE_USER_BY_ADMIN}/${userId}`)
+        .patch(endpoint)
         .json<DeleteUserByAdminResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async reactivateUserByAdmin(
+    userId: string
+  ): Promise<DeleteUserByAdminResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.AUTH.REACTIVATE_USER_BY_ADMIN.replace(
+        '{userId}',
+        userId
+      );
+      const result = await client.patch(endpoint).json<DeleteUserByAdminResponse>();
       return result;
     } catch (error: unknown) {
       if (
@@ -939,5 +970,200 @@ export const BusinessService = {
       }
       throw error;
     }
+  },
+
+  async getClients(businessId: string): Promise<any> {
+    const apiClient = createAuthenticatedClient();
+    try {
+      const result = await apiClient
+        .get(`business/${businessId}/clients`)
+        .json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async createClient(businessId: string, data: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    password?: string;
+  }): Promise<any> {
+    const apiClient = createAuthenticatedClient();
+    try {
+      const result = await apiClient
+        .post(`business/${businessId}/clients`, { json: data })
+        .json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getRecurringInvoices(): Promise<any[]> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client.get('recurring-invoices').json<any[]>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getRecurringInvoiceStats(): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client.get('recurring-invoices/stats').json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async updateRecurringInvoiceStatus(
+    id: string,
+    status: 'active' | 'paused' | 'cancelled'
+  ): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .patch(`recurring-invoices/${id}/status`, { json: { status } })
+        .json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async deleteRecurringInvoice(id: string): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client.delete(`recurring-invoices/${id}`).json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async downloadRecurringInvoice(id: string): Promise<Response> {
+    const client = createAuthenticatedClient();
+    const response = await client.get(`recurring-invoices/${id}/download`);
+    return response;
+  },
+};
+
+export const AdminStatsRequests = {
+  async getStatistics(): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client.get('statistics').json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getPlatformStatistics(range?: string): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .get('statistics/platform', {
+          searchParams: range ? { range } : undefined,
+        })
+        .json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getAuditLogs(limit: number = 20): Promise<any> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .get('statistics/audit-logs', {
+          searchParams: { limit },
+        })
+        .json<any>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getFilteredTransactions(params: {
+    startDate?: string;
+    endDate?: string;
+    type?: 'income' | 'expense' | 'all';
+    limit?: number;
+    offset?: number;
+  }): Promise<any[]> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .get('statistics/transactions', {
+          searchParams: params,
+        })
+        .json<any[]>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async downloadInvoice(id: string): Promise<Response> {
+    const client = createAuthenticatedClient();
+    const response = await client.get(`statistics/transactions/${id}/download`);
+    return response;
   },
 };

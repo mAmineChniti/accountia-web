@@ -92,6 +92,7 @@
         "register": "Register",
         "profile": "Profile",
         "invoices": "Invoices",
+        "reports": "Reports",
         "adminDashboard": "Dashboard",
         "logout": "Logout"
       },
@@ -313,6 +314,33 @@
       "successMessage": "Your application has been received. Our team will review it and get back to you shortly.",
       "closeButton": "Back to Home",
       "cancelButton": "Cancel"
+    },
+    "reports": {
+      "navReports": "Reports",
+      "title": "Financial Reports",
+      "subtitle": "View and export your financial summary based on transaction data.",
+      "filters": {
+        "dateRange": "Date Range",
+        "type": "Type",
+        "all": "All Transactions",
+        "income": "Income Only",
+        "expense": "Expenses Only"
+      },
+      "summary": {
+        "revenue": "Total Revenue",
+        "expenses": "Total Expenses",
+        "profit": "Total Profit"
+      },
+      "table": {
+        "date": "Date",
+        "type": "Type",
+        "amount": "Amount",
+        "noData": "No transactions found for the selected period."
+      },
+      "export": {
+        "csv": "Export as CSV",
+        "pdf": "Export as PDF"
+      }
     }
   },
   "errorMessages": {
@@ -490,7 +518,11 @@
     "dateFilterLabel": "Filter by registration date:",
     "dateFilterPlaceholder": "Select date range",
     "loadError": "Failed to load users",
-    "deleteError": "Failed to delete user",
+    "deactivateError": "Failed to deactivate user",
+    "reactivateError": "Failed to reactivate user",
+    "deleteError": "Failed to deactivate user",
+    "reactivateSuccess": "User reactivated successfully",
+    "deleteSuccess": "User deactivated successfully",
     "noResults": "No results found.",
     "adminBadge": "Admin",
     "userBadge": "User",
@@ -506,11 +538,16 @@
     },
     "manageButton": "Manage",
     "deleteDialog": {
-      "title": "Delete user",
-      "description": "Are you sure you want to delete user {username}? This action cannot be undone.",
-      "confirm": "Delete",
-      "deleting": "Deleting..."
+      "title": "Deactivate user",
+      "description": "Are you sure you want to deactivate user {username}? They will no longer be able to log in, but their data will be preserved.",
+      "confirm": "Deactivate",
+      "deleting": "Deactivating..."
     },
+    "statusActive": "Active",
+    "statusInactive": "Deactivated",
+    "status": "Status",
+    "deactivateUser": "Deactivate",
+    "reactivateUser": "Reactivate",
     "tableCaption": "List of all users",
     "username": "Username",
     "email": "Email",

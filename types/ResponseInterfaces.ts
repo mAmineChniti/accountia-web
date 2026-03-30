@@ -111,6 +111,7 @@ export interface UserSummary {
   phoneNumber?: string;
   role?: Role;
   dateJoined: string;
+  isActive?: boolean;
   isBanned?: boolean;
   bannedReason?: string;
 }
@@ -121,11 +122,11 @@ export interface UsersListResponse {
 }
 
 export interface DeleteUserSuccessResponse extends BaseResponse {
-  message: 'Account deleted successfully';
+  message: 'Account deactivated successfully';
 }
 
 export interface DeleteUserByAdminSuccessResponse extends BaseResponse {
-  message: 'User deleted successfully';
+  message: 'User deactivated successfully' | 'User reactivated successfully';
 }
 
 export interface ChangeRoleResponse extends BaseResponse {
@@ -169,6 +170,7 @@ export interface BusinessItem {
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
   isActive: boolean;
+  logo?: string;
   createdAt: string;
 }
 
@@ -182,6 +184,16 @@ export interface BusinessDetailData {
   status: 'pending' | 'approved' | 'rejected';
   isActive: boolean;
   tags: string[];
+  templateSettings: {
+    currency: string;
+    themeColor?: string;
+    fontFamily?: string;
+    companyName?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logo?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

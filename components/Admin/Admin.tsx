@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -29,7 +29,17 @@ import {
   Loader2,
   Ban,
   ShieldCheck,
+  Users as UsersIcon,
+  UserPlus,
+  Building,
+  Clock,
 } from 'lucide-react';
+
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell 
+} from 'recharts';
+
 import {
   Dialog,
   DialogContent,
@@ -63,9 +73,21 @@ import type {
   UserSummary,
   UsersListResponse,
 } from '@/types/ResponseInterfaces';
-import { AuthService } from '@/lib/requests';
+import { AuthService, AdminStatsRequests } from '@/lib/requests';
 import { toast } from 'sonner';
 import { localizeErrorMessage } from '@/lib/error-localization';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
+import { 
+  Activity, 
+  History, 
+  User as UserIcon, 
+  Briefcase, 
+  Settings as SettingsIcon,
+  ShieldAlert,
+  Info,
+  RotateCw
+} from 'lucide-react';
 
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
@@ -88,6 +110,15 @@ const ALL_ROLES: Role[] = [
   'CLIENT',
 ];
 
+const CHART_COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+];
+
+
 export default function Admin({
   dictionary,
   lang,
@@ -108,12 +139,60 @@ export default function Admin({
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  
+  // Platform Stats State
+  const [platformStats, setPlatformStats] = useState<any>(null);
+  const [statsRange, setStatsRange] = useState('30d');
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
+  const [statsCountdown, setStatsCountdown] = useState(60);
+
 
   const { data, isLoading, error, refetch, isFetching } =
     useQuery<UsersListResponse>({
       queryKey: ['users'],
       queryFn: AuthService.fetchAllUsers,
     });
+
+  const fetchPlatformStats = async (currentRange: string) => {
+    try {
+      const result = await AdminStatsRequests.getPlatformStatistics(currentRange);
+      setPlatformStats(result);
+      setStatsError('');
+    } catch (e: any) {
+      setStatsError(e.message || 'Failed to fetch platform statistics');
+    } finally {
+      setIsStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlatformStats(statsRange);
+    setStatsCountdown(60);
+    const interval = setInterval(() => {
+      fetchPlatformStats(statsRange);
+      setStatsCountdown(60);
+    }, 60000);
+    // Countdown tick every second
+    const countdownInterval = setInterval(() => {
+      setStatsCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(countdownInterval);
+    };
+  }, [statsRange]);
+
+  const GrowthIndicator = ({ value }: { value: number }) => {
+    if (value === 0) return null;
+    const isPositive = value > 0;
+    return (
+      <span className={`text-xs font-medium ltr:ml-2 rtl:mr-2 ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        {isPositive ? '↑' : '↓'} {Math.abs(value)}%
+      </span>
+    );
+  };
+
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -125,10 +204,26 @@ export default function Admin({
   };
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
+  
+  const roleCounts = useMemo(() => {
+    const counts = {
+      PLATFORM_OWNER: 0,
+      PLATFORM_ADMIN: 0,
+      BUSINESS_OWNER: 0,
+      BUSINESS_ADMIN: 0,
+      CLIENT: 0,
+    };
+    users.forEach((u) => {
+      const role = u.role as keyof typeof counts;
+      if (role && role in counts) {
+        counts[role]++;
+      }
+    });
+    return counts;
+  }, [users]);
+
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) =>
-    ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(u.role ?? '')
-  ).length;
+
   const modalUsername = modalUser ? modalUser.username : '';
   const usersLoadErrorMessage = error
     ? localizeErrorMessage(error, dictionary, dictionary.admin.loadError)
@@ -233,22 +328,52 @@ export default function Admin({
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (userId: string) => AuthService.deleteUserByAdmin(userId),
+  const deactivateMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.deactivateUserByAdmin(userId),
     onSuccess: (_: unknown, userId: string) => {
       queryClient.setQueryData(
         ['users'],
         (old: UsersListResponse | undefined) => {
           if (!old) return old;
-          return { ...old, users: old.users.filter((u) => u.id !== userId) };
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isActive: false } : u
+            ),
+          };
         }
       );
       setModalUser(undefined);
       setDeleteError(undefined);
+      toast.success(dictionary.admin.deleteSuccess);
     },
     onError: (error: unknown) => {
       setDeleteError(
         localizeErrorMessage(error, dictionary, dictionary.admin.deleteError)
+      );
+    },
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.reactivateUserByAdmin(userId),
+    onSuccess: (_: unknown, userId: string) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isActive: true } : u
+            ),
+          };
+        }
+      );
+      toast.success(dictionary.admin.reactivateSuccess || 'User reactivated successfully');
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(error, dictionary, 'Failed to reactivate user')
       );
     },
   });
@@ -320,11 +445,12 @@ export default function Admin({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-1">
           <div className="text-2xl font-bold tracking-tight">
-            {dictionary.admin.title}
+            Admin Dashboard
           </div>
           <div className="text-muted-foreground">
-            {dictionary.admin.subtitle}
+            Manage users and access controls
           </div>
+
         </div>
         <Button asChild variant="outline">
           <Link href={`/${lang}/dashboard/businesses`}>
@@ -333,53 +459,222 @@ export default function Admin({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Platform Statistics KPIs */}
+      {/* Compact refresh pill */}
+      <div className="flex items-center gap-2 w-fit">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+          </span>
+          {statsCountdown}s
+        </span>
+        <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-1000 ease-linear"
+            style={{ width: `${(statsCountdown / 60) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {isStatsLoading ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : platformStats ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Total Users */}
+          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
+            <CardHeader className="p-6">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+                <UsersIcon className="h-4 w-4" />
+                {dictionary.admin.stats.totalUsers || 'Total Users'}
+              </div>
+              <div className="flex items-baseline justify-between">
+                <div className="text-3xl font-bold">{platformStats.kpis.totalUsers}</div>
+                <GrowthIndicator value={platformStats.growth.totalUsers} />
+              </div>
+            </CardHeader>
+          </Card>
+          
+          {/* New Registrations */}
+          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
+            <CardHeader className="p-6">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+                <UserPlus className="h-4 w-4" />
+                New Registrations
+              </div>
+              <div className="flex items-baseline justify-between">
+                <div className="text-3xl font-bold text-primary">
+                  +{platformStats.kpis.newRegistrations}
+                </div>
+                <GrowthIndicator value={platformStats.growth.newRegistrations} />
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Pending Applications */}
+          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
+            <CardHeader className="p-6">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+                <Clock className="h-4 w-4" />
+                Pending Applications
+              </div>
+              <div className="flex items-baseline justify-between">
+                <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+                  {platformStats.kpis.pendingApplications}
+                </div>
+                <GrowthIndicator value={platformStats.growth.pendingApplications} />
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+      ) : statsError ? (
+        <div className="text-destructive text-sm p-4 bg-destructive/10 rounded-lg">
+          {statsError}
+        </div>
+      ) : null}
+
+      {/* Users By Role */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.totalUsers}
-            </CardDescription>
+            <CardDescription>Platform Admin</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? dictionary.admin.stats.placeholder : totalUsers}
+              {isLoading ? '...' : roleCounts.PLATFORM_ADMIN + roleCounts.PLATFORM_OWNER}
             </CardTitle>
           </CardHeader>
           <CardContent />
         </Card>
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.totalAdmins}
-            </CardDescription>
+            <CardDescription>Business Owner</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? dictionary.admin.stats.placeholder : totalAdmins}
+              {isLoading ? '...' : roleCounts.BUSINESS_OWNER}
             </CardTitle>
           </CardHeader>
           <CardContent />
         </Card>
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.lastUpdated}
-            </CardDescription>
-            <CardTitle className="text-base font-medium">
-              {isFetching
-                ? dictionary.admin.stats.refreshing
-                : dictionary.admin.stats.upToDate}
+            <CardDescription>Business Admin</CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? '...' : roleCounts.BUSINESS_ADMIN}
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              {dictionary.admin.stats.syncButton}
-            </Button>
-          </CardContent>
+          <CardContent />
+        </Card>
+        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>Client</CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? '...' : roleCounts.CLIENT}
+            </CardTitle>
+          </CardHeader>
+          <CardContent />
         </Card>
       </div>
+
+      {/* NEW Row 3: Platform Charts */}
+      {!isStatsLoading && platformStats && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* User Registration Trends */}
+          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-6">
+              <CardTitle className="text-lg font-semibold">User Registration Trends</CardTitle>
+              <div className="flex items-center bg-muted/50 p-1 rounded-lg border">
+                <button
+                  onClick={() => setStatsRange('7d')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    statsRange === '7d' 
+                      ? 'bg-card text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  7 Days
+                </button>
+                <button
+                  onClick={() => setStatsRange('30d')}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    statsRange === '30d' 
+                      ? 'bg-card text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  30 Days
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={platformStats.charts.registrationTrends}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                    <XAxis dataKey="name" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} minTickGap={30} />
+                    <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="users" name="New Users" stroke="var(--color-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--color-primary)', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Users Distribution Chart */}
+          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Users Distribution by Role</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[260px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={platformStats.charts.usersByRole}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={100}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {platformStats.charts.usersByRole.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip formatter={(value: any, name: any) => [value, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Custom legend with percentages */}
+              <div className="mt-3 flex flex-col gap-2">
+                {(() => {
+                  const total = platformStats.charts.usersByRole.reduce((sum: number, d: any) => sum + d.value, 0);
+                  return platformStats.charts.usersByRole.map((entry: any, index: number) => (
+                    <div key={entry.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
+                        <span className="text-foreground font-medium">{entry.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="tabular-nums text-muted-foreground text-xs">{entry.value} users</span>
+                        <span className="tabular-nums font-semibold text-foreground text-xs w-10 text-right">
+                          {total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0}%
+                        </span>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      )}
+
 
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-2">
@@ -388,13 +683,13 @@ export default function Admin({
               <CardTitle>{dictionary.admin.usersTitle}</CardTitle>
               <CardDescription>{dictionary.admin.tableCaption}</CardDescription>
             </div>
-            <div className="flex flex-col gap-2 md:w-xs md:flex-row md:items-center">
-              <div className="relative flex-1">
+            <div className="flex flex-row gap-2 md:w-auto md:items-center">
+              <div className="relative w-full md:w-64">
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={dictionary.admin.searchPlaceholder}
-                  className="flex-1 pr-10"
+                  className="pr-10"
                 />
                 {search && (
                   <Button
@@ -409,6 +704,17 @@ export default function Admin({
                   </Button>
                 )}
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title={dictionary.admin.stats.syncButton}
+                className={cn("shrink-0", isFetching && "animate-spin")}
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
@@ -485,170 +791,133 @@ export default function Admin({
                 : dictionary.admin.noResults}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('username')}
-                    >
-                      {dictionary.admin.username}
-                      {sortKey === 'username' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
+            <div className="flex flex-col divide-y divide-border">
+              {/* Table Header */}
+              <div className="grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] gap-4 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <button type="button" className="flex items-center gap-1 select-none hover:text-foreground transition-colors" onClick={() => toggleSort('username')}>
+                  {dictionary.admin.username}
+                  {sortKey === 'username' ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" /> : <ChevronsUpDown className="h-3 w-3 opacity-50" />}
+                </button>
+                <button type="button" className="flex items-center gap-1 select-none hover:text-foreground transition-colors" onClick={() => toggleSort('email')}>
+                  {dictionary.admin.email}
+                  {sortKey === 'email' ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" /> : <ChevronsUpDown className="h-3 w-3 opacity-50" />}
+                </button>
+                <span>{dictionary.admin.status || 'Status'}</span>
+                <span>{dictionary.admin.roleColumn}</span>
+                <span className="text-right">{dictionary.admin.actions}</span>
+              </div>
+              {/* Rows */}
+              {filteredUsers.map((user) => {
+                const initials = `${user.firstName?.charAt(0) ?? user.username.charAt(0)}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
+                const roleColors: Record<string, string> = {
+                  PLATFORM_OWNER: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                  PLATFORM_ADMIN: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                  BUSINESS_OWNER: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                  BUSINESS_ADMIN: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+                  CLIENT: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                };
+                const roleClass = roleColors[user.role ?? 'CLIENT'] ?? roleColors.CLIENT;
+                return (
+                  <div key={user.id} className="grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] items-center gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    {/* User + Avatar */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-foreground">{user.username}</div>
+                        <div className="truncate text-[11px] text-muted-foreground">{user.firstName ?? ''} {user.lastName ?? ''}</div>
+                      </div>
+                    </div>
+                    {/* Email */}
+                    <div className="truncate text-sm text-muted-foreground">{user.email}</div>
+                    {/* Status */}
+                    <div>
+                      {user.isActive === false ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                          {dictionary.admin.statusInactive || 'Inactive'}
+                        </span>
+                      ) : user.isBanned ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
+                          Banned
+                        </span>
                       ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                          {dictionary.admin.statusActive || 'Active'}
+                        </span>
                       )}
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('email')}
-                    >
-                      {dictionary.admin.email}
-                      {sortKey === 'email' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>{dictionary.admin.firstName}</TableHead>
-                  <TableHead>{dictionary.admin.lastName}</TableHead>
-                  <TableHead>{dictionary.admin.roleColumn}</TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('dateJoined')}
-                    >
-                      {dictionary.admin.dateJoined}
-                      {sortKey === 'dateJoined' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {dictionary.admin.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.username}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.email}
-                    </TableCell>
-                    <TableCell>{user.firstName ?? '-'}</TableCell>
-                    <TableCell>{user.lastName ?? '-'}</TableCell>
-                    <TableCell>
+                    </div>
+                    {/* Role dropdown */}
+                    <div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
+                            type="button"
                             disabled={changingRoleUserId === user.id}
-                            className="h-8 gap-1.5 px-2 text-xs font-normal"
-                          >
-                            {changingRoleUserId === user.id && (
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                            className={cn(
+                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-80',
+                              roleClass
                             )}
+                          >
+                            {changingRoleUserId === user.id && <Loader2 className="h-3 w-3 animate-spin" />}
                             {dictionary.admin.roles[user.role ?? 'CLIENT']}
-                            <ChevronDown className="h-3 w-3 opacity-60" />
-                          </Button>
+                            <ChevronDown className="h-2.5 w-2.5 opacity-60 ml-0.5" />
+                          </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
                           {ALL_ROLES.map((role) => (
                             <DropdownMenuItem
                               key={role}
-                              onSelect={() => {
-                                if (role !== user.role) {
-                                  changeRoleMutation.mutate({
-                                    userId: user.id,
-                                    newRole: role,
-                                  });
-                                }
-                              }}
-                              className={cn(
-                                'text-xs',
-                                role === user.role && 'font-semibold'
-                              )}
+                              onSelect={() => { if (role !== user.role) changeRoleMutation.mutate({ userId: user.id, newRole: role }); }}
+                              className={cn('text-xs', role === user.role && 'font-semibold')}
                             >
                               {dictionary.admin.roles[role]}
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                    <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant={
-                            user.isBanned === true ? 'outline' : 'secondary'
-                          }
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
-                            setBanModalUser(user);
-                            setBanAction(
-                              user.isBanned === true ? 'unban' : 'ban'
-                            );
-                          }}
-                          disabled={banningUserId === user.id}
-                          aria-label={
-                            user.isBanned === true
-                              ? dictionary.admin.unbanUser
-                              : dictionary.admin.banUser
-                          }
-                        >
-                          {user.isBanned === true ? (
-                            <ShieldCheck className="h-4 w-4" />
-                          ) : (
-                            <Ban className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
-                            setModalUser(user);
-                            setDeleteError(undefined);
-                          }}
-                          disabled={deleteMutation.isPending}
-                          aria-label={dictionary.common.delete}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant={user.isActive === false ? 'default' : 'destructive'}
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-[11px]"
+                        onClick={() => {
+                          if (user.isActive === false) { reactivateMutation.mutate(user.id); }
+                          else { setModalUser(user); setDeleteError(undefined); }
+                        }}
+                        disabled={deactivateMutation.isPending || reactivateMutation.isPending}
+                      >
+                        {user.isActive === false ? (
+                          <><ShieldCheck className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.reactivateUser || 'Reactivate'}</span></>
+                        ) : (
+                          <><Trash2 className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.deactivateUser || 'Deactivate'}</span></>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={user.isBanned === true ? 'outline' : 'secondary'}
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-[11px]"
+                        onClick={() => { setBanModalUser(user); setBanAction(user.isBanned === true ? 'unban' : 'ban'); }}
+                        disabled={banningUserId === user.id}
+                      >
+                        {user.isBanned === true ? (
+                          <><ShieldCheck className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.unbanUser || 'Unban'}</span></>
+                        ) : (
+                          <><Ban className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.banUser || 'Ban'}</span></>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -680,20 +949,20 @@ export default function Admin({
               type="button"
               variant="secondary"
               onClick={() => setModalUser(undefined)}
-              disabled={deleteMutation.isPending}
+              disabled={deactivateMutation.isPending}
             >
               {dictionary.common.cancel}
             </Button>
-            <Button
+             <Button
               type="button"
               variant="destructive"
               onClick={() => {
                 if (!modalUser) return;
-                deleteMutation.mutate(modalUser.id);
+                deactivateMutation.mutate(modalUser.id);
               }}
-              disabled={deleteMutation.isPending || !modalUser}
+              disabled={deactivateMutation.isPending || !modalUser}
             >
-              {deleteMutation.isPending
+              {deactivateMutation.isPending
                 ? dictionary.admin.deleteDialog.deleting
                 : dictionary.admin.deleteDialog.confirm}
             </Button>
@@ -755,6 +1024,212 @@ export default function Admin({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Activity Timeline Section */}
+      <ActivityTimeline dictionary={dictionary} lang={lang} />
     </div>
+  );
+}
+
+function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [countdown, setCountdown] = useState(30);
+
+  const fetchLogs = async () => {
+    try {
+      const data = await AdminStatsRequests.getAuditLogs(20);
+      setLogs(data);
+    } catch (error) {
+      console.error('Failed to fetch audit logs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    setCountdown(30);
+    const interval = setInterval(() => {
+      fetchLogs();
+      setCountdown(30);
+    }, 30000);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(countdownInterval);
+    };
+  }, []);
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'CREATE': return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
+      case 'DELETE': return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
+      case 'UPDATE': return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
+      case 'LOGIN': return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
+      default: return 'text-muted-foreground bg-muted/50';
+    }
+  };
+
+  const getResourceIcon = (resource: string) => {
+    switch (resource) {
+      case 'User': return <UserIcon className="h-4 w-4" />;
+      case 'Business':
+      case 'BusinessApplication': return <Briefcase className="h-4 w-4" />;
+      case 'Settings': return <SettingsIcon className="h-4 w-4" />;
+      default: return <Activity className="h-4 w-4" />;
+    }
+  };
+
+  const getRelativeTime = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), { 
+        addSuffix: true,
+        locale: lang === 'fr' ? fr : enUS 
+      });
+    } catch {
+      return date;
+    }
+  };
+
+  return (
+    <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="space-y-1">
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" />
+            Activity Timeline
+          </CardTitle>
+          <CardDescription>
+            Real-time platform audit logs
+          </CardDescription>
+        </div>
+        {/* Countdown pill - same style as stats */}
+        <div className="flex items-center gap-2 shrink-0 w-fit">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            {countdown}s
+          </span>
+          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-1000 ease-linear"
+              style={{ width: `${(countdown / 30) * 100}%` }}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading && logs.length === 0 ? (
+          <div className="space-y-1 p-4">
+            <Skeleton className="h-8 w-full rounded" />
+            <Skeleton className="h-8 w-full rounded" />
+            <Skeleton className="h-8 w-full rounded" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground italic">
+            No recent activity recorded.
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {logs.map((log) => (
+              <div 
+                key={log._id} 
+                className="relative flex items-center gap-3 px-4 py-2 hover:bg-muted/30 cursor-pointer transition-colors border-b border-muted/20 last:border-0 group"
+                onClick={() => setSelectedLog(log)}
+              >
+                <div className={cn(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm z-10 bg-background",
+                  getActionColor(log.action).split(' ')[1]
+                )}>
+                  <div className={getActionColor(log.action).split(' ')[0]}>
+                    {getResourceIcon(log.resource)}
+                  </div>
+                </div>
+                
+                <div className="flex-1 flex items-center justify-between min-w-0 gap-3">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-sm font-semibold text-foreground truncate">{log.username}</span>
+                    <span className={cn("px-1.5 py-px rounded-[4px] text-[10px] font-bold uppercase tracking-wider", getActionColor(log.action))}>
+                      {log.action}
+                    </span>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">on {log.resource}</span>
+                    
+                    {log.details && (log.details.message || log.details.businessName || log.details.targetUsername) && (
+                      <span className="text-xs text-muted-foreground/60 truncate italic ml-1 hidden md:block">
+                        — {log.details.message || 
+                         (log.details.businessName ? `Business: ${log.details.businessName}` : null) ||
+                         (log.details.targetUsername ? `Target: ${log.details.targetUsername}` : null)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <time className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
+                    {getRelativeTime(log.createdAt)}
+                  </time>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+
+      {/* Log Detail Modal */}
+      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              Activity Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedLog && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-muted-foreground">User</span>
+                <span className="col-span-2 text-sm font-semibold">{selectedLog.username} ({selectedLog.userId})</span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-muted-foreground">Action</span>
+                <span className="col-span-2">
+                  <span className={cn("px-2 py-0.5 rounded text-[11px] font-bold", getActionColor(selectedLog.action))}>
+                    {selectedLog.action}
+                  </span>
+                </span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-muted-foreground">Resource</span>
+                <span className="col-span-2 text-sm">{selectedLog.resource}</span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-sm font-medium text-muted-foreground">Timestamp</span>
+                <span className="col-span-2 text-sm">{new Date(selectedLog.createdAt).toLocaleString()}</span>
+              </div>
+              {selectedLog.details && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Info className="h-4 w-4" />
+                    Technical Details
+                  </div>
+                  <pre className="bg-muted p-3 rounded-md text-[10px] overflow-auto max-h-40 font-mono">
+                    {JSON.stringify(selectedLog.details, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => setSelectedLog(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

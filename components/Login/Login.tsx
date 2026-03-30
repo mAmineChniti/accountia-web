@@ -68,9 +68,9 @@ export default function Login({
 
   const [twoFA, setTwoFA] = useState<
     | {
-        tempToken: string;
-        email: string;
-      }
+      tempToken: string;
+      email: string;
+    }
     | undefined
   >(() =>
     initialOAuthTempToken
@@ -106,11 +106,11 @@ export default function Login({
     if (profilePicture) {
       try {
         localStorage.setItem('profilePicture', profilePicture);
-      } catch {}
+      } catch { }
     } else {
       try {
         localStorage.removeItem('profilePicture');
-      } catch {}
+      } catch { }
     }
 
     await setTokens({
@@ -196,18 +196,18 @@ export default function Login({
 
   const loginErrorMessage = loginMutation.error
     ? localizeErrorMessage(
-        loginMutation.error,
-        dictionary,
-        dictionary.pages.login.unexpectedError
-      )
+      loginMutation.error,
+      dictionary,
+      dictionary.pages.login.unexpectedError
+    )
     : undefined;
 
   const twoFAErrorMessage = twoFAMutation.error
     ? localizeErrorMessage(
-        twoFAMutation.error,
-        dictionary,
-        dictionary.pages.login.unexpectedError
-      )
+      twoFAMutation.error,
+      dictionary,
+      dictionary.pages.login.unexpectedError
+    )
     : undefined;
 
   return (
