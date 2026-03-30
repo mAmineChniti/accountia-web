@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  FileText, 
-  Download, 
-  Printer, 
-  Calendar as CalendarIcon, 
+import {
+  FileText,
+  Download,
+  Printer,
+  Calendar as CalendarIcon,
   Filter,
   TrendingUp,
   TrendingDown,
-  Wallet
+  Wallet,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { type DateRange } from 'react-day-picker';
@@ -31,11 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Popover,
   PopoverContent,
@@ -49,7 +45,11 @@ import { AdminStatsRequests } from '@/lib/requests';
 import { type Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { cn } from '@/lib/utils';
-import { formatDateLong, getCalendarLocale, getCalendarDirection } from '@/lib/date-utils';
+import {
+  formatDateLong,
+  getCalendarLocale,
+  getCalendarDirection,
+} from '@/lib/date-utils';
 
 export default function ReportsTab({
   dictionary,
@@ -63,28 +63,37 @@ export default function ReportsTab({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
   });
-  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>(
+    'all'
+  );
 
   const { data: transactions, isLoading } = useQuery({
     queryKey: ['filtered-transactions', dateRange, typeFilter],
-    queryFn: () => AdminStatsRequests.getFilteredTransactions({
-      startDate: dateRange?.from?.toISOString(),
-      endDate: dateRange?.to?.toISOString(),
-      type: typeFilter === 'all' ? undefined : typeFilter,
-    }),
+    queryFn: () =>
+      AdminStatsRequests.getFilteredTransactions({
+        startDate: dateRange?.from?.toISOString(),
+        endDate: dateRange?.to?.toISOString(),
+        type: typeFilter === 'all' ? undefined : typeFilter,
+      }),
   });
 
   const totals = useMemo(() => {
     if (!transactions) return { revenue: 0, expenses: 0, profit: 0 };
-    
+
     const revenue = transactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + (Number(t.revenue) || Number(t.amount) || 0), 0);
-      
+      .filter((t) => t.type === 'income')
+      .reduce(
+        (sum, t) => sum + (Number(t.revenue) || Number(t.amount) || 0),
+        0
+      );
+
     const expenses = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + (Number(t.expenditure) || Number(t.amount) || 0), 0);
-      
+      .filter((t) => t.type === 'expense')
+      .reduce(
+        (sum, t) => sum + (Number(t.expenditure) || Number(t.amount) || 0),
+        0
+      );
+
     return {
       revenue,
       expenses,
@@ -94,24 +103,32 @@ export default function ReportsTab({
 
   const exportCSV = () => {
     if (!transactions || transactions.length === 0) return;
-    
+
     const headers = [t.table.date, t.table.type, t.table.amount];
-    const rows = transactions.map(tr => [
+    const rows = transactions.map((tr) => [
       tr.date ? formatDateLong(new Date(tr.date)) : 'N/A',
       tr.type === 'income' ? t.filters.income : t.filters.expense,
-      (Number(tr.revenue) || Number(tr.expenditure) || Number(tr.amount) || 0).toFixed(2)
+      (
+        Number(tr.revenue) ||
+        Number(tr.expenditure) ||
+        Number(tr.amount) ||
+        0
+      ).toFixed(2),
     ]);
-    
+
     const csvContent = [
       headers.join(','),
-      ...rows.map(r => r.join(','))
+      ...rows.map((r) => r.join(',')),
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `report_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute(
+      'download',
+      `report_${format(new Date(), 'yyyy-MM-dd')}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -130,11 +147,21 @@ export default function ReportsTab({
           <p className="text-muted-foreground text-sm">{t.subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={exportCSV} variant="outline" size="sm" className="gap-2">
+          <Button
+            onClick={exportCSV}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
             <Download className="h-4 w-4" />
             {t.export.csv}
           </Button>
-          <Button onClick={exportPDF} variant="outline" size="sm" className="gap-2">
+          <Button
+            onClick={exportPDF}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
             <Printer className="h-4 w-4" />
             {t.export.pdf}
           </Button>
@@ -142,11 +169,11 @@ export default function ReportsTab({
       </div>
 
       {/* Filters */}
-      <Card className="print:hidden glass-card border-0">
+      <Card className="glass-card border-0 print:hidden">
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-sm font-medium flex items-center gap-2">
+            <div className="flex flex-1 flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm font-medium">
                 <CalendarIcon className="h-4 w-4" />
                 {t.filters.dateRange}
               </label>
@@ -155,7 +182,7 @@ export default function ReportsTab({
                   <Button
                     variant="outline"
                     className={cn(
-                      'justify-start text-left font-normal w-full md:w-64',
+                      'w-full justify-start text-left font-normal md:w-64',
                       !dateRange && 'text-muted-foreground'
                     )}
                   >
@@ -189,7 +216,7 @@ export default function ReportsTab({
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm font-medium">
                 <Filter className="h-4 w-4" />
                 {t.filters.type}
               </label>
@@ -218,7 +245,10 @@ export default function ReportsTab({
               {t.summary.revenue}
             </CardDescription>
             <CardTitle className="text-2xl font-bold text-green-600">
-              USD {totals.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              USD{' '}
+              {totals.revenue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -230,22 +260,30 @@ export default function ReportsTab({
               {t.summary.expenses}
             </CardDescription>
             <CardTitle className="text-2xl font-bold text-red-600">
-              USD {totals.expenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              USD{' '}
+              {totals.expenses.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="glass-card border-0 border-l-4 border-l-primary">
+        <Card className="glass-card border-l-primary border-0 border-l-4">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" />
+              <Wallet className="text-primary h-4 w-4" />
               {t.summary.profit}
             </CardDescription>
-            <CardTitle className={cn(
-              "text-2xl font-bold",
-              totals.profit >= 0 ? "text-primary" : "text-red-500"
-            )}>
-              USD {totals.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            <CardTitle
+              className={cn(
+                'text-2xl font-bold',
+                totals.profit >= 0 ? 'text-primary' : 'text-red-500'
+              )}
+            >
+              USD{' '}
+              {totals.profit.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -273,14 +311,23 @@ export default function ReportsTab({
                 {isLoading ? (
                   [1, 2, 3, 4, 5].map((i) => (
                     <TableRow key={i}>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-16" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-4 w-20" />
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : transactions?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-10 text-muted-foreground italic">
+                    <TableCell
+                      colSpan={3}
+                      className="text-muted-foreground py-10 text-center italic"
+                    >
                       {t.table.noData}
                     </TableCell>
                   </TableRow>
@@ -291,15 +338,34 @@ export default function ReportsTab({
                         {tr.date ? formatDateLong(new Date(tr.date)) : 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={tr.type === 'income' ? 'default' : 'secondary'} className="capitalize">
-                          {tr.type === 'income' ? t.filters.income : t.filters.expense}
+                        <Badge
+                          variant={
+                            tr.type === 'income' ? 'default' : 'secondary'
+                          }
+                          className="capitalize"
+                        >
+                          {tr.type === 'income'
+                            ? t.filters.income
+                            : t.filters.expense}
                         </Badge>
                       </TableCell>
-                      <TableCell className={cn(
-                        "text-right font-bold tabular-nums",
-                        tr.type === 'income' ? "text-green-600" : "text-red-600"
-                      )}>
-                        {tr.type === 'income' ? '+' : '-'} USD {(Number(tr.revenue) || Number(tr.expenditure) || Number(tr.amount) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      <TableCell
+                        className={cn(
+                          'text-right font-bold tabular-nums',
+                          tr.type === 'income'
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        )}
+                      >
+                        {tr.type === 'income' ? '+' : '-'} USD{' '}
+                        {(
+                          Number(tr.revenue) ||
+                          Number(tr.expenditure) ||
+                          Number(tr.amount) ||
+                          0
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}
                       </TableCell>
                     </TableRow>
                   ))

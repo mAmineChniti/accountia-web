@@ -3,7 +3,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { Building2, LayoutDashboard, LogOut, BarChart3, FileBarChart, Briefcase, LayoutTemplate, Repeat, Users, LineChart } from 'lucide-react';
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  BarChart3,
+  FileBarChart,
+  Briefcase,
+  LayoutTemplate,
+  Repeat,
+  Users,
+  LineChart,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
@@ -41,7 +52,7 @@ export default function UserSidebar({
   const handlePostLogout = async () => {
     try {
       localStorage.removeItem('profilePicture');
-    } catch { }
+    } catch {}
     globalThis.dispatchEvent(new Event('auth:changed'));
     router.refresh();
     router.push(`/${lang}/login`);
@@ -94,10 +105,12 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/dashboard/admin`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${pathname.includes('/dashboard/admin') && !pathname.includes('/statistics')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/admin') &&
+                    !pathname.includes('/statistics')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <LayoutDashboard className="h-4 w-4 shrink-0" />
                   {dictionary.pages.home.navigation.adminDashboard}
@@ -113,10 +126,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/dashboard/businesses`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${pathname.includes('/dashboard/businesses')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/businesses')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <Building2 className="h-4 w-4 shrink-0" />
                   {dictionary.admin.businessManagement.navLabel}
@@ -132,10 +146,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/dashboard/admin/statistics`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${pathname.includes('/dashboard/admin/statistics')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/admin/statistics')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <BarChart3 className="h-4 w-4 shrink-0" />
                   {dictionary.admin.statisticsTitle}
@@ -152,10 +167,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/managed/financials`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${pathname.includes('/managed/financials')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/managed/financials')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <LineChart className="h-4 w-4 shrink-0" />
                   Financial Dashboard
@@ -173,10 +189,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/invoices`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${pathname === `/${lang}/invoices`
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname === `/${lang}/invoices`
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <FileBarChart className="h-4 w-4 shrink-0" />
                   {dictionary.pages.home.navigation.invoices}
@@ -190,10 +207,11 @@ export default function UserSidebar({
             {/* Sub-item: Reports */}
             <Link
               href={`/${lang}/invoices/reports`}
-              className={`hover:text-accent-foreground ml-9 flex items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${pathname === `/${lang}/invoices/reports`
-                ? 'text-foreground font-semibold'
-                : 'text-muted-foreground hover:bg-accent/50'
-                }`}
+              className={`hover:text-accent-foreground ml-9 flex items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                pathname === `/${lang}/invoices/reports`
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
             >
               {dictionary.pages.reports.navReports}
             </Link>
@@ -203,10 +221,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/invoices/templates`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors mt-2 ${pathname.includes('/invoices/templates')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/invoices/templates')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <LayoutTemplate className="h-4 w-4 shrink-0" />
                   Templates
@@ -222,10 +241,11 @@ export default function UserSidebar({
               <TooltipTrigger asChild>
                 <Link
                   href={`/${lang}/invoices/recurring`}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors mt-2 ${pathname.includes('/invoices/recurring')
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  className={`mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/invoices/recurring')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
                 >
                   <Repeat className="h-4 w-4 shrink-0" />
                   Recurring Invoices
@@ -235,7 +255,6 @@ export default function UserSidebar({
                 <p>Automate Invoices</p>
               </TooltipContent>
             </Tooltip>
-
           </div>
         )}
 

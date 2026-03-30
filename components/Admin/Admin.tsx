@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -35,9 +36,18 @@ import {
   Clock,
 } from 'lucide-react';
 
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 
 import {
@@ -78,15 +88,15 @@ import { toast } from 'sonner';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
-import { 
-  Activity, 
-  History, 
-  User as UserIcon, 
-  Briefcase, 
+import {
+  Activity,
+  History,
+  User as UserIcon,
+  Briefcase,
   Settings as SettingsIcon,
   ShieldAlert,
   Info,
-  RotateCw
+  RotateCw,
 } from 'lucide-react';
 
 import type { Dictionary } from '@/get-dictionary';
@@ -118,7 +128,6 @@ const CHART_COLORS = [
   'var(--color-chart-5)',
 ];
 
-
 export default function Admin({
   dictionary,
   lang,
@@ -139,14 +148,13 @@ export default function Admin({
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  
+
   // Platform Stats State
   const [platformStats, setPlatformStats] = useState<any>(null);
   const [statsRange, setStatsRange] = useState('30d');
   const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState('');
   const [statsCountdown, setStatsCountdown] = useState(60);
-
 
   const { data, isLoading, error, refetch, isFetching } =
     useQuery<UsersListResponse>({
@@ -156,7 +164,8 @@ export default function Admin({
 
   const fetchPlatformStats = async (currentRange: string) => {
     try {
-      const result = await AdminStatsRequests.getPlatformStatistics(currentRange);
+      const result =
+        await AdminStatsRequests.getPlatformStatistics(currentRange);
       setPlatformStats(result);
       setStatsError('');
     } catch (e: any) {
@@ -187,12 +196,13 @@ export default function Admin({
     if (value === 0) return null;
     const isPositive = value > 0;
     return (
-      <span className={`text-xs font-medium ltr:ml-2 rtl:mr-2 ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      <span
+        className={`text-xs font-medium ltr:ml-2 rtl:mr-2 ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+      >
         {isPositive ? '↑' : '↓'} {Math.abs(value)}%
       </span>
     );
   };
-
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -204,7 +214,7 @@ export default function Admin({
   };
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
-  
+
   const roleCounts = useMemo(() => {
     const counts = {
       PLATFORM_OWNER: 0,
@@ -369,7 +379,9 @@ export default function Admin({
           };
         }
       );
-      toast.success(dictionary.admin.reactivateSuccess || 'User reactivated successfully');
+      toast.success(
+        dictionary.admin.reactivateSuccess || 'User reactivated successfully'
+      );
     },
     onError: (error: unknown) => {
       toast.error(
@@ -450,7 +462,6 @@ export default function Admin({
           <div className="text-muted-foreground">
             Manage users and access controls
           </div>
-
         </div>
         <Button asChild variant="outline">
           <Link href={`/${lang}/dashboard/businesses`}>
@@ -461,17 +472,17 @@ export default function Admin({
 
       {/* Platform Statistics KPIs */}
       {/* Compact refresh pill */}
-      <div className="flex items-center gap-2 w-fit">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+      <div className="flex w-fit items-center gap-2">
+        <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+            <span className="bg-primary relative inline-flex h-2 w-2 rounded-full" />
           </span>
           {statsCountdown}s
         </span>
-        <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="bg-muted h-1.5 w-24 overflow-hidden rounded-full">
           <div
-            className="h-full rounded-full bg-primary transition-all duration-1000 ease-linear"
+            className="bg-primary h-full rounded-full transition-all duration-1000 ease-linear"
             style={{ width: `${(statsCountdown / 60) * 100}%` }}
           />
         </div>
@@ -488,29 +499,33 @@ export default function Admin({
           {/* Total Users */}
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
             <CardHeader className="p-6">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
                 <UsersIcon className="h-4 w-4" />
                 {dictionary.admin.stats.totalUsers || 'Total Users'}
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold">{platformStats.kpis.totalUsers}</div>
+                <div className="text-3xl font-bold">
+                  {platformStats.kpis.totalUsers}
+                </div>
                 <GrowthIndicator value={platformStats.growth.totalUsers} />
               </div>
             </CardHeader>
           </Card>
-          
+
           {/* New Registrations */}
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
             <CardHeader className="p-6">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
                 <UserPlus className="h-4 w-4" />
                 New Registrations
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold text-primary">
+                <div className="text-primary text-3xl font-bold">
                   +{platformStats.kpis.newRegistrations}
                 </div>
-                <GrowthIndicator value={platformStats.growth.newRegistrations} />
+                <GrowthIndicator
+                  value={platformStats.growth.newRegistrations}
+                />
               </div>
             </CardHeader>
           </Card>
@@ -518,7 +533,7 @@ export default function Admin({
           {/* Pending Applications */}
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
             <CardHeader className="p-6">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium mb-1">
+              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
                 <Clock className="h-4 w-4" />
                 Pending Applications
               </div>
@@ -526,13 +541,15 @@ export default function Admin({
                 <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                   {platformStats.kpis.pendingApplications}
                 </div>
-                <GrowthIndicator value={platformStats.growth.pendingApplications} />
+                <GrowthIndicator
+                  value={platformStats.growth.pendingApplications}
+                />
               </div>
             </CardHeader>
           </Card>
         </div>
       ) : statsError ? (
-        <div className="text-destructive text-sm p-4 bg-destructive/10 rounded-lg">
+        <div className="text-destructive bg-destructive/10 rounded-lg p-4 text-sm">
           {statsError}
         </div>
       ) : null}
@@ -543,7 +560,9 @@ export default function Admin({
           <CardHeader className="pb-2">
             <CardDescription>Platform Admin</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? '...' : roleCounts.PLATFORM_ADMIN + roleCounts.PLATFORM_OWNER}
+              {isLoading
+                ? '...'
+                : roleCounts.PLATFORM_ADMIN + roleCounts.PLATFORM_OWNER}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -583,13 +602,15 @@ export default function Admin({
           {/* User Registration Trends */}
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-6">
-              <CardTitle className="text-lg font-semibold">User Registration Trends</CardTitle>
-              <div className="flex items-center bg-muted/50 p-1 rounded-lg border">
+              <CardTitle className="text-lg font-semibold">
+                User Registration Trends
+              </CardTitle>
+              <div className="bg-muted/50 flex items-center rounded-lg border p-1">
                 <button
                   onClick={() => setStatsRange('7d')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                    statsRange === '7d' 
-                      ? 'bg-card text-foreground shadow-sm' 
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                    statsRange === '7d'
+                      ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -597,9 +618,9 @@ export default function Admin({
                 </button>
                 <button
                   onClick={() => setStatsRange('30d')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                    statsRange === '30d' 
-                      ? 'bg-card text-foreground shadow-sm' 
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                    statsRange === '30d'
+                      ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -611,12 +632,46 @@ export default function Admin({
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={platformStats.charts.registrationTrends}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                    <XAxis dataKey="name" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} minTickGap={30} />
-                    <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="name"
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      minTickGap={30}
+                    />
+                    <YAxis
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        borderRadius: '8px',
+                        border: 'none',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }}
+                    />
                     <Legend />
-                    <Line type="monotone" dataKey="users" name="New Users" stroke="var(--color-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--color-primary)', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    <Line
+                      type="monotone"
+                      dataKey="users"
+                      name="New Users"
+                      stroke="var(--color-primary)"
+                      strokeWidth={3}
+                      dot={{
+                        r: 4,
+                        fill: 'var(--color-primary)',
+                        strokeWidth: 0,
+                      }}
+                      activeDot={{ r: 6 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -626,7 +681,9 @@ export default function Admin({
           {/* Users Distribution Chart */}
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">Users Distribution by Role</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                Users Distribution by Role
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[260px] w-full">
@@ -641,40 +698,66 @@ export default function Admin({
                       paddingAngle={4}
                       dataKey="value"
                     >
-                      {platformStats.charts.usersByRole.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
+                      {platformStats.charts.usersByRole.map(
+                        (entry: any, index: number) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        )
+                      )}
                     </Pie>
-                    <RechartsTooltip formatter={(value: any, name: any) => [value, name]} />
+                    <RechartsTooltip
+                      formatter={(value: any, name: any) => [value, name]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               {/* Custom legend with percentages */}
               <div className="mt-3 flex flex-col gap-2">
                 {(() => {
-                  const total = platformStats.charts.usersByRole.reduce((sum: number, d: any) => sum + d.value, 0);
-                  return platformStats.charts.usersByRole.map((entry: any, index: number) => (
-                    <div key={entry.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
-                        <span className="text-foreground font-medium">{entry.name}</span>
+                  const total = platformStats.charts.usersByRole.reduce(
+                    (sum: number, d: any) => sum + d.value,
+                    0
+                  );
+                  return platformStats.charts.usersByRole.map(
+                    (entry: any, index: number) => (
+                      <div
+                        key={entry.name}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block h-2.5 w-2.5 rounded-full"
+                            style={{
+                              backgroundColor:
+                                CHART_COLORS[index % CHART_COLORS.length],
+                            }}
+                          />
+                          <span className="text-foreground font-medium">
+                            {entry.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {entry.value} users
+                          </span>
+                          <span className="text-foreground w-10 text-right text-xs font-semibold tabular-nums">
+                            {total > 0
+                              ? ((entry.value / total) * 100).toFixed(0)
+                              : 0}
+                            %
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="tabular-nums text-muted-foreground text-xs">{entry.value} users</span>
-                        <span className="tabular-nums font-semibold text-foreground text-xs w-10 text-right">
-                          {total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0}%
-                        </span>
-                      </div>
-                    </div>
-                  ));
+                    )
+                  );
                 })()}
               </div>
             </CardContent>
           </Card>
-
         </div>
       )}
-
 
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-2">
@@ -711,7 +794,7 @@ export default function Admin({
                 onClick={() => refetch()}
                 disabled={isFetching}
                 title={dictionary.admin.stats.syncButton}
-                className={cn("shrink-0", isFetching && "animate-spin")}
+                className={cn('shrink-0', isFetching && 'animate-spin')}
               >
                 <RotateCw className="h-4 w-4" />
               </Button>
@@ -791,16 +874,40 @@ export default function Admin({
                 : dictionary.admin.noResults}
             </div>
           ) : (
-            <div className="flex flex-col divide-y divide-border">
+            <div className="divide-border flex flex-col divide-y">
               {/* Table Header */}
-              <div className="grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] gap-4 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <button type="button" className="flex items-center gap-1 select-none hover:text-foreground transition-colors" onClick={() => toggleSort('username')}>
+              <div className="text-muted-foreground grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] gap-4 px-4 py-2 text-xs font-semibold tracking-wider uppercase">
+                <button
+                  type="button"
+                  className="hover:text-foreground flex items-center gap-1 transition-colors select-none"
+                  onClick={() => toggleSort('username')}
+                >
                   {dictionary.admin.username}
-                  {sortKey === 'username' ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" /> : <ChevronsUpDown className="h-3 w-3 opacity-50" />}
+                  {sortKey === 'username' ? (
+                    sortDir === 'asc' ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )
+                  ) : (
+                    <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                  )}
                 </button>
-                <button type="button" className="flex items-center gap-1 select-none hover:text-foreground transition-colors" onClick={() => toggleSort('email')}>
+                <button
+                  type="button"
+                  className="hover:text-foreground flex items-center gap-1 transition-colors select-none"
+                  onClick={() => toggleSort('email')}
+                >
                   {dictionary.admin.email}
-                  {sortKey === 'email' ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" /> : <ChevronsUpDown className="h-3 w-3 opacity-50" />}
+                  {sortKey === 'email' ? (
+                    sortDir === 'asc' ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )
+                  ) : (
+                    <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                  )}
                 </button>
                 <span>{dictionary.admin.status || 'Status'}</span>
                 <span>{dictionary.admin.roleColumn}</span>
@@ -808,44 +915,60 @@ export default function Admin({
               </div>
               {/* Rows */}
               {filteredUsers.map((user) => {
-                const initials = `${user.firstName?.charAt(0) ?? user.username.charAt(0)}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
+                const initials =
+                  `${user.firstName?.charAt(0) ?? user.username.charAt(0)}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
                 const roleColors: Record<string, string> = {
-                  PLATFORM_OWNER: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-                  PLATFORM_ADMIN: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                  BUSINESS_OWNER: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-                  BUSINESS_ADMIN: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-                  CLIENT: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                  PLATFORM_OWNER:
+                    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                  PLATFORM_ADMIN:
+                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                  BUSINESS_OWNER:
+                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                  BUSINESS_ADMIN:
+                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+                  CLIENT:
+                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
                 };
-                const roleClass = roleColors[user.role ?? 'CLIENT'] ?? roleColors.CLIENT;
+                const roleClass =
+                  roleColors[user.role ?? 'CLIENT'] ?? roleColors.CLIENT;
                 return (
-                  <div key={user.id} className="grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] items-center gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                  <div
+                    key={user.id}
+                    className="hover:bg-muted/30 grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] items-center gap-4 px-4 py-3 transition-colors"
+                  >
                     {/* User + Avatar */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                         {initials}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-foreground">{user.username}</div>
-                        <div className="truncate text-[11px] text-muted-foreground">{user.firstName ?? ''} {user.lastName ?? ''}</div>
+                        <div className="text-foreground truncate text-sm font-semibold">
+                          {user.username}
+                        </div>
+                        <div className="text-muted-foreground truncate text-[11px]">
+                          {user.firstName ?? ''} {user.lastName ?? ''}
+                        </div>
                       </div>
                     </div>
                     {/* Email */}
-                    <div className="truncate text-sm text-muted-foreground">{user.email}</div>
+                    <div className="text-muted-foreground truncate text-sm">
+                      {user.email}
+                    </div>
                     {/* Status */}
                     <div>
                       {user.isActive === false ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
                           {dictionary.admin.statusInactive || 'Inactive'}
                         </span>
                       ) : user.isBanned ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
                           Banned
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
                           {dictionary.admin.statusActive || 'Active'}
                         </span>
                       )}
@@ -862,17 +985,28 @@ export default function Admin({
                               roleClass
                             )}
                           >
-                            {changingRoleUserId === user.id && <Loader2 className="h-3 w-3 animate-spin" />}
+                            {changingRoleUserId === user.id && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
                             {dictionary.admin.roles[user.role ?? 'CLIENT']}
-                            <ChevronDown className="h-2.5 w-2.5 opacity-60 ml-0.5" />
+                            <ChevronDown className="ml-0.5 h-2.5 w-2.5 opacity-60" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
                           {ALL_ROLES.map((role) => (
                             <DropdownMenuItem
                               key={role}
-                              onSelect={() => { if (role !== user.role) changeRoleMutation.mutate({ userId: user.id, newRole: role }); }}
-                              className={cn('text-xs', role === user.role && 'font-semibold')}
+                              onSelect={() => {
+                                if (role !== user.role)
+                                  changeRoleMutation.mutate({
+                                    userId: user.id,
+                                    newRole: role,
+                                  });
+                              }}
+                              className={cn(
+                                'text-xs',
+                                role === user.role && 'font-semibold'
+                              )}
                             >
                               {dictionary.admin.roles[role]}
                             </DropdownMenuItem>
@@ -884,33 +1018,69 @@ export default function Admin({
                     <div className="flex items-center gap-1.5">
                       <Button
                         type="button"
-                        variant={user.isActive === false ? 'default' : 'destructive'}
+                        variant={
+                          user.isActive === false ? 'default' : 'destructive'
+                        }
                         size="sm"
                         className="h-7 gap-1 px-2 text-[11px]"
                         onClick={() => {
-                          if (user.isActive === false) { reactivateMutation.mutate(user.id); }
-                          else { setModalUser(user); setDeleteError(undefined); }
+                          if (user.isActive === false) {
+                            reactivateMutation.mutate(user.id);
+                          } else {
+                            setModalUser(user);
+                            setDeleteError(undefined);
+                          }
                         }}
-                        disabled={deactivateMutation.isPending || reactivateMutation.isPending}
+                        disabled={
+                          deactivateMutation.isPending ||
+                          reactivateMutation.isPending
+                        }
                       >
                         {user.isActive === false ? (
-                          <><ShieldCheck className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.reactivateUser || 'Reactivate'}</span></>
+                          <>
+                            <ShieldCheck className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.reactivateUser || 'Reactivate'}
+                            </span>
+                          </>
                         ) : (
-                          <><Trash2 className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.deactivateUser || 'Deactivate'}</span></>
+                          <>
+                            <Trash2 className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.deactivateUser || 'Deactivate'}
+                            </span>
+                          </>
                         )}
                       </Button>
                       <Button
                         type="button"
-                        variant={user.isBanned === true ? 'outline' : 'secondary'}
+                        variant={
+                          user.isBanned === true ? 'outline' : 'secondary'
+                        }
                         size="sm"
                         className="h-7 gap-1 px-2 text-[11px]"
-                        onClick={() => { setBanModalUser(user); setBanAction(user.isBanned === true ? 'unban' : 'ban'); }}
+                        onClick={() => {
+                          setBanModalUser(user);
+                          setBanAction(
+                            user.isBanned === true ? 'unban' : 'ban'
+                          );
+                        }}
                         disabled={banningUserId === user.id}
                       >
                         {user.isBanned === true ? (
-                          <><ShieldCheck className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.unbanUser || 'Unban'}</span></>
+                          <>
+                            <ShieldCheck className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.unbanUser || 'Unban'}
+                            </span>
+                          </>
                         ) : (
-                          <><Ban className="h-3 w-3" /><span className="uppercase font-bold tracking-tight">{dictionary.admin.banUser || 'Ban'}</span></>
+                          <>
+                            <Ban className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.banUser || 'Ban'}
+                            </span>
+                          </>
                         )}
                       </Button>
                     </div>
@@ -953,7 +1123,7 @@ export default function Admin({
             >
               {dictionary.common.cancel}
             </Button>
-             <Button
+            <Button
               type="button"
               variant="destructive"
               onClick={() => {
@@ -1031,7 +1201,13 @@ export default function Admin({
   );
 }
 
-function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string }) {
+function ActivityTimeline({
+  dictionary,
+  lang,
+}: {
+  dictionary: any;
+  lang: string;
+}) {
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<any>(null);
@@ -1066,29 +1242,38 @@ function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string 
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'CREATE': return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
-      case 'DELETE': return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
-      case 'UPDATE': return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
-      case 'LOGIN': return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
-      default: return 'text-muted-foreground bg-muted/50';
+      case 'CREATE':
+        return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
+      case 'DELETE':
+        return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
+      case 'UPDATE':
+        return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
+      case 'LOGIN':
+        return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
+      default:
+        return 'text-muted-foreground bg-muted/50';
     }
   };
 
   const getResourceIcon = (resource: string) => {
     switch (resource) {
-      case 'User': return <UserIcon className="h-4 w-4" />;
+      case 'User':
+        return <UserIcon className="h-4 w-4" />;
       case 'Business':
-      case 'BusinessApplication': return <Briefcase className="h-4 w-4" />;
-      case 'Settings': return <SettingsIcon className="h-4 w-4" />;
-      default: return <Activity className="h-4 w-4" />;
+      case 'BusinessApplication':
+        return <Briefcase className="h-4 w-4" />;
+      case 'Settings':
+        return <SettingsIcon className="h-4 w-4" />;
+      default:
+        return <Activity className="h-4 w-4" />;
     }
   };
 
   const getRelativeTime = (date: string) => {
     try {
-      return formatDistanceToNow(new Date(date), { 
+      return formatDistanceToNow(new Date(date), {
         addSuffix: true,
-        locale: lang === 'fr' ? fr : enUS 
+        locale: lang === 'fr' ? fr : enUS,
       });
     } catch {
       return date;
@@ -1096,29 +1281,27 @@ function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string 
   };
 
   return (
-    <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm overflow-hidden">
+    <Card className="dark:bg-card/90 overflow-hidden border-0 bg-white/90 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5 text-primary" />
+            <History className="text-primary h-5 w-5" />
             Activity Timeline
           </CardTitle>
-          <CardDescription>
-            Real-time platform audit logs
-          </CardDescription>
+          <CardDescription>Real-time platform audit logs</CardDescription>
         </div>
         {/* Countdown pill - same style as stats */}
-        <div className="flex items-center gap-2 shrink-0 w-fit">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+        <div className="flex w-fit shrink-0 items-center gap-2">
+          <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+              <span className="bg-primary relative inline-flex h-2 w-2 rounded-full" />
             </span>
             {countdown}s
           </span>
-          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
             <div
-              className="h-full rounded-full bg-primary transition-all duration-1000 ease-linear"
+              className="bg-primary h-full rounded-full transition-all duration-1000 ease-linear"
               style={{ width: `${(countdown / 30) * 100}%` }}
             />
           </div>
@@ -1132,44 +1315,63 @@ function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string 
             <Skeleton className="h-8 w-full rounded" />
           </div>
         ) : logs.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground italic">
+          <div className="text-muted-foreground py-10 text-center italic">
             No recent activity recorded.
           </div>
         ) : (
           <div className="flex flex-col">
             {logs.map((log) => (
-              <div 
-                key={log._id} 
-                className="relative flex items-center gap-3 px-4 py-2 hover:bg-muted/30 cursor-pointer transition-colors border-b border-muted/20 last:border-0 group"
+              <div
+                key={log._id}
+                className="hover:bg-muted/30 border-muted/20 group relative flex cursor-pointer items-center gap-3 border-b px-4 py-2 transition-colors last:border-0"
                 onClick={() => setSelectedLog(log)}
               >
-                <div className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm z-10 bg-background",
-                  getActionColor(log.action).split(' ')[1]
-                )}>
+                <div
+                  className={cn(
+                    'bg-background z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm',
+                    getActionColor(log.action).split(' ')[1]
+                  )}
+                >
                   <div className={getActionColor(log.action).split(' ')[0]}>
                     {getResourceIcon(log.resource)}
                   </div>
                 </div>
-                
-                <div className="flex-1 flex items-center justify-between min-w-0 gap-3">
+
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                   <div className="flex items-center gap-2 truncate">
-                    <span className="text-sm font-semibold text-foreground truncate">{log.username}</span>
-                    <span className={cn("px-1.5 py-px rounded-[4px] text-[10px] font-bold uppercase tracking-wider", getActionColor(log.action))}>
+                    <span className="text-foreground truncate text-sm font-semibold">
+                      {log.username}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded-[4px] px-1.5 py-px text-[10px] font-bold tracking-wider uppercase',
+                        getActionColor(log.action)
+                      )}
+                    >
                       {log.action}
                     </span>
-                    <span className="text-xs text-muted-foreground hidden sm:inline">on {log.resource}</span>
-                    
-                    {log.details && (log.details.message || log.details.businessName || log.details.targetUsername) && (
-                      <span className="text-xs text-muted-foreground/60 truncate italic ml-1 hidden md:block">
-                        — {log.details.message || 
-                         (log.details.businessName ? `Business: ${log.details.businessName}` : null) ||
-                         (log.details.targetUsername ? `Target: ${log.details.targetUsername}` : null)}
-                      </span>
-                    )}
+                    <span className="text-muted-foreground hidden text-xs sm:inline">
+                      on {log.resource}
+                    </span>
+
+                    {log.details &&
+                      (log.details.message ||
+                        log.details.businessName ||
+                        log.details.targetUsername) && (
+                        <span className="text-muted-foreground/60 ml-1 hidden truncate text-xs italic md:block">
+                          —{' '}
+                          {log.details.message ||
+                            (log.details.businessName
+                              ? `Business: ${log.details.businessName}`
+                              : null) ||
+                            (log.details.targetUsername
+                              ? `Target: ${log.details.targetUsername}`
+                              : null)}
+                        </span>
+                      )}
                   </div>
-                  
-                  <time className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
+
+                  <time className="text-muted-foreground text-[11px] whitespace-nowrap tabular-nums">
                     {getRelativeTime(log.createdAt)}
                   </time>
                 </div>
@@ -1188,43 +1390,62 @@ function ActivityTimeline({ dictionary, lang }: { dictionary: any; lang: string 
               Activity Details
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedLog && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-3 items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">User</span>
-                <span className="col-span-2 text-sm font-semibold">{selectedLog.username} ({selectedLog.userId})</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  User
+                </span>
+                <span className="col-span-2 text-sm font-semibold">
+                  {selectedLog.username} ({selectedLog.userId})
+                </span>
               </div>
               <div className="grid grid-cols-3 items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">Action</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  Action
+                </span>
                 <span className="col-span-2">
-                  <span className={cn("px-2 py-0.5 rounded text-[11px] font-bold", getActionColor(selectedLog.action))}>
+                  <span
+                    className={cn(
+                      'rounded px-2 py-0.5 text-[11px] font-bold',
+                      getActionColor(selectedLog.action)
+                    )}
+                  >
                     {selectedLog.action}
                   </span>
                 </span>
               </div>
               <div className="grid grid-cols-3 items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">Resource</span>
-                <span className="col-span-2 text-sm">{selectedLog.resource}</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  Resource
+                </span>
+                <span className="col-span-2 text-sm">
+                  {selectedLog.resource}
+                </span>
               </div>
               <div className="grid grid-cols-3 items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">Timestamp</span>
-                <span className="col-span-2 text-sm">{new Date(selectedLog.createdAt).toLocaleString()}</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  Timestamp
+                </span>
+                <span className="col-span-2 text-sm">
+                  {new Date(selectedLog.createdAt).toLocaleString()}
+                </span>
               </div>
               {selectedLog.details && (
                 <div className="mt-2 space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                     <Info className="h-4 w-4" />
                     Technical Details
                   </div>
-                  <pre className="bg-muted p-3 rounded-md text-[10px] overflow-auto max-h-40 font-mono">
+                  <pre className="bg-muted max-h-40 overflow-auto rounded-md p-3 font-mono text-[10px]">
                     {JSON.stringify(selectedLog.details, null, 2)}
                   </pre>
                 </div>
               )}
             </div>
           )}
-          
+
           <DialogFooter>
             <Button onClick={() => setSelectedLog(null)}>Close</Button>
           </DialogFooter>

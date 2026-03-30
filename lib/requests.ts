@@ -642,7 +642,9 @@ export const AuthService = {
     }
   },
 
-  async deactivateUserByAdmin(userId: string): Promise<DeleteUserByAdminResponse> {
+  async deactivateUserByAdmin(
+    userId: string
+  ): Promise<DeleteUserByAdminResponse> {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.AUTH.DEACTIVATE_USER_BY_ADMIN.replace(
@@ -677,7 +679,9 @@ export const AuthService = {
         '{userId}',
         userId
       );
-      const result = await client.patch(endpoint).json<DeleteUserByAdminResponse>();
+      const result = await client
+        .patch(endpoint)
+        .json<DeleteUserByAdminResponse>();
       return result;
     } catch (error: unknown) {
       if (
@@ -981,20 +985,25 @@ export const BusinessService = {
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
     }
   },
 
-  async createClient(businessId: string, data: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber?: string;
-    password?: string;
-  }): Promise<any> {
+  async createClient(
+    businessId: string,
+    data: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      phoneNumber?: string;
+      password?: string;
+    }
+  ): Promise<any> {
     const apiClient = createAuthenticatedClient();
     try {
       const result = await apiClient
@@ -1003,7 +1012,9 @@ export const BusinessService = {
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
@@ -1017,7 +1028,9 @@ export const BusinessService = {
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
@@ -1031,7 +1044,9 @@ export const BusinessService = {
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
@@ -1050,7 +1065,9 @@ export const BusinessService = {
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;
@@ -1060,11 +1077,15 @@ export const BusinessService = {
   async deleteRecurringInvoice(id: string): Promise<any> {
     const client = createAuthenticatedClient();
     try {
-      const result = await client.delete(`recurring-invoices/${id}`).json<any>();
+      const result = await client
+        .delete(`recurring-invoices/${id}`)
+        .json<any>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const errorData = await safeParseJson((error as HTTPErrorLike).response);
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
         throw ApiError.fromResponse(errorData);
       }
       throw error;

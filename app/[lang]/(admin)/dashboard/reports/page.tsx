@@ -9,6 +9,6 @@ export default async function ReportsPage({
 }) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
-  
+
   return <ReportsClient dictionary={dictionary} lang={lang} />;
 }

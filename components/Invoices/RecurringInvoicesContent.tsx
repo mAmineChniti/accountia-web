@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Repeat, Play, Pause, Trash2, MoreVertical, Download } from 'lucide-react';
+import {
+  Plus,
+  Repeat,
+  Play,
+  Pause,
+  Trash2,
+  MoreVertical,
+  Download,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { Button } from '@/components/ui/button';
@@ -23,7 +31,11 @@ export default function RecurringInvoicesContent({
   dictionary: Dictionary;
 }) {
   const [schedules, setSchedules] = useState<any[]>([]);
-  const [stats, setStats] = useState({ activeCount: 0, pausedCount: 0, estimatedMrr: 0 });
+  const [stats, setStats] = useState({
+    activeCount: 0,
+    pausedCount: 0,
+    estimatedMrr: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -76,7 +88,9 @@ export default function RecurringInvoicesContent({
     try {
       const response = await BusinessService.downloadRecurringInvoice(id);
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([blob], { type: 'application/pdf' })
+      );
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = `recurring-invoice-${id.slice(-6).toUpperCase()}.pdf`;
@@ -90,14 +104,19 @@ export default function RecurringInvoicesContent({
     }
   };
 
-  const formatCurrency = (amount: number) => `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number) =>
+    `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Recurring Invoices</h1>
-          <p className="text-muted-foreground mt-1">Automate invoice generation on a schedule.</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Recurring Invoices
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Automate invoice generation on a schedule.
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
           <Plus className="h-4 w-4" />
@@ -107,86 +126,136 @@ export default function RecurringInvoicesContent({
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="glass-card flex flex-col gap-1 p-6 rounded-xl border shadow-sm bg-card">
-          <div className="text-muted-foreground text-sm font-medium">Estimated MRR</div>
-          <div className="text-2xl font-bold text-primary">{formatCurrency(stats.estimatedMrr)}</div>
+        <div className="glass-card bg-card flex flex-col gap-1 rounded-xl border p-6 shadow-sm">
+          <div className="text-muted-foreground text-sm font-medium">
+            Estimated MRR
+          </div>
+          <div className="text-primary text-2xl font-bold">
+            {formatCurrency(stats.estimatedMrr)}
+          </div>
         </div>
-        <div className="glass-card flex flex-col gap-1 p-6 rounded-xl border shadow-sm bg-card">
-          <div className="text-muted-foreground text-sm font-medium">Active Schedules</div>
+        <div className="glass-card bg-card flex flex-col gap-1 rounded-xl border p-6 shadow-sm">
+          <div className="text-muted-foreground text-sm font-medium">
+            Active Schedules
+          </div>
           <div className="text-2xl font-bold">{stats.activeCount}</div>
         </div>
-        <div className="glass-card flex flex-col gap-1 p-6 rounded-xl border shadow-sm bg-card">
-          <div className="text-muted-foreground text-sm font-medium">Paused Schedules</div>
+        <div className="glass-card bg-card flex flex-col gap-1 rounded-xl border p-6 shadow-sm">
+          <div className="text-muted-foreground text-sm font-medium">
+            Paused Schedules
+          </div>
           <div className="text-2xl font-bold">{stats.pausedCount}</div>
         </div>
       </div>
 
       {/* List */}
-      <div className="glass-card rounded-xl border shadow-sm bg-card overflow-hidden">
+      <div className="glass-card bg-card overflow-hidden rounded-xl border shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="p-4 font-medium text-muted-foreground">Client</th>
-                <th className="p-4 font-medium text-muted-foreground">Amount</th>
-                <th className="p-4 font-medium text-muted-foreground">Frequency</th>
-                <th className="p-4 font-medium text-muted-foreground">Next Run Date</th>
-                <th className="p-4 font-medium text-muted-foreground">Status</th>
-                <th className="p-4 font-medium text-muted-foreground text-right">Actions</th>
+                <th className="text-muted-foreground p-4 font-medium">
+                  Client
+                </th>
+                <th className="text-muted-foreground p-4 font-medium">
+                  Amount
+                </th>
+                <th className="text-muted-foreground p-4 font-medium">
+                  Frequency
+                </th>
+                <th className="text-muted-foreground p-4 font-medium">
+                  Next Run Date
+                </th>
+                <th className="text-muted-foreground p-4 font-medium">
+                  Status
+                </th>
+                <th className="text-muted-foreground p-4 text-right font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-muted-foreground animate-pulse">Loading schedules...</td>
+                  <td
+                    colSpan={6}
+                    className="text-muted-foreground animate-pulse p-8 text-center"
+                  >
+                    Loading schedules...
+                  </td>
                 </tr>
               ) : schedules.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                    <Repeat className="mx-auto h-8 w-8 opacity-20 mb-2" />
+                  <td
+                    colSpan={6}
+                    className="text-muted-foreground p-8 text-center"
+                  >
+                    <Repeat className="mx-auto mb-2 h-8 w-8 opacity-20" />
                     No recurring invoices found. Create one to get started.
                   </td>
                 </tr>
               ) : (
                 schedules.map((schedule) => (
-                  <tr key={schedule._id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={schedule._id}
+                    className="hover:bg-muted/30 border-b transition-colors last:border-0"
+                  >
                     <td className="p-4 font-medium">{schedule.clientName}</td>
-                    <td className="p-4 font-bold">{formatCurrency(schedule.totalAmount)}</td>
+                    <td className="p-4 font-bold">
+                      {formatCurrency(schedule.totalAmount)}
+                    </td>
                     <td className="p-4 capitalize">{schedule.frequency}</td>
-                    <td className="p-4">{new Date(schedule.nextRunDate).toLocaleDateString()}</td>
                     <td className="p-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-                        ${schedule.status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : ''}
-                        ${schedule.status === 'paused' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''}
-                        ${schedule.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : ''}
-                      `}>
+                      {new Date(schedule.nextRunDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${schedule.status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : ''} ${schedule.status === 'paused' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''} ${schedule.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : ''} `}
+                      >
                         {schedule.status}
                       </span>
                     </td>
                     <td className="p-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {schedule.status === 'active' ? (
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(schedule._id, 'paused')}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleUpdateStatus(schedule._id, 'paused')
+                              }
+                            >
                               <Pause className="mr-2 h-4 w-4" /> Pause
                             </DropdownMenuItem>
                           ) : schedule.status === 'paused' ? (
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(schedule._id, 'active')}>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleUpdateStatus(schedule._id, 'active')
+                              }
+                            >
                               <Play className="mr-2 h-4 w-4" /> Resume
                             </DropdownMenuItem>
                           ) : null}
-                          <DropdownMenuItem onClick={(e) => {
-                            e.preventDefault();
-                            handleDownload(schedule._id);
-                          }}>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleDownload(schedule._id);
+                            }}
+                          >
                             <Download className="mr-2 h-4 w-4" /> Download PDF
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(schedule._id)}>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleDelete(schedule._id)}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
