@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { env } from '@/env';
 import ky from 'ky';
 import { getToken, setTokens } from '@/actions/cookies';
@@ -1100,6 +1099,37 @@ export const BusinessService = {
   },
 };
 
+export interface PlatformStatisticsResponse {
+  kpis: {
+    totalUsers: number;
+    newRegistrations: number;
+    pendingApplications: number;
+  };
+  growth: {
+    totalUsers: number;
+    newRegistrations: number;
+    pendingApplications: number;
+  };
+  charts: {
+    registrationTrends: Array<{ name: string; users: number }>;
+    usersByRole: Array<{ name: string; value: number }>;
+  };
+}
+
+export interface AuditLog {
+  _id: string;
+  username: string;
+  action: string;
+  resource: string;
+  details?: {
+    message?: string;
+    businessName?: string;
+    targetUsername?: string;
+    [key: string]: unknown;
+  };
+  createdAt: string;
+}
+
 export const AdminStatsRequests = {
   async getStatistics(): Promise<any> {
     const client = createAuthenticatedClient();
@@ -1117,14 +1147,16 @@ export const AdminStatsRequests = {
     }
   },
 
-  async getPlatformStatistics(range?: string): Promise<any> {
+  async getPlatformStatistics(
+    range?: string
+  ): Promise<PlatformStatisticsResponse> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
         .get('statistics/platform', {
           searchParams: range ? { range } : undefined,
         })
-        .json<any>();
+        .json<PlatformStatisticsResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1137,14 +1169,14 @@ export const AdminStatsRequests = {
     }
   },
 
-  async getAuditLogs(limit: number = 20): Promise<any> {
+  async getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
         .get('statistics/audit-logs', {
           searchParams: { limit },
         })
-        .json<any>();
+        .json<AuditLog[]>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

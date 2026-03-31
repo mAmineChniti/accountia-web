@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -32,13 +31,9 @@ const handleLocaleChange = async (newLocale: Locale) => {
 };
 
 export default function LocaleSwitcher() {
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState<boolean>(() => typeof window !== 'undefined');
   const pathname = usePathname();
   const router = useRouter();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return (

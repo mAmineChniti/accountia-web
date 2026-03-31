@@ -1,16 +1,7 @@
-/* eslint-disable unicorn/no-null, unicorn/numeric-separators-style, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, unicorn/no-array-for-each, unicorn/consistent-function-scoping, unicorn/switch-case-braces */
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -84,6 +75,7 @@ import type {
   UsersListResponse,
 } from '@/types/ResponseInterfaces';
 import { AuthService, AdminStatsRequests } from '@/lib/requests';
+import type { AuditLog } from '@/lib/requests';
 import { toast } from 'sonner';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { formatDistanceToNow } from 'date-fns';
@@ -119,6 +111,44 @@ const ALL_ROLES: Role[] = [
   'BUSINESS_ADMIN',
   'CLIENT',
 ];
+
+const getActionColor = (action: string): string => {
+  switch (action) {
+    case 'CREATE': {
+      return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
+    }
+    case 'DELETE': {
+      return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
+    }
+    case 'UPDATE': {
+      return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
+    }
+    case 'LOGIN': {
+      return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
+    }
+    default: {
+      return 'text-muted-foreground bg-muted/50';
+    }
+  }
+};
+
+const getResourceIcon = (resource: string) => {
+  switch (resource) {
+    case 'User': {
+      return <UserIcon className="h-4 w-4" />;
+    }
+    case 'Business':
+    case 'BusinessApplication': {
+      return <Briefcase className="h-4 w-4" />;
+    }
+    case 'Settings': {
+      return <SettingsIcon className="h-4 w-4" />;
+    }
+    default: {
+      return <Activity className="h-4 w-4" />;
+    }
+  }
+};
 
 export default function Admin({
   dictionary,
@@ -166,12 +196,12 @@ export default function Admin({
       BUSINESS_ADMIN: 0,
       CLIENT: 0,
     };
-    users.forEach((u) => {
+    for (const u of users) {
       const role = u.role as keyof typeof counts;
       if (role && role in counts) {
         counts[role]++;
       }
-    });
+    }
     return counts;
   }, [users]);
 
@@ -900,12 +930,12 @@ function ActivityTimeline({
   dictionary,
   lang,
 }: {
-  dictionary: any;
-  lang: string;
+  dictionary: Dictionary;
+  lang: Locale;
 }) {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | undefined>();
   const [countdown, setCountdown] = useState(30);
 
   const fetchLogs = async () => {
@@ -925,7 +955,7 @@ function ActivityTimeline({
     const interval = setInterval(() => {
       fetchLogs();
       setCountdown(30);
-    }, 30000);
+    }, 30_000);
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -934,35 +964,6 @@ function ActivityTimeline({
       clearInterval(countdownInterval);
     };
   }, []);
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'CREATE':
-        return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
-      case 'DELETE':
-        return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
-      case 'UPDATE':
-        return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
-      case 'LOGIN':
-        return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
-      default:
-        return 'text-muted-foreground bg-muted/50';
-    }
-  };
-
-  const getResourceIcon = (resource: string) => {
-    switch (resource) {
-      case 'User':
-        return <UserIcon className="h-4 w-4" />;
-      case 'Business':
-      case 'BusinessApplication':
-        return <Briefcase className="h-4 w-4" />;
-      case 'Settings':
-        return <SettingsIcon className="h-4 w-4" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
 
   const getRelativeTime = (date: string) => {
     try {
@@ -1058,10 +1059,10 @@ function ActivityTimeline({
                           {log.details.message ||
                             (log.details.businessName
                               ? `Business: ${log.details.businessName}`
-                              : null) ||
+                              : undefined) ||
                             (log.details.targetUsername
                               ? `Target: ${log.details.targetUsername}`
-                              : null)}
+                              : undefined)}
                         </span>
                       )}
                   </div>
@@ -1077,7 +1078,10 @@ function ActivityTimeline({
       </CardContent>
 
       {/* Log Detail Modal */}
-      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+      <Dialog
+        open={!!selectedLog}
+        onOpenChange={() => setSelectedLog(undefined)}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1134,7 +1138,7 @@ function ActivityTimeline({
                     Technical Details
                   </div>
                   <pre className="bg-muted max-h-40 overflow-auto rounded-md p-3 font-mono text-[10px]">
-                    {JSON.stringify(selectedLog.details, null, 2)}
+                    {JSON.stringify(selectedLog.details, undefined, 2)}
                   </pre>
                 </div>
               )}
@@ -1142,7 +1146,7 @@ function ActivityTimeline({
           )}
 
           <DialogFooter>
-            <Button onClick={() => setSelectedLog(null)}>Close</Button>
+            <Button onClick={() => setSelectedLog(undefined)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, unicorn/no-zero-fractions, unicorn/catch-error-name, @typescript-eslint/no-deprecated, unicorn/prefer-optional-catch-binding, unicorn/prefer-number-properties */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +30,8 @@ interface Template {
 }
 
 export default function CreateRecurringInvoiceModal({
-  lang,
-  dictionary,
+  _lang,
+  _dictionary,
   open,
   setOpen,
   onSuccess,
@@ -58,7 +56,7 @@ export default function CreateRecurringInvoiceModal({
   const [autoSend, setAutoSend] = useState(false);
 
   const [items, setItems] = useState([
-    { description: '', quantity: 1, price: 1.0 },
+    { description: '', quantity: 1, price: 1 },
   ]);
 
   useEffect(() => {
@@ -76,8 +74,8 @@ export default function CreateRecurringInvoiceModal({
               setTemplateId(data.templates[0]._id);
             }
           }
-        } catch (e) {
-          console.error(e);
+        } catch (error) {
+          console.error(error);
         }
       };
       fetchTemplates();
@@ -135,7 +133,7 @@ export default function CreateRecurringInvoiceModal({
       toast.success('Recurring Invoice Schedule Created!');
       setOpen(false);
       onSuccess();
-    } catch (error) {
+    } catch {
       toast.error('Error creating recurring invoice');
     } finally {
       setIsSubmitting(false);
@@ -143,7 +141,7 @@ export default function CreateRecurringInvoiceModal({
   };
 
   const addItem = () =>
-    setItems([...items, { description: '', quantity: 1, price: 1.0 }]);
+    setItems([...items, { description: '', quantity: 1, price: 1 }]);
   const removeItem = (index: number) =>
     setItems(items.filter((_, i) => i !== index));
   const updateItem = (index: number, field: string, value: string | number) => {
@@ -249,7 +247,11 @@ export default function CreateRecurringInvoiceModal({
                   placeholder="Qty"
                   value={item.quantity}
                   onChange={(e) =>
-                    updateItem(index, 'quantity', parseInt(e.target.value) || 1)
+                    updateItem(
+                      index,
+                      'quantity',
+                      Number.parseInt(e.target.value) || 1
+                    )
                   }
                   required
                 />
@@ -268,7 +270,7 @@ export default function CreateRecurringInvoiceModal({
                       updateItem(
                         index,
                         'price',
-                        parseFloat(e.target.value) || 0
+                        Number.parseFloat(e.target.value) || 0
                       )
                     }
                     required

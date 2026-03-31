@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, unicorn/catch-error-name, @typescript-eslint/no-explicit-any, unicorn/consistent-function-scoping, unicorn/prefer-global-this, unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove */
 'use client';
 
 import { useState } from 'react';
@@ -25,6 +24,35 @@ import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
 import { type StaticInvoice, type InvoiceStatus } from '@/lib/data/invoices';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface RawTransaction {
+  id: string;
+  accountType?: string;
+  amount?: number;
+  type?: 'income' | 'expense';
+  date?: string;
+}
+
+async function downloadInvoicePdf(id: string): Promise<void> {
+  try {
+    const response = await AdminStatsRequests.downloadInvoice(id);
+    const blob = await response.blob();
+    const blobUrl = globalThis.URL.createObjectURL(
+      new Blob([blob], { type: 'application/pdf' })
+    );
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `invoice-${id.slice(-6).toUpperCase()}.pdf`;
+    document.body.append(a);
+    a.click();
+    globalThis.URL.revokeObjectURL(blobUrl);
+    a.remove();
+  } catch (error) {
+    console.error('Download error:', error);
+    toast.error('Failed to download invoice');
+  }
+}
+
 import { useQuery } from '@tanstack/react-query';
 import { AdminStatsRequests } from '@/lib/requests';
 import {
@@ -116,8 +144,8 @@ export default function Invoices({
         }
         const data = await response.json();
         return data.rates[selectedCurrency] || 1;
-      } catch (err) {
-        console.error('Failed to fetch exchange rate', err);
+      } catch (error_) {
+        console.error('Failed to fetch exchange rate', error_);
         const fallbacks: Record<string, number> = { EUR: 0.92, TND: 3.12 };
         return fallbacks[selectedCurrency] || 1;
       }
@@ -164,16 +192,16 @@ export default function Invoices({
     try {
       const response = await AdminStatsRequests.downloadInvoice(id);
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(
+      const blobUrl = globalThis.URL.createObjectURL(
         new Blob([blob], { type: 'application/pdf' })
       );
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = `invoice-${id.slice(-6).toUpperCase()}.pdf`;
-      document.body.appendChild(a);
+      document.body.append(a);
       a.click();
-      window.URL.revokeObjectURL(blobUrl);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(blobUrl);
+      a.remove();
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download invoice');

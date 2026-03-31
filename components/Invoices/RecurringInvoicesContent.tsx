@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, unicorn/consistent-function-scoping, unicorn/prefer-global-this, unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove, unicorn/no-null */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -89,16 +88,16 @@ export default function RecurringInvoicesContent({
     try {
       const response = await BusinessService.downloadRecurringInvoice(id);
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(
+      const blobUrl = globalThis.URL.createObjectURL(
         new Blob([blob], { type: 'application/pdf' })
       );
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = `recurring-invoice-${id.slice(-6).toUpperCase()}.pdf`;
-      document.body.appendChild(a);
+      document.body.append(a);
       a.click();
-      window.URL.revokeObjectURL(blobUrl);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(blobUrl);
+      a.remove();
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download invoice');

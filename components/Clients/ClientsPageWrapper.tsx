@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-null */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,9 +5,9 @@ import { BusinessService } from '@/lib/requests';
 import ClientManagement from '@/components/Clients/ClientManagement';
 
 export default function ClientsPageWrapper() {
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     async function fetchBusiness() {

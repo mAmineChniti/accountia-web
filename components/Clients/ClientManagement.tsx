@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -65,8 +64,10 @@ export default function ClientManagement({ businessId }: Props) {
       setIsModalOpen(false);
       reset();
     },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Failed to create client');
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create client';
+      toast.error(message);
     },
   });
 

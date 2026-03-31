@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/prefer-dom-node-append, unicorn/prefer-dom-node-remove, unicorn/consistent-function-scoping, unicorn/prefer-global-this, @typescript-eslint/no-deprecated, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -130,13 +129,13 @@ export default function ReportsTab({
       'download',
       `report_${format(new Date(), 'yyyy-MM-dd')}.csv`
     );
-    document.body.appendChild(link);
+    document.body.append(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   };
 
   const exportPDF = () => {
-    window.print();
+    globalThis.print();
   };
 
   return (

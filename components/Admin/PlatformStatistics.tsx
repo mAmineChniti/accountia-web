@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -25,7 +24,7 @@ import {
   Pie,
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { AuthService, AdminStatsRequests } from '@/lib/requests';
+import { AuthService, AdminStatsRequests, PlatformStatisticsResponse } from '@/lib/requests';
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import type { UsersListResponse } from '@/types/ResponseInterfaces';
@@ -56,7 +55,8 @@ export default function PlatformStatistics({
   dictionary: Dictionary;
   lang: Locale;
 }) {
-  const [platformStats, setPlatformStats] = useState<any>();
+  const [platformStats, setPlatformStats] =
+    useState<PlatformStatisticsResponse | undefined>(undefined);
   const [statsRange, setStatsRange] = useState('30d');
   const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState('');
@@ -73,8 +73,12 @@ export default function PlatformStatistics({
         await AdminStatsRequests.getPlatformStatistics(currentRange);
       setPlatformStats(result);
       setStatsError('');
-    } catch (error: any) {
-      setStatsError(error.message || 'Failed to fetch platform statistics');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch platform statistics';
+      setStatsError(errorMessage);
     } finally {
       setIsStatsLoading(false);
     }
@@ -354,7 +358,7 @@ export default function PlatformStatistics({
                   <PieChart>
                     <Pie
                       data={platformStats.charts.usersByRole.map(
-                        (entry: any, index: number) => ({
+                        (entry, index) => ({
                           ...entry,
                           fill: CHART_COLORS[index % CHART_COLORS.length],
                         })
@@ -367,7 +371,10 @@ export default function PlatformStatistics({
                       dataKey="value"
                     />
                     <RechartsTooltip
-                      formatter={(value: any, name: any) => [value, name]}
+                      formatter={(value: string | number, name: string) => [
+                        value,
+                        name,
+                      ]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -375,11 +382,11 @@ export default function PlatformStatistics({
               <div className="mt-3 flex flex-col gap-2">
                 {(() => {
                   const total = platformStats.charts.usersByRole.reduce(
-                    (sum: number, d: any) => sum + d.value,
+                    (sum: number, d) => sum + d.value,
                     0
                   );
                   return platformStats.charts.usersByRole.map(
-                    (entry: any, index: number) => (
+                    (entry, index) => (
                       <div
                         key={entry.name}
                         className="flex items-center justify-between text-sm"

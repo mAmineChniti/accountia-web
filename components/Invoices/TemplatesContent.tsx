@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, unicorn/no-null, @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect, unicorn/catch-error-name, @next/next/no-img-element */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -43,7 +42,7 @@ interface TemplateConfig {
   name: string;
   themeColor: string;
   fontFamily: string;
-  logo: string | null;
+  logo?: string;
   companyName: string;
   address: string;
   phone: string;
@@ -58,6 +57,23 @@ interface TemplateConfig {
   isDefault: boolean;
 }
 
+interface BusinessWithTemplateSettings {
+  status?: string;
+  isActive?: boolean;
+  templateSettings?: Partial<TemplateConfig>;
+  name?: string;
+  phone?: string;
+  logo?: string;
+}
+
+interface RawInvoiceTransaction {
+  id: string;
+  accountType?: string;
+  amount?: number;
+  type?: 'income' | 'expense';
+  date?: string;
+}
+
 export default function TemplatesContent({
   dictionary,
   lang,
@@ -69,7 +85,7 @@ export default function TemplatesContent({
     name: 'Standard Theme',
     themeColor: '#7f1d1d', // Bordeaux/Dark Red
     fontFamily: 'font-sans',
-    logo: null,
+    logo: undefined,
     companyName: '',
     address: '',
     phone: '',
@@ -110,7 +126,7 @@ export default function TemplatesContent({
         limit: 50,
       });
       return transactions.map(
-        (t: any): StaticInvoice => ({
+        (t: RawInvoiceTransaction): StaticInvoice => ({
           id: t.id,
           invoiceNumber: `INV-${t.id.toString().slice(-6).toUpperCase()}`,
           description: t.accountType || 'Transaction',
@@ -136,25 +152,32 @@ export default function TemplatesContent({
       const activeBusiness =
         businessesData?.find((b) => b.status === 'approved' && b.isActive) ||
         businessesData?.[0];
-      const settings = (activeBusiness as any)?.templateSettings || {};
+      const settings =
+        (activeBusiness as BusinessWithTemplateSettings).templateSettings ?? {};
 
-      setConfig((prev) => ({
-        ...prev,
-        companyName: settings.companyName || activeBusiness?.name || '',
-        email: settings.email || userData?.email || '',
-        phone:
-          settings.phone ||
-          activeBusiness?.phone ||
-          userData?.phoneNumber ||
-          '',
-        address: settings.address || prev.address,
-        themeColor: settings.themeColor || prev.themeColor,
-        fontFamily: settings.fontFamily || prev.fontFamily,
-        logo: settings.logo || activeBusiness?.logo || null,
-        currency: settings.currency || 'USD',
-      }));
-      setHasInitialized(true);
+      const timer = globalThis.setTimeout(() => {
+        setConfig((prev) => ({
+          ...prev,
+          companyName: settings.companyName || activeBusiness?.name || '',
+          email: settings.email || userData?.email || '',
+          phone:
+            settings.phone ||
+            activeBusiness?.phone ||
+            userData?.phoneNumber ||
+            '',
+          address: settings.address || prev.address,
+          themeColor: settings.themeColor || prev.themeColor,
+          fontFamily: settings.fontFamily || prev.fontFamily,
+          logo: settings.logo || activeBusiness?.logo || undefined,
+          currency: settings.currency || 'USD',
+        }));
+        setHasInitialized(true);
+      }, 0);
+
+      return () => globalThis.clearTimeout(timer);
     }
+
+    return;
   }, [userData, businessesData, hasInitialized]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,24 +210,19 @@ export default function TemplatesContent({
           address: config.address,
           phone: config.phone,
           email: config.email,
-          logo: config.logo as any,
+          logo: config.logo,
         },
       });
       alert('Template settings saved successfully!');
-    } catch (err) {
-      console.error('Failed to save template', err);
+    } catch (error) {
+      console.error('Failed to save template', error);
       alert('Failed to save template settings.');
     }
   };
 
   const [previewInvoiceId, setPreviewInvoiceId] = useState<string>('');
-
-  // Update selection if realInvoices changes and no selection made
-  useEffect(() => {
-    if (realInvoices.length > 0 && !previewInvoiceId) {
-      setPreviewInvoiceId(realInvoices[0].id);
-    }
-  }, [realInvoices, previewInvoiceId]);
+  const selectedPreviewInvoiceId =
+    previewInvoiceId || realInvoices[0]?.id || '';
 
   // Fetch exchange rates for preview
   const { data: exchangeRates } = useQuery({
@@ -224,8 +242,8 @@ export default function TemplatesContent({
         }
         const data = await response.json();
         return data.rates[config.currency] || 1;
-      } catch (err) {
-        console.error('Failed to fetch exchange rate', err);
+      } catch (error) {
+        console.error('Failed to fetch exchange rate', error);
         const fallbacks: Record<string, number> = { EUR: 0.92, TND: 3.12 };
         return fallbacks[config.currency] || 1;
       }
@@ -235,9 +253,8 @@ export default function TemplatesContent({
 
   const rate = exchangeRates || 1;
 
-  const previewInvoice = realInvoices.find(
-    (inv) => inv.id === previewInvoiceId
-  ) ||
+  const previewInvoice =
+    realInvoices.find((inv) => inv.id === selectedPreviewInvoiceId) ||
     realInvoices[0] || {
       id: 'placeholder',
       invoiceNumber: 'INV-000000',
@@ -393,7 +410,10 @@ export default function TemplatesContent({
                   className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                   value={config.currency}
                   onChange={(e) =>
-                    setConfig({ ...config, currency: e.target.value as any })
+                    setConfig({
+                      ...config,
+                      currency: e.target.value as 'USD' | 'EUR' | 'TND',
+                    })
                   }
                 >
                   <option value="USD">USD ($) - Base</option>
@@ -433,7 +453,7 @@ export default function TemplatesContent({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setConfig({ ...config, logo: null })}
+                      onClick={() => setConfig({ ...config, logo: undefined })}
                       className="text-red-500 hover:text-red-600"
                     >
                       Remove
