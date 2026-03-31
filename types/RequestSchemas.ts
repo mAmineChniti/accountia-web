@@ -108,6 +108,21 @@ export const UpdateBusinessSchema = z.object({
   description: z.string().min(10).optional(),
   website: z.url().optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
+  templateSettings: z.preprocess(
+    (val) => (val === undefined ? undefined : val),
+    z
+      .object({
+        currency: z.string().optional(),
+        themeColor: z.string().optional(),
+        fontFamily: z.string().optional(),
+        companyName: z.string().optional(),
+        address: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        logo: z.string().optional().nullable(),
+      })
+      .optional()
+  ),
 });
 
 export const AssignUserSchema = z.object({

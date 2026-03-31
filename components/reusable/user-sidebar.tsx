@@ -1,9 +1,20 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { Building2, LayoutDashboard, LogOut } from 'lucide-react';
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  BarChart3,
+  FileBarChart,
+  Briefcase,
+  LayoutTemplate,
+  Repeat,
+  Users,
+  LineChart,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
@@ -29,6 +40,7 @@ export default function UserSidebar({
   user: UserCookieData;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [profilePicture] = useState<string | undefined>(() => {
     try {
       return localStorage.getItem('profilePicture') ?? undefined;
@@ -62,6 +74,8 @@ export default function UserSidebar({
     user.role ?? ''
   );
 
+  const isClient = user.role === 'CLIENT';
+
   const dashboardHref = isAdmin
     ? `/${lang}/dashboard/admin`
     : `/${lang}/invoices`;
@@ -83,37 +97,165 @@ export default function UserSidebar({
     <aside className="bg-background fixed inset-y-0 z-50 flex w-64 flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {/* Dashboard at top */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={dashboardHref}
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-            >
-              <LayoutDashboard className="h-4 w-4 shrink-0" />
-              {dashboardLabel}
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dashboardTooltip}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Navigation Section */}
+        {isAdmin ? (
+          <>
+            {/* Admin: Dashboard */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/dashboard/admin`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/admin') &&
+                    !pathname.includes('/statistics')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  {dictionary.pages.home.navigation.adminDashboard}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{dictionary.tooltips.adminDashboard}</p>
+              </TooltipContent>
+            </Tooltip>
 
-        {isAdmin && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={`/${lang}/dashboard/businesses`}
-                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-              >
-                <Building2 className="h-4 w-4 shrink-0" />
-                {dictionary.admin.businessManagement.navLabel}
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{dictionary.tooltips.businessManagement}</p>
-            </TooltipContent>
-          </Tooltip>
+            {/* Admin: Business Management */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/dashboard/businesses`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/businesses')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  {dictionary.admin.businessManagement.navLabel}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{dictionary.tooltips.businessManagement}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Admin: Platform Statistics */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/dashboard/statistics`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/dashboard/statistics')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <BarChart3 className="h-4 w-4 shrink-0" />
+                  {dictionary.pages.home.navigation.platformStatistics}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{dictionary.tooltips.platformStatistics}</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        ) : isClient ? (
+          <div className="flex flex-col gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/managed/financials`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/managed/financials')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <LineChart className="h-4 w-4 shrink-0" />
+                  Financial Dashboard
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Your financials view</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {/* Non-Admin: Principal "Invoices" */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/invoices`}
+                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname === `/${lang}/invoices`
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <FileBarChart className="h-4 w-4 shrink-0" />
+                  {dictionary.pages.home.navigation.invoices}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{dictionary.tooltips.invoices}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Sub-item: Reports */}
+            <Link
+              href={`/${lang}/invoices/reports`}
+              className={`hover:text-accent-foreground ml-9 flex items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                pathname === `/${lang}/invoices/reports`
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
+            >
+              {dictionary.pages.reports.navReports}
+            </Link>
+
+            {/* Non-Admin: Templates */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/invoices/templates`}
+                  className={`mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/invoices/templates')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <LayoutTemplate className="h-4 w-4 shrink-0" />
+                  Templates
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Invoice Templates</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Non-Admin: Recurring Invoices */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/${lang}/invoices/recurring`}
+                  className={`mt-2 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    pathname.includes('/invoices/recurring')
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <Repeat className="h-4 w-4 shrink-0" />
+                  Recurring Invoices
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Automate Invoices</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         )}
 
         {/* Spacer pushes profile/logout to bottom */}

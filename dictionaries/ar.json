@@ -87,14 +87,14 @@
         "features": "الميزات",
         "solutions": "الحلول",
         "pricing": "الأسعار",
-        "statisticsTitle": "الإحصائيات",
-        "statisticsSubtitle": "نظرة عامة على الإيرادات والمصاريف",
         "getStarted": "ابدأ الآن",
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
         "profile": "الملف الشخصي",
         "invoices": "الفواتير",
+        "reports": "التقارير",
         "adminDashboard": "لوحة التحكم",
+        "platformStatistics": "إحصائيات المنصة",
         "logout": "تسجيل الخروج"
       },
       "hero": {
@@ -307,6 +307,33 @@
       "successMessage": "استُلم طلبك بنجاح. سيراجعه فريقنا ويتواصل معك قريبًا.",
       "closeButton": "العودة إلى الرئيسية",
       "cancelButton": "إلغاء"
+    },
+    "reports": {
+      "navReports": "التقارير",
+      "title": "التقارير المالية",
+      "subtitle": "عرض وتصدير ملخصك المالي بناءً على بيانات المعاملات.",
+      "filters": {
+        "dateRange": "نطاق التاريخ",
+        "type": "النوع",
+        "all": "جميع المعاملات",
+        "income": "الدخل فقط",
+        "expense": "المصروفات فقط"
+      },
+      "summary": {
+        "revenue": "إجمالي الإيرادات",
+        "expenses": "إجمالي المصروفات",
+        "profit": "إجمالي الربح"
+      },
+      "table": {
+        "date": "التاريخ",
+        "type": "النوع",
+        "amount": "المبلغ",
+        "noData": "لم يتم العثور على معاملات للفترة المحددة."
+      },
+      "export": {
+        "csv": "تصدير كـ CSV",
+        "pdf": "تصدير كـ PDF"
+      }
     }
   },
   "errorMessages": {
@@ -376,6 +403,7 @@
     "profile": "عرض ملفك الشخصي",
     "invoices": "الذهاب إلى فواتيرك",
     "adminDashboard": "الانتقال إلى لوحة تحكم المدير",
+    "platformStatistics": "عرض إحصائيات المنصة التفصيلية",
     "businessManagement": "إدارة طلبات الأعمال والشركات",
     "logout": "تسجيل الخروج من حسابك",
     "perfectForNewBusinesses": "مثالي للشركات الجديدة",
@@ -484,7 +512,11 @@
     "dateFilterLabel": "تصفية حسب تاريخ التسجيل:",
     "dateFilterPlaceholder": "اختر نطاق التاريخ",
     "loadError": "فشل تحميل المستخدمين",
-    "deleteError": "فشل حذف المستخدم",
+    "deactivateError": "فشل إلغاء تنشيط المستخدم",
+    "reactivateError": "فشل إعادة تنشيط المستخدم",
+    "deleteError": "فشل إلغاء تنشيط المستخدم",
+    "reactivateSuccess": "تم إعادة تنشيط المستخدم بنجاح",
+    "deleteSuccess": "تم إلغاء تنشيط المستخدم بنجاح",
     "noResults": "لم يتم العثور على نتائج.",
     "adminBadge": "مسؤول",
     "userBadge": "مستخدم",
@@ -505,6 +537,11 @@
       "confirm": "حذف",
       "deleting": "جارٍ الحذف..."
     },
+    "statusActive": "نشط",
+    "statusInactive": "غير نشط",
+    "status": "الحالة",
+    "deactivateUser": "إلغاء تنشيط",
+    "reactivateUser": "إعادة تنشيط",
     "tableCaption": "قائمة جميع المستخدمين",
     "username": "اسم المستخدم",
     "email": "البريد الإلكتروني",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Globe } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { i18n, type Locale } from '@/i18n-config';
@@ -30,8 +31,17 @@ const handleLocaleChange = async (newLocale: Locale) => {
 };
 
 export default function LocaleSwitcher() {
+  const [mounted] = useState<boolean>(() => typeof window !== 'undefined');
   const pathname = usePathname();
   const router = useRouter();
+
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="icon" className="w-auto px-3">
+        <Globe className="h-[1.2rem] w-[1.2rem]" />
+      </Button>
+    );
+  }
 
   const redirectedPathname = (locale: Locale) => {
     if (!pathname) return '/';

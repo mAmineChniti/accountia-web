@@ -1,15 +1,7 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -29,7 +21,26 @@ import {
   Loader2,
   Ban,
   ShieldCheck,
+  Users as UsersIcon,
+  UserPlus,
+  Building,
+  Clock,
 } from 'lucide-react';
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+
 import {
   Dialog,
   DialogContent,
@@ -63,9 +74,22 @@ import type {
   UserSummary,
   UsersListResponse,
 } from '@/types/ResponseInterfaces';
-import { AuthService } from '@/lib/requests';
+import { AuthService, AdminStatsRequests } from '@/lib/requests';
+import type { AuditLog } from '@/lib/requests';
 import { toast } from 'sonner';
 import { localizeErrorMessage } from '@/lib/error-localization';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
+import {
+  Activity,
+  History,
+  User as UserIcon,
+  Briefcase,
+  Settings as SettingsIcon,
+  ShieldAlert,
+  Info,
+  RotateCw,
+} from 'lucide-react';
 
 import type { Dictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
@@ -87,6 +111,44 @@ const ALL_ROLES: Role[] = [
   'BUSINESS_ADMIN',
   'CLIENT',
 ];
+
+const getActionColor = (action: string): string => {
+  switch (action) {
+    case 'CREATE': {
+      return 'text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/20';
+    }
+    case 'DELETE': {
+      return 'text-red-600 dark:text-red-400 bg-red-100/50 dark:bg-red-900/20';
+    }
+    case 'UPDATE': {
+      return 'text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20';
+    }
+    case 'LOGIN': {
+      return 'text-blue-600 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-900/20';
+    }
+    default: {
+      return 'text-muted-foreground bg-muted/50';
+    }
+  }
+};
+
+const getResourceIcon = (resource: string) => {
+  switch (resource) {
+    case 'User': {
+      return <UserIcon className="h-4 w-4" />;
+    }
+    case 'Business':
+    case 'BusinessApplication': {
+      return <Briefcase className="h-4 w-4" />;
+    }
+    case 'Settings': {
+      return <SettingsIcon className="h-4 w-4" />;
+    }
+    default: {
+      return <Activity className="h-4 w-4" />;
+    }
+  }
+};
 
 export default function Admin({
   dictionary,
@@ -125,10 +187,26 @@ export default function Admin({
   };
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
+
+  const roleCounts = useMemo(() => {
+    const counts = {
+      PLATFORM_OWNER: 0,
+      PLATFORM_ADMIN: 0,
+      BUSINESS_OWNER: 0,
+      BUSINESS_ADMIN: 0,
+      CLIENT: 0,
+    };
+    for (const u of users) {
+      const role = u.role as keyof typeof counts;
+      if (role && role in counts) {
+        counts[role]++;
+      }
+    }
+    return counts;
+  }, [users]);
+
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) =>
-    ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(u.role ?? '')
-  ).length;
+
   const modalUsername = modalUser ? modalUser.username : '';
   const usersLoadErrorMessage = error
     ? localizeErrorMessage(error, dictionary, dictionary.admin.loadError)
@@ -233,22 +311,54 @@ export default function Admin({
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (userId: string) => AuthService.deleteUserByAdmin(userId),
+  const deactivateMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.deactivateUserByAdmin(userId),
     onSuccess: (_: unknown, userId: string) => {
       queryClient.setQueryData(
         ['users'],
         (old: UsersListResponse | undefined) => {
           if (!old) return old;
-          return { ...old, users: old.users.filter((u) => u.id !== userId) };
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isActive: false } : u
+            ),
+          };
         }
       );
       setModalUser(undefined);
       setDeleteError(undefined);
+      toast.success(dictionary.admin.deleteSuccess);
     },
     onError: (error: unknown) => {
       setDeleteError(
         localizeErrorMessage(error, dictionary, dictionary.admin.deleteError)
+      );
+    },
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: (userId: string) => AuthService.reactivateUserByAdmin(userId),
+    onSuccess: (_: unknown, userId: string) => {
+      queryClient.setQueryData(
+        ['users'],
+        (old: UsersListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            users: old.users.map((u) =>
+              u.id === userId ? { ...u, isActive: true } : u
+            ),
+          };
+        }
+      );
+      toast.success(
+        dictionary.admin.reactivateSuccess || 'User reactivated successfully'
+      );
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        localizeErrorMessage(error, dictionary, 'Failed to reactivate user')
       );
     },
   });
@@ -320,10 +430,10 @@ export default function Admin({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-1">
           <div className="text-2xl font-bold tracking-tight">
-            {dictionary.admin.title}
+            Admin Dashboard
           </div>
           <div className="text-muted-foreground">
-            {dictionary.admin.subtitle}
+            Manage users and access controls
           </div>
         </div>
         <Button asChild variant="outline">
@@ -332,52 +442,45 @@ export default function Admin({
           </Link>
         </Button>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Users By Role */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.totalUsers}
-            </CardDescription>
+            <CardDescription>Platform Admin</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? dictionary.admin.stats.placeholder : totalUsers}
+              {isLoading
+                ? '...'
+                : roleCounts.PLATFORM_ADMIN + roleCounts.PLATFORM_OWNER}
             </CardTitle>
           </CardHeader>
           <CardContent />
         </Card>
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.totalAdmins}
-            </CardDescription>
+            <CardDescription>Business Owner</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? dictionary.admin.stats.placeholder : totalAdmins}
+              {isLoading ? '...' : roleCounts.BUSINESS_OWNER}
             </CardTitle>
           </CardHeader>
           <CardContent />
         </Card>
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>
-              {dictionary.admin.stats.lastUpdated}
-            </CardDescription>
-            <CardTitle className="text-base font-medium">
-              {isFetching
-                ? dictionary.admin.stats.refreshing
-                : dictionary.admin.stats.upToDate}
+            <CardDescription>Business Admin</CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? '...' : roleCounts.BUSINESS_ADMIN}
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              {dictionary.admin.stats.syncButton}
-            </Button>
-          </CardContent>
+          <CardContent />
+        </Card>
+        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardDescription>Client</CardDescription>
+            <CardTitle className="text-3xl">
+              {isLoading ? '...' : roleCounts.CLIENT}
+            </CardTitle>
+          </CardHeader>
+          <CardContent />
         </Card>
       </div>
 
@@ -388,13 +491,13 @@ export default function Admin({
               <CardTitle>{dictionary.admin.usersTitle}</CardTitle>
               <CardDescription>{dictionary.admin.tableCaption}</CardDescription>
             </div>
-            <div className="flex flex-col gap-2 md:w-xs md:flex-row md:items-center">
-              <div className="relative flex-1">
+            <div className="flex flex-row gap-2 md:w-auto md:items-center">
+              <div className="relative w-full md:w-64">
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={dictionary.admin.searchPlaceholder}
-                  className="flex-1 pr-10"
+                  className="pr-10"
                 />
                 {search && (
                   <Button
@@ -409,6 +512,17 @@ export default function Admin({
                   </Button>
                 )}
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title={dictionary.admin.stats.syncButton}
+                className={cn('shrink-0', isFetching && 'animate-spin')}
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
@@ -485,109 +599,134 @@ export default function Admin({
                 : dictionary.admin.noResults}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('username')}
-                    >
-                      {dictionary.admin.username}
-                      {sortKey === 'username' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('email')}
-                    >
-                      {dictionary.admin.email}
-                      {sortKey === 'email' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>{dictionary.admin.firstName}</TableHead>
-                  <TableHead>{dictionary.admin.lastName}</TableHead>
-                  <TableHead>{dictionary.admin.roleColumn}</TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('dateJoined')}
-                    >
-                      {dictionary.admin.dateJoined}
-                      {sortKey === 'dateJoined' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {dictionary.admin.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.username}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
+            <div className="divide-border flex flex-col divide-y">
+              {/* Table Header */}
+              <div className="text-muted-foreground grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] gap-4 px-4 py-2 text-xs font-semibold tracking-wider uppercase">
+                <button
+                  type="button"
+                  className="hover:text-foreground flex items-center gap-1 transition-colors select-none"
+                  onClick={() => toggleSort('username')}
+                >
+                  {dictionary.admin.username}
+                  {sortKey === 'username' ? (
+                    sortDir === 'asc' ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )
+                  ) : (
+                    <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="hover:text-foreground flex items-center gap-1 transition-colors select-none"
+                  onClick={() => toggleSort('email')}
+                >
+                  {dictionary.admin.email}
+                  {sortKey === 'email' ? (
+                    sortDir === 'asc' ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )
+                  ) : (
+                    <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                  )}
+                </button>
+                <span>{dictionary.admin.status || 'Status'}</span>
+                <span>{dictionary.admin.roleColumn}</span>
+                <span className="text-right">{dictionary.admin.actions}</span>
+              </div>
+              {/* Rows */}
+              {filteredUsers.map((user) => {
+                const initials =
+                  `${user.firstName?.charAt(0) ?? user.username.charAt(0)}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
+                const roleColors: Record<string, string> = {
+                  PLATFORM_OWNER:
+                    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                  PLATFORM_ADMIN:
+                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                  BUSINESS_OWNER:
+                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                  BUSINESS_ADMIN:
+                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+                  CLIENT:
+                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                };
+                const roleClass =
+                  roleColors[user.role ?? 'CLIENT'] ?? roleColors.CLIENT;
+                return (
+                  <div
+                    key={user.id}
+                    className="hover:bg-muted/30 grid grid-cols-[2fr_2.5fr_1fr_1.5fr_auto] items-center gap-4 px-4 py-3 transition-colors"
+                  >
+                    {/* User + Avatar */}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-foreground truncate text-sm font-semibold">
+                          {user.username}
+                        </div>
+                        <div className="text-muted-foreground truncate text-[11px]">
+                          {user.firstName ?? ''} {user.lastName ?? ''}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Email */}
+                    <div className="text-muted-foreground truncate text-sm">
                       {user.email}
-                    </TableCell>
-                    <TableCell>{user.firstName ?? '-'}</TableCell>
-                    <TableCell>{user.lastName ?? '-'}</TableCell>
-                    <TableCell>
+                    </div>
+                    {/* Status */}
+                    <div>
+                      {user.isActive === false ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
+                          {dictionary.admin.statusInactive || 'Inactive'}
+                        </span>
+                      ) : user.isBanned ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
+                          Banned
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
+                          {dictionary.admin.statusActive || 'Active'}
+                        </span>
+                      )}
+                    </div>
+                    {/* Role dropdown */}
+                    <div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
+                            type="button"
                             disabled={changingRoleUserId === user.id}
-                            className="h-8 gap-1.5 px-2 text-xs font-normal"
+                            className={cn(
+                              'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-80',
+                              roleClass
+                            )}
                           >
                             {changingRoleUserId === user.id && (
                               <Loader2 className="h-3 w-3 animate-spin" />
                             )}
                             {dictionary.admin.roles[user.role ?? 'CLIENT']}
-                            <ChevronDown className="h-3 w-3 opacity-60" />
-                          </Button>
+                            <ChevronDown className="ml-0.5 h-2.5 w-2.5 opacity-60" />
+                          </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
                           {ALL_ROLES.map((role) => (
                             <DropdownMenuItem
                               key={role}
                               onSelect={() => {
-                                if (role !== user.role) {
+                                if (role !== user.role)
                                   changeRoleMutation.mutate({
                                     userId: user.id,
                                     newRole: role,
                                   });
-                                }
                               }}
                               className={cn(
                                 'text-xs',
@@ -599,56 +738,81 @@ export default function Admin({
                           ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                    <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant={
-                            user.isBanned === true ? 'outline' : 'secondary'
-                          }
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
-                            setBanModalUser(user);
-                            setBanAction(
-                              user.isBanned === true ? 'unban' : 'ban'
-                            );
-                          }}
-                          disabled={banningUserId === user.id}
-                          aria-label={
-                            user.isBanned === true
-                              ? dictionary.admin.unbanUser
-                              : dictionary.admin.banUser
-                          }
-                        >
-                          {user.isBanned === true ? (
-                            <ShieldCheck className="h-4 w-4" />
-                          ) : (
-                            <Ban className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
+                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant={
+                          user.isActive === false ? 'default' : 'destructive'
+                        }
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-[11px]"
+                        onClick={() => {
+                          if (user.isActive === false) {
+                            reactivateMutation.mutate(user.id);
+                          } else {
                             setModalUser(user);
                             setDeleteError(undefined);
-                          }}
-                          disabled={deleteMutation.isPending}
-                          aria-label={dictionary.common.delete}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          }
+                        }}
+                        disabled={
+                          deactivateMutation.isPending ||
+                          reactivateMutation.isPending
+                        }
+                      >
+                        {user.isActive === false ? (
+                          <>
+                            <ShieldCheck className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.reactivateUser || 'Reactivate'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.deactivateUser || 'Deactivate'}
+                            </span>
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          user.isBanned === true ? 'outline' : 'secondary'
+                        }
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-[11px]"
+                        onClick={() => {
+                          setBanModalUser(user);
+                          setBanAction(
+                            user.isBanned === true ? 'unban' : 'ban'
+                          );
+                        }}
+                        disabled={banningUserId === user.id}
+                      >
+                        {user.isBanned === true ? (
+                          <>
+                            <ShieldCheck className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.unbanUser || 'Unban'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Ban className="h-3 w-3" />
+                            <span className="font-bold tracking-tight uppercase">
+                              {dictionary.admin.banUser || 'Ban'}
+                            </span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -680,7 +844,7 @@ export default function Admin({
               type="button"
               variant="secondary"
               onClick={() => setModalUser(undefined)}
-              disabled={deleteMutation.isPending}
+              disabled={deactivateMutation.isPending}
             >
               {dictionary.common.cancel}
             </Button>
@@ -689,11 +853,11 @@ export default function Admin({
               variant="destructive"
               onClick={() => {
                 if (!modalUser) return;
-                deleteMutation.mutate(modalUser.id);
+                deactivateMutation.mutate(modalUser.id);
               }}
-              disabled={deleteMutation.isPending || !modalUser}
+              disabled={deactivateMutation.isPending || !modalUser}
             >
-              {deleteMutation.isPending
+              {deactivateMutation.isPending
                 ? dictionary.admin.deleteDialog.deleting
                 : dictionary.admin.deleteDialog.confirm}
             </Button>
@@ -755,6 +919,237 @@ export default function Admin({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Activity Timeline Section */}
+      <ActivityTimeline dictionary={dictionary} lang={lang} />
     </div>
+  );
+}
+
+function ActivityTimeline({
+  dictionary,
+  lang,
+}: {
+  dictionary: Dictionary;
+  lang: Locale;
+}) {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | undefined>();
+  const [countdown, setCountdown] = useState(30);
+
+  const fetchLogs = async () => {
+    try {
+      const data = await AdminStatsRequests.getAuditLogs(20);
+      setLogs(data);
+    } catch (error) {
+      console.error('Failed to fetch audit logs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    setCountdown(30);
+    const interval = setInterval(() => {
+      fetchLogs();
+      setCountdown(30);
+    }, 30_000);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(countdownInterval);
+    };
+  }, []);
+
+  const getRelativeTime = (date: string) => {
+    try {
+      return formatDistanceToNow(new Date(date), {
+        addSuffix: true,
+        locale: lang === 'fr' ? fr : enUS,
+      });
+    } catch {
+      return date;
+    }
+  };
+
+  return (
+    <Card className="dark:bg-card/90 overflow-hidden border-0 bg-white/90 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="space-y-1">
+          <CardTitle className="flex items-center gap-2">
+            <History className="text-primary h-5 w-5" />
+            Activity Timeline
+          </CardTitle>
+          <CardDescription>Real-time platform audit logs</CardDescription>
+        </div>
+        {/* Countdown pill - same style as stats */}
+        <div className="flex w-fit shrink-0 items-center gap-2">
+          <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+            <span className="relative flex h-2 w-2">
+              <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
+              <span className="bg-primary relative inline-flex h-2 w-2 rounded-full" />
+            </span>
+            {countdown}s
+          </span>
+          <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+            <div
+              className="bg-primary h-full rounded-full transition-all duration-1000 ease-linear"
+              style={{ width: `${(countdown / 30) * 100}%` }}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading && logs.length === 0 ? (
+          <div className="space-y-1 p-4">
+            <Skeleton className="h-8 w-full rounded" />
+            <Skeleton className="h-8 w-full rounded" />
+            <Skeleton className="h-8 w-full rounded" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-muted-foreground py-10 text-center italic">
+            No recent activity recorded.
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {logs.map((log) => (
+              <div
+                key={log._id}
+                className="hover:bg-muted/30 border-muted/20 group relative flex cursor-pointer items-center gap-3 border-b px-4 py-2 transition-colors last:border-0"
+                onClick={() => setSelectedLog(log)}
+              >
+                <div
+                  className={cn(
+                    'bg-background z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm',
+                    getActionColor(log.action).split(' ')[1]
+                  )}
+                >
+                  <div className={getActionColor(log.action).split(' ')[0]}>
+                    {getResourceIcon(log.resource)}
+                  </div>
+                </div>
+
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-foreground truncate text-sm font-semibold">
+                      {log.username}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded-[4px] px-1.5 py-px text-[10px] font-bold tracking-wider uppercase',
+                        getActionColor(log.action)
+                      )}
+                    >
+                      {log.action}
+                    </span>
+                    <span className="text-muted-foreground hidden text-xs sm:inline">
+                      on {log.resource}
+                    </span>
+
+                    {log.details &&
+                      (log.details.message ||
+                        log.details.businessName ||
+                        log.details.targetUsername) && (
+                        <span className="text-muted-foreground/60 ml-1 hidden truncate text-xs italic md:block">
+                          —{' '}
+                          {log.details.message ||
+                            (log.details.businessName
+                              ? `Business: ${log.details.businessName}`
+                              : undefined) ||
+                            (log.details.targetUsername
+                              ? `Target: ${log.details.targetUsername}`
+                              : undefined)}
+                        </span>
+                      )}
+                  </div>
+
+                  <time className="text-muted-foreground text-[11px] whitespace-nowrap tabular-nums">
+                    {getRelativeTime(log.createdAt)}
+                  </time>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+
+      {/* Log Detail Modal */}
+      <Dialog
+        open={!!selectedLog}
+        onOpenChange={() => setSelectedLog(undefined)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              Activity Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedLog && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-muted-foreground text-sm font-medium">
+                  User
+                </span>
+                <span className="col-span-2 text-sm font-semibold">
+                  {selectedLog.username} ({selectedLog.userId})
+                </span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-muted-foreground text-sm font-medium">
+                  Action
+                </span>
+                <span className="col-span-2">
+                  <span
+                    className={cn(
+                      'rounded px-2 py-0.5 text-[11px] font-bold',
+                      getActionColor(selectedLog.action)
+                    )}
+                  >
+                    {selectedLog.action}
+                  </span>
+                </span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-muted-foreground text-sm font-medium">
+                  Resource
+                </span>
+                <span className="col-span-2 text-sm">
+                  {selectedLog.resource}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 items-center gap-4">
+                <span className="text-muted-foreground text-sm font-medium">
+                  Timestamp
+                </span>
+                <span className="col-span-2 text-sm">
+                  {new Date(selectedLog.createdAt).toLocaleString()}
+                </span>
+              </div>
+              {selectedLog.details && (
+                <div className="mt-2 space-y-2">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+                    <Info className="h-4 w-4" />
+                    Technical Details
+                  </div>
+                  <pre className="bg-muted max-h-40 overflow-auto rounded-md p-3 font-mono text-[10px]">
+                    {JSON.stringify(selectedLog.details, undefined, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setSelectedLog(undefined)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

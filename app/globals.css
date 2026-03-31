@@ -213,3 +213,46 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Premium Glassmorphism Styles */
+@layer components {
+  .glass-card {
+    @apply relative overflow-hidden transition-all duration-300;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .glass-card {
+    background: rgba(17, 24, 39, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      0 2px 4px -1px rgba(0, 0, 0, 0.18);
+  }
+
+  .glass-card:hover {
+    @apply -translate-y-1 shadow-lg;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass-card:hover {
+    background: rgba(17, 24, 39, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glass border gradient effect */
+  .glass-card::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-white/20 to-transparent;
+  }
+
+  .dark .glass-card::before {
+    @apply from-white/5 to-transparent;
+  }
+}

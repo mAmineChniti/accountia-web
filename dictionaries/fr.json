@@ -92,7 +92,9 @@
         "register": "S'inscrire",
         "profile": "Profil",
         "invoices": "Factures",
+        "reports": "Rapports",
         "adminDashboard": "Tableau de bord",
+        "platformStatistics": "Statistiques de la plateforme",
         "logout": "Déconnexion"
       },
       "hero": {
@@ -313,6 +315,33 @@
       "successMessage": "Votre demande a bien été reçue. Notre équipe l'examinera et vous répondra prochainement.",
       "closeButton": "Retour à l'accueil",
       "cancelButton": "Annuler"
+    },
+    "reports": {
+      "navReports": "Rapports",
+      "title": "Rapports Financiers",
+      "subtitle": "Consultez et exportez votre résumé financier basé sur les données de transaction.",
+      "filters": {
+        "dateRange": "Plage de dates",
+        "type": "Type",
+        "all": "Toutes les transactions",
+        "income": "Revenus uniquement",
+        "expense": "Dépenses uniquement"
+      },
+      "summary": {
+        "revenue": "Revenu total",
+        "expenses": "Dépenses totales",
+        "profit": "Bénéfice total"
+      },
+      "table": {
+        "date": "Date",
+        "type": "Type",
+        "amount": "Montant",
+        "noData": "Aucune transaction trouvée pour la période sélectionnée."
+      },
+      "export": {
+        "csv": "Exporter en CSV",
+        "pdf": "Exporter en PDF"
+      }
     }
   },
   "errorMessages": {
@@ -382,6 +411,7 @@
     "profile": "Voir votre profil",
     "invoices": "Accéder à vos factures",
     "adminDashboard": "Accéder au tableau de bord admin",
+    "platformStatistics": "Voir les statistiques détaillées de la plateforme",
     "businessManagement": "Gérer les demandes et entreprises",
     "logout": "Se déconnecter de votre compte",
     "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",
@@ -490,7 +520,11 @@
     "dateFilterLabel": "Filtrer par date d'inscription:",
     "dateFilterPlaceholder": "Sélectionner une plage de dates",
     "loadError": "Échec du chargement des utilisateurs",
-    "deleteError": "Échec de la suppression de l'utilisateur",
+    "deactivateError": "Échec de la désactivation de l'utilisateur",
+    "reactivateError": "Échec de la réactivation de l'utilisateur",
+    "deleteError": "Échec de la désactivation de l'utilisateur",
+    "reactivateSuccess": "Utilisateur réactivé avec succès",
+    "deleteSuccess": "Utilisateur désactivé avec succès",
     "noResults": "Aucun résultat trouvé.",
     "adminBadge": "Admin",
     "userBadge": "Utilisateur",
@@ -506,11 +540,16 @@
     },
     "manageButton": "Gérer",
     "deleteDialog": {
-      "title": "Supprimer l'utilisateur",
-      "description": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
-      "confirm": "Supprimer",
-      "deleting": "Suppression..."
+      "title": "Désactiver l'utilisateur",
+      "description": "Êtes-vous sûr de vouloir désactiver l'utilisateur {username} ? Il ne pourra plus se connecter, mais ses données seront conservées.",
+      "confirm": "Désactiver",
+      "deleting": "Désactivation..."
     },
+    "statusActive": "Actif",
+    "statusInactive": "Désactivé",
+    "status": "Statut",
+    "deactivateUser": "Désactiver",
+    "reactivateUser": "Réactiver",
     "tableCaption": "Liste de tous les utilisateurs",
     "username": "Nom d'utilisateur",
     "email": "Email",
