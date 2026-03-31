@@ -87,8 +87,6 @@
         "features": "الميزات",
         "solutions": "الحلول",
         "pricing": "الأسعار",
-        "statisticsTitle": "الإحصائيات",
-        "statisticsSubtitle": "نظرة عامة على الإيرادات والمصاريف",
         "getStarted": "ابدأ الآن",
         "login": "تسجيل الدخول",
         "register": "إنشاء حساب",
@@ -96,6 +94,7 @@
         "invoices": "الفواتير",
         "reports": "التقارير",
         "adminDashboard": "لوحة التحكم",
+        "platformStatistics": "إحصائيات المنصة",
         "logout": "تسجيل الخروج"
       },
       "hero": {
