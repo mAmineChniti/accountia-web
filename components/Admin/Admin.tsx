@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/no-null, unicorn/catch-error-name, unicorn/numeric-separators-style, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, unicorn/no-array-for-each, unicorn/consistent-function-scoping, unicorn/switch-case-braces, @typescript-eslint/no-deprecated */
+/* eslint-disable unicorn/no-null, unicorn/numeric-separators-style, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, unicorn/no-array-for-each, unicorn/consistent-function-scoping, unicorn/switch-case-braces */
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -120,14 +120,6 @@ const ALL_ROLES: Role[] = [
   'CLIENT',
 ];
 
-const CHART_COLORS = [
-  'var(--color-chart-1)',
-  'var(--color-chart-2)',
-  'var(--color-chart-3)',
-  'var(--color-chart-4)',
-  'var(--color-chart-5)',
-];
-
 export default function Admin({
   dictionary,
   lang,
@@ -149,60 +141,11 @@ export default function Admin({
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  // Platform Stats State
-  const [platformStats, setPlatformStats] = useState<any>(null);
-  const [statsRange, setStatsRange] = useState('30d');
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState('');
-  const [statsCountdown, setStatsCountdown] = useState(60);
-
   const { data, isLoading, error, refetch, isFetching } =
     useQuery<UsersListResponse>({
       queryKey: ['users'],
       queryFn: AuthService.fetchAllUsers,
     });
-
-  const fetchPlatformStats = async (currentRange: string) => {
-    try {
-      const result =
-        await AdminStatsRequests.getPlatformStatistics(currentRange);
-      setPlatformStats(result);
-      setStatsError('');
-    } catch (e: any) {
-      setStatsError(e.message || 'Failed to fetch platform statistics');
-    } finally {
-      setIsStatsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPlatformStats(statsRange);
-    setStatsCountdown(60);
-    const interval = setInterval(() => {
-      fetchPlatformStats(statsRange);
-      setStatsCountdown(60);
-    }, 60000);
-    // Countdown tick every second
-    const countdownInterval = setInterval(() => {
-      setStatsCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-      clearInterval(countdownInterval);
-    };
-  }, [statsRange]);
-
-  const GrowthIndicator = ({ value }: { value: number }) => {
-    if (value === 0) return null;
-    const isPositive = value > 0;
-    return (
-      <span
-        className={`text-xs font-medium ltr:ml-2 rtl:mr-2 ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-      >
-        {isPositive ? '↑' : '↓'} {Math.abs(value)}%
-      </span>
-    );
-  };
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -469,91 +412,6 @@ export default function Admin({
           </Link>
         </Button>
       </div>
-
-      {/* Platform Statistics KPIs */}
-      {/* Compact refresh pill */}
-      <div className="flex w-fit items-center gap-2">
-        <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
-          <span className="relative flex h-2 w-2">
-            <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
-            <span className="bg-primary relative inline-flex h-2 w-2 rounded-full" />
-          </span>
-          {statsCountdown}s
-        </span>
-        <div className="bg-muted h-1.5 w-24 overflow-hidden rounded-full">
-          <div
-            className="bg-primary h-full rounded-full transition-all duration-1000 ease-linear"
-            style={{ width: `${(statsCountdown / 60) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {isStatsLoading ? (
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : platformStats ? (
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Total Users */}
-          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
-            <CardHeader className="p-6">
-              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
-                <UsersIcon className="h-4 w-4" />
-                {dictionary.admin.stats.totalUsers || 'Total Users'}
-              </div>
-              <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold">
-                  {platformStats.kpis.totalUsers}
-                </div>
-                <GrowthIndicator value={platformStats.growth.totalUsers} />
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* New Registrations */}
-          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
-            <CardHeader className="p-6">
-              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
-                <UserPlus className="h-4 w-4" />
-                New Registrations
-              </div>
-              <div className="flex items-baseline justify-between">
-                <div className="text-primary text-3xl font-bold">
-                  +{platformStats.kpis.newRegistrations}
-                </div>
-                <GrowthIndicator
-                  value={platformStats.growth.newRegistrations}
-                />
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Pending Applications */}
-          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm transition-all hover:shadow-md">
-            <CardHeader className="p-6">
-              <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm font-medium">
-                <Clock className="h-4 w-4" />
-                Pending Applications
-              </div>
-              <div className="flex items-baseline justify-between">
-                <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-                  {platformStats.kpis.pendingApplications}
-                </div>
-                <GrowthIndicator
-                  value={platformStats.growth.pendingApplications}
-                />
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-      ) : statsError ? (
-        <div className="text-destructive bg-destructive/10 rounded-lg p-4 text-sm">
-          {statsError}
-        </div>
-      ) : null}
-
       {/* Users By Role */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
@@ -595,169 +453,6 @@ export default function Admin({
           <CardContent />
         </Card>
       </div>
-
-      {/* NEW Row 3: Platform Charts */}
-      {!isStatsLoading && platformStats && (
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* User Registration Trends */}
-          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-6">
-              <CardTitle className="text-lg font-semibold">
-                User Registration Trends
-              </CardTitle>
-              <div className="bg-muted/50 flex items-center rounded-lg border p-1">
-                <button
-                  onClick={() => setStatsRange('7d')}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                    statsRange === '7d'
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  7 Days
-                </button>
-                <button
-                  onClick={() => setStatsRange('30d')}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                    statsRange === '30d'
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  30 Days
-                </button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={platformStats.charts.registrationTrends}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      opacity={0.3}
-                    />
-                    <XAxis
-                      dataKey="name"
-                      stroke="var(--color-muted-foreground)"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      minTickGap={30}
-                    />
-                    <YAxis
-                      stroke="var(--color-muted-foreground)"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <RechartsTooltip
-                      contentStyle={{
-                        borderRadius: '8px',
-                        border: 'none',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="users"
-                      name="New Users"
-                      stroke="var(--color-primary)"
-                      strokeWidth={3}
-                      dot={{
-                        r: 4,
-                        fill: 'var(--color-primary)',
-                        strokeWidth: 0,
-                      }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Users Distribution Chart */}
-          <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">
-                Users Distribution by Role
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[260px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={platformStats.charts.usersByRole}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={100}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {platformStats.charts.usersByRole.map(
-                        (entry: any, index: number) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={CHART_COLORS[index % CHART_COLORS.length]}
-                          />
-                        )
-                      )}
-                    </Pie>
-                    <RechartsTooltip
-                      formatter={(value: any, name: any) => [value, name]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Custom legend with percentages */}
-              <div className="mt-3 flex flex-col gap-2">
-                {(() => {
-                  const total = platformStats.charts.usersByRole.reduce(
-                    (sum: number, d: any) => sum + d.value,
-                    0
-                  );
-                  return platformStats.charts.usersByRole.map(
-                    (entry: any, index: number) => (
-                      <div
-                        key={entry.name}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-block h-2.5 w-2.5 rounded-full"
-                            style={{
-                              backgroundColor:
-                                CHART_COLORS[index % CHART_COLORS.length],
-                            }}
-                          />
-                          <span className="text-foreground font-medium">
-                            {entry.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-muted-foreground text-xs tabular-nums">
-                            {entry.value} users
-                          </span>
-                          <span className="text-foreground w-10 text-right text-xs font-semibold tabular-nums">
-                            {total > 0
-                              ? ((entry.value / total) * 100).toFixed(0)
-                              : 0}
-                            %
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-2">

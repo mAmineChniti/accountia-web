@@ -94,6 +94,7 @@
         "invoices": "Factures",
         "reports": "Rapports",
         "adminDashboard": "Tableau de bord",
+        "platformStatistics": "Statistiques de la plateforme",
         "logout": "Déconnexion"
       },
       "hero": {
@@ -410,6 +411,7 @@
     "profile": "Voir votre profil",
     "invoices": "Accéder à vos factures",
     "adminDashboard": "Accéder au tableau de bord admin",
+    "platformStatistics": "Voir les statistiques détaillées de la plateforme",
     "businessManagement": "Gérer les demandes et entreprises",
     "logout": "Se déconnecter de votre compte",
     "perfectForNewBusinesses": "Parfait pour les nouvelles entreprises",

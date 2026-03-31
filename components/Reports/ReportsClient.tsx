@@ -76,6 +76,7 @@ export default function ReportsClient({
         endDate: dateRange?.to?.toISOString(),
         type: typeFilter === 'all' ? undefined : typeFilter,
       }),
+    refetchInterval: 5000,
   });
 
   const totals = useMemo(() => {

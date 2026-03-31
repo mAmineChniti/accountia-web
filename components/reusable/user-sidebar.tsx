@@ -142,23 +142,23 @@ export default function UserSidebar({
               </TooltipContent>
             </Tooltip>
 
-            {/* Admin: Statistics */}
+            {/* Admin: Platform Statistics */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href={`/${lang}/dashboard/admin/statistics`}
+                  href={`/${lang}/dashboard/statistics`}
                   className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                    pathname.includes('/dashboard/admin/statistics')
+                    pathname.includes('/dashboard/statistics')
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
                   <BarChart3 className="h-4 w-4 shrink-0" />
-                  {dictionary.admin.statisticsTitle}
+                  {dictionary.pages.home.navigation.platformStatistics}
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">
-                <p>{dictionary.admin.statisticsSubtitle}</p>
+                <p>{dictionary.tooltips.platformStatistics}</p>
               </TooltipContent>
             </Tooltip>
           </>

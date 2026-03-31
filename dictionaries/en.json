@@ -94,6 +94,7 @@
         "invoices": "Invoices",
         "reports": "Reports",
         "adminDashboard": "Dashboard",
+        "platformStatistics": "Platform Statistics",
         "logout": "Logout"
       },
       "hero": {
@@ -410,6 +411,7 @@
     "profile": "View your profile",
     "invoices": "Go to your invoices",
     "adminDashboard": "Go to the admin dashboard",
+    "platformStatistics": "View detailed platform statistics",
     "businessManagement": "Manage business applications and businesses",
     "logout": "Sign out of your account",
     "perfectForNewBusinesses": "Perfect for new businesses",

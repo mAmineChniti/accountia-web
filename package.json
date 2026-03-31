@@ -70,5 +70,8 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "overrides": {
+    "zod-validation-error": "^5.0.0"
+  }
 }
