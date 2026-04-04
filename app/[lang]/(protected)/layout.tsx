@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { requireAuth } from '@/actions/session';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import UserSidebar from '@/components/reusable/user-sidebar';
 
 export default async function ProtectedLayout({
@@ -17,9 +18,11 @@ export default async function ProtectedLayout({
   const dictionary = await getDictionary(locale);
 
   return (
-    <>
+    <SidebarProvider>
       <UserSidebar lang={locale} dictionary={dictionary} user={session.user} />
-      <main className="ltr:ml-64 rtl:mr-64">{children}</main>
-    </>
+      <SidebarInset>
+        <main className="flex-1">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

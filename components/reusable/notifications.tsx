@@ -81,10 +81,10 @@ export function Notifications({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="ghost"
           size="icon"
           className="relative"
-          aria-label="Notifications"
+          aria-label={t.title}
+          title={t.title}
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (

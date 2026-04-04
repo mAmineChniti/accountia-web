@@ -115,6 +115,8 @@ export default function Admin({
     useQuery<UsersListResponse>({
       queryKey: ['users'],
       queryFn: AuthService.fetchAllUsers,
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 45 * 60 * 1000, // 45 minutes - admin user lists don't change often
     });
 
   const toggleSort = (key: SortKey) => {
@@ -326,7 +328,7 @@ export default function Admin({
   });
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-1">
           <div className="text-2xl font-bold tracking-tight">

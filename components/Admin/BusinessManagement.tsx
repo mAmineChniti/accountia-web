@@ -55,9 +55,10 @@ const getStatusVariant = (status: BusinessItem['status']) => {
   return 'secondary';
 };
 
-const formatDate = (value?: string | null): string => {
+const formatDate = (value?: string | Date | null): string => {
   if (!value) return '-';
-  return formatDateLong(value);
+  const dateString = typeof value === 'string' ? value : value.toISOString();
+  return formatDateLong(dateString);
 };
 
 export default function BusinessManagement({
@@ -98,6 +99,8 @@ export default function BusinessManagement({
   } = useQuery<BusinessApplicationsListResponse>({
     queryKey: ['business-applications'],
     queryFn: BusinessService.getApplications,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const {
@@ -109,6 +112,8 @@ export default function BusinessManagement({
   } = useQuery<AllBusinessesResponse>({
     queryKey: ['all-businesses'],
     queryFn: BusinessService.getAllBusinesses,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const applications = useMemo(
@@ -267,7 +272,7 @@ export default function BusinessManagement({
     : t.loadBusinessesError;
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">{t.title}</h1>
@@ -403,8 +408,14 @@ export default function BusinessManagement({
                       </TableCell>
                       <TableCell>{application.phone}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(application.status)}>
-                          {t.status[application.status]}
+                        <Badge
+                          variant={getStatusVariant(
+                            application.status as string
+                          )}
+                        >
+                          {t.status[
+                            application.status as keyof typeof t.status
+                          ] || application.status}
                         </Badge>
                       </TableCell>
                       <TableCell>{formatDate(application.createdAt)}</TableCell>
@@ -515,7 +526,6 @@ export default function BusinessManagement({
                   <TableHead>{t.businesses.columns.name}</TableHead>
                   <TableHead>{t.businesses.columns.phone}</TableHead>
                   <TableHead>{t.businesses.columns.status}</TableHead>
-                  <TableHead>{t.businesses.columns.active}</TableHead>
                   <TableHead>{t.businesses.columns.created}</TableHead>
                   <TableHead className="text-right">
                     {t.businesses.columns.actions}
@@ -533,17 +543,11 @@ export default function BusinessManagement({
                       </TableCell>
                       <TableCell>{business.phone}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(business.status)}>
-                          {t.status[business.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
                         <Badge
-                          variant={business.isActive ? 'default' : 'secondary'}
+                          variant={getStatusVariant(business.status as string)}
                         >
-                          {business.isActive
-                            ? t.businesses.active
-                            : t.businesses.inactive}
+                          {t.status[business.status as keyof typeof t.status] ||
+                            business.status}
                         </Badge>
                       </TableCell>
                       <TableCell>{formatDate(business.createdAt)}</TableCell>

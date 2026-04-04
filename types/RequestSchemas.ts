@@ -210,7 +210,6 @@ export const CreateInvoiceLineItemSchema = z.object({
 });
 
 export const CreateInvoiceSchema = z.object({
-  invoiceNumber: z.string().min(1, 'Invoice number is required'),
   issuedDate: DateSchema,
   dueDate: DateSchema,
   currency: z.string().min(1, 'Currency is required'),

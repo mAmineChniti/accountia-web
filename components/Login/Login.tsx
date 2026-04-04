@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   InputOTP,
   InputOTPGroup,
@@ -52,11 +52,13 @@ export default function Login({
   lang: Locale;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialOAuthTempToken =
-    searchParams.get('oauth2fa') === '1'
-      ? searchParams.get('tempToken')
-      : undefined;
+  const queryClient = useQueryClient();
+  const [initialOAuthTempToken] = useState<string | undefined>(() => {
+    if (typeof globalThis === 'undefined') return;
+    const params = new URLSearchParams(globalThis.location?.search);
+    const isOAuth2fa = params.get('oauth2fa') === '1';
+    return isOAuth2fa ? (params.get('tempToken') ?? undefined) : undefined;
+  });
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -164,6 +166,9 @@ export default function Login({
   >({
     mutationFn: AuthService.login,
     onSuccess: async (response, variables) => {
+      // Invalidate cached queries on fresh login
+      queryClient.invalidateQueries({ queryKey: ['my-businesses'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       await handleAuthSuccess(response, variables.email);
     },
   });

@@ -1,15 +1,16 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRouter, usePathname } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
   LayoutDashboard,
   LogOut,
   ChevronDown,
-  Loader2,
+  FileText,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
@@ -24,11 +25,18 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+} from '@/components/ui/sidebar';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
 import { ModeToggle } from '@/components/reusable/theme-toggle';
 import { Notifications } from '@/components/reusable/notifications';
@@ -94,6 +102,8 @@ export default function UserSidebar({
   user: UserCookieData;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
   const [profilePicture] = useState<string | undefined>(() => {
     try {
       return localStorage.getItem('profilePicture') ?? undefined;
@@ -101,6 +111,19 @@ export default function UserSidebar({
       return;
     }
   });
+  const [expandedBusinesses, setExpandedBusinesses] = useState<Set<string>>(
+    new Set()
+  );
+
+  const toggleBusinessExpanded = (businessId: string) => {
+    const newExpanded = new Set(expandedBusinesses);
+    if (newExpanded.has(businessId)) {
+      newExpanded.delete(businessId);
+    } else {
+      newExpanded.add(businessId);
+    }
+    setExpandedBusinesses(newExpanded);
+  };
 
   const isPlatformUser = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
     user.role ?? ''
@@ -111,6 +134,8 @@ export default function UserSidebar({
     queryKey: ['my-businesses'],
     queryFn: () => BusinessService.getMyBusinesses(),
     enabled: !isPlatformUser,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const handlePostLogout = async () => {
@@ -127,6 +152,8 @@ export default function UserSidebar({
       await logout();
     },
     onSuccess: async () => {
+      // Clear all cached data on logout
+      queryClient.clear();
       await handlePostLogout();
     },
     onError: async () => {
@@ -144,186 +171,201 @@ export default function UserSidebar({
   const businesses = businessesData?.businesses ?? [];
 
   return (
-    <aside className="bg-background fixed inset-y-0 z-50 flex w-64 flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
-      {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+    <Sidebar className="border-r">
+      <SidebarContent>
         {/* Platform Navigation */}
         {isPlatformUser && (
-          <>
-            {platformNav.map((item) => (
-              <Tooltip key={item.id}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+          <SidebarGroup>
+            <SidebarMenu className="gap-2">
+              {platformNav.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.tooltip}
+                    className={cn(
+                      'hover:bg-accent hover:text-accent-foreground transition-all'
+                    )}
                   >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{item.tooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </>
+                    <Link href={item.href}>
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
         )}
 
         {/* Client Navigation */}
         {!isPlatformUser && (
           <>
-            {clientNav.map((item) => (
-              <Tooltip key={item.id}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{item.tooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
+            <SidebarGroup>
+              <SidebarMenu className="gap-2">
+                {clientNav.map((item) => (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.tooltip}
+                      className={cn(
+                        'hover:bg-accent hover:text-accent-foreground transition-all'
+                      )}
+                    >
+                      <Link href={item.href}>
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
 
-            {/* Businesses Dropdown */}
+            {/* Businesses List */}
             {businesses.length > 0 && (
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent! dark:hover:text-accent-foreground h-auto w-full justify-between gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-                        disabled={isLoadingBusinesses}
-                      >
-                        <span className="flex items-center gap-3">
-                          <Building2 className="h-4 w-4 shrink-0" />
-                          <span>
-                            {isLoadingBusinesses
-                              ? dictionary.pages.sidebar.loading
-                              : dictionary.pages.sidebar.businessesLabel}
-                          </span>
-                        </span>
-                        <ChevronDown className="h-4 w-4 shrink-0" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>{dictionary.pages.sidebar.viewYourBusinesses}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent
-                  side="right"
-                  align="start"
-                  className="w-56"
-                >
-                  {isLoadingBusinesses ? (
-                    <div className="flex items-center justify-center gap-2 px-2 py-2 text-sm">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>{dictionary.pages.sidebar.loading}</span>
-                    </div>
-                  ) : businesses.length === 0 ? (
-                    <div className="text-muted-foreground px-2 py-2 text-sm">
-                      {dictionary.pages.sidebar.noBusinessesFound}
-                    </div>
-                  ) : (
-                    businesses.map((business) => (
-                      <DropdownMenuItem key={business.id} asChild>
-                        <Link
-                          href={`/${lang}/business/${business.id}`}
-                          className="flex cursor-pointer items-center justify-between gap-2"
-                        >
-                          <span className="flex-1 truncate font-medium">
-                            {business.name}
-                          </span>
-                          {!business.isActive && (
-                            <span className="text-muted-foreground text-xs">
-                              {dictionary.pages.sidebar.businessInactive}
-                            </span>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  {isLoadingBusinesses
+                    ? dictionary.pages.sidebar.loading
+                    : dictionary.pages.sidebar.businessesLabel}
+                </SidebarGroupLabel>
+                <SidebarMenu className="gap-2">
+                  {businesses.map((business) => {
+                    const businessHref = `/${lang}/business/${business.id}`;
+                    const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
+                    const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
+                    const isBusinessActive =
+                      pathname === businessHref ||
+                      pathname === issuedInvoicesHref ||
+                      pathname === receivedInvoicesHref;
+                    const isExpanded = expandedBusinesses.has(business.id);
+
+                    return (
+                      <SidebarMenuItem key={business.id}>
+                        <div className="flex items-center">
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isBusinessActive}
+                            className={cn(
+                              'hover:bg-accent hover:text-accent-foreground flex-1 transition-all'
+                            )}
+                          >
+                            <Link href={businessHref}>
+                              <Building2 className="h-4 w-4" />
+                              <span className="truncate">{business.name}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                          <button
+                            onClick={() => toggleBusinessExpanded(business.id)}
+                            className={cn(
+                              'ml-auto h-4 w-4 transition-transform',
+                              isExpanded && 'rotate-180'
+                            )}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {isExpanded && (
+                          <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === issuedInvoicesHref}
+                              >
+                                <Link href={issuedInvoicesHref}>
+                                  <FileText className="h-4 w-4" />
+                                  <span>
+                                    {dictionary.pages.invoices.issuedInvoices}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === receivedInvoicesHref}
+                              >
+                                <Link href={receivedInvoicesHref}>
+                                  <FileText className="h-4 w-4" />
+                                  <span>
+                                    {dictionary.pages.invoices.receivedInvoices}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </SidebarMenuSub>
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroup>
             )}
           </>
         )}
+      </SidebarContent>
 
-        {/* Spacer pushes profile/logout to bottom */}
-        <div className="flex-1" />
+      {/* Footer with Profile, Logout, and Utilities */}
+      <SidebarFooter>
+        {/* Profile link */}
+        <div className="mb-3">
+          <Link
+            href={`/${lang}/profile`}
+            className="hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-colors"
+          >
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={profilePicture} alt={displayName} />
+              <AvatarFallback className="text-xs font-semibold">
+                {fallbackInitial}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">{displayName}</span>
+          </Link>
+        </div>
 
         <Separator className="my-2" />
 
-        {/* Profile link */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={`/${lang}/profile`}
-              className="hover:bg-accent hover:text-accent-foreground flex flex-col gap-1.5 rounded-md px-3 py-3 text-sm font-medium transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={profilePicture} alt={displayName} />
-                  <AvatarFallback className="text-xs font-semibold">
-                    {fallbackInitial}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">{displayName}</span>
-                </div>
-              </div>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dictionary.tooltips.profile}</p>
-          </TooltipContent>
-        </Tooltip>
-
         {/* Logout */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent! dark:hover:text-accent-foreground h-auto w-full justify-start gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              {dictionary.pages.home.navigation.logout}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dictionary.tooltips.logout}</p>
-          </TooltipContent>
-        </Tooltip>
-      </nav>
+        <Button
+          variant="ghost"
+          className="text-muted-foreground hover:bg-accent hover:text-accent-foreground h-auto w-full justify-start gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {dictionary.pages.home.navigation.logout}
+        </Button>
 
-      {/* Utilities (notifications + locale + theme) */}
-      <div className="flex items-center justify-between border-t px-2 py-3">
-        <Notifications lang={lang} dictionary={dictionary} />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <LocaleSwitcher />
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dictionary.tooltips.changeLanguage}</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ModeToggle />
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dictionary.tooltips.toggleTheme}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    </aside>
+        <Separator className="my-2" />
+
+        {/* Utilities (notifications + locale + theme) */}
+        <div className="flex items-center justify-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <LocaleSwitcher />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{dictionary.tooltips.changeLanguage}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Notifications lang={lang} dictionary={dictionary} />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{dictionary.tooltips.notifications}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ModeToggle />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p>{dictionary.tooltips.toggleTheme}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

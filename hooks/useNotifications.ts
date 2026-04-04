@@ -1,14 +1,24 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { io } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { getToken } from '@/actions/cookies';
 import { NotificationsService } from '@/lib/requests';
-import type { Notification } from '@/types/ResponseInterfaces';
+import { env } from '@/env';
+import type { NotificationType } from '@/types/ResponseInterfaces';
 
 export interface UseNotificationsOptions {
   businessId?: string;
   enabled?: boolean;
+}
+
+/** Type for real-time Socket.IO notifications (subset of Notification) */
+interface SocketIONotification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  payload: Record<string, unknown>;
+  createdAt: Date;
 }
 
 export function useNotifications({
@@ -18,6 +28,9 @@ export function useNotifications({
   const queryClient = useQueryClient();
   const [isConnected, setIsConnected] = useState(false);
   const shownToastIdsRef = useRef<Set<string>>(new Set());
+  const socketRef = useRef<Socket | undefined>(undefined);
+  const isMountedRef = useRef(true);
+  const isInitializingRef = useRef(false);
 
   // Fetch notifications
   const {
@@ -57,17 +70,54 @@ export function useNotifications({
       },
     });
 
+  // Listen for logout event and disconnect socket
+  useEffect(() => {
+    const handleLogout = () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = undefined;
+      }
+      setIsConnected(false);
+    };
+
+    // Listen for logout event
+    globalThis.addEventListener('auth:changed', handleLogout);
+
+    return () => {
+      globalThis.removeEventListener('auth:changed', handleLogout);
+    };
+  }, []);
+
   // Initialize WebSocket connection
   useEffect(() => {
     if (!enabled) return;
 
+    // Reset the mounted flag for this effect cycle
+    isMountedRef.current = true;
+
     const initSocket = async () => {
+      // Prevent duplicate initialization
+      if (isInitializingRef.current || socketRef.current) {
+        return;
+      }
+
+      isInitializingRef.current = true;
+
       try {
         const token = await getToken();
-        if (!token) return;
+        if (!token || !isMountedRef.current) {
+          console.warn(
+            'No token available for WebSocket connection or component unmounted'
+          );
+          return;
+        }
 
-        const socketUrl =
-          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        // Get the backend URL from environment and strip /api suffix if present
+        const backendUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789';
+        const socketUrl = backendUrl.endsWith('/api')
+          ? backendUrl.slice(0, -4)
+          : backendUrl;
+
         const query: Record<string, string> = { token: token.token };
         if (businessId) {
           query.businessId = businessId;
@@ -79,18 +129,41 @@ export function useNotifications({
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
-          reconnectionAttempts: 5,
+          reconnectionAttempts: 10,
+          // Explicitly set transports - try WebSocket first, fall back to polling
+          transports: ['websocket', 'polling'],
+          // Add these options for better compatibility
+          upgrade: true,
+          rememberUpgrade: false,
+          forceNew: false,
         });
+
+        // Only set ref if component is still mounted
+        if (!isMountedRef.current) {
+          newSocket.disconnect();
+          return;
+        }
+
+        socketRef.current = newSocket;
 
         newSocket.on('connect', () => {
-          setIsConnected(true);
+          console.log('[Socket.IO] Connected');
+          if (isMountedRef.current) {
+            setIsConnected(true);
+          }
         });
 
-        newSocket.on('disconnect', () => {
-          setIsConnected(false);
+        newSocket.on('disconnect', (reason: string) => {
+          console.log('[Socket.IO] Disconnected:', reason);
+          if (isMountedRef.current) {
+            setIsConnected(false);
+          }
         });
 
-        newSocket.on('notification', (notification: Notification) => {
+        newSocket.on('notification', (notification: SocketIONotification) => {
+          if (!isMountedRef.current) return;
+
+          console.log('[Socket.IO] Received notification:', notification.id);
           // Invalidate queries to refetch notifications
           queryClient.invalidateQueries({
             queryKey: ['notifications', businessId],
@@ -112,21 +185,38 @@ export function useNotifications({
           }
         });
 
-        newSocket.on('connect_error', (error) => {
-          console.error('WebSocket connection error:', error);
+        newSocket.on('connect_error', (error: Error | unknown) => {
+          console.error(
+            '[Socket.IO] Connection error:',
+            error instanceof Error ? error.message : error
+          );
+          // Connection errors are normal during reconnection attempts
+          // The client will keep trying to reconnect
         });
 
-        return () => {
-          newSocket.disconnect();
-        };
+        newSocket.on('error', (error: Error | unknown) => {
+          console.error('[Socket.IO] Error:', error);
+        });
       } catch (error) {
         console.error('Failed to initialize WebSocket:', error);
+        if (isMountedRef.current) {
+          setIsConnected(false);
+        }
+      } finally {
+        isInitializingRef.current = false;
       }
     };
 
-    const cleanup = initSocket();
+    initSocket();
+
     return () => {
-      cleanup?.then((fn) => fn?.());
+      isMountedRef.current = false;
+
+      // Always disconnect the socket, regardless of its state
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = undefined;
+      }
     };
   }, [enabled, businessId, queryClient, markAsReadMutate]);
 

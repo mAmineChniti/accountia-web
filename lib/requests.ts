@@ -193,6 +193,7 @@ const API_CONFIG = {
     GET_ISSUED: 'invoices/issued/{id}',
     UPDATE_ISSUED: 'invoices/issued/{id}',
     TRANSITION: 'invoices/issued/{id}/transition',
+    IMPORT: 'invoices/import',
     // Recipient Endpoints
     LIST_RECEIVED_BUSINESS: 'invoices/received/business',
     LIST_RECEIVED_INDIVIDUAL: 'invoices/received/individual',

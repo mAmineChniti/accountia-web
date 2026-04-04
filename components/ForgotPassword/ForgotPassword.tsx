@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -41,6 +41,7 @@ export default function ForgotPassword({
 }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const successCardRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (isSubmitted && successCardRef.current) {
@@ -58,6 +59,8 @@ export default function ForgotPassword({
   const forgotPasswordMutation = useMutation({
     mutationFn: AuthService.forgotPassword,
     onSuccess: () => {
+      // Invalidate notifications on password reset initiation
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setIsSubmitted(true);
       toast.success(dictionary.pages.forgotPassword.successMessage);
     },
