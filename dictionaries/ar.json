@@ -361,6 +361,8 @@
       "created": "تاريخ الإنشاء",
       "lastUpdated": "آخر تحديث",
       "createInvoiceButton": "إنشاء فاتورة",
+      "statistics": "إحصائيات الأعمال",
+      "statisticsDescription": "نظرة عامة على المنتجات والفواتير لعملك",
       "clientsSection": "العملاء",
       "clientsDescription": "المستخدمون المعينون لهذا العمل",
       "noClientsAssigned": "لا توجد عملاء معينة",

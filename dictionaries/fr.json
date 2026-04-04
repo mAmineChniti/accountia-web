@@ -367,6 +367,8 @@
       "created": "Créé",
       "lastUpdated": "Dernière mise à jour",
       "createInvoiceButton": "Créer une facture",
+      "statistics": "Statistiques commerciales",
+      "statisticsDescription": "Aperçu des produits et des factures de votre entreprise",
       "clientsSection": "Clients",
       "clientsDescription": "Utilisateurs assignés à cette entreprise",
       "noClientsAssigned": "Aucun client assigné",

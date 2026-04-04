@@ -367,6 +367,8 @@
       "created": "Created",
       "lastUpdated": "Last Updated",
       "createInvoiceButton": "Create Invoice",
+      "statistics": "Business Statistics",
+      "statisticsDescription": "Products and invoices overview for your business",
       "clientsSection": "Clients",
       "clientsDescription": "Users assigned to this business",
       "noClientsAssigned": "No clients assigned",
