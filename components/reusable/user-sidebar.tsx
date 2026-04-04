@@ -306,7 +306,7 @@ export default function UserSidebar({
 
       {/* Utilities (notifications + locale + theme) */}
       <div className="flex items-center justify-between border-t px-2 py-3">
-        <Notifications lang={lang} />
+        <Notifications lang={lang} dictionary={dictionary} />
         <Tooltip>
           <TooltipTrigger asChild>
             <LocaleSwitcher />

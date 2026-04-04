@@ -376,6 +376,16 @@
       "name": "Nom",
       "failedToLoadDetails": "Impossible de charger les détails de l'entreprise",
       "businessNotFound": "Entreprise non trouvée"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllAsRead": "Marquer tout comme lu",
+      "noNotifications": "Pas de notifications",
+      "allCaughtUp": "Vous êtes à jour !",
+      "justNow": "À l'instant",
+      "minutesAgo": "Il y a {count}m",
+      "hoursAgo": "Il y a {count}h",
+      "daysAgo": "Il y a {count}j"
     }
   },
   "errorMessages": {

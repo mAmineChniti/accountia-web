@@ -370,6 +370,16 @@
       "name": "الاسم",
       "failedToLoadDetails": "فشل في تحميل تفاصيل العمل",
       "businessNotFound": "العمل غير موجود"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "markAllAsRead": "وضع علامة على الكل كمقروء",
+      "noNotifications": "لا توجد إشعارات",
+      "allCaughtUp": "أنت على اطلاع بكل شيء!",
+      "justNow": "الآن",
+      "minutesAgo": "قبل {count} د",
+      "hoursAgo": "قبل {count} س",
+      "daysAgo": "قبل {count} أيام"
     }
   },
   "errorMessages": {

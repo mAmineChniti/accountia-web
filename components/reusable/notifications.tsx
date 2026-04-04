@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { type Dictionary } from '@/get-dictionary';
 
 // Get notification icon based on type
 function getNotificationIcon(type: string) {
@@ -32,9 +33,16 @@ function getNotificationIcon(type: string) {
   }
 }
 
-export function Notifications({ lang }: { lang: Locale }) {
+export function Notifications({
+  lang,
+  dictionary,
+}: {
+  lang: Locale;
+  dictionary: Dictionary;
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const t = dictionary.pages.notifications;
 
   // Extract businessId from pathname if we're on a business route
   const businessIdMatch = pathname.match(/\/business\/([^/]+)/);
@@ -59,13 +67,13 @@ export function Notifications({ lang }: { lang: Locale }) {
     const now = new Date();
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (seconds < 60) return 'Just now';
+    if (seconds < 60) return t.justNow;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return t.minutesAgo.replace('{count}', String(minutes));
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t.hoursAgo.replace('{count}', String(hours));
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
+    if (days < 7) return t.daysAgo.replace('{count}', String(days));
     return date.toLocaleDateString(lang);
   };
 
@@ -92,7 +100,7 @@ export function Notifications({ lang }: { lang: Locale }) {
           {/* Header */}
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold">Notifications</h2>
+              <h2 className="font-semibold">{t.title}</h2>
               {unreadCount > 0 && (
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-100">
                   {unreadCount}
@@ -112,7 +120,7 @@ export function Notifications({ lang }: { lang: Locale }) {
                 ) : (
                   <Check className="h-3 w-3" />
                 )}
-                <span className="ml-1">Mark all as read</span>
+                <span className="ml-1">{t.markAllAsRead}</span>
               </Button>
             )}
           </div>
@@ -125,10 +133,8 @@ export function Notifications({ lang }: { lang: Locale }) {
           ) : notifications.length === 0 ? (
             <div className="flex h-48 flex-col items-center justify-center gap-2">
               <Bell className="text-muted-foreground h-8 w-8" />
-              <p className="text-sm font-medium">No notifications</p>
-              <p className="text-muted-foreground text-xs">
-                You&apos;re all caught up!
-              </p>
+              <p className="text-sm font-medium">{t.noNotifications}</p>
+              <p className="text-muted-foreground text-xs">{t.allCaughtUp}</p>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">

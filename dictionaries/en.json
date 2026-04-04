@@ -376,6 +376,16 @@
       "name": "Name",
       "failedToLoadDetails": "Failed to load business details",
       "businessNotFound": "Business not found"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllAsRead": "Mark all as read",
+      "noNotifications": "No notifications",
+      "allCaughtUp": "You're all caught up!",
+      "justNow": "Just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago"
     }
   },
   "errorMessages": {
