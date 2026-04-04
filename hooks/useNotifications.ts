@@ -106,9 +106,6 @@ export function useNotifications({
       try {
         const token = await getToken();
         if (!token || !isMountedRef.current) {
-          console.warn(
-            'No token available for WebSocket connection or component unmounted'
-          );
           return;
         }
 
@@ -147,14 +144,12 @@ export function useNotifications({
         socketRef.current = newSocket;
 
         newSocket.on('connect', () => {
-          console.log('[Socket.IO] Connected');
           if (isMountedRef.current) {
             setIsConnected(true);
           }
         });
 
         newSocket.on('disconnect', (reason: string) => {
-          console.log('[Socket.IO] Disconnected:', reason);
           if (isMountedRef.current) {
             setIsConnected(false);
           }
@@ -163,7 +158,6 @@ export function useNotifications({
         newSocket.on('notification', (notification: SocketIONotification) => {
           if (!isMountedRef.current) return;
 
-          console.log('[Socket.IO] Received notification:', notification.id);
           // Invalidate queries to refetch notifications
           queryClient.invalidateQueries({
             queryKey: ['notifications', businessId],
@@ -186,19 +180,14 @@ export function useNotifications({
         });
 
         newSocket.on('connect_error', (error: Error | unknown) => {
-          console.error(
-            '[Socket.IO] Connection error:',
-            error instanceof Error ? error.message : error
-          );
           // Connection errors are normal during reconnection attempts
           // The client will keep trying to reconnect
         });
 
         newSocket.on('error', (error: Error | unknown) => {
-          console.error('[Socket.IO] Error:', error);
+          // Error handling
         });
-      } catch (error) {
-        console.error('Failed to initialize WebSocket:', error);
+      } catch {
         if (isMountedRef.current) {
           setIsConnected(false);
         }
