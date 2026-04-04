@@ -115,6 +115,10 @@ export const AssignUserSchema = z.object({
   role: z.string().min(1, 'Role is required'),
 });
 
+export const ChangeClientRoleSchema = z.object({
+  role: z.string().min(1, 'Role is required'),
+});
+
 export const TwoFALoginSchema = z.object({
   tempToken: z.string().min(1, 'Temporary token is required'),
   code: TwoFACodeSchema,
@@ -152,3 +156,170 @@ export type BusinessApplicationInput = z.infer<
 export type ReviewApplicationInput = z.infer<typeof ReviewApplicationSchema>;
 export type UpdateBusinessInput = z.infer<typeof UpdateBusinessSchema>;
 export type AssignUserInput = z.infer<typeof AssignUserSchema>;
+export type ChangeClientRoleInput = z.infer<typeof ChangeClientRoleSchema>;
+
+// ============= Products Schemas =============
+
+export const CreateProductSchema = z.object({
+  name: z.string().min(1, 'Product name is required'),
+  description: z.string().optional(),
+  unitPrice: z.number().positive('Unit price must be positive'),
+  currency: z.string().min(1, 'Currency is required'),
+});
+
+export const UpdateProductSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  unitPrice: z.number().positive().optional(),
+  currency: z.string().optional(),
+});
+
+// ============= Invoices Schemas =============
+
+const InvoiceRecipientTypeEnum = z.enum([
+  'PLATFORM_BUSINESS',
+  'PLATFORM_INDIVIDUAL',
+  'EXTERNAL',
+]);
+
+const InvoiceStatusEnum = z.enum([
+  'DRAFT',
+  'ISSUED',
+  'VIEWED',
+  'PAID',
+  'PARTIAL',
+  'OVERDUE',
+  'DISPUTED',
+  'VOIDED',
+  'ARCHIVED',
+]);
+
+export const CreateInvoiceRecipientSchema = z.object({
+  type: InvoiceRecipientTypeEnum,
+  platformId: z.string().min(1).optional(),
+  email: z.email().optional(),
+  displayName: z.string().optional(),
+});
+
+export const CreateInvoiceLineItemSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required'),
+  productName: z.string().min(1, 'Product name is required'),
+  quantity: z.number().positive('Quantity must be positive'),
+  unitPrice: z.number().min(0, 'Unit price must be non-negative'),
+  description: z.string().optional(),
+});
+
+export const CreateInvoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, 'Invoice number is required'),
+  issuedDate: DateSchema,
+  dueDate: DateSchema,
+  currency: z.string().min(1, 'Currency is required'),
+  description: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  recipient: CreateInvoiceRecipientSchema,
+  lineItems: z
+    .array(CreateInvoiceLineItemSchema)
+    .min(1, 'At least one line item is required'),
+});
+
+export const UpdateInvoiceSchema = z.object({
+  description: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  dueDate: OptionalDateSchema,
+});
+
+export const TransitionInvoiceSchema = z.object({
+  newStatus: InvoiceStatusEnum,
+  amountPaid: z.number().min(0).optional(),
+  reason: z.string().optional(),
+});
+
+export const LineItemSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required'),
+  quantity: z.number().positive('Quantity must be positive'),
+});
+
+export const CreatePersonalInvoiceSchema = z.object({
+  clientUserId: z.string().min(1, 'Client user ID is required'),
+  lineItems: z
+    .array(LineItemSchema)
+    .min(1, 'At least one line item is required'),
+  issuedAt: DateSchema,
+  dueDate: DateSchema,
+});
+
+export const UpdatePersonalInvoiceSchema = z.object({
+  dueDate: OptionalDateSchema,
+  lineItems: z.array(LineItemSchema).optional(),
+  paid: z.boolean().optional(),
+  paidAt: OptionalDateSchema,
+});
+
+export const CreateCompanyInvoiceSchema = z.object({
+  clientBusinessId: z.string().min(1, 'Client business ID is required'),
+  clientCompanyName: z.string().min(1, 'Client company name is required'),
+  clientContactEmail: z.email('Valid email is required'),
+  lineItems: z
+    .array(LineItemSchema)
+    .min(1, 'At least one line item is required'),
+  issuedAt: DateSchema,
+  dueDate: DateSchema,
+});
+
+export const UpdateCompanyInvoiceSchema = z.object({
+  clientCompanyName: z.string().min(1).optional(),
+  clientContactEmail: z.email().optional(),
+  dueDate: OptionalDateSchema,
+  lineItems: z.array(LineItemSchema).optional(),
+  paid: z.boolean().optional(),
+  paidAt: OptionalDateSchema,
+});
+
+// ============= Chat Schemas =============
+
+export const ChatMessageSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
+  query: z.string().min(1, 'Query is required'),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string(),
+      })
+    )
+    .optional(),
+});
+
+// ============= Ban/Unban User Schemas =============
+
+export const BanUserSchema = z.object({
+  reason: z.string().min(1, 'Ban reason is required'),
+});
+
+// Type exports
+export type CreateProductInput = z.infer<typeof CreateProductSchema>;
+export type UpdateProductInput = z.infer<typeof UpdateProductSchema>;
+export type LineItemInput = z.infer<typeof LineItemSchema>;
+export type CreateInvoiceRecipientInput = z.infer<
+  typeof CreateInvoiceRecipientSchema
+>;
+export type CreateInvoiceLineItemInput = z.infer<
+  typeof CreateInvoiceLineItemSchema
+>;
+export type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>;
+export type UpdateInvoiceInput = z.infer<typeof UpdateInvoiceSchema>;
+export type TransitionInvoiceInput = z.infer<typeof TransitionInvoiceSchema>;
+export type CreatePersonalInvoiceInput = z.infer<
+  typeof CreatePersonalInvoiceSchema
+>;
+export type UpdatePersonalInvoiceInput = z.infer<
+  typeof UpdatePersonalInvoiceSchema
+>;
+export type CreateCompanyInvoiceInput = z.infer<
+  typeof CreateCompanyInvoiceSchema
+>;
+export type UpdateCompanyInvoiceInput = z.infer<
+  typeof UpdateCompanyInvoiceSchema
+>;
+export type ChatMessageInput = z.infer<typeof ChatMessageSchema>;
+export type BanUserInput = z.infer<typeof BanUserSchema>;

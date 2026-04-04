@@ -82,6 +82,13 @@
       "tokenDetected": "Jeton de réinitialisation détecté depuis le lien email.",
       "backToLogin": "Retour à la connexion"
     },
+    "sidebar": {
+      "businessesLabel": "Entreprises",
+      "loading": "Chargement...",
+      "noBusinessesFound": "Aucune entreprise trouvée",
+      "businessInactive": "Inactive",
+      "viewYourBusinesses": "Voir vos entreprises"
+    },
     "home": {
       "navigation": {
         "features": "Fonctionnalités",
@@ -293,7 +300,43 @@
       "paidAtLabel": "Payé le",
       "statusOverdue": "En retard",
       "retry": "Réessayer",
-      "fetchError": "Échec du chargement des factures. Veuillez réessayer."
+      "fetchError": "Échec du chargement des factures. Veuillez réessayer.",
+      "searchPlaceholder": "Rechercher des factures...",
+      "searchLabel": "Recherche",
+      "filterLabel": "Filtrer par statut",
+      "filterAll": "Tous",
+      "filterIssued": "Émis",
+      "filterPaid": "Payé",
+      "filterOverdue": "En retard",
+      "filterPartial": "Partiellement payé",
+      "columnInvoiceNumber": "Facture #",
+      "columnFrom": "De",
+      "columnAmount": "Montant",
+      "columnStatus": "Statut",
+      "columnDueDate": "Date d'échéance",
+      "columnIssuedDate": "Émis",
+      "columnActions": "Actions",
+      "statusDraft": "Brouillon",
+      "statusIssued": "Émis",
+      "statusViewed": "Consulté",
+      "statusPaid": "Payé",
+      "statusPartial": "Partiellement payé",
+      "statusDisputed": "Contesté",
+      "statusVoided": "Annulé",
+      "statusArchived": "Archivé",
+      "viewButton": "Afficher",
+      "clearButton": "Effacer",
+      "pagination": "Page {page} sur {totalPages}",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "noResults": "Aucune facture ne correspond à votre recherche",
+      "viewed": "Consulté",
+      "notViewed": "Non consulté",
+      "close": "Fermer",
+      "statusPending": "En attente",
+      "paymentStatus": "Statut de paiement",
+      "lastSynced": "Dernière synchronisation",
+      "viewedAt": "Consulté"
     },
     "businessApplication": {
       "title": "Demande d'accès entreprise",
@@ -313,6 +356,26 @@
       "successMessage": "Votre demande a bien été reçue. Notre équipe l'examinera et vous répondra prochainement.",
       "closeButton": "Retour à l'accueil",
       "cancelButton": "Annuler"
+    },
+    "business": {
+      "title": "Détails de l'entreprise",
+      "businessInformation": "Informations de l'entreprise",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "databaseName": "Nom de la base de données",
+      "website": "Site web",
+      "created": "Créé",
+      "lastUpdated": "Dernière mise à jour",
+      "createInvoiceButton": "Créer une facture",
+      "clientsSection": "Clients",
+      "clientsDescription": "Utilisateurs assignés à cette entreprise",
+      "noClientsAssigned": "Aucun client assigné",
+      "noClientsAssignedHint": "Aucun utilisateur n'a encore été assigné à cette entreprise",
+      "clientDetailsTitle": "Détails du client",
+      "clientDetailsDescription": "Informations sur l'utilisateur assigné",
+      "name": "Nom",
+      "failedToLoadDetails": "Impossible de charger les détails de l'entreprise",
+      "businessNotFound": "Entreprise non trouvée"
     }
   },
   "errorMessages": {
@@ -532,6 +595,8 @@
     "banDialog": {
       "title": "Bannir l'utilisateur",
       "description": "Êtes-vous sûr de vouloir bannir {username} ? Il ne pourra plus se connecter.",
+      "reason": "Raison de l'interdiction",
+      "reasonRequired": "Veuillez fournir une raison pour le bannissement",
       "confirm": "Bannir",
       "banning": "Bannissement..."
     },

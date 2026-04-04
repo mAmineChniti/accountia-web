@@ -82,6 +82,13 @@
       "tokenDetected": "Reset token detected from email link.",
       "backToLogin": "Back to Login"
     },
+    "sidebar": {
+      "businessesLabel": "Businesses",
+      "loading": "Loading...",
+      "noBusinessesFound": "No businesses found",
+      "businessInactive": "Inactive",
+      "viewYourBusinesses": "View your businesses"
+    },
     "home": {
       "navigation": {
         "features": "Features",
@@ -293,7 +300,43 @@
       "paidAtLabel": "Paid on",
       "statusOverdue": "Overdue",
       "retry": "Try again",
-      "fetchError": "Failed to load invoices. Please try again."
+      "fetchError": "Failed to load invoices. Please try again.",
+      "searchPlaceholder": "Search invoices. . .",
+      "searchLabel": "Search",
+      "filterLabel": "Filter by Status",
+      "filterAll": "All",
+      "filterIssued": "Issued",
+      "filterPaid": "Paid",
+      "filterOverdue": "Overdue",
+      "filterPartial": "Partially Paid",
+      "columnInvoiceNumber": "Invoice #",
+      "columnFrom": "From",
+      "columnAmount": "Amount",
+      "columnStatus": "Status",
+      "columnDueDate": "Due Date",
+      "columnIssuedDate": "Issued",
+      "columnActions": "Actions",
+      "statusDraft": "Draft",
+      "statusIssued": "Issued",
+      "statusViewed": "Viewed",
+      "statusPaid": "Paid",
+      "statusPartial": "Partially Paid",
+      "statusDisputed": "Disputed",
+      "statusVoided": "Voided",
+      "statusArchived": "Archived",
+      "viewButton": "View",
+      "clearButton": "Clear",
+      "pagination": "Page {page} of {totalPages}",
+      "previous": "Previous",
+      "next": "Next",
+      "noResults": "No invoices match your search",
+      "viewed": "Viewed",
+      "notViewed": "Not Viewed",
+      "close": "Close",
+      "statusPending": "Pending",
+      "paymentStatus": "Payment Status",
+      "lastSynced": "Last synced",
+      "viewedAt": "Viewed"
     },
     "businessApplication": {
       "title": "Apply for Business Access",
@@ -313,6 +356,26 @@
       "successMessage": "Your application has been received. Our team will review it and get back to you shortly.",
       "closeButton": "Back to Home",
       "cancelButton": "Cancel"
+    },
+    "business": {
+      "title": "Business Details",
+      "businessInformation": "Business Information",
+      "phone": "Phone",
+      "email": "Email",
+      "databaseName": "Database Name",
+      "website": "Website",
+      "created": "Created",
+      "lastUpdated": "Last Updated",
+      "createInvoiceButton": "Create Invoice",
+      "clientsSection": "Clients",
+      "clientsDescription": "Users assigned to this business",
+      "noClientsAssigned": "No clients assigned",
+      "noClientsAssignedHint": "No users have been assigned to this business yet",
+      "clientDetailsTitle": "Client Details",
+      "clientDetailsDescription": "Information about the assigned user",
+      "name": "Name",
+      "failedToLoadDetails": "Failed to load business details",
+      "businessNotFound": "Business not found"
     }
   },
   "errorMessages": {
@@ -532,6 +595,8 @@
     "banDialog": {
       "title": "Ban user",
       "description": "Are you sure you want to ban {username}? They will not be able to log in.",
+      "reason": "Ban Reason",
+      "reasonRequired": "Please provide a reason for banning",
       "confirm": "Ban",
       "banning": "Banning..."
     },

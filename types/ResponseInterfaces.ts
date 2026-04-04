@@ -178,10 +178,9 @@ export interface BusinessDetailData {
   description: string;
   website?: string;
   phone: string;
+  email: string;
   databaseName: string;
   status: 'pending' | 'approved' | 'rejected';
-  isActive: boolean;
-  tags: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -237,6 +236,30 @@ export interface AssignUserResponse {
   businessUser: AssignedBusinessUser;
 }
 
+export interface BusinessUsersListResponse {
+  message: string;
+  users: AssignedBusinessUser[];
+}
+
+export interface ClientData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  createdAt: string;
+}
+
+export interface GetBusinessClientsResponse {
+  message: string;
+  clients: ClientData[];
+}
+
+export interface ChangeClientRoleResponse {
+  message: string;
+  businessUser: AssignedBusinessUser;
+}
+
 export interface BusinessMessageResponse {
   message: string;
 }
@@ -252,3 +275,388 @@ export interface BanUserResponse extends BaseResponse {
 }
 
 export type UnbanUserResponse = BanUserResponse;
+
+// ============= Invoices Types =============
+
+export type InvoiceStatus =
+  | 'DRAFT'
+  | 'ISSUED'
+  | 'VIEWED'
+  | 'PAID'
+  | 'PARTIAL'
+  | 'OVERDUE'
+  | 'DISPUTED'
+  | 'VOIDED'
+  | 'ARCHIVED';
+
+export type InvoiceRecipientType =
+  | 'PLATFORM_BUSINESS'
+  | 'PLATFORM_INDIVIDUAL'
+  | 'EXTERNAL';
+
+export type RecipientResolutionStatus =
+  | 'RESOLVED'
+  | 'PENDING'
+  | 'CLAIMED'
+  | 'NEVER_RESOLVED';
+
+export interface InvoiceLineItemResponseDto {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  description?: string;
+}
+
+export interface InvoiceRecipientResponseDto {
+  type: InvoiceRecipientType;
+  platformId?: string;
+  tenantDatabaseName?: string;
+  email?: string;
+  displayName?: string;
+  resolutionStatus?: RecipientResolutionStatus;
+  lastResolutionAttempt?: string;
+}
+
+export interface InvoiceResponse extends BaseResponse {
+  id: string;
+  issuerBusinessId: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  totalAmount: number;
+  currency: string;
+  amountPaid: number;
+  issuedDate: string;
+  dueDate: string;
+  description?: string;
+  paymentTerms?: string;
+  recipient: InvoiceRecipientResponseDto;
+  lineItems: InvoiceLineItemResponseDto[];
+  createdBy?: string;
+  lastModifiedBy?: string;
+  lastStatusChangeAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvoiceListResponse extends BaseResponse {
+  invoices: InvoiceResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface InvoiceReceiptResponseDto {
+  id: string;
+  invoiceId: string;
+  issuerTenantDatabaseName: string;
+  issuerBusinessId: string;
+  issuerBusinessName: string;
+  invoiceNumber: string;
+  totalAmount: number;
+  currency: string;
+  issuedDate: string;
+  dueDate: string;
+  invoiceStatus: InvoiceStatus;
+  recipientViewed: boolean;
+  recipientViewedAt?: string;
+  lastSyncedAt: string;
+  createdAt: string;
+}
+
+export interface ReceivedInvoiceListResponse extends BaseResponse {
+  receipts: InvoiceReceiptResponseDto[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Legacy invoice types (kept for backward compatibility)
+
+export interface Product {
+  id: string;
+  businessId: string;
+  name: string;
+  description?: string;
+  unitPrice: number;
+  currency: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateProductResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  name: string;
+  description?: string;
+  unitPrice: number;
+  currency: string;
+  createdAt: string;
+}
+
+export interface ProductListResponse extends BaseResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ProductDetailResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  name: string;
+  description?: string;
+  unitPrice: number;
+  currency: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UpdateProductResponse extends BaseResponse {
+  id: string;
+  name: string;
+  unitPrice: number;
+  currency: string;
+  updatedAt?: string;
+}
+
+export interface ProductImportResponse extends BaseResponse {
+  imported: number;
+  failed: number;
+  skipped: number;
+}
+
+export interface ProductMessageResponse extends BaseResponse {
+  message: string;
+}
+
+export interface LineItem {
+  productId: string;
+  productName?: string;
+  quantity: number;
+  unitPrice?: number;
+  total?: number;
+}
+
+export interface PersonalInvoice {
+  id: string;
+  businessId: string;
+  clientUserId: string;
+  amount: number;
+  status?: 'DRAFT' | 'SENT' | 'PENDING' | 'PAID' | 'OVERDUE';
+  paid: boolean;
+  paidAt?: string;
+  issuedAt: string;
+  dueDate: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PersonalInvoiceDetail extends PersonalInvoice {
+  lineItems: LineItem[];
+}
+
+export interface CreatePersonalInvoiceResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientUserId: string;
+  amount: number;
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  createdAt: string;
+}
+
+export interface PersonalInvoiceListResponse extends BaseResponse {
+  invoices: PersonalInvoice[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PersonalInvoiceDetailResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientUserId: string;
+  lineItems: LineItem[];
+  amount: number;
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  paidAt?: string;
+}
+
+export interface UpdatePersonalInvoiceResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientUserId: string;
+  lineItems?: LineItem[];
+  amount: number;
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  paidAt?: string;
+}
+
+export interface CompanyInvoice {
+  id: string;
+  businessId: string;
+  clientBusinessId: string;
+  clientCompanyName: string;
+  clientContactEmail: string;
+  amount: number;
+  status?: 'DRAFT' | 'SENT' | 'PENDING' | 'PAID' | 'OVERDUE';
+  paid: boolean;
+  paidAt?: string;
+  issuedAt: string;
+  dueDate: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CompanyInvoiceDetail extends CompanyInvoice {
+  lineItems: LineItem[];
+}
+
+export interface CreateCompanyInvoiceResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientBusinessId: string;
+  clientCompanyName: string;
+  amount: number;
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  createdAt: string;
+}
+
+export interface CompanyInvoiceListResponse extends BaseResponse {
+  invoices: CompanyInvoice[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CompanyInvoiceDetailResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientBusinessId: string;
+  clientCompanyName: string;
+  clientContactEmail: string;
+  amount: number;
+  lineItems: LineItem[];
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  paidAt?: string;
+}
+
+export interface UpdateCompanyInvoiceResponse extends BaseResponse {
+  id: string;
+  businessId: string;
+  clientBusinessId: string;
+  clientCompanyName: string;
+  clientContactEmail: string;
+  amount: number;
+  lineItems?: LineItem[];
+  issuedAt: string;
+  dueDate: string;
+  paid: boolean;
+  paidAt?: string;
+}
+
+export interface InvoiceImportResponse extends BaseResponse {
+  imported: number;
+  failed: number;
+  message: string;
+}
+
+export interface InvoiceMessageResponse extends BaseResponse {
+  message: string;
+}
+
+export interface TenantMetadata {
+  businessId: string;
+  databaseName: string;
+}
+
+export interface TenantMetadataResponse extends BaseResponse {
+  tenant: TenantMetadata;
+  metadata: {
+    invoicesCount: number;
+    activeClients: number;
+    lastModified: string;
+  };
+}
+
+// ============= Chat Endpoints =============
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatMessageResponse extends BaseResponse {
+  response: string;
+}
+
+// ============= Notifications Endpoints =============
+
+export type NotificationType =
+  | 'invoice.sent'
+  | 'invoice.paid'
+  | 'invoice.viewed'
+  | 'invoice.overdue'
+  | 'business.approved'
+  | 'business.rejected'
+  | 'user.added'
+  | 'user.removed'
+  | string;
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface NotificationListResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
+// ============= Audit Endpoints =============
+
+export interface AuditLog {
+  id: string;
+  action: string;
+  userId: string;
+  userEmail: string;
+  userRole: Role;
+  target: string;
+  details: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface AuditLogListResponse extends BaseResponse {
+  logs: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// ============= Health Check =============
+
+export interface HealthCheckResponse {
+  status: 'ok' | 'degraded' | 'error';
+  timestamp: string;
+  uptime: number;
+  version: string;
+}
