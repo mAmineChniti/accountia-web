@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Chatbot } from '@/components/chat/Chatbot';
 
 export function Business({
   businessId,
@@ -352,6 +353,9 @@ export function Business({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Bot Chat UI */}
+      <Chatbot businessId={businessId} />
     </div>
   );
 }
