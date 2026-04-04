@@ -62,6 +62,7 @@ import type {
   Role,
   UserSummary,
   UsersListResponse,
+  ChangeRoleResponse,
 } from '@/types/ResponseInterfaces';
 import { AuthService } from '@/lib/requests';
 import { toast } from 'sonner';
@@ -104,6 +105,7 @@ export default function Admin({
   const [banningUserId, setBanningUserId] = useState<string | undefined>();
   const [banModalUser, setBanModalUser] = useState<UserSummary | undefined>();
   const [banAction, setBanAction] = useState<'ban' | 'unban'>('ban');
+  const [banReason, setBanReason] = useState('');
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('dateJoined');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -126,7 +128,7 @@ export default function Admin({
 
   const users = useMemo(() => data?.users ?? EMPTY_USERS, [data?.users]);
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) =>
+  const totalAdmins = users.filter((u: UserSummary) =>
     ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(u.role ?? '')
   ).length;
   const modalUsername = modalUser ? modalUser.username : '';
@@ -140,7 +142,7 @@ export default function Admin({
 
     // Apply search filter
     if (q.length > 0) {
-      filtered = filtered.filter((u) => {
+      filtered = filtered.filter((u: UserSummary) => {
         const haystack =
           `${u.username} ${u.email} ${u.firstName ?? ''} ${u.lastName ?? ''}`.toLowerCase();
         return haystack.includes(q);
@@ -149,7 +151,7 @@ export default function Admin({
 
     // Apply date range filter
     if (dateRange?.from || dateRange?.to) {
-      filtered = filtered.filter((u) => {
+      filtered = filtered.filter((u: UserSummary) => {
         const joinDate = u.dateJoined;
         if (!joinDate) return false;
         const date = new Date(joinDate);
@@ -182,7 +184,7 @@ export default function Admin({
       });
     }
 
-    const sorted = filtered.toSorted((a, b) => {
+    const sorted = filtered.toSorted((a: UserSummary, b: UserSummary) => {
       const dir = sortDir === 'asc' ? 1 : -1;
       if (sortKey === 'dateJoined') {
         const aDate = a.dateJoined;
@@ -202,17 +204,20 @@ export default function Admin({
   const changeRoleMutation = useMutation({
     mutationFn: (data: { userId: string; newRole: Role }) =>
       AuthService.changeRole(data),
-    onMutate: ({ userId }) => {
+    onMutate: ({ userId }: { userId: string; newRole: Role }) => {
       setChangingRoleUserId(userId);
     },
-    onSuccess: (result, variables) => {
+    onSuccess: (
+      result: ChangeRoleResponse,
+      variables: { userId: string; newRole: Role }
+    ) => {
       queryClient.setQueryData(
         ['users'],
         (old: UsersListResponse | undefined) => {
           if (!old) return old;
           return {
             ...old,
-            users: old.users.map((u) =>
+            users: old.users.map((u: UserSummary) =>
               u.id === variables.userId ? { ...u, role: result.newRole } : u
             ),
           };
@@ -240,7 +245,10 @@ export default function Admin({
         ['users'],
         (old: UsersListResponse | undefined) => {
           if (!old) return old;
-          return { ...old, users: old.users.filter((u) => u.id !== userId) };
+          return {
+            ...old,
+            users: old.users.filter((u: UserSummary) => u.id !== userId),
+          };
         }
       );
       setModalUser(undefined);
@@ -254,24 +262,26 @@ export default function Admin({
   });
 
   const banMutation = useMutation({
-    mutationFn: (userId: string) => AuthService.banUser(userId),
-    onMutate: (userId) => {
+    mutationFn: ({ userId, reason }: { userId: string; reason: string }) =>
+      AuthService.banUser(userId, reason),
+    onMutate: ({ userId }: { userId: string; reason: string }) => {
       setBanningUserId(userId);
     },
-    onSuccess: (_: unknown, userId: string) => {
+    onSuccess: (_: unknown, { userId }: { userId: string; reason: string }) => {
       queryClient.setQueryData(
         ['users'],
         (old: UsersListResponse | undefined) => {
           if (!old) return old;
           return {
             ...old,
-            users: old.users.map((u) =>
+            users: old.users.map((u: UserSummary) =>
               u.id === userId ? { ...u, isBanned: true } : u
             ),
           };
         }
       );
       setBanModalUser(undefined);
+      setBanReason('');
       toast.success(dictionary.admin.banSuccess);
     },
     onError: (error: unknown) => {
@@ -286,7 +296,7 @@ export default function Admin({
 
   const unbanMutation = useMutation({
     mutationFn: (userId: string) => AuthService.unbanUser(userId),
-    onMutate: (userId) => {
+    onMutate: (userId: string) => {
       setBanningUserId(userId);
     },
     onSuccess: (_: unknown, userId: string) => {
@@ -296,7 +306,7 @@ export default function Admin({
           if (!old) return old;
           return {
             ...old,
-            users: old.users.map((u) =>
+            users: old.users.map((u: UserSummary) =>
               u.id === userId ? { ...u, isBanned: false } : u
             ),
           };
@@ -551,7 +561,7 @@ export default function Admin({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {filteredUsers.map((user: UserSummary) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
                       {user.username}
@@ -655,7 +665,7 @@ export default function Admin({
 
       <Dialog
         open={modalUser !== undefined}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           if (!open) setModalUser(undefined);
           setDeleteError(undefined);
         }}
@@ -703,8 +713,11 @@ export default function Admin({
 
       <Dialog
         open={banModalUser !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setBanModalUser(undefined);
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setBanModalUser(undefined);
+            setBanReason('');
+          }
         }}
       >
         <DialogContent>
@@ -721,11 +734,28 @@ export default function Admin({
               ).replace('{username}', banModalUser?.username ?? '')}
             </DialogDescription>
           </DialogHeader>
+          {banAction === 'ban' && (
+            <div className="space-y-3">
+              <label htmlFor="ban-reason" className="text-sm font-medium">
+                {dictionary.admin.banDialog.reason}
+              </label>
+              <Input
+                id="ban-reason"
+                placeholder={dictionary.admin.banDialog.reason}
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                disabled={banMutation.isPending}
+              />
+            </div>
+          )}
           <DialogFooter>
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setBanModalUser(undefined)}
+              onClick={() => {
+                setBanModalUser(undefined);
+                setBanReason('');
+              }}
               disabled={banMutation.isPending || unbanMutation.isPending}
             >
               {dictionary.common.cancel}
@@ -735,13 +765,24 @@ export default function Admin({
               variant={banAction === 'ban' ? 'destructive' : 'default'}
               onClick={() => {
                 if (!banModalUser) return;
-                if (banAction === 'ban') banMutation.mutate(banModalUser.id);
-                else unbanMutation.mutate(banModalUser.id);
+                if (banAction === 'ban') {
+                  if (!banReason.trim()) {
+                    toast.error(dictionary.admin.banDialog.reasonRequired);
+                    return;
+                  }
+                  banMutation.mutate({
+                    userId: banModalUser.id,
+                    reason: banReason.trim(),
+                  });
+                } else {
+                  unbanMutation.mutate(banModalUser.id);
+                }
               }}
               disabled={
                 banMutation.isPending ||
                 unbanMutation.isPending ||
-                !banModalUser
+                !banModalUser ||
+                (banAction === 'ban' && !banReason.trim())
               }
             >
               {banMutation.isPending || unbanMutation.isPending

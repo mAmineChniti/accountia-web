@@ -82,6 +82,13 @@
       "tokenDetected": "تم اكتشاف رمز إعادة التعيين من رابط البريد الإلكتروني.",
       "backToLogin": "العودة إلى تسجيل الدخول"
     },
+    "sidebar": {
+      "businessesLabel": "الأنشطة التجارية",
+      "loading": "جاري التحميل...",
+      "noBusinessesFound": "لم يتم العثور على أنشطة تجارية",
+      "businessInactive": "غير نشط",
+      "viewYourBusinesses": "عرض أنشطتك التجارية"
+    },
     "home": {
       "navigation": {
         "features": "الميزات",
@@ -287,7 +294,43 @@
       "paidAtLabel": "دُفعت في",
       "statusOverdue": "متأخرة",
       "retry": "إعادة المحاولة",
-      "fetchError": "فشل تحميل الفواتير. يرجى المحاولة مرة أخرى."
+      "fetchError": "فشل تحميل الفواتير. يرجى المحاولة مرة أخرى.",
+      "searchPlaceholder": "ابحث عن الفواتير...",
+      "searchLabel": "بحث",
+      "filterLabel": "تصفية حسب الحالة",
+      "filterAll": "الكل",
+      "filterIssued": "صادر",
+      "filterPaid": "مدفوع",
+      "filterOverdue": "متأخر",
+      "filterPartial": "مدفوع جزئياً",
+      "columnInvoiceNumber": "رقم الفاتورة #",
+      "columnFrom": "من",
+      "columnAmount": "المبلغ",
+      "columnStatus": "الحالة",
+      "columnDueDate": "تاريخ الاستحقاق",
+      "columnIssuedDate": "صادر في",
+      "columnActions": "الإجراءات",
+      "statusDraft": "مسودة",
+      "statusIssued": "صادر",
+      "statusViewed": "تم عرضه",
+      "statusPaid": "مدفوع",
+      "statusPartial": "مدفوع جزئياً",
+      "statusDisputed": "محل نزاع",
+      "statusVoided": "ملغى",
+      "statusArchived": "مؤرشف",
+      "viewButton": "عرض",
+      "clearButton": "مسح",
+      "pagination": "الصفحة {page} من {totalPages}",
+      "previous": "السابق",
+      "next": "التالي",
+      "noResults": "لا توجد فواتير تطابق بحثك",
+      "viewed": "تم عرضه",
+      "notViewed": "لم يتم عرضه",
+      "close": "إغلاق",
+      "statusPending": "قيد الانتظار",
+      "paymentStatus": "حالة الدفع",
+      "lastSynced": "آخر مزامنة",
+      "viewedAt": "تم عرضه"
     },
     "businessApplication": {
       "title": "التقدم للحصول على صلاحية الأعمال",
@@ -307,6 +350,36 @@
       "successMessage": "استُلم طلبك بنجاح. سيراجعه فريقنا ويتواصل معك قريبًا.",
       "closeButton": "العودة إلى الرئيسية",
       "cancelButton": "إلغاء"
+    },
+    "business": {
+      "title": "تفاصيل العمل",
+      "businessInformation": "معلومات العمل",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "databaseName": "اسم قاعدة البيانات",
+      "website": "موقع الويب",
+      "created": "تاريخ الإنشاء",
+      "lastUpdated": "آخر تحديث",
+      "createInvoiceButton": "إنشاء فاتورة",
+      "clientsSection": "العملاء",
+      "clientsDescription": "المستخدمون المعينون لهذا العمل",
+      "noClientsAssigned": "لا توجد عملاء معينة",
+      "noClientsAssignedHint": "لم يتم تعيين أي مستخدمين لهذا العمل بعد",
+      "clientDetailsTitle": "تفاصيل العميل",
+      "clientDetailsDescription": "معلومات عن المستخدم المعين",
+      "name": "الاسم",
+      "failedToLoadDetails": "فشل في تحميل تفاصيل العمل",
+      "businessNotFound": "العمل غير موجود"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "markAllAsRead": "وضع علامة على الكل كمقروء",
+      "noNotifications": "لا توجد إشعارات",
+      "allCaughtUp": "أنت على اطلاع بكل شيء!",
+      "justNow": "الآن",
+      "minutesAgo": "قبل {count} د",
+      "hoursAgo": "قبل {count} س",
+      "daysAgo": "قبل {count} أيام"
     }
   },
   "errorMessages": {
@@ -526,6 +599,8 @@
     "banDialog": {
       "title": "حظر المستخدم",
       "description": "هل أنت متأكد أنك تريد حظر {username}؟ لن يتمكن من تسجيل الدخول.",
+      "reason": "سبب الحظر",
+      "reasonRequired": "يرجى تقديم سبب للحظر",
       "confirm": "حظر",
       "banning": "جارٍ الحظر..."
     },

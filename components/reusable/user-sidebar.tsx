@@ -2,12 +2,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
-import { Building2, LayoutDashboard, LogOut } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  ChevronDown,
+  Loader2,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { type UserCookieData } from '@/types/auth';
 import { logout } from '@/actions/auth';
+import { BusinessService } from '@/lib/requests';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -16,8 +23,66 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import LocaleSwitcher from '@/components/reusable/locale-switcher';
 import { ModeToggle } from '@/components/reusable/theme-toggle';
+import { Notifications } from '@/components/reusable/notifications';
+
+// Navigation configuration for platform users (Admin/Owner)
+interface PlatformNavItem {
+  id: string;
+  href: string;
+  label: string;
+  tooltip: string;
+  icon: React.ReactNode;
+}
+
+const getPlatformNavigation = (
+  lang: Locale,
+  dictionary: Dictionary
+): PlatformNavItem[] => [
+  {
+    id: 'dashboard',
+    href: `/${lang}/dashboard/admin`,
+    label: dictionary.pages.home.navigation.adminDashboard,
+    tooltip: dictionary.tooltips.adminDashboard,
+    icon: <LayoutDashboard className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'businesses',
+    href: `/${lang}/dashboard/businesses`,
+    label: dictionary.admin.businessManagement.navLabel,
+    tooltip: dictionary.tooltips.businessManagement,
+    icon: <Building2 className="h-4 w-4 shrink-0" />,
+  },
+];
+
+// Navigation configuration for client users
+interface ClientNavItem {
+  id: string;
+  href: string;
+  label: string;
+  tooltip: string;
+  icon: React.ReactNode;
+}
+
+const getClientNavigation = (
+  lang: Locale,
+  dictionary: Dictionary
+): ClientNavItem[] => [
+  {
+    id: 'invoices',
+    href: `/${lang}/invoices`,
+    label: dictionary.pages.home.navigation.invoices,
+    tooltip: dictionary.tooltips.invoices,
+    icon: <LayoutDashboard className="h-4 w-4 shrink-0" />,
+  },
+];
 
 export default function UserSidebar({
   lang,
@@ -35,6 +100,17 @@ export default function UserSidebar({
     } catch {
       return;
     }
+  });
+
+  const isPlatformUser = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
+    user.role ?? ''
+  );
+
+  // Fetch businesses for client users
+  const { data: businessesData, isLoading: isLoadingBusinesses } = useQuery({
+    queryKey: ['my-businesses'],
+    queryFn: () => BusinessService.getMyBusinesses(),
+    enabled: !isPlatformUser,
   });
 
   const handlePostLogout = async () => {
@@ -58,62 +134,125 @@ export default function UserSidebar({
     },
   });
 
-  const isAdmin = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(
-    user.role ?? ''
-  );
-
-  const dashboardHref = isAdmin
-    ? `/${lang}/dashboard/admin`
-    : `/${lang}/invoices`;
-
-  const dashboardLabel = isAdmin
-    ? dictionary.pages.home.navigation.adminDashboard
-    : dictionary.pages.home.navigation.invoices;
-
-  const dashboardTooltip = isAdmin
-    ? dictionary.tooltips.adminDashboard
-    : dictionary.tooltips.invoices;
-
   const displayName = user.firstName ?? user.username;
   const fallbackInitial = (user.firstName ?? user.username ?? 'U')
     .charAt(0)
     .toUpperCase();
 
+  const platformNav = getPlatformNavigation(lang, dictionary);
+  const clientNav = getClientNavigation(lang, dictionary);
+  const businesses = businessesData?.businesses ?? [];
+
   return (
     <aside className="bg-background fixed inset-y-0 z-50 flex w-64 flex-col ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l">
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {/* Dashboard at top */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={dashboardHref}
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-            >
-              <LayoutDashboard className="h-4 w-4 shrink-0" />
-              {dashboardLabel}
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{dashboardTooltip}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Platform Navigation */}
+        {isPlatformUser && (
+          <>
+            {platformNav.map((item) => (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>{item.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </>
+        )}
 
-        {isAdmin && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={`/${lang}/dashboard/businesses`}
-                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
-              >
-                <Building2 className="h-4 w-4 shrink-0" />
-                {dictionary.admin.businessManagement.navLabel}
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{dictionary.tooltips.businessManagement}</p>
-            </TooltipContent>
-          </Tooltip>
+        {/* Client Navigation */}
+        {!isPlatformUser && (
+          <>
+            {clientNav.map((item) => (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>{item.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+
+            {/* Businesses Dropdown */}
+            {businesses.length > 0 && (
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent! dark:hover:text-accent-foreground h-auto w-full justify-between gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors"
+                        disabled={isLoadingBusinesses}
+                      >
+                        <span className="flex items-center gap-3">
+                          <Building2 className="h-4 w-4 shrink-0" />
+                          <span>
+                            {isLoadingBusinesses
+                              ? dictionary.pages.sidebar.loading
+                              : dictionary.pages.sidebar.businessesLabel}
+                          </span>
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>{dictionary.pages.sidebar.viewYourBusinesses}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent
+                  side="right"
+                  align="start"
+                  className="w-56"
+                >
+                  {isLoadingBusinesses ? (
+                    <div className="flex items-center justify-center gap-2 px-2 py-2 text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{dictionary.pages.sidebar.loading}</span>
+                    </div>
+                  ) : businesses.length === 0 ? (
+                    <div className="text-muted-foreground px-2 py-2 text-sm">
+                      {dictionary.pages.sidebar.noBusinessesFound}
+                    </div>
+                  ) : (
+                    businesses.map((business) => (
+                      <DropdownMenuItem key={business.id} asChild>
+                        <Link
+                          href={`/${lang}/business/${business.id}`}
+                          className="flex cursor-pointer items-center justify-between gap-2"
+                        >
+                          <span className="flex-1 truncate font-medium">
+                            {business.name}
+                          </span>
+                          {!business.isActive && (
+                            <span className="text-muted-foreground text-xs">
+                              {dictionary.pages.sidebar.businessInactive}
+                            </span>
+                          )}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </>
         )}
 
         {/* Spacer pushes profile/logout to bottom */}
@@ -165,8 +304,9 @@ export default function UserSidebar({
         </Tooltip>
       </nav>
 
-      {/* Utilities (locale + theme) */}
-      <div className="flex items-center justify-between border-t px-4 py-3">
+      {/* Utilities (notifications + locale + theme) */}
+      <div className="flex items-center justify-between border-t px-2 py-3">
+        <Notifications lang={lang} dictionary={dictionary} />
         <Tooltip>
           <TooltipTrigger asChild>
             <LocaleSwitcher />
