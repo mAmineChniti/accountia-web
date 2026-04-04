@@ -60,8 +60,8 @@ export function Chatbot({ businessId }: { businessId?: string }) {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          'fixed right-6 bottom-6 z-50 rounded-full p-4 shadow-[0_10px_25px_rgba(79,70,229,0.4)] transition-all duration-300 ease-in-out hover:shadow-[0_15px_30px_rgba(79,70,229,0.5)]',
-          'bg-gradient-to-tr from-blue-600 to-indigo-500 text-white hover:from-blue-700 hover:to-indigo-600 focus:ring-4 focus:ring-indigo-300/50 focus:outline-none',
+          'shadow-primary/40 hover:shadow-primary/50 fixed right-6 bottom-6 z-50 rounded-full p-4 shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl',
+          'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary/50 focus:ring-4 focus:outline-none',
           isOpen
             ? 'pointer-events-none scale-0 opacity-0'
             : 'scale-100 opacity-100 hover:scale-110'
@@ -74,43 +74,44 @@ export function Chatbot({ businessId }: { businessId?: string }) {
       {/* Chat Window */}
       <div
         className={cn(
-          'fixed right-6 bottom-6 z-50 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950',
+          'border-border bg-background fixed right-6 bottom-6 z-50 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col overflow-hidden rounded-2xl border shadow-2xl transition-all duration-300',
           isOpen
             ? 'scale-100 opacity-100'
             : 'pointer-events-none scale-0 opacity-0'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white drop-shadow-md">
+        <div className="bg-primary text-primary-foreground flex items-center justify-between p-4 drop-shadow-md">
           <div className="flex items-center gap-3">
-            <div className="self-center rounded-xl bg-white/20 p-2 backdrop-blur-sm">
-              <Bot size={24} className="text-white" />
+            <div className="bg-primary-foreground/20 self-center rounded-xl p-2 backdrop-blur-sm">
+              <Bot size={24} className="text-primary-foreground" />
             </div>
             <div>
               <h3 className="text-lg leading-tight font-semibold tracking-tight">
                 Accountia AI
               </h3>
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-blue-100">
-                <Sparkles size={10} className="fill-blue-100" /> En ligne
+              <p className="text-primary-foreground/80 mt-0.5 flex items-center gap-1 text-xs">
+                <Sparkles size={10} className="fill-primary-foreground/80" /> En
+                ligne
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="rounded-full p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white focus:outline-none"
+            className="text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground rounded-full p-2 transition-colors focus:outline-none"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 space-y-5 overflow-y-auto scroll-smooth bg-zinc-50 p-4 dark:bg-zinc-900">
+        <div className="bg-muted/30 dark:bg-muted/10 flex-1 space-y-5 overflow-y-auto scroll-smooth p-4">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center space-y-4 px-4 text-center opacity-70">
-              <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-indigo-500 shadow-sm dark:bg-indigo-900/30">
+              <div className="bg-primary/10 text-primary mb-2 flex h-16 w-16 items-center justify-center rounded-full shadow-sm">
                 <MessageSquare size={30} />
               </div>
-              <p className="text-sm leading-relaxed text-balance text-zinc-500 dark:text-zinc-400">
+              <p className="text-muted-foreground text-sm leading-relaxed text-balance">
                 Bonjour ! Posez-moi vos questions sur la comptabilité de votre
                 entreprise.
               </p>
@@ -128,8 +129,8 @@ export function Chatbot({ businessId }: { businessId?: string }) {
                   className={cn(
                     'max-w-[85%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm',
                     msg.role === 'user'
-                      ? 'rounded-br-sm bg-indigo-600 text-white'
-                      : 'rounded-bl-sm border border-zinc-100 bg-white text-zinc-800 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200'
+                      ? 'bg-primary text-primary-foreground rounded-br-sm'
+                      : 'border-border bg-card text-card-foreground rounded-bl-sm border'
                   )}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -140,19 +141,19 @@ export function Chatbot({ businessId }: { businessId?: string }) {
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="flex flex-row items-center gap-3 rounded-2xl rounded-bl-sm border border-zinc-100 bg-white px-4 py-3.5 shadow-sm dark:border-zinc-700/60 dark:bg-zinc-800">
-                <Bot size={18} className="animate-pulse text-indigo-500" />
+              <div className="border-border bg-card flex flex-row items-center gap-3 rounded-2xl rounded-bl-sm border px-4 py-3.5 shadow-sm">
+                <Bot size={18} className="text-primary animate-pulse" />
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400 dark:bg-indigo-500"
+                    className="bg-primary/60 h-1.5 w-1.5 animate-bounce rounded-full"
                     style={{ animationDelay: '0ms' }}
                   />
                   <span
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400 dark:bg-indigo-500"
+                    className="bg-primary/60 h-1.5 w-1.5 animate-bounce rounded-full"
                     style={{ animationDelay: '150ms' }}
                   />
                   <span
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400 dark:bg-indigo-500"
+                    className="bg-primary/60 h-1.5 w-1.5 animate-bounce rounded-full"
                     style={{ animationDelay: '300ms' }}
                   />
                 </div>
@@ -163,15 +164,15 @@ export function Chatbot({ businessId }: { businessId?: string }) {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-zinc-100 bg-white p-4 dark:border-zinc-800/80 dark:bg-zinc-950">
-          <div className="relative flex items-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-50 shadow-sm transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="border-border bg-background border-t p-4">
+          <div className="border-border bg-muted/50 focus-within:border-primary focus-within:ring-primary/30 relative flex items-center overflow-hidden rounded-full border shadow-sm transition-all focus-within:ring-2">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Écrivez votre message..."
-              className="flex-1 border-none bg-transparent py-3.5 pr-14 pl-5 text-[15px] placeholder:text-zinc-400 focus:outline-none dark:text-zinc-200"
+              className="placeholder:text-muted-foreground text-foreground flex-1 border-none bg-transparent py-3.5 pr-14 pl-5 text-[15px] focus:outline-none"
             />
             <button
               onClick={handleSendMessage}
@@ -179,8 +180,8 @@ export function Chatbot({ businessId }: { businessId?: string }) {
               className={cn(
                 'absolute right-1.5 flex items-center justify-center rounded-full p-2 transition-all duration-200',
                 inputValue.trim() && !isLoading
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'cursor-not-allowed bg-zinc-200 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
               )}
             >
               {isLoading ? (
@@ -191,7 +192,7 @@ export function Chatbot({ businessId }: { businessId?: string }) {
             </button>
           </div>
           <div className="mt-3 mb-1 text-center">
-            <p className="text-[11px] tracking-wide text-zinc-400/80 dark:text-zinc-500">
+            <p className="text-muted-foreground text-[11px] tracking-wide">
               Accountia AI peut faire des erreurs.
             </p>
           </div>
