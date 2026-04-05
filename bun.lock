@@ -46,7 +46,7 @@
         "@types/react-dom": "^19",
         "@typescript-eslint/parser": "^8.57.1",
         "babel-plugin-react-compiler": "1.0.0",
-        "eslint": "9@latest",
+        "eslint": "9",
         "eslint-config-next": "16.2.2",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.5",
