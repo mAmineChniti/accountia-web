@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  FileText,
+  Building2,
+  Phone,
+  Globe,
+  Users,
+  Package,
+} from 'lucide-react';
+import Link from 'next/link';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -15,6 +24,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -38,7 +48,12 @@ export function Business({
     ClientData | undefined
   >();
 
-  const { data: clientsData, isLoading: isLoadingUsers } = useQuery({
+  const {
+    data: clientsData,
+    isLoading: isLoadingUsers,
+    error: clientsError,
+    refetch: refetchClients,
+  } = useQuery({
     queryKey: ['business-clients', businessId],
     queryFn: () => BusinessService.getBusinessClients(businessId),
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -222,6 +237,20 @@ export function Business({
         </CardContent>
       </Card>
 
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Button size="lg" className="gap-2" asChild variant="outline">
+          <Link href={`/${lang}/business/${businessId}/products`}>
+            <Package className="h-5 w-5" />
+            {t.viewProducts}
+          </Link>
+        </Button>
+        <Button size="lg" className="gap-2">
+          <FileText className="h-5 w-5" />
+          {t.createInvoiceButton}
+        </Button>
+      </div>
+
       {/* Clients Section */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader>
@@ -237,6 +266,20 @@ export function Business({
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
+            </div>
+          ) : clientsError ? (
+            <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
+              <AlertCircle className="h-5 w-5" />
+              <div className="flex-1 text-sm">
+                {t.errorLoading || 'Failed to load clients'}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchClients()}
+              >
+                {t.retry || 'Retry'}
+              </Button>
             </div>
           ) : clients.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">

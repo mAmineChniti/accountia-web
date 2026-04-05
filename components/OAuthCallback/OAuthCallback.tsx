@@ -60,7 +60,7 @@ export default function OAuthCallback({
     const finalizeOAuth = async () => {
       try {
         const authResult = await AuthService.exchangeGoogleOAuthCode({
-          oauthCode,
+          code: oauthCode,
         });
 
         if ('tempToken' in authResult) {

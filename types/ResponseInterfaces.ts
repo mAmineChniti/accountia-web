@@ -321,7 +321,7 @@ export interface InvoiceRecipientResponseDto {
   lastResolutionAttempt?: string;
 }
 
-export interface InvoiceResponse extends BaseResponse {
+export interface InvoiceResponse {
   id: string;
   issuerBusinessId: string;
   invoiceNumber: string;
@@ -342,7 +342,7 @@ export interface InvoiceResponse extends BaseResponse {
   updatedAt: string;
 }
 
-export interface InvoiceListResponse extends BaseResponse {
+export interface InvoiceListResponse {
   invoices: InvoiceResponse[];
   total: number;
   page: number;
@@ -368,7 +368,7 @@ export interface InvoiceReceiptResponseDto {
   createdAt: string;
 }
 
-export interface ReceivedInvoiceListResponse extends BaseResponse {
+export interface ReceivedInvoiceListResponse {
   receipts: InvoiceReceiptResponseDto[];
   total: number;
   page: number;
@@ -382,8 +382,10 @@ export interface Product {
   id: string;
   businessId: string;
   name: string;
-  description?: string;
+  description: string;
   unitPrice: number;
+  cost: number;
+  quantity: number;
   currency: string;
   createdAt: string;
   updatedAt?: string;
@@ -393,10 +395,13 @@ export interface CreateProductResponse extends BaseResponse {
   id: string;
   businessId: string;
   name: string;
-  description?: string;
+  description: string;
   unitPrice: number;
+  cost: number;
+  quantity: number;
   currency: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ProductListResponse extends BaseResponse {
@@ -404,14 +409,17 @@ export interface ProductListResponse extends BaseResponse {
   total: number;
   page: number;
   limit: number;
+  totalPages: number;
 }
 
 export interface ProductDetailResponse extends BaseResponse {
   id: string;
   businessId: string;
   name: string;
-  description?: string;
+  description: string;
   unitPrice: number;
+  cost: number;
+  quantity: number;
   currency: string;
   createdAt: string;
   updatedAt?: string;
@@ -419,16 +427,23 @@ export interface ProductDetailResponse extends BaseResponse {
 
 export interface UpdateProductResponse extends BaseResponse {
   id: string;
+  businessId: string;
   name: string;
+  description: string;
   unitPrice: number;
+  cost: number;
+  quantity: number;
   currency: string;
+  createdAt: string;
   updatedAt?: string;
 }
 
-export interface ProductImportResponse extends BaseResponse {
+export interface ProductImportResponse {
   imported: number;
   failed: number;
-  skipped: number;
+  skipped?: number;
+  errors: string[];
+  message?: string;
 }
 
 export interface ProductMessageResponse extends BaseResponse {
