@@ -43,7 +43,7 @@ export function Business({
   const {
     data: clientsData,
     isLoading: isLoadingUsers,
-    error: clientsError,
+    isError: isClientsError,
     refetch: refetchClients,
   } = useQuery({
     queryKey: ['business-clients', businessId],
@@ -250,16 +250,18 @@ export function Business({
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          ) : clientsError ? (
-            <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
-              <AlertCircle className="h-5 w-5" />
-              <div className="flex-1 text-sm">
-                {t.errorLoading || 'Failed to load clients'}
-              </div>
+          ) : isClientsError ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <AlertCircle className="text-destructive h-10 w-10" />
+              <p className="text-foreground font-medium">
+                {t.failedToLoadClients || t.errorLoading}
+              </p>
               <Button
+                type="button"
                 variant="outline"
-                size="sm"
-                onClick={() => refetchClients()}
+                onClick={() => {
+                  void refetchClients();
+                }}
               >
                 {t.retry || 'Retry'}
               </Button>

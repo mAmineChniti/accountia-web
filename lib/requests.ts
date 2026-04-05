@@ -69,6 +69,7 @@ import type {
   NotificationListResponse,
   AuditLogListResponse,
   HealthCheckResponse,
+  BusinessStatisticsResponse,
   InvoiceImportResponse,
   BusinessMessageResponse,
 } from '@/types/ResponseInterfaces';
@@ -177,6 +178,7 @@ const API_CONFIG = {
     GET_CLIENTS: 'business/{id}/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
     DELETE_CLIENT: 'business/{id}/clients/{clientId}',
+    GET_STATISTICS: 'business/{id}/statistics',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -1114,6 +1116,30 @@ export const BusinessService = {
       const result = await client
         .delete(endpoint)
         .json<BusinessMessageResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getBusinessStatistics(
+    businessId: string
+  ): Promise<BusinessStatisticsResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS.replace(
+        '{id}',
+        businessId
+      );
+      const result = await client
+        .get(endpoint)
+        .json<BusinessStatisticsResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
