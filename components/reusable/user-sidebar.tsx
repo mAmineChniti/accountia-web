@@ -256,11 +256,14 @@ export default function UserSidebar({
                             </Link>
                           </SidebarMenuButton>
                           <button
+                            type="button"
                             onClick={() => toggleBusinessExpanded(business.id)}
                             className={cn(
                               'ml-auto h-4 w-4 transition-transform',
                               isExpanded && 'rotate-180'
                             )}
+                            aria-label={`Toggle ${business.name} details`}
+                            aria-expanded={isExpanded}
                           >
                             <ChevronDown className="h-4 w-4" />
                           </button>

@@ -23,8 +23,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
-import { getToken } from '@/actions/cookies';
-import { ApiError } from '@/lib/requests';
+import { InvoicesService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import type { InvoiceImportResponse } from '@/types/ResponseInterfaces';
 
@@ -57,33 +56,8 @@ export function ImportInvoicesModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
-    mutationFn: async (file: File): Promise<InvoiceImportResponse> => {
-      // POST /invoices/import with multipart/form-data
-      // Accepts CSV or XLSX files with invoice data
-      // Returns detailed results with success/failure counts and detailed per-invoice status
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const token = await getToken();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND || 'http://127.0.0.1:4789/api'}/invoices/import`,
-        {
-          method: 'POST',
-          body: formData,
-          headers: {
-            // Don't set Content-Type header, browser will set it with boundary
-            Authorization: `Bearer ${token?.token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw ApiError.fromResponse(error);
-      }
-
-      return response.json() as Promise<InvoiceImportResponse>;
-    },
+    mutationFn: (file: File): Promise<InvoiceImportResponse> =>
+      InvoicesService.importInvoices(file),
     onSuccess: (data: InvoiceImportResponse) => {
       // Invalidate invoice queries to refetch updated list
       queryClient.invalidateQueries({ queryKey: ['invoices-issued'] });

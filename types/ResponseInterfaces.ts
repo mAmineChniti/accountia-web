@@ -168,7 +168,7 @@ export interface BusinessItem {
   name: string;
   phone: string;
   status: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface BusinessDetailData {
@@ -180,8 +180,8 @@ export interface BusinessDetailData {
   email: string;
   databaseName: string;
   status: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BusinessDetailResponse {
@@ -209,7 +209,7 @@ export interface BusinessApplicationItem {
   applicantEmail?: string;
   applicantName?: string;
   status: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface BusinessApplicationsListResponse {

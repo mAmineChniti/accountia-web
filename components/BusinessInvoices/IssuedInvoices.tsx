@@ -326,12 +326,12 @@ export function IssuedInvoices({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Issued Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t.invoiceNumber}</TableHead>
+                  <TableHead>{t.recipient}</TableHead>
+                  <TableHead>{t.amount}</TableHead>
+                  <TableHead>{t.status}</TableHead>
+                  <TableHead>{t.issuedDate}</TableHead>
+                  <TableHead className="text-right">{t.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -363,9 +363,13 @@ export function IssuedInvoices({
                       {new Date(invoice.issuedDate).toLocaleDateString(lang)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
+                      <Link
+                        href={`/${lang}/business/${businessId}/invoices/${invoice.id}`}
+                      >
+                        <Button variant="outline" size="sm">
+                          {t.view}
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

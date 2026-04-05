@@ -7,8 +7,14 @@ export default async function CompanyInvoicesPage({
 }: {
   params: Promise<{ lang: Locale; businessId: string }>;
 }) {
-  const { lang } = await params;
+  const { lang, businessId } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <ReceivedInvoices lang={lang} dictionary={dictionary} />;
+  return (
+    <ReceivedInvoices
+      lang={lang}
+      dictionary={dictionary}
+      businessId={businessId}
+    />
+  );
 }

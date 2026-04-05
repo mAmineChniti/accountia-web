@@ -5,20 +5,11 @@ import { toast } from 'sonner';
 import { getToken } from '@/actions/cookies';
 import { NotificationsService } from '@/lib/requests';
 import { env } from '@/env';
-import type { NotificationType } from '@/types/ResponseInterfaces';
+import type { Notification } from '@/types/ResponseInterfaces';
 
 export interface UseNotificationsOptions {
   businessId?: string;
   enabled?: boolean;
-}
-
-/** Type for real-time Socket.IO notifications (subset of Notification) */
-interface SocketIONotification {
-  id: string;
-  type: NotificationType;
-  message: string;
-  payload: Record<string, unknown>;
-  createdAt: Date;
 }
 
 export function useNotifications({
@@ -155,7 +146,7 @@ export function useNotifications({
           }
         });
 
-        newSocket.on('notification', (notification: SocketIONotification) => {
+        newSocket.on('notification', (notification: Notification) => {
           if (!isMountedRef.current) return;
 
           // Invalidate queries to refetch notifications

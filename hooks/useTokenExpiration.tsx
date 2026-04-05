@@ -98,7 +98,7 @@ export const useTokenExpiration = () => {
           }
         }
 
-        // Schedule next check: either at (expiry - buffer) or in 30 seconds, whichever is sooner
+        // Schedule next check: either at (expiry - buffer) or in 3 minutes, whichever is sooner (MIN_CHECK_INTERVAL)
         const timeUntilRefreshNeeded = timeUntilExpiry - REFRESH_BUFFER_MS;
         const delayUntilNextCheck = Math.min(
           timeUntilRefreshNeeded,

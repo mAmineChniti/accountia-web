@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   FileText,
   AlertCircle,
@@ -26,6 +25,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableHeader,
   TableBody,
@@ -33,7 +40,11 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import type { InvoiceStatus } from '@/types/ResponseInterfaces';
+import { useQuery } from '@tanstack/react-query';
+import type {
+  InvoiceStatus,
+  InvoiceResponse,
+} from '@/types/ResponseInterfaces';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -66,13 +77,19 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 export function ReceivedInvoices({
   lang,
   dictionary,
+  businessId: _businessId,
 }: {
   lang: Locale;
   dictionary: Dictionary;
+  businessId: string;
 }) {
   const t = dictionary.pages.invoices;
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<
+    string | undefined
+  >();
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const {
     data: invoicesResponse,
@@ -82,6 +99,17 @@ export function ReceivedInvoices({
     queryKey: ['invoices-received-business'],
     queryFn: () => InvoicesService.getReceivedInvoicesByBusiness(),
   });
+
+  // Fetch invoice details when a specific invoice is selected
+  const { data: invoiceDetails, isLoading: isLoadingDetails } =
+    useQuery<InvoiceResponse>({
+      queryKey: ['invoice-received-details', selectedInvoiceId],
+      queryFn: () =>
+        selectedInvoiceId
+          ? InvoicesService.getReceivedInvoiceDetails(selectedInvoiceId)
+          : Promise.reject(new Error('No invoice selected')),
+      enabled: !!selectedInvoiceId && isDetailsOpen,
+    });
 
   const invoices = useMemo(
     () => invoicesResponse?.receipts ?? [],
@@ -317,13 +345,13 @@ export function ReceivedInvoices({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>From</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Issued Date</TableHead>
-                  <TableHead>Viewed</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t.invoiceNumber}</TableHead>
+                  <TableHead>{t.from}</TableHead>
+                  <TableHead>{t.amount}</TableHead>
+                  <TableHead>{t.status}</TableHead>
+                  <TableHead>{t.issuedDate}</TableHead>
+                  <TableHead>{t.viewed}</TableHead>
+                  <TableHead className="text-right">{t.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -369,8 +397,15 @@ export function ReceivedInvoices({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm">
-                        View
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedInvoiceId(invoice.id);
+                          setIsDetailsOpen(true);
+                        }}
+                      >
+                        {t.view}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -380,6 +415,123 @@ export function ReceivedInvoices({
           )}
         </CardContent>
       </Card>
+
+      {/* Invoice Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {isLoadingDetails ? 'Loading...' : 'Invoice Details'}
+            </DialogTitle>
+            <DialogDescription>
+              {invoiceDetails?.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingDetails ? (
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+            </div>
+          ) : invoiceDetails ? (
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    Invoice Number
+                  </p>
+                  <p className="font-medium">{invoiceDetails.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">Status</p>
+                  <Badge className={STATUS_COLORS[invoiceDetails.status]}>
+                    <span className="mr-1">
+                      {STATUS_ICONS[invoiceDetails.status]}
+                    </span>
+                    {invoiceDetails.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">Amount</p>
+                  <p className="font-medium">
+                    {invoiceDetails.totalAmount.toLocaleString(lang, {
+                      minimumFractionDigits: 2,
+                    })}{' '}
+                    {invoiceDetails.currency}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">Issued Date</p>
+                  <p className="font-medium">
+                    {new Date(invoiceDetails.issuedDate).toLocaleDateString(
+                      lang
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              {invoiceDetails.description && (
+                <div>
+                  <p className="text-muted-foreground text-sm">Description</p>
+                  <p className="text-sm">{invoiceDetails.description}</p>
+                </div>
+              )}
+
+              {/* Line Items */}
+              {invoiceDetails.lineItems &&
+                invoiceDetails.lineItems.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium">Line Items</p>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoiceDetails.lineItems.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.unitPrice.toLocaleString(lang, {
+                                minimumFractionDigits: 2,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {(item.quantity * item.unitPrice).toLocaleString(
+                                lang,
+                                { minimumFractionDigits: 2 }
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
+              Failed to load invoice details
+            </p>
+          )}
+
+          <DialogClose asChild>
+            <Button type="button" variant="outline">
+              Close
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
