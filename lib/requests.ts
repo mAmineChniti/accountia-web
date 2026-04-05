@@ -70,6 +70,7 @@ import type {
   AuditLogListResponse,
   HealthCheckResponse,
   BusinessStatisticsResponse,
+  InvoiceImportResponse,
   BusinessMessageResponse,
 } from '@/types/ResponseInterfaces';
 
@@ -194,6 +195,7 @@ const API_CONFIG = {
     GET_ISSUED: 'invoices/issued/{id}',
     UPDATE_ISSUED: 'invoices/issued/{id}',
     TRANSITION: 'invoices/issued/{id}/transition',
+    IMPORT: 'invoices/import',
     // Recipient Endpoints
     LIST_RECEIVED_BUSINESS: 'invoices/received/business',
     LIST_RECEIVED_INDIVIDUAL: 'invoices/received/individual',
@@ -1521,6 +1523,27 @@ export const InvoicesService = {
           }
         )
         .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  // 10. Import Invoices from File
+  async importInvoices(file: File): Promise<InvoiceImportResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await client
+        .post(API_CONFIG.INVOICES.IMPORT, { body: formData })
+        .json<InvoiceImportResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

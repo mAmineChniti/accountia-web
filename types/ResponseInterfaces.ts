@@ -168,7 +168,6 @@ export interface BusinessItem {
   name: string;
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
-  isActive: boolean;
   createdAt: string;
 }
 
@@ -207,6 +206,8 @@ export interface BusinessApplicationItem {
   website?: string;
   phone: string;
   applicantId: string;
+  applicantEmail?: string;
+  applicantName?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
@@ -604,10 +605,24 @@ export interface UpdateCompanyInvoiceResponse extends BaseResponse {
   paidAt?: string;
 }
 
-export interface InvoiceImportResponse extends BaseResponse {
-  imported: number;
-  failed: number;
+export interface InvoiceImportResult {
+  invoiceNumber: string;
+  invoiceId?: string;
+  status: 'success' | 'error' | 'warning';
   message: string;
+  lineItemsCount?: number;
+  totalAmount?: number;
+}
+
+export interface InvoiceImportResponse extends BaseResponse {
+  totalRecords: number;
+  successCount: number;
+  failedCount: number;
+  warningCount: number;
+  results: InvoiceImportResult[];
+  importStartedAt: string;
+  importCompletedAt: string;
+  processingTimeMs: number;
 }
 
 export interface InvoiceMessageResponse extends BaseResponse {

@@ -112,6 +112,8 @@ export default function Profile({
       const res = await AuthService.fetchUser();
       return res.user;
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const setup2FAMutation = useMutation({

@@ -63,8 +63,13 @@ export function CreateProductDialog({
       ProductsService.createProduct(data),
     onSuccess: () => {
       toast.success(t.createSuccess);
+      // Invalidate all product queries for this business to refresh the list
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId],
+      });
+      // Also invalidate products query used in invoice creation
+      queryClient.invalidateQueries({
+        queryKey: ['products', businessId],
       });
       setOpen(false);
       form.reset();
