@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Package,
-  ArrowLeft,
   Search,
   Loader2,
   AlertCircle,
@@ -17,8 +16,6 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-import Link from 'next/link';
-import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -74,11 +71,9 @@ const sanitizeCsvValue = (value: string | number): string => {
 export function BusinessProducts({
   businessId,
   dictionary,
-  lang,
 }: {
   businessId: string;
   dictionary: Dictionary;
-  lang: Locale;
 }) {
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessProducts;
@@ -107,6 +102,8 @@ export function BusinessProducts({
         businessId,
         searchQuery
       ),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
   });
 
   const deleteMutation = useMutation({
@@ -158,23 +155,23 @@ export function BusinessProducts({
     if (products.length === 0) return;
 
     const headers = [
-      'ID',
-      'Name',
-      'Description',
-      'Unit Price',
-      'Cost Price',
-      'Quantity',
-      'Created At',
-    ];
+      t.columnId,
+      t.columnName,
+      t.columnDescription,
+      t.columnUnitPrice,
+      t.columnCost,
+      t.columnQuantity,
+      t.columnCreatedAt,
+    ].map((h) => sanitizeCsvValue(h));
 
     const rows = filteredProducts.map((p) => [
-      p.id,
+      sanitizeCsvValue(String(p.id)),
       sanitizeCsvValue(p.name),
       sanitizeCsvValue(p.description),
-      p.unitPrice,
-      p.cost,
-      p.quantity,
-      p.createdAt,
+      sanitizeCsvValue(String(p.unitPrice)),
+      sanitizeCsvValue(String(p.cost)),
+      sanitizeCsvValue(String(p.quantity)),
+      sanitizeCsvValue(String(p.createdAt)),
     ]);
 
     const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
@@ -270,11 +267,6 @@ export function BusinessProducts({
     );
   };
 
-  // Handle back button destination
-  const backHref = businessId
-    ? `/${lang}/business/${businessId}`
-    : `/${lang}/dashboard/admin`;
-
   if (error) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
@@ -290,32 +282,39 @@ export function BusinessProducts({
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="h-8 w-8"
-              aria-label="Go back"
-            >
-              <Link href={backHref}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold tracking-tight">{t.title}</h1>
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      {/* Header Section */}
+      <div className="space-y-6">
+        {/* Title and Description */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 rounded-lg p-2">
+              <Package className="text-primary h-6 w-6" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           </div>
-          <p className="text-muted-foreground ml-12">
+          <p className="text-muted-foreground ml-11">
             {businessId
               ? t.description
               : t.adminSubtitle || 'Manage products across all businesses'}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="flex gap-2">
+
+        {/* Actions Bar */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-sm flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder={t.searchPlaceholder}
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -359,32 +358,70 @@ export function BusinessProducts({
       </div>
 
       {/* Main Content Card */}
-      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="relative max-w-sm flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-              <Input
-                placeholder={t.searchPlaceholder}
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-            <div className="text-muted-foreground text-sm">
-              {isLoading ? '...' : `${filteredProducts.length} items`}
+      <Card className="dark:from-card dark:to-card/95 border-0 bg-linear-to-br from-white to-white/95 shadow-md">
+        <CardHeader className="border-border/50 border-b pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">{t.title || 'Products'}</h2>
+              <p className="text-muted-foreground text-sm">
+                {isLoading
+                  ? '...'
+                  : `${productsData?.total ?? filteredProducts.length} ${t.productsList || 'products'}`}
+              </p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/50 border-b hover:bg-transparent">
+                    <TableHead className="text-foreground font-semibold">
+                      <Skeleton className="h-4 w-20" />
+                    </TableHead>
+                    <TableHead className="text-foreground font-semibold">
+                      <Skeleton className="h-4 w-24" />
+                    </TableHead>
+                    <TableHead className="text-foreground text-right font-semibold">
+                      <Skeleton className="ml-auto h-4 w-20" />
+                    </TableHead>
+                    <TableHead className="text-foreground text-right font-semibold">
+                      <Skeleton className="ml-auto h-4 w-20" />
+                    </TableHead>
+                    <TableHead className="text-foreground text-right font-semibold">
+                      <Skeleton className="ml-auto h-4 w-16" />
+                    </TableHead>
+                    <TableHead className="text-destructive w-12 text-right font-semibold">
+                      <Skeleton className="ml-auto h-4 w-8" />
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <TableRow key={i} className="group hover:bg-muted/50">
+                      <TableCell>
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-4 w-12" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-4 w-8" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -400,25 +437,32 @@ export function BusinessProducts({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>{t.columnName}</TableHead>
-                    <TableHead className="hidden md:table-cell">
+                  <TableRow className="border-border/50 border-b hover:bg-transparent">
+                    <TableHead className="text-foreground font-semibold">
+                      {t.columnName}
+                    </TableHead>
+                    <TableHead className="text-foreground hidden font-semibold md:table-cell">
                       {t.columnDescription}
                     </TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className="text-foreground text-right font-semibold">
                       {t.columnUnitPrice}
                     </TableHead>
-                    <TableHead className="text-right">{t.columnCost}</TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className="text-foreground text-right font-semibold">
+                      {t.columnCost}
+                    </TableHead>
+                    <TableHead className="text-foreground text-right font-semibold">
                       {t.columnQuantity}
                     </TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-[50px] font-semibold"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProducts.map((product: Product) => (
-                    <TableRow key={product.id} className="group">
-                      <TableCell className="text-foreground font-medium">
+                    <TableRow
+                      key={product.id}
+                      className="group hover:bg-primary/5 border-border/30 border-b transition-colors"
+                    >
+                      <TableCell className="text-foreground font-semibold">
                         {product.name}
                       </TableCell>
                       <TableCell className="text-muted-foreground hidden max-w-xs truncate md:table-cell">
@@ -432,10 +476,10 @@ export function BusinessProducts({
                       </TableCell>
                       <TableCell className="text-right">
                         <span
-                          className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                             product.quantity > 10
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                           }`}
                         >
                           {product.quantity}
@@ -447,7 +491,7 @@ export function BusinessProducts({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-8 w-8 opacity-100 transition-opacity group-focus-within:opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                               aria-label={`More actions for ${product.name}`}
                             >
                               <MoreVertical className="h-4 w-4" />
@@ -483,10 +527,12 @@ export function BusinessProducts({
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
-                    Previous
+                    {t.previous}
                   </Button>
                   <span className="text-sm">
-                    Page {currentPage} of {totalPages}
+                    {t.page
+                      .replace('{page}', currentPage.toString())
+                      .replace('{totalPages}', totalPages.toString())}
                   </span>
                   <Button
                     variant="outline"
@@ -494,7 +540,7 @@ export function BusinessProducts({
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >
-                    Next
+                    {t.next}
                   </Button>
                 </div>
               )}
@@ -512,12 +558,13 @@ export function BusinessProducts({
           <DialogHeader>
             <DialogTitle className="text-destructive flex items-center gap-2">
               <Trash2 className="h-5 w-5" />
-              {t.deleteConfirmTitle || 'Confirm Delete'}
+              {t.deleteConfirmTitle}
             </DialogTitle>
             <DialogDescription className="py-4">
-              Are you sure you want to delete{' '}
-              <strong>{productToDelete?.name}</strong>? This action cannot be
-              undone.
+              {t.deleteConfirmDescriptionWithName.replace(
+                '{name}',
+                productToDelete?.name || ''
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

@@ -36,7 +36,12 @@ export default async function RootLayout({
   const locale = headersList.get('x-locale') ?? 'en';
 
   return (
-    <html lang={locale} className="h-full" suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={locale.split('-')[0] === 'ar' ? 'rtl' : 'ltr'}
+      className="h-full"
+      suppressHydrationWarning
+    >
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansArabic.variable} h-full antialiased`}
       >

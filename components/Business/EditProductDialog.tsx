@@ -90,11 +90,17 @@ export function EditProductDialog({
       ProductsService.updateProduct(product.id, data),
     onSuccess: () => {
       toast.success(t.updateSuccess || 'Product updated successfully');
+      // Invalidate all product queries for this business to refresh the list
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId || product.businessId],
       });
+      // Also invalidate products query used in invoice creation
+      queryClient.invalidateQueries({
+        queryKey: ['products', businessId || product.businessId],
+      });
       if (!businessId) {
         queryClient.invalidateQueries({ queryKey: ['business-products', ''] });
+        queryClient.invalidateQueries({ queryKey: ['products', ''] });
       }
       setOpen(false);
     },

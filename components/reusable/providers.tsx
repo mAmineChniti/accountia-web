@@ -9,7 +9,16 @@ import { usePathname } from 'next/navigation';
 import { type Locale, i18n } from '@/i18n-config';
 import { DirectionProvider } from '@/components/ui/direction';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh for 5 mins
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache for 30 mins
+      retry: 1,
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    },
+  },
+});
 
 const RTL_LANGUAGES = new Set(['ar']);
 

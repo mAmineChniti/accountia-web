@@ -2,16 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  FileText,
-  Building2,
-  Phone,
-  Globe,
-  Users,
-  Package,
-} from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -23,8 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -44,6 +35,7 @@ export function Business({
   lang: Locale;
 }) {
   const t = dictionary.pages.business;
+  const containerClass = 'w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8';
   const [selectedClient, setSelectedClient] = useState<
     ClientData | undefined
   >();
@@ -56,6 +48,8 @@ export function Business({
   } = useQuery({
     queryKey: ['business-clients', businessId],
     queryFn: () => BusinessService.getBusinessClients(businessId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const {
@@ -65,6 +59,8 @@ export function Business({
   } = useQuery({
     queryKey: ['business', businessId],
     queryFn: () => BusinessService.getBusinessById(businessId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
   const clients = clientsData?.clients ?? [];
 
@@ -72,7 +68,7 @@ export function Business({
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         {/* Header Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-64" />
@@ -99,7 +95,7 @@ export function Business({
 
   if (error || !business) {
     return (
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
           <div className="text-sm">
@@ -116,15 +112,25 @@ export function Business({
     approved:
       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+    neutral: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
+  };
+
+  // Normalize and safely lookup status color
+  const getStatusColorClass = (status: string) => {
+    const key = (status || '').toLowerCase().trim();
+    if (Object.prototype.hasOwnProperty.call(statusColors, key)) {
+      return statusColors[key as keyof typeof statusColors];
+    }
+    return statusColors.neutral;
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className={containerClass}>
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">{business.name}</h1>
-          <Badge className={statusColors[business.status]}>
+          <Badge className={getStatusColorClass(business.status)}>
             {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
           </Badge>
         </div>
@@ -227,20 +233,6 @@ export function Business({
           </div>
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button size="lg" className="gap-2" asChild variant="outline">
-          <Link href={`/${lang}/business/${businessId}/products`}>
-            <Package className="h-5 w-5" />
-            {t.viewProducts}
-          </Link>
-        </Button>
-        <Button size="lg" className="gap-2">
-          <FileText className="h-5 w-5" />
-          {t.createInvoiceButton}
-        </Button>
-      </div>
 
       {/* Clients Section */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">

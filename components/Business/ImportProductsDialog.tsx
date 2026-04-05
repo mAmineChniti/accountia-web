@@ -58,8 +58,13 @@ export function ImportProductsDialog({
       ProductsService.importProducts(file, businessId),
     onSuccess: (result) => {
       setImportResult(result);
+      // Invalidate all product queries for this business to refresh the list
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId],
+      });
+      // Also invalidate products query used in invoice creation
+      queryClient.invalidateQueries({
+        queryKey: ['products', businessId],
       });
       toast.success(
         t.importSuccess
