@@ -366,6 +366,8 @@
       "clientsDescription": "المستخدمون المعينون لهذا العمل",
       "noClientsAssigned": "لا توجد عملاء معينة",
       "noClientsAssignedHint": "لم يتم تعيين أي مستخدمين لهذا العمل بعد",
+      "errorLoading": "فشل في تحميل العملاء",
+      "retry": "إعادة المحاولة",
       "clientDetailsTitle": "تفاصيل العميل",
       "clientDetailsDescription": "معلومات عن المستخدم المعين",
       "name": "الاسم",

@@ -43,6 +43,16 @@ export function ImportProductsDialog({
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessProducts;
 
+  // Handle dialog open/close to reset state when closing
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      // Reset file and import state when dialog closes
+      setSelectedFile(undefined);
+      setImportResult(undefined);
+    }
+    setOpen(newOpen);
+  };
+
   const mutation = useMutation({
     mutationFn: (file: File) =>
       ProductsService.importProducts(file, businessId),
@@ -79,7 +89,7 @@ export function ImportProductsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2">

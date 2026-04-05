@@ -58,6 +58,19 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+// Sanitize CSV values to prevent formula injection and escape quotes
+const sanitizeCsvValue = (value: string | number): string => {
+  if (typeof value === 'number') return value.toString();
+  let sanitized = String(value);
+  // Escape formula injection
+  if (/^[+=@\-]/.test(sanitized)) {
+    sanitized = "'" + sanitized;
+  }
+  // Escape quotes by doubling them and wrap in quotes
+  sanitized = '"' + sanitized.replaceAll('"', '""') + '"';
+  return sanitized;
+};
+
 export function BusinessProducts({
   businessId,
   dictionary,
@@ -153,10 +166,11 @@ export function BusinessProducts({
       'Quantity',
       'Created At',
     ];
+
     const rows = filteredProducts.map((p) => [
       p.id,
-      `"${p.name}"`,
-      `"${p.description}"`,
+      sanitizeCsvValue(p.name),
+      sanitizeCsvValue(p.description),
       p.unitPrice,
       p.cost,
       p.quantity,
@@ -281,7 +295,13 @@ export function BusinessProducts({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="h-8 w-8"
+              aria-label="Go back"
+            >
               <Link href={backHref}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
@@ -348,7 +368,10 @@ export function BusinessProducts({
                 placeholder={t.searchPlaceholder}
                 className="pl-9"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
             <div className="text-muted-foreground text-sm">
@@ -425,6 +448,7 @@ export function BusinessProducts({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
+                              aria-label={`More actions for ${product.name}`}
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>

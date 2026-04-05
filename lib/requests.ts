@@ -1162,14 +1162,13 @@ export const ProductsService = {
   },
 
   async createProduct(
-    data: CreateProductInput,
-    businessId: string
+    data: CreateProductInput
   ): Promise<CreateProductResponse> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
         .post(API_CONFIG.PRODUCTS.CREATE, {
-          json: { ...data, businessId },
+          json: data,
         })
         .json<CreateProductResponse>();
       return result;
@@ -1204,14 +1203,13 @@ export const ProductsService = {
 
   async updateProduct(
     id: string,
-    data: UpdateProductInput,
-    businessId: string
+    data: UpdateProductInput
   ): Promise<UpdateProductResponse> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
         .patch(API_CONFIG.PRODUCTS.UPDATE.replace('{id}', id), {
-          json: { ...data, businessId },
+          json: data,
         })
         .json<UpdateProductResponse>();
       return result;

@@ -372,6 +372,8 @@
       "clientsDescription": "Utilisateurs assignés à cette entreprise",
       "noClientsAssigned": "Aucun client assigné",
       "noClientsAssignedHint": "Aucun utilisateur n'a encore été assigné à cette entreprise",
+      "errorLoading": "Échec du chargement des clients",
+      "retry": "Réessayer",
       "clientDetailsTitle": "Détails du client",
       "clientDetailsDescription": "Informations sur l'utilisateur assigné",
       "name": "Nom",

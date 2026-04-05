@@ -60,7 +60,7 @@ export function CreateProductDialog({
 
   const mutation = useMutation({
     mutationFn: (data: CreateProductInput) =>
-      ProductsService.createProduct(data, businessId),
+      ProductsService.createProduct(data),
     onSuccess: () => {
       toast.success(t.createSuccess);
       queryClient.invalidateQueries({
@@ -142,9 +142,13 @@ export function CreateProductDialog({
                         inputMode="decimal"
                         className="border-orange-200 bg-orange-50/10 transition-all focus-visible:ring-orange-400"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={(e) => {
+                          const numValue =
+                            Number.parseFloat(e.target.value) || 0;
+                          field.onChange(numValue);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -164,9 +168,13 @@ export function CreateProductDialog({
                         inputMode="decimal"
                         className="border-red-400/50 bg-red-50/10 shadow-[0_0_10px_rgba(239,68,68,0.05)] transition-all focus-visible:ring-red-400"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={(e) => {
+                          const numValue =
+                            Number.parseFloat(e.target.value) || 0;
+                          field.onChange(numValue);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />

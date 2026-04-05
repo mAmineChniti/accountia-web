@@ -372,6 +372,8 @@
       "clientsDescription": "Users assigned to this business",
       "noClientsAssigned": "No clients assigned",
       "noClientsAssignedHint": "No users have been assigned to this business yet",
+      "errorLoading": "Failed to load clients",
+      "retry": "Retry",
       "clientDetailsTitle": "Client Details",
       "clientDetailsDescription": "Information about the assigned user",
       "name": "Name",

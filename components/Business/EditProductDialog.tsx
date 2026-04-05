@@ -61,10 +61,11 @@ export function EditProductDialog({
     },
   });
 
-  // Update form values when product changes or dialog opens
+  // Update form values when dialog opens or product ID changes
   useEffect(() => {
     if (open) {
       form.reset({
+        businessId,
         name: product.name,
         description: product.description,
         unitPrice: product.unitPrice,
@@ -72,15 +73,21 @@ export function EditProductDialog({
         quantity: product.quantity,
       });
     }
-  }, [open, product, form]);
+  }, [
+    open,
+    product.id,
+    product.name,
+    product.description,
+    product.unitPrice,
+    product.cost,
+    product.quantity,
+    form,
+    businessId,
+  ]);
 
   const mutation = useMutation({
     mutationFn: (data: UpdateProductInput) =>
-      ProductsService.updateProduct(
-        product.id,
-        data,
-        businessId || product.businessId
-      ),
+      ProductsService.updateProduct(product.id, data),
     onSuccess: () => {
       toast.success(t.updateSuccess || 'Product updated successfully');
       queryClient.invalidateQueries({
@@ -171,9 +178,12 @@ export function EditProductDialog({
                         className="border-orange-200 bg-orange-50/10 transition-all focus-visible:ring-orange-400"
                         {...field}
                         value={field.value ?? ''}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={(e) => {
+                          const numValue =
+                            Number.parseFloat(e.target.value) || 0;
+                          field.onChange(numValue);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -194,9 +204,12 @@ export function EditProductDialog({
                         className="border-red-400/50 bg-red-50/10 shadow-[0_0_10px_rgba(239,68,68,0.05)] transition-all focus-visible:ring-red-400"
                         {...field}
                         value={field.value ?? ''}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={(e) => {
+                          const numValue =
+                            Number.parseFloat(e.target.value) || 0;
+                          field.onChange(numValue);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />

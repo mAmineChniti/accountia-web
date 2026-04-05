@@ -173,7 +173,7 @@ export const CreateProductSchema = z.object({
 export const UpdateProductSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required').optional(),
   name: z.string().min(1).optional(),
-  description: z.string().optional(),
+  description: z.string().min(1, 'Description must not be empty').optional(),
   unitPrice: z.number().min(0).optional(),
   cost: z.number().min(0).optional(),
   quantity: z.number().int().min(0).optional(),
