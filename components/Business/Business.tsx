@@ -9,7 +9,9 @@ import {
   Phone,
   Globe,
   Users,
+  Package,
 } from 'lucide-react';
+import Link from 'next/link';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -228,6 +230,12 @@ export function Business({
 
       {/* Actions */}
       <div className="flex gap-3">
+        <Button size="lg" className="gap-2" asChild variant="outline">
+          <Link href={`/${lang}/business/${businessId}/products`}>
+            <Package className="h-5 w-5" />
+            {t.viewProducts}
+          </Link>
+        </Button>
         <Button size="lg" className="gap-2">
           <FileText className="h-5 w-5" />
           {t.createInvoiceButton}
@@ -254,7 +262,7 @@ export function Business({
             <div className="flex flex-col items-center gap-3 py-8 text-center">
               <AlertCircle className="text-destructive h-10 w-10" />
               <p className="text-foreground font-medium">
-                {t.failedToLoadClients}
+                {t.failedToLoadClients || t.errorLoading}
               </p>
               <Button
                 type="button"
@@ -263,7 +271,7 @@ export function Business({
                   void refetchClients();
                 }}
               >
-                {t.retry}
+                {t.retry || 'Retry'}
               </Button>
             </div>
           ) : clients.length === 0 ? (
