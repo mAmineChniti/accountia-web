@@ -149,7 +149,7 @@ export function useNotifications({
           }
         });
 
-        newSocket.on('disconnect', (reason: string) => {
+        newSocket.on('disconnect', (_reason: string) => {
           if (isMountedRef.current) {
             setIsConnected(false);
           }
@@ -180,14 +180,16 @@ export function useNotifications({
         });
 
         newSocket.on('connect_error', (error: Error | unknown) => {
+          console.warn('Socket connection error:', error);
           // Connection errors are normal during reconnection attempts
           // The client will keep trying to reconnect
         });
 
         newSocket.on('error', (error: Error | unknown) => {
-          // Error handling
+          console.error('Socket error:', error);
         });
-      } catch {
+      } catch (error_) {
+        console.error('Failed to initialize notifications socket:', error_);
         if (isMountedRef.current) {
           setIsConnected(false);
         }
