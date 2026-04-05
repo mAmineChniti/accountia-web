@@ -70,7 +70,8 @@ export const FetchUserByIdSchema = z.object({
 });
 
 export const GoogleOAuthExchangeSchema = z.object({
-  oauthCode: z.string().min(1, 'OAuth code is required'),
+  code: z.string().min(1, 'OAuth code is required'),
+  redirectUri: z.string().optional(),
 });
 
 export const TwoFAVerifySchema = z.object({
@@ -161,17 +162,21 @@ export type ChangeClientRoleInput = z.infer<typeof ChangeClientRoleSchema>;
 // ============= Products Schemas =============
 
 export const CreateProductSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
   name: z.string().min(1, 'Product name is required'),
-  description: z.string().optional(),
-  unitPrice: z.number().positive('Unit price must be positive'),
-  currency: z.string().min(1, 'Currency is required'),
+  description: z.string().min(1, 'Product description is required'),
+  unitPrice: z.number().min(0, 'Unit price must be non-negative'),
+  cost: z.number().min(0, 'Cost must be non-negative'),
+  quantity: z.number().int().min(0, 'Quantity must be a non-negative integer'),
 });
 
 export const UpdateProductSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').optional(),
   name: z.string().min(1).optional(),
   description: z.string().optional(),
-  unitPrice: z.number().positive().optional(),
-  currency: z.string().optional(),
+  unitPrice: z.number().min(0).optional(),
+  cost: z.number().min(0).optional(),
+  quantity: z.number().int().min(0).optional(),
 });
 
 // ============= Invoices Schemas =============
@@ -210,6 +215,7 @@ export const CreateInvoiceLineItemSchema = z.object({
 });
 
 export const CreateInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
   invoiceNumber: z.string().min(1, 'Invoice number is required'),
   issuedDate: DateSchema,
   dueDate: DateSchema,
@@ -223,12 +229,14 @@ export const CreateInvoiceSchema = z.object({
 });
 
 export const UpdateInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').optional(),
   description: z.string().optional(),
   paymentTerms: z.string().optional(),
   dueDate: OptionalDateSchema,
 });
 
 export const TransitionInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
   newStatus: InvoiceStatusEnum,
   amountPaid: z.number().min(0).optional(),
   reason: z.string().optional(),
@@ -240,6 +248,7 @@ export const LineItemSchema = z.object({
 });
 
 export const CreatePersonalInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
   clientUserId: z.string().min(1, 'Client user ID is required'),
   lineItems: z
     .array(LineItemSchema)
@@ -249,6 +258,7 @@ export const CreatePersonalInvoiceSchema = z.object({
 });
 
 export const UpdatePersonalInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').optional(),
   dueDate: OptionalDateSchema,
   lineItems: z.array(LineItemSchema).optional(),
   paid: z.boolean().optional(),
@@ -256,6 +266,7 @@ export const UpdatePersonalInvoiceSchema = z.object({
 });
 
 export const CreateCompanyInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
   clientBusinessId: z.string().min(1, 'Client business ID is required'),
   clientCompanyName: z.string().min(1, 'Client company name is required'),
   clientContactEmail: z.email('Valid email is required'),
@@ -267,6 +278,7 @@ export const CreateCompanyInvoiceSchema = z.object({
 });
 
 export const UpdateCompanyInvoiceSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').optional(),
   clientCompanyName: z.string().min(1).optional(),
   clientContactEmail: z.email().optional(),
   dueDate: OptionalDateSchema,
