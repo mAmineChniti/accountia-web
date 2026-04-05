@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import {
   Bar,
@@ -15,7 +15,8 @@ import {
   YAxis,
 } from 'recharts';
 import { type Locale } from '@/i18n-config';
-import { BusinessService } from '@/lib/requests';
+import { ApiError, BusinessService } from '@/lib/requests';
+import { type BusinessStatisticsResponse } from '@/types/ResponseInterfaces';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Card,
@@ -26,112 +27,33 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface BusinessStatisticsData {
-  businessId: string;
-  businessName: string;
-  products: {
-    totalProducts: number;
-    totalValue: number;
-    lowStockProducts: number;
-  };
-  invoices: {
-    totalInvoices: number;
-    paidAmount: number;
-    pendingAmount: number;
-    overdueAmount: number;
-    paidInvoices: number;
-    pendingInvoices: number;
-    overdueInvoices: number;
-  };
+type StatisticsUiText = {
+  fetchError: string;
+  noStatistics: string;
+  noData: string;
+  productStats: string;
+  totalProducts: string;
+  totalValue: string;
+  lowStockProducts: string;
+  lowStockHint: string;
+  allInStockHint: string;
+  invoiceStats: string;
+  totalInvoices: string;
+  paidInvoices: string;
+  pendingInvoices: string;
+  overdueInvoices: string;
+  businessOverview: string;
+  productsVsInvoices: string;
+  count: string;
+  invoiceDistribution: string;
+  paidVsPendingVsOverdue: string;
+  paid: string;
+  pending: string;
+  overdue: string;
+  revenueSummary: string;
+  byInvoiceStatus: string;
   lastUpdated: string;
-}
-
-const formatMoney = (amount: number) => `TND ${amount.toFixed(2)}`;
-
-const textByLocale = {
-  en: {
-    fetchError: 'Failed to fetch statistics',
-    noStatistics: 'No statistics data available',
-    noData: 'No data yet. Create products and invoices to populate statistics.',
-    productStats: 'Product Statistics',
-    totalProducts: 'Total Products',
-    totalValue: 'Total Value',
-    lowStockProducts: 'Low Stock Products',
-    lowStockHint: 'Products with less than 10 units',
-    allInStockHint: 'All products in stock',
-    invoiceStats: 'Invoice Statistics',
-    totalInvoices: 'Total Invoices',
-    paidInvoices: 'Paid Invoices',
-    pendingInvoices: 'Pending Invoices',
-    overdueInvoices: 'Overdue Invoices',
-    businessOverview: 'Business Overview',
-    productsVsInvoices: 'Products vs Invoices Comparison',
-    count: 'Count',
-    invoiceDistribution: 'Invoice Status Distribution',
-    paidVsPendingVsOverdue: 'Paid vs Pending vs Overdue',
-    paid: 'Paid',
-    pending: 'Pending',
-    overdue: 'Overdue',
-    revenueSummary: 'Revenue Summary',
-    byInvoiceStatus: 'By Invoice Status',
-    lastUpdated: 'Last updated',
-  },
-  fr: {
-    fetchError: 'Echec du chargement des statistiques',
-    noStatistics: 'Aucune donnee statistique disponible',
-    noData:
-      'Aucune donnee pour le moment. Creez des produits et des factures pour alimenter les statistiques.',
-    productStats: 'Statistiques des produits',
-    totalProducts: 'Total des produits',
-    totalValue: 'Valeur totale',
-    lowStockProducts: 'Produits en stock faible',
-    lowStockHint: 'Produits avec moins de 10 unites',
-    allInStockHint: 'Tous les produits sont en stock',
-    invoiceStats: 'Statistiques des factures',
-    totalInvoices: 'Total des factures',
-    paidInvoices: 'Factures payees',
-    pendingInvoices: 'Factures en attente',
-    overdueInvoices: 'Factures en retard',
-    businessOverview: 'Vue d ensemble de l entreprise',
-    productsVsInvoices: 'Comparaison Produits vs Factures',
-    count: 'Nombre',
-    invoiceDistribution: 'Repartition des statuts des factures',
-    paidVsPendingVsOverdue: 'Payees vs En attente vs En retard',
-    paid: 'Payees',
-    pending: 'En attente',
-    overdue: 'En retard',
-    revenueSummary: 'Resume des revenus',
-    byInvoiceStatus: 'Par statut de facture',
-    lastUpdated: 'Derniere mise a jour',
-  },
-  ar: {
-    fetchError: 'فشل تحميل الإحصائيات',
-    noStatistics: 'لا توجد بيانات إحصائية متاحة',
-    noData: 'لا توجد بيانات حاليا. قم بإنشاء منتجات وفواتير لعرض الإحصائيات.',
-    productStats: 'إحصائيات المنتجات',
-    totalProducts: 'إجمالي المنتجات',
-    totalValue: 'القيمة الإجمالية',
-    lowStockProducts: 'منتجات منخفضة المخزون',
-    lowStockHint: 'منتجات أقل من 10 وحدات',
-    allInStockHint: 'كل المنتجات متوفرة',
-    invoiceStats: 'إحصائيات الفواتير',
-    totalInvoices: 'إجمالي الفواتير',
-    paidInvoices: 'الفواتير المدفوعة',
-    pendingInvoices: 'الفواتير المعلقة',
-    overdueInvoices: 'الفواتير المتأخرة',
-    businessOverview: 'نظرة عامة على النشاط',
-    productsVsInvoices: 'مقارنة المنتجات مقابل الفواتير',
-    count: 'العدد',
-    invoiceDistribution: 'توزيع حالات الفواتير',
-    paidVsPendingVsOverdue: 'مدفوعة مقابل معلقة مقابل متأخرة',
-    paid: 'مدفوعة',
-    pending: 'معلقة',
-    overdue: 'متأخرة',
-    revenueSummary: 'ملخص الإيرادات',
-    byInvoiceStatus: 'حسب حالة الفاتورة',
-    lastUpdated: 'آخر تحديث',
-  },
-} as const;
+};
 
 function StatCard({
   title,
@@ -171,34 +93,76 @@ function StatCard({
 export default function BusinessStatistics({
   businessId,
   lang,
+  text,
+  errorMessages,
 }: {
   businessId: string;
   lang: Locale;
+  text: StatisticsUiText;
+  errorMessages: Record<string, string>;
 }) {
   const [statistics, setStatistics] = useState<
-    BusinessStatisticsData | undefined
+    BusinessStatisticsResponse | undefined
   >();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
-  const text = textByLocale[lang];
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(lang, {
+        style: 'currency',
+        currency: 'TND',
+      }),
+    [lang]
+  );
+
+  const formatMoney = (amount: number) => currencyFormatter.format(amount);
 
   useEffect(() => {
+    let isCurrent = true;
+
     const fetchStatistics = async () => {
+      setLoading(true);
+      setError(undefined);
+
       try {
-        setLoading(true);
-        setError(undefined);
         const data = await BusinessService.getBusinessStatistics(businessId);
+        if (!isCurrent) {
+          return;
+        }
         setStatistics(data);
       } catch (error_) {
-        setError(error_ instanceof Error ? error_.message : text.fetchError);
+        if (!isCurrent) {
+          return;
+        }
+
+        const apiErrorType =
+          error_ instanceof ApiError
+            ? error_.type
+            : typeof error_ === 'object' &&
+                error_ !== null &&
+                'type' in error_ &&
+                typeof (error_ as { type?: unknown }).type === 'string'
+              ? (error_ as { type: string }).type
+              : undefined;
+
+        const mappedError =
+          apiErrorType === undefined ? undefined : errorMessages[apiErrorType];
+
+        setError(mappedError ?? text.fetchError);
       } finally {
-        setLoading(false);
+        if (isCurrent) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchStatistics();
-  }, [businessId, text.fetchError]);
+    void fetchStatistics();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [businessId, errorMessages, text.fetchError]);
 
   if (error) {
     return (
@@ -219,7 +183,7 @@ export default function BusinessStatistics({
     );
   }
 
-  if (!statistics) {
+  if (statistics === undefined) {
     return (
       <Alert>
         <AlertDescription>{text.noStatistics}</AlertDescription>

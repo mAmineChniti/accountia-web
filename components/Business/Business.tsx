@@ -46,7 +46,12 @@ export function Business({
     ClientData | undefined
   >();
 
-  const { data: clientsData, isLoading: isLoadingUsers } = useQuery({
+  const {
+    data: clientsData,
+    isLoading: isLoadingUsers,
+    isError: isClientsError,
+    refetch: refetchClients,
+  } = useQuery({
     queryKey: ['business-clients', businessId],
     queryFn: () => BusinessService.getBusinessClients(businessId),
   });
@@ -244,6 +249,22 @@ export function Business({
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
+            </div>
+          ) : isClientsError ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <AlertCircle className="text-destructive h-10 w-10" />
+              <p className="text-foreground font-medium">
+                {t.failedToLoadClients}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void refetchClients();
+                }}
+              >
+                {t.retry}
+              </Button>
             </div>
           ) : clients.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">

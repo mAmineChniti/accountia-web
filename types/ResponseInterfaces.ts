@@ -264,6 +264,26 @@ export interface BusinessMessageResponse {
   message: string;
 }
 
+export interface BusinessStatisticsResponse {
+  businessId: string;
+  businessName: string;
+  products: {
+    totalProducts: number;
+    totalValue: number;
+    lowStockProducts: number;
+  };
+  invoices: {
+    totalInvoices: number;
+    paidAmount: number;
+    pendingAmount: number;
+    overdueAmount: number;
+    paidInvoices: number;
+    pendingInvoices: number;
+    overdueInvoices: number;
+  };
+  lastUpdated: string;
+}
+
 export interface TwoFADisableResponse extends BaseResponse {
   disabled: boolean;
 }

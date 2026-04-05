@@ -71,6 +71,7 @@ import type {
   NotificationListResponse,
   AuditLogListResponse,
   HealthCheckResponse,
+  BusinessStatisticsResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -116,26 +117,6 @@ interface HTTPErrorLike {
       get: (name: string) => string | null;
     };
   };
-}
-
-interface BusinessStatisticsResponse {
-  businessId: string;
-  businessName: string;
-  products: {
-    totalProducts: number;
-    totalValue: number;
-    lowStockProducts: number;
-  };
-  invoices: {
-    totalInvoices: number;
-    paidAmount: number;
-    pendingAmount: number;
-    overdueAmount: number;
-    paidInvoices: number;
-    pendingInvoices: number;
-    overdueInvoices: number;
-  };
-  lastUpdated: string;
 }
 
 const safeParseJson = async (

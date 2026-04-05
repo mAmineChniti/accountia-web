@@ -27,6 +27,7 @@ export default async function StatisticsPage({ params }: StatisticsPageProps) {
   const resolvedParams = await params;
   const dictionary = await getDictionary(resolvedParams.lang);
   const t = dictionary.pages.business;
+  const statsUi = t.statisticsUi;
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -40,6 +41,8 @@ export default async function StatisticsPage({ params }: StatisticsPageProps) {
       <BusinessStatistics
         businessId={resolvedParams.businessId}
         lang={resolvedParams.lang}
+        text={statsUi}
+        errorMessages={dictionary.errorMessages}
       />
     </div>
   );
