@@ -97,7 +97,10 @@ export function ReceivedInvoices({
     isFetching,
   } = useQuery({
     queryKey: ['invoices-received-business', _businessId],
-    queryFn: () => InvoicesService.getReceivedInvoicesByBusiness(),
+    queryFn: () =>
+      InvoicesService.getReceivedInvoicesByBusiness({
+        businessId: _businessId,
+      }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -143,12 +146,14 @@ export function ReceivedInvoices({
   }, [invoices, filterStatus, searchQuery]);
 
   const stats = useMemo(() => {
-    let paid = 0;
-    let pending = 0;
+    const paid: Record<string, number> = {};
+    const pending: Record<string, number> = {};
 
     for (const inv of invoices) {
+      const currency = inv.currency || 'USD';
+
       if (inv.invoiceStatus === 'PAID' || inv.invoiceStatus === 'ARCHIVED') {
-        paid += inv.totalAmount;
+        paid[currency] = (paid[currency] || 0) + inv.totalAmount;
       }
       if (
         inv.invoiceStatus === 'ISSUED' ||
@@ -156,7 +161,7 @@ export function ReceivedInvoices({
         inv.invoiceStatus === 'PARTIAL' ||
         inv.invoiceStatus === 'OVERDUE'
       ) {
-        pending += inv.totalAmount;
+        pending[currency] = (pending[currency] || 0) + inv.totalAmount;
       }
     }
 
@@ -224,12 +229,25 @@ export function ReceivedInvoices({
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
             <CardDescription>{t.totalPaid}</CardDescription>
-            <CardTitle className="text-3xl">
-              {isLoading
-                ? '—'
-                : `${stats.paid.toLocaleString(lang, {
-                    minimumFractionDigits: 2,
-                  })}`}
+            <CardTitle className="text-2xl">
+              {isLoading ? (
+                '—'
+              ) : (
+                <div className="space-y-1">
+                  {Object.entries(stats.paid).length === 0 ? (
+                    <span>0</span>
+                  ) : (
+                    Object.entries(stats.paid).map(([currency, amount]) => (
+                      <div key={currency} className="text-sm">
+                        {amount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        {currency}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -238,12 +256,25 @@ export function ReceivedInvoices({
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
             <CardDescription>{t.totalPending}</CardDescription>
-            <CardTitle className="text-3xl">
-              {isLoading
-                ? '—'
-                : `${stats.pending.toLocaleString(lang, {
-                    minimumFractionDigits: 2,
-                  })}`}
+            <CardTitle className="text-2xl">
+              {isLoading ? (
+                '—'
+              ) : (
+                <div className="space-y-1">
+                  {Object.entries(stats.pending).length === 0 ? (
+                    <span>0</span>
+                  ) : (
+                    Object.entries(stats.pending).map(([currency, amount]) => (
+                      <div key={currency} className="text-sm">
+                        {amount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        {currency}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -509,20 +540,25 @@ export function ReceivedInvoices({
                       <TableBody>
                         {invoiceDetails.lineItems.map((item, idx) => (
                           <TableRow key={idx}>
-                            <TableCell>{item.description}</TableCell>
+                            <TableCell>
+                              {item.productName ||
+                                item.description ||
+                                'Unknown'}
+                            </TableCell>
                             <TableCell className="text-right">
                               {item.quantity}
                             </TableCell>
                             <TableCell className="text-right">
-                              {item.unitPrice.toLocaleString(lang, {
+                              {(
+                                item.amount / (item.quantity || 1)
+                              ).toLocaleString(lang, {
                                 minimumFractionDigits: 2,
                               })}
                             </TableCell>
                             <TableCell className="text-right">
-                              {(item.quantity * item.unitPrice).toLocaleString(
-                                lang,
-                                { minimumFractionDigits: 2 }
-                              )}
+                              {item.amount.toLocaleString(lang, {
+                                minimumFractionDigits: 2,
+                              })}
                             </TableCell>
                           </TableRow>
                         ))}

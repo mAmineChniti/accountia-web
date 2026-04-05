@@ -35,6 +35,7 @@ export function Business({
   lang: Locale;
 }) {
   const t = dictionary.pages.business;
+  const containerClass = 'w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8';
   const [selectedClient, setSelectedClient] = useState<
     ClientData | undefined
   >();
@@ -67,7 +68,7 @@ export function Business({
 
   if (isLoading) {
     return (
-      <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         {/* Header Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-64" />
@@ -94,7 +95,7 @@ export function Business({
 
   if (error || !business) {
     return (
-      <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
           <div className="text-sm">
@@ -114,18 +115,22 @@ export function Business({
     neutral: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
   };
 
+  // Normalize and safely lookup status color
+  const getStatusColorClass = (status: string) => {
+    const key = (status || '').toLowerCase().trim();
+    if (Object.prototype.hasOwnProperty.call(statusColors, key)) {
+      return statusColors[key as keyof typeof statusColors];
+    }
+    return statusColors.neutral;
+  };
+
   return (
-    <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className={containerClass}>
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">{business.name}</h1>
-          <Badge
-            className={
-              statusColors[business.status as keyof typeof statusColors] ||
-              statusColors.neutral
-            }
-          >
+          <Badge className={getStatusColorClass(business.status)}>
             {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
           </Badge>
         </div>

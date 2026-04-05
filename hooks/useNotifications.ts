@@ -63,19 +63,26 @@ export function useNotifications({
 
   // Listen for logout event and disconnect socket
   useEffect(() => {
-    const handleLogout = () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = undefined;
+    const handleAuthChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{ action?: string }>;
+      const action = customEvent.detail?.action;
+
+      // Only disconnect socket on logout
+      if (action === 'logout') {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = undefined;
+        }
+        setIsConnected(false);
+        isInitializingRef.current = false;
       }
-      setIsConnected(false);
     };
 
-    // Listen for logout event
-    globalThis.addEventListener('auth:changed', handleLogout);
+    // Listen for auth state changes
+    globalThis.addEventListener('auth:changed', handleAuthChanged);
 
     return () => {
-      globalThis.removeEventListener('auth:changed', handleLogout);
+      globalThis.removeEventListener('auth:changed', handleAuthChanged);
     };
   }, []);
 
@@ -226,6 +233,7 @@ export function useNotifications({
 
     return () => {
       isMountedRef.current = false;
+      isInitializingRef.current = false;
 
       // Always disconnect the socket, regardless of its state
       if (socketRef.current) {

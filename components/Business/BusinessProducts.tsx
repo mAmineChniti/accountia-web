@@ -162,7 +162,7 @@ export function BusinessProducts({
       t.columnCost,
       t.columnQuantity,
       t.columnCreatedAt,
-    ];
+    ].map((h) => sanitizeCsvValue(h));
 
     const rows = filteredProducts.map((p) => [
       p.id,
@@ -362,11 +362,11 @@ export function BusinessProducts({
         <CardHeader className="border-border/50 border-b pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">
-                {t.columnName || 'Products'}
-              </h2>
+              <h2 className="text-lg font-semibold">{t.title || 'Products'}</h2>
               <p className="text-muted-foreground text-sm">
-                {isLoading ? '...' : `${filteredProducts.length} items`}
+                {isLoading
+                  ? '...'
+                  : `${productsData?.total ?? filteredProducts.length} products`}
               </p>
             </div>
           </div>
@@ -491,7 +491,7 @@ export function BusinessProducts({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                              className="h-8 w-8 opacity-100 transition-opacity group-focus-within:opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                               aria-label={`More actions for ${product.name}`}
                             >
                               <MoreVertical className="h-4 w-4" />
@@ -563,7 +563,7 @@ export function BusinessProducts({
             <DialogDescription className="py-4">
               {t.deleteConfirmDescriptionWithName.replace(
                 '{name}',
-                `"${productToDelete?.name}"`
+                productToDelete?.name || ''
               )}
             </DialogDescription>
           </DialogHeader>

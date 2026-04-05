@@ -41,6 +41,19 @@ const ACCEPTED_FILE_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ]);
 
+const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx'];
+
+const isValidFile = (file: File): boolean => {
+  // Check MIME type
+  if (ACCEPTED_FILE_TYPES.has(file.type)) {
+    return true;
+  }
+
+  // Fallback: check file extension
+  const fileName = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+};
+
 export function ImportInvoicesModal({
   isOpen,
   onClose,
@@ -73,6 +86,28 @@ export function ImportInvoicesModal({
       });
 
       setResult(data);
+
+      // Handle warnings: keep modal open for review
+      if (data.warningCount > 0) {
+        const warningMessage = (
+          t.importWarningMessage ||
+          'Import completed with {count} warning(s). Review details below.'
+        ).replace('{count}', data.warningCount.toString());
+        toast.warning(warningMessage);
+        return;
+      }
+
+      // Handle failures: show error if all rows failed
+      if (data.successCount === 0 && data.failedCount > 0) {
+        const failureMessage = (
+          t.importFailureMessage ||
+          'Import failed: {count} invoice(s) could not be imported.'
+        ).replace('{count}', data.failedCount.toString());
+        toast.error(failureMessage);
+        return;
+      }
+
+      // Success: show success toast
       const successMessage =
         t.importSuccessMessage ||
         `Successfully imported ${data.successCount} invoices${data.failedCount > 0 ? ` (${data.failedCount} failed)` : ''}`;
@@ -106,9 +141,10 @@ export function ImportInvoicesModal({
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (ACCEPTED_FILE_TYPES.has(file.type)) {
+      if (isValidFile(file)) {
         setSelectedFile(file);
       } else {
+        setSelectedFile(undefined);
         toast.error(t.invalidFileType || 'Please upload a CSV or Excel file');
       }
     }
@@ -118,9 +154,10 @@ export function ImportInvoicesModal({
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (ACCEPTED_FILE_TYPES.has(file.type)) {
+      if (isValidFile(file)) {
         setSelectedFile(file);
       } else {
+        setSelectedFile(undefined);
         toast.error(t.invalidFileType || 'Please upload a CSV or Excel file');
       }
     }
@@ -134,10 +171,13 @@ export function ImportInvoicesModal({
 
   const handleClose = () => {
     if (result) {
+      // Only call onSuccess if no warnings and some records succeeded
+      if (result.warningCount === 0 && result.successCount > 0) {
+        onSuccess?.();
+      }
       setResult(undefined);
       setSelectedFile(undefined);
       onClose();
-      onSuccess?.();
     } else {
       setSelectedFile(undefined);
       onClose();
@@ -200,6 +240,21 @@ export function ImportInvoicesModal({
                         </div>
                         <div className="text-sm text-red-700 dark:text-red-300">
                           {t.failedLabel || 'Failed'}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {result.warningCount > 0 && (
+                  <Card className="bg-yellow-50 dark:bg-yellow-950/30">
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                          {result.warningCount}
+                        </div>
+                        <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                          {t.warningsLabel || 'Warnings'}
                         </div>
                       </div>
                     </CardContent>

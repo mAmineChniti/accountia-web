@@ -144,7 +144,9 @@ export default function Login({
       loginTime: new Date().toISOString(),
     });
 
-    globalThis.dispatchEvent(new CustomEvent('auth:changed'));
+    globalThis.dispatchEvent(
+      new CustomEvent('auth:changed', { detail: { action: 'login' } })
+    );
 
     if (
       ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(

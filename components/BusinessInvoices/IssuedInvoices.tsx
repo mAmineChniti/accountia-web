@@ -144,12 +144,14 @@ export function IssuedInvoices({
   }, [invoices, filterStatus, searchQuery]);
 
   const stats = useMemo(() => {
-    let paid = 0;
-    let pending = 0;
+    const paid: Record<string, number> = {};
+    const pending: Record<string, number> = {};
 
     for (const inv of invoices) {
+      const currency = inv.currency || 'USD';
+
       if (inv.status === 'PAID' || inv.status === 'ARCHIVED') {
-        paid += inv.totalAmount;
+        paid[currency] = (paid[currency] || 0) + inv.totalAmount;
       }
       if (
         inv.status === 'ISSUED' ||
@@ -157,7 +159,7 @@ export function IssuedInvoices({
         inv.status === 'PARTIAL' ||
         inv.status === 'OVERDUE'
       ) {
-        pending += inv.totalAmount;
+        pending[currency] = (pending[currency] || 0) + inv.totalAmount;
       }
     }
 
@@ -233,12 +235,25 @@ export function IssuedInvoices({
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
             <CardDescription>{t.totalPaid}</CardDescription>
-            <CardTitle className="text-3xl">
-              {isLoading
-                ? '—'
-                : `${stats.paid.toLocaleString(lang, {
-                    minimumFractionDigits: 2,
-                  })}`}
+            <CardTitle className="text-2xl">
+              {isLoading ? (
+                '—'
+              ) : (
+                <div className="space-y-1">
+                  {Object.entries(stats.paid).length === 0 ? (
+                    <span>0</span>
+                  ) : (
+                    Object.entries(stats.paid).map(([currency, amount]) => (
+                      <div key={currency} className="text-sm">
+                        {amount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        {currency}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -247,12 +262,25 @@ export function IssuedInvoices({
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="pb-2">
             <CardDescription>{t.totalPending}</CardDescription>
-            <CardTitle className="text-3xl">
-              {isLoading
-                ? '—'
-                : `${stats.pending.toLocaleString(lang, {
-                    minimumFractionDigits: 2,
-                  })}`}
+            <CardTitle className="text-2xl">
+              {isLoading ? (
+                '—'
+              ) : (
+                <div className="space-y-1">
+                  {Object.entries(stats.pending).length === 0 ? (
+                    <span>0</span>
+                  ) : (
+                    Object.entries(stats.pending).map(([currency, amount]) => (
+                      <div key={currency} className="text-sm">
+                        {amount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        {currency}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent />
