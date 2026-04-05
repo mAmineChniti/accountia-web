@@ -38,7 +38,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+      dir={locale.split('-')[0] === 'ar' ? 'rtl' : 'ltr'}
       className="h-full"
       suppressHydrationWarning
     >

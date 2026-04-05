@@ -56,11 +56,11 @@ export function CreateBusinessInvoicePage({
   const t = dictionary.pages.invoices;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  // Fetch products
+  // Fetch products for this business
   const { data: productsData, isLoading: isLoadingProducts } =
     useQuery<ProductListResponse>({
-      queryKey: ['products'],
-      queryFn: () => ProductsService.getProducts(1, 100),
+      queryKey: ['products', businessId],
+      queryFn: () => ProductsService.getProducts(1, 100, businessId),
       staleTime: 15 * 60 * 1000, // 15 minutes - products change infrequently
       gcTime: 60 * 60 * 1000, // 1 hour - keep products cached longer
     });

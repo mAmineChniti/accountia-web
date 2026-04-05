@@ -59,10 +59,17 @@ export function ImportInvoicesModal({
     mutationFn: (file: File): Promise<InvoiceImportResponse> =>
       InvoicesService.importInvoices(file),
     onSuccess: (data: InvoiceImportResponse) => {
-      // Invalidate invoice queries to refetch updated list
-      queryClient.invalidateQueries({ queryKey: ['invoices-issued'] });
+      // Invalidate all invoice queries (both issued and received) across all scopes
       queryClient.invalidateQueries({
-        queryKey: ['invoices-received-business'],
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return (
+            (Array.isArray(queryKey) &&
+              (queryKey[0] === 'invoices-issued' ||
+                queryKey[0] === 'invoices-received-business')) ||
+            false
+          );
+        },
       });
 
       setResult(data);

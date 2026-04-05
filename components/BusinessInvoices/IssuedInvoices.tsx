@@ -27,6 +27,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableHeader,
   TableBody,
@@ -34,7 +42,10 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import type { InvoiceStatus } from '@/types/ResponseInterfaces';
+import type {
+  InvoiceStatus,
+  InvoiceResponse,
+} from '@/types/ResponseInterfaces';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -76,15 +87,34 @@ export function IssuedInvoices({
   const t = dictionary.pages.invoices;
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<
+    string | undefined
+  >();
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const {
     data: invoicesResponse,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['invoices-issued'],
+    queryKey: ['invoices-issued', businessId],
     queryFn: () => InvoicesService.listIssuedInvoices(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
+
+  // Fetch invoice details when a specific invoice is selected
+  const { data: invoiceDetails, isLoading: isLoadingDetails } =
+    useQuery<InvoiceResponse>({
+      queryKey: ['invoice-issued-details', selectedInvoiceId],
+      queryFn: () =>
+        selectedInvoiceId
+          ? InvoicesService.getIssuedInvoice(selectedInvoiceId)
+          : Promise.reject(new Error('No invoice selected')),
+      enabled: !!selectedInvoiceId && isDetailsOpen,
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
+    });
 
   const invoices = useMemo(
     () => invoicesResponse?.invoices ?? [],
@@ -233,11 +263,11 @@ export function IssuedInvoices({
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>Invoice List</CardTitle>
+            <CardTitle>{t.issuedInvoicesList || 'Invoice List'}</CardTitle>
             <CardDescription>
               {isLoading
                 ? '...'
-                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'}`}
+                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular || 'invoice' : t.invoicePlural || 'invoices'}`}
             </CardDescription>
           </div>
 
@@ -343,6 +373,7 @@ export function IssuedInvoices({
                     <TableCell className="text-muted-foreground">
                       {invoice.recipient.displayName ||
                         invoice.recipient.email ||
+                        t.externalRecipient ||
                         'External Recipient'}
                     </TableCell>
                     <TableCell className="font-medium">
@@ -363,13 +394,16 @@ export function IssuedInvoices({
                       {new Date(invoice.issuedDate).toLocaleDateString(lang)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link
-                        href={`/${lang}/business/${businessId}/invoices/${invoice.id}`}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedInvoiceId(invoice.id);
+                          setIsDetailsOpen(true);
+                        }}
                       >
-                        <Button variant="outline" size="sm">
-                          {t.view}
-                        </Button>
-                      </Link>
+                        {t.view}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -378,6 +412,137 @@ export function IssuedInvoices({
           )}
         </CardContent>
       </Card>
+
+      {/* Invoice Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
+            </DialogTitle>
+            <DialogDescription>
+              {invoiceDetails?.invoiceNumber}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingDetails ? (
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+            </div>
+          ) : invoiceDetails ? (
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {t.invoiceNumberLabel}
+                  </p>
+                  <p className="font-medium">{invoiceDetails.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {t.statusLabel}
+                  </p>
+                  <Badge className={STATUS_COLORS[invoiceDetails.status]}>
+                    <span className="mr-1">
+                      {STATUS_ICONS[invoiceDetails.status]}
+                    </span>
+                    {invoiceDetails.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {t.amountLabel}
+                  </p>
+                  <p className="font-medium">
+                    {invoiceDetails.totalAmount.toLocaleString(lang, {
+                      minimumFractionDigits: 2,
+                    })}{' '}
+                    {invoiceDetails.currency}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {t.issuedDateLabel}
+                  </p>
+                  <p className="font-medium">
+                    {new Date(invoiceDetails.issuedDate).toLocaleDateString(
+                      lang
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              {invoiceDetails.description && (
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {t.descriptionLabel}
+                  </p>
+                  <p className="text-sm">{invoiceDetails.description}</p>
+                </div>
+              )}
+
+              {/* Line Items */}
+              {invoiceDetails.lineItems &&
+                invoiceDetails.lineItems.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium">
+                      {t.lineItemsLabel}
+                    </p>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t.itemLabel}</TableHead>
+                          <TableHead className="text-right">
+                            {t.quantityLabel}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t.priceLabel}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t.totalLabel}
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invoiceDetails.lineItems.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.unitPrice.toLocaleString(lang, {
+                                minimumFractionDigits: 2,
+                              })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {(item.quantity * item.unitPrice).toLocaleString(
+                                lang,
+                                { minimumFractionDigits: 2 }
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
+          )}
+
+          <DialogClose asChild>
+            <Button type="button" variant="outline">
+              {t.closeButtonLabel}
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

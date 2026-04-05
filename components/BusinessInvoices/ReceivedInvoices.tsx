@@ -96,8 +96,10 @@ export function ReceivedInvoices({
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['invoices-received-business'],
+    queryKey: ['invoices-received-business', _businessId],
     queryFn: () => InvoicesService.getReceivedInvoicesByBusiness(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   // Fetch invoice details when a specific invoice is selected
@@ -109,6 +111,8 @@ export function ReceivedInvoices({
           ? InvoicesService.getReceivedInvoiceDetails(selectedInvoiceId)
           : Promise.reject(new Error('No invoice selected')),
       enabled: !!selectedInvoiceId && isDetailsOpen,
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour
     });
 
   const invoices = useMemo(
@@ -484,14 +488,22 @@ export function ReceivedInvoices({
               {invoiceDetails.lineItems &&
                 invoiceDetails.lineItems.length > 0 && (
                   <div>
-                    <p className="mb-3 text-sm font-medium">Line Items</p>
+                    <p className="mb-3 text-sm font-medium">
+                      {t.lineItemsLabel}
+                    </p>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Item</TableHead>
-                          <TableHead className="text-right">Qty</TableHead>
-                          <TableHead className="text-right">Price</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead>{t.itemLabel}</TableHead>
+                          <TableHead className="text-right">
+                            {t.quantityLabel}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t.priceLabel}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t.totalLabel}
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

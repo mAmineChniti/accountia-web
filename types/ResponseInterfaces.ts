@@ -167,7 +167,7 @@ export interface BusinessItem {
   id: string;
   name: string;
   phone: string;
-  status: string;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
 
@@ -179,7 +179,7 @@ export interface BusinessDetailData {
   phone: string;
   email: string;
   databaseName: string;
-  status: string;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   updatedAt: string;
 }
@@ -208,7 +208,7 @@ export interface BusinessApplicationItem {
   applicantId: string;
   applicantEmail?: string;
   applicantName?: string;
-  status: string;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
 

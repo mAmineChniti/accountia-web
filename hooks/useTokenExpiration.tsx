@@ -14,7 +14,8 @@ export const useTokenExpiration = () => {
   const router = useRouter();
   const pathname = usePathname();
   const previousTokenRef = useRef<AuthCookieData | undefined>(undefined);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const cancelledRef = useRef(false);
 
   const { refetch: refreshToken } = useQuery({
     queryKey: ['token-refresh'],
@@ -24,12 +25,20 @@ export const useTokenExpiration = () => {
   });
 
   useEffect(() => {
+    // Reset cancellation flag on effect mount
+    cancelledRef.current = false;
+
     const checkAndScheduleToken = async () => {
+      // Bail out if this effect has been cleaned up
+      if (cancelledRef.current) {
+        return;
+      }
+
       try {
         const tokenData = await getToken();
 
         if (!tokenData) {
-          if (previousTokenRef.current) {
+          if (previousTokenRef.current && !cancelledRef.current) {
             await clearAuthCookies();
             const lang = pathname.split('/')[1] || 'en';
             router.push(`/${lang}/login`);
@@ -52,9 +61,11 @@ export const useTokenExpiration = () => {
           } else if (tokenData.expires_at) {
             timestampMs = new Date(tokenData.expires_at).getTime();
           } else {
-            await clearAuthCookies();
-            const lang = pathname.split('/')[1] || 'en';
-            router.push(`/${lang}/login`);
+            if (!cancelledRef.current) {
+              await clearAuthCookies();
+              const lang = pathname.split('/')[1] || 'en';
+              router.push(`/${lang}/login`);
+            }
             return;
           }
 
@@ -75,25 +86,47 @@ export const useTokenExpiration = () => {
 
         // Token already expired - logout immediately
         if (timeUntilExpiry <= 0) {
-          await clearAuthCookies();
-          const lang = pathname.split('/')[1] || 'en';
-          router.push(`/${lang}/login`);
-          previousTokenRef.current = undefined;
+          if (!cancelledRef.current) {
+            await clearAuthCookies();
+            const lang = pathname.split('/')[1] || 'en';
+            router.push(`/${lang}/login`);
+            previousTokenRef.current = undefined;
+          }
           return;
         }
 
         // Token within 5-minute buffer - refresh NOW
         if (timeUntilExpiry <= REFRESH_BUFFER_MS) {
           try {
-            await refreshToken();
-            // Recheck immediately after refresh with new token
+            // Call refetch and wait for the result
+            const result = await refreshToken();
+
+            // Check if effect was cancelled while waiting for refresh
+            if (cancelledRef.current) {
+              return;
+            }
+
+            // Check if refresh was successful
+            if (result.isError || !result.data) {
+              // Refresh failed - logout
+              await clearAuthCookies();
+              const lang = pathname.split('/')[1] || 'en';
+              router.push(`/${lang}/login`);
+              previousTokenRef.current = undefined;
+              return;
+            }
+
+            // Refresh successful - recheck immediately with new token
             void checkAndScheduleToken();
             return;
           } catch {
-            await clearAuthCookies();
-            const lang = pathname.split('/')[1] || 'en';
-            router.push(`/${lang}/login`);
-            previousTokenRef.current = undefined;
+            // Error during refresh - logout
+            if (!cancelledRef.current) {
+              await clearAuthCookies();
+              const lang = pathname.split('/')[1] || 'en';
+              router.push(`/${lang}/login`);
+              previousTokenRef.current = undefined;
+            }
             return;
           }
         }
@@ -111,17 +144,22 @@ export const useTokenExpiration = () => {
           clearTimeout(timeoutRef.current);
         }
 
-        // Schedule the next check
-        timeoutRef.current = setTimeout(() => {
-          void checkAndScheduleToken();
-        }, delay);
+        // Schedule the next check - only if effect hasn't been cancelled
+        if (!cancelledRef.current) {
+          timeoutRef.current = setTimeout(() => {
+            void checkAndScheduleToken();
+          }, delay);
+        }
       } catch {
-        const tokenData = await getToken();
-        if (tokenData) {
-          await clearAuthCookies();
-          const lang = pathname.split('/')[1] || 'en';
-          router.push(`/${lang}/login`);
-          previousTokenRef.current = undefined;
+        // Outer catch for any unexpected errors
+        if (!cancelledRef.current) {
+          const tokenData = await getToken();
+          if (tokenData) {
+            await clearAuthCookies();
+            const lang = pathname.split('/')[1] || 'en';
+            router.push(`/${lang}/login`);
+            previousTokenRef.current = undefined;
+          }
         }
       }
     };
@@ -129,8 +167,13 @@ export const useTokenExpiration = () => {
     void checkAndScheduleToken();
 
     return () => {
+      // Set cancellation flag to prevent any side effects
+      cancelledRef.current = true;
+
+      // Clear any scheduled timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
       }
     };
   }, [router, pathname, refreshToken]);

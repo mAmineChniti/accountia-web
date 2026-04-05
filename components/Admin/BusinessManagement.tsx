@@ -408,11 +408,7 @@ export default function BusinessManagement({
                       </TableCell>
                       <TableCell>{application.phone}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={getStatusVariant(
-                            application.status as string
-                          )}
-                        >
+                        <Badge variant={getStatusVariant(application.status)}>
                           {t.status[
                             application.status as keyof typeof t.status
                           ] || application.status}
@@ -543,9 +539,7 @@ export default function BusinessManagement({
                       </TableCell>
                       <TableCell>{business.phone}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={getStatusVariant(business.status as string)}
-                        >
+                        <Badge variant={getStatusVariant(business.status)}>
                           {t.status[business.status as keyof typeof t.status] ||
                             business.status}
                         </Badge>

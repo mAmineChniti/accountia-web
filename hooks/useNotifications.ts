@@ -100,11 +100,44 @@ export function useNotifications({
           return;
         }
 
-        // Get the backend URL from environment and strip /api suffix if present
+        // Get the backend URL from environment and derive socket URL safely
         const backendUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789';
-        const socketUrl = backendUrl.endsWith('/api')
-          ? backendUrl.slice(0, -4)
-          : backendUrl;
+
+        let socketUrl: string;
+        try {
+          // Parse the backend URL to extract base URL
+          const url = new URL(backendUrl);
+          // Use the origin (protocol + host) as the socket URL
+          socketUrl = url.origin;
+
+          // If the pathname has segments beyond just /api, preserve relevant path parts
+          if (
+            url.pathname &&
+            url.pathname !== '/' &&
+            !url.pathname.endsWith('/api')
+          ) {
+            // Remove trailing /api and any query/hash
+            let pathname = url.pathname;
+            if (pathname.endsWith('/')) {
+              pathname = pathname.slice(0, -1);
+            }
+            if (pathname.endsWith('/api')) {
+              pathname = pathname.slice(0, -4);
+            }
+            if (pathname && pathname !== '/') {
+              socketUrl += pathname;
+            }
+          }
+        } catch {
+          // If URL parsing fails, fall back to naive string replacement
+          socketUrl = backendUrl.endsWith('/api')
+            ? backendUrl.slice(0, -4)
+            : backendUrl;
+          // Handle trailing slash
+          if (socketUrl.endsWith('/')) {
+            socketUrl = socketUrl.slice(0, -1);
+          }
+        }
 
         const query: Record<string, string> = { token: token.token };
         if (businessId) {
