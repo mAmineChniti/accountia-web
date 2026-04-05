@@ -9,6 +9,7 @@ import {
   LogOut,
   ChevronDown,
   FileText,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -292,6 +293,24 @@ export default function UserSidebar({
                                   <FileText className="h-4 w-4" />
                                   <span>
                                     {dictionary.pages.invoices.receivedInvoices}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={
+                                  pathname ===
+                                  `/${lang}/business/${business.id}/products`
+                                }
+                              >
+                                <Link
+                                  href={`/${lang}/business/${business.id}/products`}
+                                >
+                                  <Package className="h-4 w-4" />
+                                  <span>
+                                    {dictionary.pages.business.viewProducts}
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>

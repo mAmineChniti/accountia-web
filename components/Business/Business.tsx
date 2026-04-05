@@ -2,16 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  FileText,
-  Building2,
-  Phone,
-  Globe,
-  Users,
-  Package,
-} from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -236,20 +227,6 @@ export function Business({
           </div>
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button size="lg" className="gap-2" asChild variant="outline">
-          <Link href={`/${lang}/business/${businessId}/products`}>
-            <Package className="h-5 w-5" />
-            {t.viewProducts}
-          </Link>
-        </Button>
-        <Button size="lg" className="gap-2">
-          <FileText className="h-5 w-5" />
-          {t.createInvoiceButton}
-        </Button>
-      </div>
 
       {/* Clients Section */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
