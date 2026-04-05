@@ -22,6 +22,7 @@ export function useNotifications({
   const socketRef = useRef<Socket | undefined>(undefined);
   const isMountedRef = useRef(true);
   const isInitializingRef = useRef(false);
+  const initGenerationRef = useRef(0);
 
   // Fetch notifications
   const {
@@ -93,6 +94,10 @@ export function useNotifications({
     // Reset the mounted flag for this effect cycle
     isMountedRef.current = true;
 
+    // Increment generation counter to invalidate stale closures
+    initGenerationRef.current += 1;
+    const currentGeneration = initGenerationRef.current;
+
     const initSocket = async () => {
       // Prevent duplicate initialization
       if (isInitializingRef.current || socketRef.current) {
@@ -104,6 +109,11 @@ export function useNotifications({
       try {
         const token = await getToken();
         if (!token || !isMountedRef.current) {
+          return;
+        }
+
+        // Check if this generation is still valid (prevent stale closures)
+        if (currentGeneration !== initGenerationRef.current) {
           return;
         }
 
@@ -127,9 +137,6 @@ export function useNotifications({
             let pathname = url.pathname;
             if (pathname.endsWith('/')) {
               pathname = pathname.slice(0, -1);
-            }
-            if (pathname.endsWith('/api')) {
-              pathname = pathname.slice(0, -4);
             }
             if (pathname && pathname !== '/') {
               socketUrl += pathname;

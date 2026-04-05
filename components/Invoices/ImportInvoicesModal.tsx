@@ -107,10 +107,12 @@ export function ImportInvoicesModal({
         return;
       }
 
-      // Success: show success toast
+      // Success: show success toast with failed count if applicable
       const successMessage =
-        t.importSuccessMessage ||
-        `Successfully imported ${data.successCount} invoices${data.failedCount > 0 ? ` (${data.failedCount} failed)` : ''}`;
+        data.failedCount > 0
+          ? `Successfully imported ${data.successCount} invoices (${data.failedCount} failed)`
+          : t.importSuccessMessage ||
+            `Successfully imported ${data.successCount} invoices`;
       toast.success(successMessage);
     },
     onError: (error: unknown) => {
@@ -350,25 +352,34 @@ export function ImportInvoicesModal({
                       <li>• {t.excelFormat || 'Excel (.xls, .xlsx)'}</li>
                     </ul>
                     <p className="mt-2 text-xs font-semibold">
-                      Required columns:
+                      {t.requiredColumnsLabel || 'Required columns:'}
                     </p>
                     <ul className="space-y-1 text-xs">
                       <li>
-                        • invoiceNumber, recipientType, issuedDate, dueDate
+                        •{' '}
+                        {t.requiredColumnsList ||
+                          'invoiceNumber, recipientType, issuedDate, dueDate'}
                       </li>
                     </ul>
                     <p className="mt-2 text-xs font-semibold">
-                      Optional columns:
+                      {t.optionalColumnsLabel || 'Optional columns:'}
                     </p>
                     <ul className="space-y-1 text-xs">
                       <li>
-                        • recipientPlatformId, recipientEmail,
-                        recipientDisplayName
+                        •{' '}
+                        {t.optionalColumnsLine1 ||
+                          'recipientPlatformId, recipientEmail, recipientDisplayName'}
                       </li>
                       <li>
-                        • productIds, productNames, quantities, unitPrices
+                        •{' '}
+                        {t.optionalColumnsLine2 ||
+                          'productIds, productNames, quantities, unitPrices'}
                       </li>
-                      <li>• description, paymentTerms, currency</li>
+                      <li>
+                        •{' '}
+                        {t.optionalColumnsLine3 ||
+                          'description, paymentTerms, currency'}
+                      </li>
                     </ul>
                     <p className="mt-2 text-xs">
                       {t.fileRequirements ||

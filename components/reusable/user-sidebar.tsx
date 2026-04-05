@@ -10,6 +10,7 @@ import {
   ChevronDown,
   FileText,
   Package,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -143,7 +144,9 @@ export default function UserSidebar({
     try {
       localStorage.removeItem('profilePicture');
     } catch {}
-    globalThis.dispatchEvent(new Event('auth:changed'));
+    globalThis.dispatchEvent(
+      new CustomEvent('auth:changed', { detail: { action: 'logout' } })
+    );
     router.refresh();
     router.push(`/${lang}/login`);
   };
@@ -235,10 +238,12 @@ export default function UserSidebar({
                     const businessHref = `/${lang}/business/${business.id}`;
                     const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
                     const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
+                    const statisticsHref = `/${lang}/business/${business.id}/statistics`;
                     const isBusinessActive =
                       pathname === businessHref ||
                       pathname === issuedInvoicesHref ||
-                      pathname === receivedInvoicesHref;
+                      pathname === receivedInvoicesHref ||
+                      pathname === statisticsHref;
                     const isExpanded = expandedBusinesses.has(business.id);
 
                     return (
@@ -311,6 +316,20 @@ export default function UserSidebar({
                                   <Package className="h-4 w-4" />
                                   <span>
                                     {dictionary.pages.business.viewProducts}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === statisticsHref}
+                              >
+                                <Link href={statisticsHref}>
+                                  <BarChart3 className="h-4 w-4" />
+                                  <span>
+                                    {dictionary.pages.business.statistics ||
+                                      'Statistics'}
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>

@@ -165,13 +165,13 @@ export function BusinessProducts({
     ].map((h) => sanitizeCsvValue(h));
 
     const rows = filteredProducts.map((p) => [
-      p.id,
+      sanitizeCsvValue(String(p.id)),
       sanitizeCsvValue(p.name),
       sanitizeCsvValue(p.description),
-      p.unitPrice,
-      p.cost,
-      p.quantity,
-      p.createdAt,
+      sanitizeCsvValue(String(p.unitPrice)),
+      sanitizeCsvValue(String(p.cost)),
+      sanitizeCsvValue(String(p.quantity)),
+      sanitizeCsvValue(String(p.createdAt)),
     ]);
 
     const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
@@ -366,7 +366,7 @@ export function BusinessProducts({
               <p className="text-muted-foreground text-sm">
                 {isLoading
                   ? '...'
-                  : `${productsData?.total ?? filteredProducts.length} products`}
+                  : `${productsData?.total ?? filteredProducts.length} ${t.productsList || 'products'}`}
               </p>
             </div>
           </div>
