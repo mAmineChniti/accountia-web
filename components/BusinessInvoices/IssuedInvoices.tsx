@@ -47,7 +47,7 @@ import type {
   InvoiceResponse,
 } from '@/types/ResponseInterfaces';
 
-type FilterStatus = 'ALL' | InvoiceStatus;
+type FilterStatus = 'ALL' | InvoiceStatus | 'PODIUM';
 
 const STATUS_ICONS: Record<InvoiceStatus, React.ReactNode> = {
   DRAFT: <Clock className="h-4 w-4" />,
@@ -98,7 +98,7 @@ export function IssuedInvoices({
     isFetching,
   } = useQuery({
     queryKey: ['invoices-issued', businessId],
-    queryFn: () => InvoicesService.listIssuedInvoices(),
+    queryFn: () => InvoicesService.listIssuedInvoices({ businessId }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -124,7 +124,10 @@ export function IssuedInvoices({
   const filteredInvoices = useMemo(() => {
     let results = invoices;
 
-    if (filterStatus !== 'ALL') {
+    if (filterStatus === 'PODIUM') {
+      results = results.filter((inv) => inv.status === 'PAID');
+      results = results.toSorted((a, b) => b.totalAmount - a.totalAmount);
+    } else if (filterStatus !== 'ALL') {
       results = results.filter((inv) => inv.status === filterStatus);
     }
 
@@ -331,6 +334,19 @@ export function IssuedInvoices({
             >
               {t.filterAll}
             </Button>
+            <Button
+              size="sm"
+              variant={filterStatus === 'PODIUM' ? 'default' : 'outline'}
+              onClick={() => setFilterStatus('PODIUM')}
+              disabled={isFetching}
+              className={
+                filterStatus === 'PODIUM'
+                  ? 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700'
+                  : ''
+              }
+            >
+              🏆 Top Paid Clients
+            </Button>
             {(['DRAFT', 'ISSUED', 'PAID', 'OVERDUE'] as const).map((status) => {
               const statusLabel =
                 status === 'DRAFT'
@@ -393,9 +409,12 @@ export function IssuedInvoices({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map((invoice) => (
+                {filteredInvoices.map((invoice, index) => (
                   <TableRow key={invoice.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
+                      {filterStatus === 'PODIUM' && index === 0 && '🥇 '}
+                      {filterStatus === 'PODIUM' && index === 1 && '🥈 '}
+                      {filterStatus === 'PODIUM' && index === 2 && '🥉 '}
                       {invoice.invoiceNumber}
                     </TableCell>
                     <TableCell className="text-muted-foreground">

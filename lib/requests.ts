@@ -1318,6 +1318,7 @@ export const InvoicesService = {
 
   // 2. List Issued Invoices
   async listIssuedInvoices(params?: {
+    businessId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -1328,6 +1329,7 @@ export const InvoicesService = {
         page: params?.page ?? 1,
         limit: params?.limit ?? 10,
       };
+      if (params?.businessId) searchParams.businessId = params.businessId;
       if (params?.status) searchParams.status = params.status;
       const result = await client
         .get(API_CONFIG.INVOICES.LIST_ISSUED, { searchParams })

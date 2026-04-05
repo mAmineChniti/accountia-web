@@ -91,6 +91,8 @@ export function CreateBusinessInvoicePage({
   const form = useForm<CreateInvoiceInput>({
     resolver: zodResolver(CreateInvoiceSchema),
     defaultValues: {
+      businessId,
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
       issuedDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -99,6 +101,7 @@ export function CreateBusinessInvoicePage({
       description: '',
       paymentTerms: '',
       recipient: {
+        type: 'EXTERNAL',
         displayName: '',
         email: '',
       },
@@ -149,7 +152,13 @@ export function CreateBusinessInvoicePage({
   };
 
   const onSubmit = (data: CreateInvoiceInput) => {
+    console.log('Submitting invoice data:', data);
     createInvoice(data);
+  };
+
+  const onError = (errors: unknown) => {
+    console.error('Form validation errors:', errors);
+    toast.error(t.fetchError || 'Please check the form for errors');
   };
 
   return (
@@ -192,7 +201,10 @@ export function CreateBusinessInvoicePage({
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, onError)}
+          className="space-y-6"
+        >
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -201,7 +213,23 @@ export function CreateBusinessInvoicePage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t.columnInvoiceNumber || 'Invoice #'}
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="INV-001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="issuedDate"
