@@ -1131,6 +1131,14 @@ export const BusinessService = {
   async getBusinessStatistics(
     businessId: string
   ): Promise<BusinessStatisticsResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS.replace(
