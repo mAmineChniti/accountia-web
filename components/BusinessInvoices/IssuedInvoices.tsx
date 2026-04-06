@@ -11,7 +11,10 @@ import {
   Eye,
   CheckCircle,
   Clock,
+  Download,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { InvoicesService } from '@/lib/requests';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
@@ -33,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -106,10 +110,10 @@ export function IssuedInvoices({
   // Fetch invoice details when a specific invoice is selected
   const { data: invoiceDetails, isLoading: isLoadingDetails } =
     useQuery<InvoiceResponse>({
-      queryKey: ['invoice-issued-details', selectedInvoiceId],
+      queryKey: ['invoice-issued-details', selectedInvoiceId, businessId],
       queryFn: () =>
         selectedInvoiceId
-          ? InvoicesService.getIssuedInvoice(selectedInvoiceId)
+          ? InvoicesService.getIssuedInvoice(selectedInvoiceId, businessId)
           : Promise.reject(new Error('No invoice selected')),
       enabled: !!selectedInvoiceId && isDetailsOpen,
       staleTime: 10 * 60 * 1000, // 10 minutes
@@ -145,6 +149,80 @@ export function IssuedInvoices({
 
     return results;
   }, [invoices, filterStatus, searchQuery]);
+
+  // Export Invoice to PDF
+  const exportToPDF = () => {
+    if (!invoiceDetails) return;
+
+    const doc = new jsPDF();
+
+    // Brand Header
+    doc.setFontSize(22);
+    doc.setTextColor(138, 34, 34); // Primary color
+    doc.text('Accountia', 14, 20);
+
+    doc.setFontSize(16);
+    doc.setTextColor(50);
+    doc.text(
+      `${t.invoiceDetailsTitle || 'Invoice'} #${invoiceDetails.invoiceNumber}`,
+      14,
+      30
+    );
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`${t.statusLabel || 'Status'}: ${invoiceDetails.status}`, 14, 38);
+    doc.text(
+      `${t.issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      14,
+      44
+    );
+
+    // Line items
+    if (invoiceDetails.lineItems && invoiceDetails.lineItems.length > 0) {
+      const tableColumn = [
+        t.itemLabel || 'Item',
+        t.quantityLabel || 'Qty',
+        t.priceLabel || 'Price',
+        t.totalLabel || 'Total',
+      ];
+      const tableRows: Array<string | number>[] = [];
+
+      for (const item of invoiceDetails.lineItems) {
+        tableRows.push([
+          item.description || item.productName || 'Item',
+          item.quantity,
+          `${item.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+          `${(item.quantity * item.unitPrice).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+        ]);
+      }
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 55,
+        styles: { fontSize: 10, cellPadding: 4, font: 'helvetica' },
+        headStyles: {
+          fillColor: [138, 34, 34],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+      });
+    }
+
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
+    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
+    doc.text(
+      `${t.amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+      14,
+      finalY + 15
+    );
+
+    doc.save(`Invoice_${invoiceDetails.invoiceNumber}.pdf`);
+  };
 
   const stats = useMemo(() => {
     const paid: Record<string, number> = {};
@@ -462,132 +540,195 @@ export function IssuedInvoices({
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
-            </DialogTitle>
-            <DialogDescription>
-              {invoiceDetails?.invoiceNumber}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto border-0 p-0 shadow-2xl sm:rounded-2xl dark:bg-slate-950">
+          <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
+              </DialogTitle>
+              <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
+                {invoiceDetails?.invoiceNumber || (
+                  <Skeleton className="h-4 w-32" />
+                )}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-          {isLoadingDetails ? (
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-6 w-full" />
-            </div>
-          ) : invoiceDetails ? (
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-muted-foreground text-sm">
-                    {t.invoiceNumberLabel}
-                  </p>
-                  <p className="font-medium">{invoiceDetails.invoiceNumber}</p>
+          <div className="px-6 py-4">
+            {isLoadingDetails ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-24" />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">
-                    {t.statusLabel}
-                  </p>
-                  <Badge className={STATUS_COLORS[invoiceDetails.status]}>
-                    <span className="mr-1">
-                      {STATUS_ICONS[invoiceDetails.status]}
-                    </span>
-                    {invoiceDetails.status}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">
-                    {t.amountLabel}
-                  </p>
-                  <p className="font-medium">
-                    {invoiceDetails.totalAmount.toLocaleString(lang, {
-                      minimumFractionDigits: 2,
-                    })}{' '}
-                    {invoiceDetails.currency}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">
-                    {t.issuedDateLabel}
-                  </p>
-                  <p className="font-medium">
-                    {new Date(invoiceDetails.issuedDate).toLocaleDateString(
-                      lang
-                    )}
-                  </p>
+                <div className="space-y-4 pt-6">
+                  <Skeleton className="h-8 w-40" />
+                  <Skeleton className="h-32 w-full" />
                 </div>
               </div>
-
-              {/* Description */}
-              {invoiceDetails.description && (
-                <div>
-                  <p className="text-muted-foreground text-sm">
-                    {t.descriptionLabel}
-                  </p>
-                  <p className="text-sm">{invoiceDetails.description}</p>
-                </div>
-              )}
-
-              {/* Line Items */}
-              {invoiceDetails.lineItems &&
-                invoiceDetails.lineItems.length > 0 && (
-                  <div>
-                    <p className="mb-3 text-sm font-medium">
-                      {t.lineItemsLabel}
+            ) : invoiceDetails ? (
+              <div className="space-y-8">
+                {/* Basic Info */}
+                <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {t.invoiceNumberLabel}
                     </p>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t.itemLabel}</TableHead>
-                          <TableHead className="text-right">
-                            {t.quantityLabel}
-                          </TableHead>
-                          <TableHead className="text-right">
-                            {t.priceLabel}
-                          </TableHead>
-                          <TableHead className="text-right">
-                            {t.totalLabel}
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {invoiceDetails.lineItems.map((item, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>{item.description}</TableCell>
-                            <TableCell className="text-right">
-                              {item.quantity}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {item.unitPrice.toLocaleString(lang, {
-                                minimumFractionDigits: 2,
-                              })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {(item.quantity * item.unitPrice).toLocaleString(
-                                lang,
-                                { minimumFractionDigits: 2 }
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <p className="font-mono font-medium">
+                      {invoiceDetails.invoiceNumber}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {t.statusLabel}
+                    </p>
+                    <Badge
+                      className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
+                    >
+                      <span className="mr-1">
+                        {STATUS_ICONS[invoiceDetails.status]}
+                      </span>
+                      {invoiceDetails.status}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {t.amountLabel}
+                    </p>
+                    <p className="text-primary text-lg font-bold">
+                      {invoiceDetails.totalAmount.toLocaleString(lang, {
+                        minimumFractionDigits: 2,
+                      })}{' '}
+                      {invoiceDetails.currency}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {t.issuedDateLabel}
+                    </p>
+                    <p className="font-medium">
+                      {new Date(invoiceDetails.issuedDate).toLocaleDateString(
+                        lang,
+                        { year: 'numeric', month: 'short', day: 'numeric' }
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {invoiceDetails.description && (
+                  <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
+                    <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+                      {t.descriptionLabel}
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      {invoiceDetails.description}
+                    </p>
                   </div>
                 )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
-          )}
 
-          <DialogClose asChild>
-            <Button type="button" variant="outline">
-              {t.closeButtonLabel}
-            </Button>
-          </DialogClose>
+                {/* Line Items */}
+                {invoiceDetails.lineItems &&
+                  invoiceDetails.lineItems.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold tracking-tight">
+                        {t.lineItemsLabel}
+                      </h4>
+                      <div className="border-border/50 overflow-hidden rounded-xl border shadow-xs">
+                        <Table>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead>{t.itemLabel}</TableHead>
+                              <TableHead className="text-right">
+                                {t.quantityLabel}
+                              </TableHead>
+                              <TableHead className="text-right">
+                                {t.priceLabel}
+                              </TableHead>
+                              <TableHead className="text-right">
+                                {t.totalLabel}
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {invoiceDetails.lineItems.map((item, idx) => (
+                              <TableRow key={idx} className="hover:bg-muted/30">
+                                <TableCell className="font-medium">
+                                  {item.productName ||
+                                    item.description ||
+                                    'Unknown'}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {item.quantity}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {item.unitPrice.toLocaleString(lang, {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </TableCell>
+                                <TableCell className="text-right font-semibold">
+                                  {(
+                                    item.quantity * item.unitPrice
+                                  ).toLocaleString(lang, {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      <div className="flex justify-end pt-4">
+                        <div className="bg-primary/5 border-primary/10 flex items-center justify-between gap-12 rounded-xl border px-6 py-4">
+                          <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+                            {t.amountLabel || 'Total'}
+                          </span>
+                          <span className="text-primary text-2xl font-bold">
+                            {invoiceDetails.totalAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                            })}{' '}
+                            <span className="text-lg opacity-75">
+                              {invoiceDetails.currency}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
+            )}
+          </div>
+
+          <div className="bg-muted/20 border-t px-6 py-4">
+            <DialogFooter className="w-full sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={exportToPDF}
+                className="hover:bg-muted gap-2 bg-white dark:bg-transparent"
+                disabled={isLoadingDetails || !invoiceDetails}
+              >
+                <Download className="h-4 w-4" />
+                {(t as Record<string, string>).exportPDF || 'Export PDF'}
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  className="shadow-md transition-shadow hover:shadow-lg"
+                >
+                  {(t as Record<string, string>).closeButtonLabel || 'Close'}
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -140,7 +140,7 @@ export function CreateProductDialog({
                 name="unitPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.unitPriceLabel}</FormLabel>
+                    <FormLabel>{t.unitPriceLabel} (TND)</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
@@ -166,7 +166,7 @@ export function CreateProductDialog({
                 name="cost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.costPriceLabel}</FormLabel>
+                    <FormLabel>{t.costPriceLabel} (TND)</FormLabel>
                     <FormControl>
                       <Input
                         type="text"

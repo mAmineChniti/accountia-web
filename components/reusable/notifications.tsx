@@ -82,6 +82,7 @@ export function Notifications({
       <PopoverTrigger asChild>
         <Button
           size="icon"
+          variant="outline"
           className="relative"
           aria-label={t.title}
           title={t.title}

@@ -209,8 +209,8 @@ export function BusinessProducts({
         p.description.length > 50
           ? p.description.slice(0, 50) + '...'
           : p.description,
-        `$${p.unitPrice.toLocaleString()}`,
-        `$${p.cost.toLocaleString()}`,
+        `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
+        `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
         p.quantity.toString(),
       ];
       tableRows.push(productData);
@@ -469,10 +469,16 @@ export function BusinessProducts({
                         {product.description}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ${product.unitPrice.toLocaleString()}
+                        {product.unitPrice.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        TND
                       </TableCell>
                       <TableCell className="text-right font-medium text-orange-600 dark:text-orange-400">
-                        ${product.cost.toLocaleString()}
+                        {product.cost.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        TND
                       </TableCell>
                       <TableCell className="text-right">
                         <span

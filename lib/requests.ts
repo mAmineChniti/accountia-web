@@ -1131,6 +1131,14 @@ export const BusinessService = {
   async getBusinessStatistics(
     businessId: string
   ): Promise<BusinessStatisticsResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS.replace(
@@ -1347,12 +1355,16 @@ export const InvoicesService = {
   },
 
   // 3. Get Single Issued Invoice
-  async getIssuedInvoice(id: string): Promise<InvoiceResponse> {
+  async getIssuedInvoice(
+    id: string,
+    businessId?: string
+  ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
-      const result = await client
-        .get(API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id))
-        .json<InvoiceResponse>();
+      const endpoint = businessId
+        ? `invoices/business/${businessId}/issued/${id}`
+        : API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id);
+      const result = await client.get(endpoint).json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
