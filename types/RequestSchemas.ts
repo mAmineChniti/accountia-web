@@ -32,7 +32,7 @@ const TwoFACodeSchema = z
 export const RegisterSchema = z.object({
   username: z.string().min(5).max(20),
   email: z.email(),
-  password: z.string().min(6),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(2).max(50),
   lastName: z.string().min(2).max(50),
   birthdate: DateSchema,
@@ -313,6 +313,7 @@ export const UpdateCompanyInvoiceSchema = z.object({
 export const ChatMessageSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required'),
   query: z.string().min(1, 'Query is required'),
+  lang: z.enum(['en', 'fr', 'ar']).optional(),
   history: z
     .array(
       z.object({

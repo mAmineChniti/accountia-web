@@ -6,6 +6,8 @@ import { Bot, Loader2, Send, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ChatService } from '@/lib/requests';
+import type { Dictionary } from '@/get-dictionary';
+import type { Locale } from '@/i18n-config';
 import type { ChatMessage } from '@/types/ResponseInterfaces';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,22 +15,68 @@ import { Textarea } from '@/components/ui/textarea';
 export function BusinessAssistantWidget({
   businessId,
   businessName,
+  dictionary,
+  lang,
 }: {
   businessId: string;
   businessName: string;
+  dictionary: Dictionary;
+  lang: Locale;
 }) {
+  const defaultText = {
+    headerTitle: 'AI Assistant',
+    headerDescription: 'Ask about invoices, overdue, revenue, or cash-flow.',
+    fallbackBadge: 'Fallback mode',
+    loadingMessage: 'Analyzing...',
+    placeholder: 'Write your message...',
+    send: 'Send',
+    openLabel: 'Open AI Assistant',
+    minimizeLabel: 'Minimize AI Assistant',
+    minimizeChatLabel: 'Minimize chat',
+    greeting: `Hello. I can help you analyze ${businessName}, understand your invoices, and monitor activity.`,
+    choicePerformance: `Summarize ${businessName} performance`,
+    choiceOverdue: 'Show overdue invoices',
+    choiceCashflow: 'Give me a cash-flow insight',
+    sendError: 'Unable to send message',
+  };
+
+  const localized = dictionary.pages.businessAssistant;
+  const text = {
+    headerTitle: localized?.widgetHeaderTitle || defaultText.headerTitle,
+    headerDescription:
+      localized?.widgetHeaderDescription || defaultText.headerDescription,
+    fallbackBadge: localized?.widgetFallbackBadge || defaultText.fallbackBadge,
+    loadingMessage:
+      localized?.widgetLoadingMessage || defaultText.loadingMessage,
+    placeholder: localized?.placeholder || defaultText.placeholder,
+    send: localized?.send || defaultText.send,
+    openLabel: localized?.openLabel || defaultText.openLabel,
+    minimizeLabel: localized?.minimizeLabel || defaultText.minimizeLabel,
+    minimizeChatLabel:
+      localized?.minimizeChatLabel || defaultText.minimizeChatLabel,
+    greeting:
+      localized?.greeting?.replace('{businessName}', businessName) ||
+      defaultText.greeting,
+    choicePerformance:
+      localized?.choicePerformance?.replace('{businessName}', businessName) ||
+      defaultText.choicePerformance,
+    choiceOverdue: localized?.choiceOverdue || defaultText.choiceOverdue,
+    choiceCashflow: localized?.choiceCashflow || defaultText.choiceCashflow,
+    sendError: localized?.sendError || defaultText.sendError,
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isFallbackMode, setIsFallbackMode] = useState(false);
   const [choices, setChoices] = useState<string[]>([
-    `Resume la performance de ${businessName}`,
-    'Montre-moi les factures en retard',
-    'Donne-moi un insight sur le cash-flow',
+    text.choicePerformance,
+    text.choiceOverdue,
+    text.choiceCashflow,
   ]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `Bonjour. Je peux vous aider a analyser ${businessName}, comprendre vos factures, et suivre votre activite.`,
+      content: text.greeting,
     },
   ]);
 
@@ -40,12 +88,10 @@ export function BusinessAssistantWidget({
       query: string;
       history: ChatMessage[];
     }) => {
-      return ChatService.sendMessage({ businessId, query, history });
+      return ChatService.sendMessage({ businessId, query, history, lang });
     },
     onSuccess: (response) => {
-      const fallbackDetected =
-        response.response.includes('IA est temporairement indisponible') ||
-        response.response.includes("Je ne peux pas joindre l'IA");
+      const fallbackDetected = response.fallback === true;
 
       setIsFallbackMode(fallbackDetected);
 
@@ -56,18 +102,12 @@ export function BusinessAssistantWidget({
       setChoices(
         response.choices && response.choices.length > 0
           ? response.choices
-          : [
-              `Resume la performance de ${businessName}`,
-              'Montre-moi les factures en retard',
-              'Donne-moi un insight sur le cash-flow',
-            ]
+          : [text.choicePerformance, text.choiceOverdue, text.choiceCashflow]
       );
     },
     onError: (error: unknown) => {
       const messageText =
-        error instanceof Error
-          ? error.message
-          : "Impossible d'envoyer le message";
+        error instanceof Error ? error.message : text.sendError;
       toast.error(messageText);
     },
   });
@@ -104,20 +144,20 @@ export function BusinessAssistantWidget({
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 <div>
-                  <p className="text-sm font-semibold">AI Assistant</p>
+                  <p className="text-sm font-semibold">{text.headerTitle}</p>
                   <p className="text-muted-foreground text-xs">
-                    Posez une question sur vos factures ou votre revenu.
+                    {text.headerDescription}
                   </p>
                 </div>
               </div>
               {isFallbackMode && (
                 <span className="rounded-full border bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
-                  Mode secours
+                  {text.fallbackBadge}
                 </span>
               )}
               <button
                 type="button"
-                aria-label="Minimize chat"
+                aria-label={text.minimizeChatLabel}
                 onClick={() => setIsOpen(false)}
                 className="text-muted-foreground hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full"
               >
@@ -163,7 +203,7 @@ export function BusinessAssistantWidget({
                 <div className="flex justify-start">
                   <div className="bg-muted/60 flex items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyse en cours...
+                    {text.loadingMessage}
                   </div>
                 </div>
               )}
@@ -175,7 +215,7 @@ export function BusinessAssistantWidget({
               <Textarea
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder="Ecrivez votre message..."
+                placeholder={text.placeholder}
                 className="min-h-[72px] resize-none"
                 disabled={isPending}
               />
@@ -192,7 +232,7 @@ export function BusinessAssistantWidget({
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
-                  Envoyer
+                  {text.send}
                 </Button>
               </div>
             </div>
@@ -202,7 +242,7 @@ export function BusinessAssistantWidget({
 
       <button
         type="button"
-        aria-label={isOpen ? 'Minimize AI Assistant' : 'Open AI Assistant'}
+        aria-label={isOpen ? text.minimizeLabel : text.openLabel}
         onClick={() => setIsOpen((current) => !current)}
         className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-14 w-14 items-center justify-center rounded-full shadow-xl shadow-black/20 transition-transform hover:scale-105"
       >

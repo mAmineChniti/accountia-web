@@ -56,21 +56,40 @@ export function InviteMemberModal({
   lang,
 }: InviteMemberModalProps) {
   const queryClient = useQueryClient();
-  const t = {
+  const fallback = {
     inviteMember: 'Invite Member',
     inviteMemberDescription: 'Send an invitation email to a new team member.',
     emailLabel: 'Email Address',
     roleLabel: 'Role',
     cancel: 'Cancel',
     sendInvite: 'Send Invitation',
-    successTitle: 'Invitation sent',
+    successMessage: 'Invitation sent successfully',
+    failedInvite: 'Failed to invite team member',
+    emailPlaceholder: 'colleague@example.com',
+    rolePlaceholder: 'Select role',
+    roleAdmin: 'Business Admin',
+  };
+  const localized = dictionary.pages.team;
+  const t = {
+    inviteMember: localized?.inviteMember || fallback.inviteMember,
+    inviteMemberDescription:
+      localized?.inviteMemberDescription || fallback.inviteMemberDescription,
+    emailLabel: localized?.emailLabel || fallback.emailLabel,
+    roleLabel: localized?.roleLabel || fallback.roleLabel,
+    cancel: localized?.cancel || fallback.cancel,
+    sendInvite: localized?.sendInvite || fallback.sendInvite,
+    successMessage: localized?.successMessage || fallback.successMessage,
+    failedInvite: localized?.failedInvite || fallback.failedInvite,
+    emailPlaceholder: localized?.emailPlaceholder || fallback.emailPlaceholder,
+    rolePlaceholder: localized?.rolePlaceholder || fallback.rolePlaceholder,
+    roleAdmin: localized?.roleAdmin || fallback.roleAdmin,
   };
 
   const form = useForm<InviteTeamMemberInput>({
     resolver: zodResolver(InviteTeamMemberSchema),
     defaultValues: {
       email: '',
-      role: 'BUSINESS_ADMIN',
+      role: 'ADMIN',
     },
   });
 
@@ -78,7 +97,7 @@ export function InviteMemberModal({
     mutationFn: (data: InviteTeamMemberInput) =>
       BusinessService.inviteTeamMember(businessId, { ...data, lang }),
     onSuccess: () => {
-      toast.success(t.successTitle || 'Invitation sent successfully');
+      toast.success(t.successMessage);
       queryClient.invalidateQueries({ queryKey: ['team-members', businessId] });
       form.reset();
       onClose();
@@ -87,7 +106,7 @@ export function InviteMemberModal({
       const errorMessage = localizeErrorMessage(
         error,
         dictionary,
-        'Failed to invite team member'
+        t.failedInvite
       );
       toast.error(errorMessage);
     },
@@ -124,7 +143,7 @@ export function InviteMemberModal({
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="colleague@example.com"
+                      placeholder={t.emailPlaceholder}
                       {...field}
                     />
                   </FormControl>
@@ -142,11 +161,11 @@ export function InviteMemberModal({
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
+                        <SelectValue placeholder={t.rolePlaceholder} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="ADMIN">Business Admin</SelectItem>
+                      <SelectItem value="ADMIN">{t.roleAdmin}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -23,15 +23,15 @@ import type { ChatMessage } from '@/types/ResponseInterfaces';
 export function BusinessAssistant({
   businessId,
   businessName,
-  dictionary: _dictionary,
-  lang: _lang,
+  dictionary,
+  lang,
 }: {
   businessId: string;
   businessName: string;
   dictionary: Dictionary;
   lang: Locale;
 }) {
-  const t = {
+  const fallback = {
     title: 'AI Assistant',
     description:
       'Ask about invoices, revenue, overdue items, or business insights.',
@@ -42,13 +42,39 @@ export function BusinessAssistant({
       'Show me overdue invoices',
       'Give me a cash flow insight',
     ],
+    badge: 'Business AI',
+    assistantName: 'Accountia Assistant',
+    assistantDescription:
+      'Ask about revenue, invoices, overdue amounts, or business activity.',
+    thinking: 'Thinking...',
+    sendError: 'Failed to send message',
+    greeting:
+      'Hello! I can help you analyze {businessName}, explain invoices, or summarize your business activity.',
+  };
+
+  const localized = dictionary.pages.businessAssistant;
+  const t = {
+    title: localized?.title || fallback.title,
+    description: localized?.description || fallback.description,
+    placeholder: localized?.placeholder || fallback.placeholder,
+    send: localized?.send || fallback.send,
+    quickPrompts: localized?.quickPrompts || fallback.quickPrompts,
+    badge: localized?.badge || fallback.badge,
+    assistantName: localized?.assistantName || fallback.assistantName,
+    assistantDescription:
+      localized?.assistantDescription || fallback.assistantDescription,
+    thinking: localized?.thinking || fallback.thinking,
+    sendError: localized?.sendError || fallback.sendError,
+    greeting:
+      localized?.greeting?.replace('{businessName}', businessName) ||
+      fallback.greeting.replace('{businessName}', businessName),
   };
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: `Hello! I can help you analyze ${businessName}, explain invoices, or summarize your business activity.`,
+      content: t.greeting,
     },
   ]);
 
@@ -60,7 +86,7 @@ export function BusinessAssistant({
       query: string;
       history: ChatMessage[];
     }) => {
-      return ChatService.sendMessage({ businessId, query, history });
+      return ChatService.sendMessage({ businessId, query, history, lang });
     },
     onSuccess: (response) => {
       setMessages((current) => [
@@ -69,8 +95,7 @@ export function BusinessAssistant({
       ]);
     },
     onError: (error: unknown) => {
-      const messageText =
-        error instanceof Error ? error.message : 'Failed to send message';
+      const messageText = error instanceof Error ? error.message : t.sendError;
       toast.error(messageText);
     },
   });
@@ -79,8 +104,6 @@ export function BusinessAssistant({
     const trimmed = message.trim();
     if (!trimmed || !businessId) return;
 
-    // Keep a clean history for backend chat: previous turns only.
-    // The current user message is sent via `query`, not inside `history`.
     const previousConversationHistory = messages.slice(1);
 
     const nextMessages: ChatMessage[] = [
@@ -102,7 +125,7 @@ export function BusinessAssistant({
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1.5">
             <Sparkles className="h-3.5 w-3.5" />
-            Business AI
+            {t.badge}
           </Badge>
         </div>
         <div className="space-y-1">
@@ -115,15 +138,13 @@ export function BusinessAssistant({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            Accountia Assistant
+            {t.assistantName}
           </CardTitle>
-          <CardDescription>
-            Ask about revenue, invoices, overdue amounts, or business activity.
-          </CardDescription>
+          <CardDescription>{t.assistantDescription}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {(t.quickPrompts as string[]).map((prompt) => (
+            {t.quickPrompts.map((prompt) => (
               <Button
                 key={prompt}
                 type="button"
@@ -159,7 +180,7 @@ export function BusinessAssistant({
                 <div className="flex justify-start">
                   <div className="bg-background flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm shadow-sm">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Thinking...
+                    {t.thinking}
                   </div>
                 </div>
               )}

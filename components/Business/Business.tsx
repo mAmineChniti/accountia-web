@@ -150,6 +150,8 @@ export function Business({
         <BusinessAssistantWidget
           businessId={businessId}
           businessName={business.name}
+          dictionary={dictionary}
+          lang={lang}
         />
 
         <div className="flex items-center justify-between gap-4">
@@ -162,14 +164,15 @@ export function Business({
           <Badge variant="outline" className="bg-background/60 gap-1.5">
             <Shield className="h-3.5 w-3.5" />
             {isOwnerView
-              ? 'Business Owner View'
+              ? (t.roleOwnerView ?? 'Business Owner View')
               : isAdminView
-                ? 'Business Admin View'
-                : 'Business Access'}
+                ? (t.roleAdminView ?? 'Business Admin View')
+                : (t.roleAccess ?? 'Business Access')}
           </Badge>
           {isAdminView && (
             <span className="text-muted-foreground text-sm">
-              Operational access only. Owner settings remain restricted.
+              {t.adminAccessNote ??
+                'Operational access only. Owner settings remain restricted.'}
             </span>
           )}
         </div>

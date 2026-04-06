@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -58,6 +59,56 @@ export function AcceptInvite({
     successMsg: 'Invitation accepted! You can now log in.',
     missingToken:
       'Invalid or missing invitation token. Please check your email link.',
+    alreadyAccepted:
+      'Invitation already accepted. Please log in with the invited email.',
+    failedAccept: 'Failed to accept invitation',
+    invalidLinkTitle: 'Invalid Link',
+    goToLogin: 'Go to Login',
+    loadingTitle: 'Loading invitation...',
+    loadingDescription: 'Please wait while we verify your invitation link.',
+    alreadyAcceptedTitle: 'Invitation Already Accepted',
+    inactiveTitle: 'Invitation Not Active',
+    alreadyAcceptedDescription:
+      'This invitation has already been accepted. Please sign in with the invited email below.',
+    inactiveDescription:
+      'This invitation is no longer active. Please request a new invitation from the Business Owner.',
+    invitedEmail: 'Invited Email',
+    firstNamePlaceholder: 'John',
+    lastNamePlaceholder: 'Doe',
+    passwordPlaceholder: '••••••••',
+  };
+
+  const localized = dictionary.pages.acceptInvite;
+  const text = {
+    title: localized?.title || t.title,
+    description: localized?.description || t.description,
+    firstName: localized?.firstName || t.firstName,
+    lastName: localized?.lastName || t.lastName,
+    password: localized?.password || t.password,
+    confirmPassword: localized?.confirmPassword || t.confirmPassword,
+    acceptButton: localized?.acceptButton || t.acceptButton,
+    successMsg: localized?.successMsg || t.successMsg,
+    missingToken: localized?.missingToken || t.missingToken,
+    alreadyAccepted: localized?.alreadyAccepted || t.alreadyAccepted,
+    failedAccept: localized?.failedAccept || t.failedAccept,
+    invalidLinkTitle: localized?.invalidLinkTitle || t.invalidLinkTitle,
+    goToLogin: localized?.goToLogin || t.goToLogin,
+    loadingTitle: localized?.loadingTitle || t.loadingTitle,
+    loadingDescription: localized?.loadingDescription || t.loadingDescription,
+    alreadyAcceptedTitle:
+      localized?.alreadyAcceptedTitle || t.alreadyAcceptedTitle,
+    inactiveTitle: localized?.inactiveTitle || t.inactiveTitle,
+    alreadyAcceptedDescription:
+      localized?.alreadyAcceptedDescription || t.alreadyAcceptedDescription,
+    inactiveDescription:
+      localized?.inactiveDescription || t.inactiveDescription,
+    invitedEmail: localized?.invitedEmail || t.invitedEmail,
+    firstNamePlaceholder:
+      localized?.firstNamePlaceholder || t.firstNamePlaceholder,
+    lastNamePlaceholder:
+      localized?.lastNamePlaceholder || t.lastNamePlaceholder,
+    passwordPlaceholder:
+      localized?.passwordPlaceholder || t.passwordPlaceholder,
   };
 
   const form = useForm<AcceptInviteInput>({
@@ -70,6 +121,10 @@ export function AcceptInvite({
       confirmPassword: '',
     },
   });
+
+  useEffect(() => {
+    form.setValue('token', token, { shouldValidate: true });
+  }, [form, token]);
 
   const {
     data: invitePreview,
@@ -85,7 +140,7 @@ export function AcceptInvite({
   const { mutate: acceptInvite, isPending } = useMutation({
     mutationFn: (data: AcceptInviteInput) => AuthService.acceptInvite(data),
     onSuccess: (response) => {
-      toast.success(t.successMsg);
+      toast.success(text.successMsg);
       const invitedEmail = response.email?.trim();
       if (invitedEmail) {
         router.push(`/${lang}/login?email=${encodeURIComponent(invitedEmail)}`);
@@ -99,9 +154,7 @@ export function AcceptInvite({
         error.type === 'INVITE_ALREADY_ACCEPTED'
       ) {
         const invitedEmail = error.email?.trim();
-        toast.info(
-          'Invitation already accepted. Please log in with the invited email.'
-        );
+        toast.info(text.alreadyAccepted);
         if (invitedEmail) {
           router.push(
             `/${lang}/login?email=${encodeURIComponent(invitedEmail)}`
@@ -115,7 +168,7 @@ export function AcceptInvite({
       const errorMessage = localizeErrorMessage(
         error,
         dictionary,
-        'Failed to accept invitation'
+        text.failedAccept
       );
       toast.error(errorMessage);
     },
@@ -127,13 +180,13 @@ export function AcceptInvite({
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-destructive text-xl">
-              Invalid Link
+              {text.invalidLinkTitle}
             </CardTitle>
-            <CardDescription>{t.missingToken}</CardDescription>
+            <CardDescription>{text.missingToken}</CardDescription>
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <Link href={`/${lang}/login`}>Go to Login</Link>
+              <Link href={`/${lang}/login`}>{text.goToLogin}</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -146,10 +199,8 @@ export function AcceptInvite({
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-xl">Loading invitation...</CardTitle>
-            <CardDescription>
-              Please wait while we verify your invitation link.
-            </CardDescription>
+            <CardTitle className="text-xl">{text.loadingTitle}</CardTitle>
+            <CardDescription>{text.loadingDescription}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -162,13 +213,13 @@ export function AcceptInvite({
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-destructive text-xl">
-              Invalid Link
+              {text.invalidLinkTitle}
             </CardTitle>
-            <CardDescription>{t.missingToken}</CardDescription>
+            <CardDescription>{text.missingToken}</CardDescription>
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <Link href={`/${lang}/login`}>Go to Login</Link>
+              <Link href={`/${lang}/login`}>{text.goToLogin}</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -178,12 +229,10 @@ export function AcceptInvite({
 
   if (invitePreview.status !== 'PENDING') {
     const isAccepted = invitePreview.status === 'ACCEPTED';
-    const title = isAccepted
-      ? 'Invitation Already Accepted'
-      : 'Invitation Not Active';
+    const title = isAccepted ? text.alreadyAcceptedTitle : text.inactiveTitle;
     const description = isAccepted
-      ? 'This invitation has already been accepted. Please sign in with the invited email below.'
-      : 'This invitation is no longer active. Please request a new invitation from the Business Owner.';
+      ? text.alreadyAcceptedDescription
+      : text.inactiveDescription;
 
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -193,7 +242,7 @@ export function AcceptInvite({
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-muted-foreground text-sm">Invited email</p>
+            <p className="text-muted-foreground text-sm">{text.invitedEmail}</p>
             <Input value={invitePreview.email} disabled />
           </CardContent>
           <CardFooter>
@@ -201,7 +250,7 @@ export function AcceptInvite({
               <Link
                 href={`/${lang}/login?email=${encodeURIComponent(invitePreview.email)}`}
               >
-                Go to Login
+                {text.goToLogin}
               </Link>
             </Button>
           </CardFooter>
@@ -223,10 +272,10 @@ export function AcceptInvite({
           </div>
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight">
-              {t.title}
+              {text.title}
             </CardTitle>
             <CardDescription className="text-sm">
-              {t.description}
+              {text.description}
             </CardDescription>
           </div>
         </CardHeader>
@@ -236,7 +285,7 @@ export function AcceptInvite({
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <FormItem>
-                    <FormLabel>Invited Email</FormLabel>
+                    <FormLabel>{text.invitedEmail}</FormLabel>
                     <FormControl>
                       <Input value={invitePreview.email} disabled />
                     </FormControl>
@@ -247,9 +296,12 @@ export function AcceptInvite({
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.firstName}</FormLabel>
+                      <FormLabel>{text.firstName}</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          placeholder={text.firstNamePlaceholder}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -260,9 +312,12 @@ export function AcceptInvite({
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.lastName}</FormLabel>
+                      <FormLabel>{text.lastName}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          placeholder={text.lastNamePlaceholder}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -275,11 +330,11 @@ export function AcceptInvite({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.password}</FormLabel>
+                    <FormLabel>{text.password}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={text.passwordPlaceholder}
                         {...field}
                       />
                     </FormControl>
@@ -293,11 +348,11 @@ export function AcceptInvite({
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.confirmPassword}</FormLabel>
+                    <FormLabel>{text.confirmPassword}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={text.passwordPlaceholder}
                         {...field}
                       />
                     </FormControl>
@@ -316,7 +371,7 @@ export function AcceptInvite({
                 ) : (
                   <ArrowRight className="mr-2 h-4 w-4" />
                 )}
-                {t.acceptButton}
+                {text.acceptButton}
               </Button>
             </form>
           </Form>

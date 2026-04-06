@@ -262,7 +262,6 @@ export interface InviteTeamMemberResponse {
 }
 
 export interface AcceptInviteResponse extends BaseResponse {
-  message: string;
   email?: string;
 }
 
@@ -668,7 +667,7 @@ export interface InvoiceMessageResponse extends BaseResponse {
 export interface TenantMetadata {
   businessId: string;
   databaseName: string;
-  membershipRole?: 'OWNER' | 'ADMIN' | 'CLIENT' | 'platform-admin';
+  membershipRole?: 'OWNER' | 'ADMIN' | 'CLIENT' | 'PLATFORM_ADMIN';
 }
 
 export interface TenantMetadataResponse extends BaseResponse {
@@ -690,6 +689,7 @@ export interface ChatMessage {
 export interface ChatMessageResponse extends BaseResponse {
   response: string;
   choices?: string[];
+  fallback?: boolean;
   type?: 'text' | 'choices' | 'analysis';
   link?: {
     text: string;

@@ -40,12 +40,7 @@ function StatCard({
   subtitle?: string;
   variant?: 'default' | 'success' | 'warning' | 'danger';
 }) {
-  const variantClasses = {
-    default: 'bg-card border-border',
-    success: 'bg-card border-border',
-    warning: 'bg-card border-border',
-    danger: 'bg-card border-border',
-  };
+  const sharedVariantClass = 'bg-card border-border';
 
   const variantAccent = {
     default: 'var(--color-muted-foreground)',
@@ -55,7 +50,7 @@ function StatCard({
   };
 
   return (
-    <Card className={variantClasses[variant]}>
+    <Card className={sharedVariantClass}>
       <CardHeader className="pb-2">
         <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
           <span

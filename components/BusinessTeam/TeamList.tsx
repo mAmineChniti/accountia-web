@@ -46,25 +46,37 @@ export function TeamList({
 }) {
   const queryClient = useQueryClient();
   const businessText = dictionary.pages.business;
+  const localizedTeam = dictionary.pages.team;
   const t = {
-    title: businessText.team || 'Team Management',
+    title: localizedTeam?.title || businessText.team || 'Team Management',
     description:
+      localizedTeam?.description ||
       businessText.clientsDescription ||
       'Manage your business team members and their roles.',
-    inviteButton: 'Invite Member',
-    searchPlaceholder: 'Search members...',
+    inviteButton: localizedTeam?.inviteButton || 'Invite Member',
+    searchPlaceholder: localizedTeam?.searchPlaceholder || 'Search members...',
     columns: {
-      name: 'Name',
-      email: 'Email',
-      role: 'Role',
-      status: 'Status',
-      actions: 'Actions',
+      name: localizedTeam?.columns?.name || 'Name',
+      email: localizedTeam?.columns?.email || 'Email',
+      role: localizedTeam?.columns?.role || 'Role',
+      status: localizedTeam?.columns?.status || 'Status',
+      actions: localizedTeam?.columns?.actions || 'Actions',
     },
-    removeConfirmTitle: 'Remove Team Member',
+    emptyState: localizedTeam?.emptyState || 'No members found.',
+    removeConfirmTitle:
+      localizedTeam?.removeConfirmTitle || 'Remove Team Member',
     removeConfirmDescription:
+      localizedTeam?.removeConfirmDescription ||
       'Are you sure you want to remove this member? They will lose access to the business immediately.',
-    cancel: 'Cancel',
-    remove: 'Remove',
+    cancel: localizedTeam?.cancel || 'Cancel',
+    remove: localizedTeam?.remove || 'Remove',
+    removeSuccess:
+      localizedTeam?.removeSuccess || 'Member removed successfully',
+    removeError: localizedTeam?.removeError || 'Failed to remove member',
+    statusActive: localizedTeam?.status?.active || 'Active',
+    statusPending: localizedTeam?.status?.pending || 'Pending',
+    statusExpired: localizedTeam?.status?.expired || 'Expired',
+    removing: localizedTeam?.removing || 'Removing...',
   };
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -100,7 +112,7 @@ export function TeamList({
       );
     },
     onSuccess: () => {
-      toast.success('Member removed successfully');
+      toast.success(t.removeSuccess);
       queryClient.invalidateQueries({ queryKey: ['team-members', businessId] });
       setMemberToRemove(undefined);
     },
@@ -108,7 +120,7 @@ export function TeamList({
       const errorMessage = localizeErrorMessage(
         error,
         dictionary,
-        'Failed to remove member'
+        t.removeError
       );
       toast.error(errorMessage);
     },
@@ -119,7 +131,7 @@ export function TeamList({
       case 'ACCEPTED': {
         return (
           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-            Active
+            {t.statusActive}
           </Badge>
         );
       }
@@ -129,12 +141,12 @@ export function TeamList({
             variant="outline"
             className="border-yellow-200 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
           >
-            Pending
+            {t.statusPending}
           </Badge>
         );
       }
       case 'EXPIRED': {
-        return <Badge variant="destructive">Expired</Badge>;
+        return <Badge variant="destructive">{t.statusExpired}</Badge>;
       }
       default: {
         return <Badge variant="secondary">{status}</Badge>;
@@ -200,7 +212,7 @@ export function TeamList({
                     colSpan={5}
                     className="text-muted-foreground h-32 text-center"
                   >
-                    No members found.
+                    {t.emptyState}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -277,7 +289,7 @@ export function TeamList({
               onClick={() => memberToRemove && removeMember(memberToRemove)}
               disabled={isRemoving}
             >
-              {isRemoving ? 'Removing...' : t.remove}
+              {isRemoving ? t.removing : t.remove}
             </Button>
           </DialogFooter>
         </DialogContent>
