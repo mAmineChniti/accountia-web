@@ -116,6 +116,25 @@ export const AssignUserSchema = z.object({
   role: z.string().min(1, 'Role is required'),
 });
 
+export const InviteTeamMemberSchema = z.object({
+  email: z.email('Valid email is required'),
+  role: z.string().min(1, 'Role is required'),
+  lang: z.enum(['en', 'fr', 'ar']).optional(),
+});
+
+export const AcceptInviteSchema = z
+  .object({
+    token: z.string().min(1, 'Token is required'),
+    firstName: z.string().min(2, 'First name is required'),
+    lastName: z.string().min(2, 'Last name is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
 export const ChangeClientRoleSchema = z.object({
   role: z.string().min(1, 'Role is required'),
 });
@@ -157,6 +176,8 @@ export type BusinessApplicationInput = z.infer<
 export type ReviewApplicationInput = z.infer<typeof ReviewApplicationSchema>;
 export type UpdateBusinessInput = z.infer<typeof UpdateBusinessSchema>;
 export type AssignUserInput = z.infer<typeof AssignUserSchema>;
+export type InviteTeamMemberInput = z.infer<typeof InviteTeamMemberSchema>;
+export type AcceptInviteInput = z.infer<typeof AcceptInviteSchema>;
 export type ChangeClientRoleInput = z.infer<typeof ChangeClientRoleSchema>;
 
 // ============= Products Schemas =============

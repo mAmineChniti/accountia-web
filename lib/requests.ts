@@ -17,6 +17,8 @@ import type {
   ReviewApplicationInput,
   UpdateBusinessInput,
   AssignUserInput,
+  InviteTeamMemberInput,
+  AcceptInviteInput,
   ChangeClientRoleInput,
   GoogleOAuthExchangeInput,
   CreateProductInput,
@@ -51,6 +53,10 @@ import type {
   BusinessApplicationsListResponse,
   ReviewApplicationResponse,
   AssignUserResponse,
+  TeamMembersListResponse,
+  InviteTeamMemberResponse,
+  AcceptInviteResponse,
+  InvitePreviewResponse,
   GetBusinessClientsResponse,
   ChangeClientRoleResponse,
   TwoFADisableResponse,
@@ -174,6 +180,11 @@ const API_CONFIG = {
     DELETE_BUSINESS: 'business/{id}',
     ASSIGN_USER: 'business/{id}/users',
     UNASSIGN_USER: 'business/{id}/users/{userId}',
+    TEAM_MEMBERS: 'business/{id}/team',
+    INVITE_MEMBER: 'business/{id}/invite',
+    CANCEL_INVITE: 'business/{id}/invite/{inviteId}',
+    INVITE_PREVIEW: 'business/invite/{token}',
+    ACCEPT_INVITE: 'business/invite/accept',
     TENANT_METADATA: 'business/{id}/tenant/metadata',
     GET_CLIENTS: 'business/{id}/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
@@ -486,6 +497,57 @@ export const AuthService = {
           json: data,
         })
         .json<ForgotPasswordResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async acceptInvite(data: AcceptInviteInput): Promise<AcceptInviteResponse> {
+    try {
+      const { confirmPassword, ...payload } = data;
+      void confirmPassword;
+
+      const result = await publicClient
+        .post(API_CONFIG.BUSINESS.ACCEPT_INVITE, {
+          json: payload,
+        })
+        .json<AcceptInviteResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const errorLike = error as HTTPErrorLike;
+        const errorData = await safeParseJson(errorLike.response);
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getInvitePreview(token: string): Promise<InvitePreviewResponse> {
+    try {
+      const endpoint = API_CONFIG.BUSINESS.INVITE_PREVIEW.replace(
+        '{token}',
+        token
+      );
+      const result = await publicClient
+        .get(endpoint)
+        .json<InvitePreviewResponse>();
       return result;
     } catch (error: unknown) {
       if (
@@ -1021,6 +1083,76 @@ export const BusinessService = {
         '{id}',
         businessId
       ).replace('{userId}', userId);
+      const result = await client
+        .delete(endpoint)
+        .json<BusinessMessageResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getTeamMembers(businessId: string): Promise<TeamMembersListResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.TEAM_MEMBERS.replace(
+        '{id}',
+        businessId
+      );
+      const result = await client.get(endpoint).json<TeamMembersListResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async inviteTeamMember(
+    businessId: string,
+    data: InviteTeamMemberInput
+  ): Promise<InviteTeamMemberResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.INVITE_MEMBER.replace(
+        '{id}',
+        businessId
+      );
+      const result = await client
+        .post(endpoint, { json: data })
+        .json<InviteTeamMemberResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async cancelInvite(
+    businessId: string,
+    inviteId: string
+  ): Promise<BusinessMessageResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.CANCEL_INVITE.replace(
+        '{id}',
+        businessId
+      ).replace('{inviteId}', inviteId);
       const result = await client
         .delete(endpoint)
         .json<BusinessMessageResponse>();

@@ -11,6 +11,7 @@ import {
   FileText,
   Package,
   BarChart3,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -239,10 +240,13 @@ export default function UserSidebar({
                     const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
                     const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
                     const statisticsHref = `/${lang}/business/${business.id}/statistics`;
+                    const teamHref = `/${lang}/business/${business.id}/team`;
+                    const canManageTeam = business.membershipRole === 'OWNER';
                     const isBusinessActive =
                       pathname === businessHref ||
                       pathname === issuedInvoicesHref ||
                       pathname === receivedInvoicesHref ||
+                      (canManageTeam && pathname === teamHref) ||
                       pathname === statisticsHref;
                     const isExpanded = expandedBusinesses.has(business.id);
 
@@ -320,6 +324,21 @@ export default function UserSidebar({
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
+                            {canManageTeam && (
+                              <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === teamHref}
+                                >
+                                  <Link href={teamHref}>
+                                    <Users className="h-4 w-4" />
+                                    <span>
+                                      {dictionary.pages.business.team || 'Team'}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            )}
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton
                                 asChild

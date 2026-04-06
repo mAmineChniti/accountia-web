@@ -10,6 +10,7 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
+  Rectangle,
   Tooltip,
   XAxis,
   YAxis,
@@ -41,15 +42,26 @@ function StatCard({
 }) {
   const variantClasses = {
     default: 'bg-card border-border',
-    success: 'bg-emerald-500/10 border-emerald-500/30',
-    warning: 'bg-amber-500/10 border-amber-500/30',
-    danger: 'bg-destructive/10 border-destructive/30',
+    success: 'bg-card border-border',
+    warning: 'bg-card border-border',
+    danger: 'bg-card border-border',
+  };
+
+  const variantAccent = {
+    default: 'var(--color-muted-foreground)',
+    success: 'var(--color-chart-2)',
+    warning: 'var(--color-chart-4)',
+    danger: 'var(--color-destructive)',
   };
 
   return (
     <Card className={variantClasses[variant]}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-muted-foreground text-sm font-medium">
+        <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+          <span
+            className="inline-block h-2 w-2 rounded-full"
+            style={{ backgroundColor: variantAccent[variant] }}
+          />
           {title}
         </CardTitle>
       </CardHeader>
@@ -75,6 +87,11 @@ export default function BusinessStatistics({
   const t = dictionary.pages.business;
   const text = t.statisticsUi;
   const errorMessages = dictionary.errorMessages as Record<string, string>;
+  const productsBarColor = 'var(--color-chart-4)';
+  const invoicesBarColor = 'var(--color-primary)';
+  const paidStatusColor = 'var(--color-chart-2)';
+  const pendingStatusColor = 'var(--color-chart-4)';
+  const overdueStatusColor = 'var(--color-destructive)';
 
   const [statistics, setStatistics] = useState<
     BusinessStatisticsResponse | undefined
@@ -271,12 +288,16 @@ export default function BusinessStatistics({
                     <Bar
                       dataKey="products"
                       name={text.totalProducts}
-                      fill="#10b981"
+                      fill={productsBarColor}
+                      stroke="var(--color-border)"
+                      strokeWidth={1}
                     />
                     <Bar
                       dataKey="invoices"
                       name={text.totalInvoices}
-                      fill="#3b82f6"
+                      fill={invoicesBarColor}
+                      stroke="var(--color-border)"
+                      strokeWidth={1}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -298,17 +319,17 @@ export default function BusinessStatistics({
                         {
                           name: text.paid,
                           value: statistics.invoices.paidInvoices,
-                          fill: '#10b981',
+                          fill: paidStatusColor,
                         },
                         {
                           name: text.pending,
                           value: statistics.invoices.pendingInvoices,
-                          fill: '#f59e0b',
+                          fill: pendingStatusColor,
                         },
                         {
                           name: text.overdue,
                           value: statistics.invoices.overdueInvoices,
-                          fill: '#ef4444',
+                          fill: overdueStatusColor,
                         },
                       ]}
                       cx="50%"
@@ -344,14 +365,17 @@ export default function BusinessStatistics({
                       {
                         status: text.paid,
                         amount: statistics.invoices.paidAmount,
+                        fill: paidStatusColor,
                       },
                       {
                         status: text.pending,
                         amount: statistics.invoices.pendingAmount,
+                        fill: pendingStatusColor,
                       },
                       {
                         status: text.overdue,
                         amount: statistics.invoices.overdueAmount,
+                        fill: overdueStatusColor,
                       },
                     ]}
                   >
@@ -374,8 +398,25 @@ export default function BusinessStatistics({
                     />
                     <Bar
                       dataKey="amount"
-                      fill="#3b82f6"
+                      fill={invoicesBarColor}
                       isAnimationActive={true}
+                      shape={(shapeProps) => {
+                        const typedShapeProps = shapeProps as {
+                          fill?: string;
+                          payload?: { fill?: string };
+                        };
+
+                        return (
+                          <Rectangle
+                            {...shapeProps}
+                            fill={
+                              typedShapeProps.payload?.fill ??
+                              typedShapeProps.fill ??
+                              invoicesBarColor
+                            }
+                          />
+                        );
+                      }}
                     />
                   </BarChart>
                 </ResponsiveContainer>

@@ -60,10 +60,16 @@ export default function Login({
     return isOAuth2fa ? (params.get('tempToken') ?? undefined) : undefined;
   });
 
+  const [prefilledEmail] = useState<string>(() => {
+    if (typeof globalThis === 'undefined') return '';
+    const params = new URLSearchParams(globalThis.location?.search);
+    return params.get('email') ?? '';
+  });
+
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: '',
+      email: prefilledEmail,
       password: '',
     },
   });

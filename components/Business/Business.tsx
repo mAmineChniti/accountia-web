@@ -2,7 +2,14 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
+import {
+  AlertCircle,
+  Building2,
+  Phone,
+  Globe,
+  Users,
+  Shield,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -24,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { BusinessAssistantWidget } from '@/components/BusinessAssistant/BusinessAssistantWidget';
 
 export function Business({
   businessId,
@@ -62,9 +70,20 @@ export function Business({
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
+
+  const { data: tenantData } = useQuery({
+    queryKey: ['tenant-metadata', businessId],
+    queryFn: () => BusinessService.getTenantMetadata(businessId),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 45 * 60 * 1000,
+  });
+
   const clients = clientsData?.clients ?? [];
 
   const business = businessData?.business;
+  const accessRole = tenantData?.tenant.membershipRole;
+  const isAdminView = accessRole === 'ADMIN';
+  const isOwnerView = accessRole === 'OWNER';
 
   if (isLoading) {
     return (
@@ -127,12 +146,32 @@ export function Business({
   return (
     <div className={containerClass}>
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
+      <div className="relative space-y-2">
+        <BusinessAssistantWidget
+          businessId={businessId}
+          businessName={business.name}
+        />
+
+        <div className="flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">{business.name}</h1>
           <Badge className={getStatusColorClass(business.status)}>
             {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
           </Badge>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="bg-background/60 gap-1.5">
+            <Shield className="h-3.5 w-3.5" />
+            {isOwnerView
+              ? 'Business Owner View'
+              : isAdminView
+                ? 'Business Admin View'
+                : 'Business Access'}
+          </Badge>
+          {isAdminView && (
+            <span className="text-muted-foreground text-sm">
+              Operational access only. Owner settings remain restricted.
+            </span>
+          )}
         </div>
         {business.description && (
           <p className="text-muted-foreground">{business.description}</p>
