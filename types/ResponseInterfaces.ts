@@ -169,6 +169,7 @@ export interface BusinessItem {
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  membershipRole?: 'OWNER' | 'ADMIN';
 }
 
 export interface BusinessDetailData {
@@ -235,6 +236,40 @@ export interface AssignedBusinessUser {
 export interface AssignUserResponse {
   message: string;
   businessUser: AssignedBusinessUser;
+}
+
+export interface TeamMember {
+  id: string; // The user ID or invite ID
+  userId?: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  status: 'ACCEPTED' | 'PENDING' | 'EXPIRED';
+  createdAt: string;
+  expiresAt?: string; // For pending invites
+}
+
+export interface TeamMembersListResponse {
+  message: string;
+  members: TeamMember[];
+}
+
+export interface InviteTeamMemberResponse {
+  message: string;
+  inviteId: string;
+  expiresAt: string;
+}
+
+export interface AcceptInviteResponse extends BaseResponse {
+  email?: string;
+}
+
+export interface InvitePreviewResponse extends BaseResponse {
+  email: string;
+  businessName: string;
+  status: 'PENDING' | 'ACCEPTED' | 'CANCELLED' | 'EXPIRED';
+  expiresAt: string;
 }
 
 export interface BusinessUsersListResponse {
@@ -632,6 +667,7 @@ export interface InvoiceMessageResponse extends BaseResponse {
 export interface TenantMetadata {
   businessId: string;
   databaseName: string;
+  membershipRole?: 'OWNER' | 'ADMIN' | 'CLIENT' | 'PLATFORM_ADMIN';
 }
 
 export interface TenantMetadataResponse extends BaseResponse {
@@ -652,6 +688,13 @@ export interface ChatMessage {
 
 export interface ChatMessageResponse extends BaseResponse {
   response: string;
+  choices?: string[];
+  fallback?: boolean;
+  type?: 'text' | 'choices' | 'analysis';
+  link?: {
+    text: string;
+    url: string;
+  };
 }
 
 // ============= Notifications Endpoints =============
