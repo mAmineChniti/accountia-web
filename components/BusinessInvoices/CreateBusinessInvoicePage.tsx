@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useState, useMemo } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -71,11 +71,6 @@ export function CreateBusinessInvoicePage({
   const queryClient = useQueryClient();
   const t = dictionary.pages.invoices;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Fetch products for this business
   const { data: productsData, isLoading: isLoadingProducts } =
@@ -108,15 +103,23 @@ export function CreateBusinessInvoicePage({
     },
   });
 
+  // Calculate default dates
+  const defaultDates = useMemo(() => {
+    const now = new Date();
+    const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return {
+      issuedDate: now.toISOString().split('T')[0],
+      dueDate: dueDate.toISOString().split('T')[0],
+    };
+  }, []);
+
   // Form setup
   const form = useForm<CreateInvoiceInput>({
     resolver: zodResolver(CreateInvoiceSchema),
     defaultValues: {
       businessId,
-      issuedDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0],
+      issuedDate: defaultDates.issuedDate,
+      dueDate: defaultDates.dueDate,
       currency: 'TND',
       description: '',
       paymentTerms: '',
@@ -140,7 +143,10 @@ export function CreateBusinessInvoicePage({
 
   // Watch recipient type to conditionally render fields
 
-  const recipientType = form.watch('recipient.type');
+  const recipientType = useWatch({
+    control: form.control,
+    name: 'recipient.type',
+  });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -149,7 +155,7 @@ export function CreateBusinessInvoicePage({
 
   // Calculate total
 
-  const lineItems = form.watch('lineItems');
+  const lineItems = useWatch({ control: form.control, name: 'lineItems' });
   const total = lineItems.reduce((sum, item) => {
     return sum + (item.quantity * item.unitPrice || 0);
   }, 0);
@@ -216,7 +222,7 @@ export function CreateBusinessInvoicePage({
           variant="outline"
           size="sm"
           onClick={() => setIsImportModalOpen(true)}
-          disabled={!isMounted || isCreating}
+          disabled={isCreating}
         >
           <Upload className="mr-2 h-4 w-4" />
           {t.importInvoices || 'Import from File'}
@@ -500,7 +506,7 @@ export function CreateBusinessInvoicePage({
                   variant="outline"
                   size="sm"
                   onClick={handleAddLineItem}
-                  disabled={!isMounted || isCreating}
+                  disabled={isCreating}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {t.addLineItemButton || 'Add Item'}
@@ -641,9 +647,7 @@ export function CreateBusinessInvoicePage({
                             variant="ghost"
                             size="sm"
                             onClick={() => remove(index)}
-                            disabled={
-                              isMounted && (fields.length === 1 || isCreating)
-                            }
+                            disabled={fields.length === 1 || isCreating}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -695,14 +699,14 @@ export function CreateBusinessInvoicePage({
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={!isMounted || isCreating}
+              disabled={isCreating}
               className="flex-1"
             >
               {t.cancelLabel || 'Cancel'}
             </Button>
             <Button
               type="submit"
-              disabled={!isMounted || isCreating || isLoadingProducts}
+              disabled={isCreating || isLoadingProducts}
               className="flex-1"
             >
               {isCreating ? (
