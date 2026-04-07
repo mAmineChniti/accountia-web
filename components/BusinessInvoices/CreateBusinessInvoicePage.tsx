@@ -140,7 +140,6 @@ export function CreateBusinessInvoicePage({
 
   // Watch recipient type to conditionally render fields
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const recipientType = form.watch('recipient.type');
 
   const { fields, append, remove } = useFieldArray({
@@ -178,7 +177,6 @@ export function CreateBusinessInvoicePage({
   };
 
   const onSubmit = (data: CreateInvoiceInput) => {
-    console.log('Submitting invoice data:', data);
     createInvoice(data);
   };
 
@@ -218,7 +216,7 @@ export function CreateBusinessInvoicePage({
           variant="outline"
           size="sm"
           onClick={() => setIsImportModalOpen(true)}
-          disabled={isMounted && isCreating}
+          disabled={!isMounted || isCreating}
         >
           <Upload className="mr-2 h-4 w-4" />
           {t.importInvoices || 'Import from File'}
@@ -262,7 +260,9 @@ export function CreateBusinessInvoicePage({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={new Date(field.value)}
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
                             onSelect={(date) =>
                               field.onChange(
                                 date?.toISOString().split('T')[0] || ''
@@ -301,7 +301,9 @@ export function CreateBusinessInvoicePage({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={new Date(field.value)}
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
                             onSelect={(date) =>
                               field.onChange(
                                 date?.toISOString().split('T')[0] || ''
@@ -498,7 +500,7 @@ export function CreateBusinessInvoicePage({
                   variant="outline"
                   size="sm"
                   onClick={handleAddLineItem}
-                  disabled={isMounted && isCreating}
+                  disabled={!isMounted || isCreating}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {t.addLineItemButton || 'Add Item'}
@@ -693,14 +695,14 @@ export function CreateBusinessInvoicePage({
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={isMounted && isCreating}
+              disabled={!isMounted || isCreating}
               className="flex-1"
             >
               {t.cancelLabel || 'Cancel'}
             </Button>
             <Button
               type="submit"
-              disabled={isMounted && (isCreating || isLoadingProducts)}
+              disabled={!isMounted || isCreating || isLoadingProducts}
               className="flex-1"
             >
               {isCreating ? (

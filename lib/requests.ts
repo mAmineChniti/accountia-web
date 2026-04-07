@@ -1237,6 +1237,14 @@ export const ProductsService = {
     id: string,
     businessId: string
   ): Promise<ProductDetailResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const searchParams: Record<string, string> = { businessId };

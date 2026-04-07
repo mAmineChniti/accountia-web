@@ -171,7 +171,7 @@ export function ReceivedInvoices({
         tableRows.push([
           item.description || item.productName || 'Item',
           item.quantity,
-          `${(item.amount / (item.quantity || 1)).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+          `${(item.unitPrice || 0).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
           `${item.amount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
         ]);
       }
@@ -542,7 +542,10 @@ export function ReceivedInvoices({
           <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isLoadingDetails ? 'Loading...' : 'Invoice Details'}
+                {isLoadingDetails
+                  ? 'Loading...'
+                  : (t as Record<string, string>).invoiceDetailsTitle ||
+                    'Invoice Details'}
               </DialogTitle>
               <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
                 {invoiceDetails?.invoiceNumber || (
@@ -574,7 +577,8 @@ export function ReceivedInvoices({
                 <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      Invoice Number
+                      {(t as Record<string, string>).invoiceNumberLabel ||
+                        'Invoice Number'}
                     </p>
                     <p className="font-mono font-medium">
                       {invoiceDetails.invoiceNumber}
@@ -582,7 +586,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      Status
+                      {(t as Record<string, string>).statusLabel || 'Status'}
                     </p>
                     <Badge
                       className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
@@ -595,7 +599,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      Amount
+                      {(t as Record<string, string>).amountLabel || 'Amount'}
                     </p>
                     <p className="text-primary text-lg font-bold">
                       {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -606,7 +610,8 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      Issued Date
+                      {(t as Record<string, string>).columnIssuedDate ||
+                        'Issued Date'}
                     </p>
                     <p className="font-medium">
                       {new Date(invoiceDetails.issuedDate).toLocaleDateString(
@@ -621,7 +626,8 @@ export function ReceivedInvoices({
                 {invoiceDetails.description && (
                   <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
                     <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-                      Description
+                      {(t as Record<string, string>).descriptionLabel ||
+                        'Description'}
                     </p>
                     <p className="text-sm leading-relaxed">
                       {invoiceDetails.description}
@@ -671,9 +677,7 @@ export function ReceivedInvoices({
                                   {item.quantity}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                  {(
-                                    item.amount / (item.quantity || 1)
-                                  ).toLocaleString(lang, {
+                                  {(item.unitPrice || 0).toLocaleString(lang, {
                                     minimumFractionDigits: 2,
                                   })}
                                 </TableCell>
@@ -709,7 +713,8 @@ export function ReceivedInvoices({
               </div>
             ) : (
               <p className="text-muted-foreground">
-                Failed to load invoice details
+                {(t as Record<string, string>).fetchError ||
+                  'Failed to load invoice details'}
               </p>
             )}
           </div>

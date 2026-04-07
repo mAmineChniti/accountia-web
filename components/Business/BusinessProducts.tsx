@@ -209,8 +209,8 @@ export function BusinessProducts({
         p.description.length > 50
           ? p.description.slice(0, 50) + '...'
           : p.description,
-        `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
-        `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
+        `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
+        `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
         p.quantity.toString(),
       ];
       tableRows.push(productData);
