@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   Briefcase,
@@ -128,6 +129,8 @@ export default function Invoices({
         limit: pageSize,
         status: filterStatus === 'ALL' ? undefined : filterStatus,
       }),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const invoices = useMemo(
@@ -201,32 +204,39 @@ export default function Invoices({
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">{t.title}</h1>
           <p className="text-muted-foreground">{t.description}</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isFetching}
-          onClick={() => refetch()}
-          size="sm"
-        >
-          {isFetching ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t.refresh}
-            </>
-          ) : (
-            <>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              {t.refresh}
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/${lang}/business-application`}>
+              {t.createBusinessButton}
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => refetch()}
+            size="sm"
+          >
+            {isFetching ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t.refresh}
+              </>
+            ) : (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t.refresh}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

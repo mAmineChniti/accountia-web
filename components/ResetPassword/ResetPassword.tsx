@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
@@ -59,6 +59,7 @@ function ResetPasswordContent({
   lang: Locale;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
   const tokenFromUrl = searchParams.get('token');
@@ -80,9 +81,11 @@ function ResetPasswordContent({
 
   const resetPasswordMutation = useMutation({
     mutationFn: AuthService.resetPassword,
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Clear all cached data on password reset
+      queryClient.clear();
       toast.success(dictionary.pages.resetPassword.successMessage);
-      router.push(`/${lang}/login`);
+      await router.push(`/${lang}/login`);
     },
     onError: (err: unknown) => {
       const message = localizeErrorMessage(

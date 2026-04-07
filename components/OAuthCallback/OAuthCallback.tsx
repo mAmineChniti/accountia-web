@@ -60,7 +60,7 @@ export default function OAuthCallback({
     const finalizeOAuth = async () => {
       try {
         const authResult = await AuthService.exchangeGoogleOAuthCode({
-          oauthCode,
+          code: oauthCode,
         });
 
         if ('tempToken' in authResult) {
@@ -119,7 +119,9 @@ export default function OAuthCallback({
           loginTime: new Date().toISOString(),
         });
 
-        globalThis.dispatchEvent(new CustomEvent('auth:changed'));
+        globalThis.dispatchEvent(
+          new CustomEvent('auth:changed', { detail: { action: 'login' } })
+        );
 
         const role = userWithoutProfilePicture.role ?? '';
         const redirectPath = ['PLATFORM_ADMIN', 'PLATFORM_OWNER'].includes(role)

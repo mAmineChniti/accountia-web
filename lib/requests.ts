@@ -53,7 +53,6 @@ import type {
   AssignUserResponse,
   GetBusinessClientsResponse,
   ChangeClientRoleResponse,
-  BusinessMessageResponse,
   TwoFADisableResponse,
   BanUserResponse,
   UnbanUserResponse,
@@ -62,7 +61,6 @@ import type {
   ProductDetailResponse,
   UpdateProductResponse,
   ProductImportResponse,
-  ProductMessageResponse,
   InvoiceResponse,
   InvoiceListResponse,
   ReceivedInvoiceListResponse,
@@ -71,6 +69,9 @@ import type {
   NotificationListResponse,
   AuditLogListResponse,
   HealthCheckResponse,
+  BusinessStatisticsResponse,
+  InvoiceImportResponse,
+  BusinessMessageResponse,
 } from '@/types/ResponseInterfaces';
 
 export class ApiError extends Error {
@@ -177,6 +178,7 @@ const API_CONFIG = {
     GET_CLIENTS: 'business/{id}/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
     DELETE_CLIENT: 'business/{id}/clients/{clientId}',
+    GET_STATISTICS: 'business/{id}/statistics',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -193,6 +195,7 @@ const API_CONFIG = {
     GET_ISSUED: 'invoices/issued/{id}',
     UPDATE_ISSUED: 'invoices/issued/{id}',
     TRANSITION: 'invoices/issued/{id}/transition',
+    IMPORT: 'invoices/import',
     // Recipient Endpoints
     LIST_RECEIVED_BUSINESS: 'invoices/received/business',
     LIST_RECEIVED_INDIVIDUAL: 'invoices/received/individual',
@@ -925,11 +928,17 @@ export const BusinessService = {
     }
   },
 
-  async getBusinessById(id: string): Promise<BusinessDetailResponse> {
+  async getBusinessById(
+    id: string,
+    businessId: string
+  ): Promise<BusinessDetailResponse> {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_BUSINESS.replace('{id}', id);
-      const result = await client.get(endpoint).json<BusinessDetailResponse>();
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<BusinessDetailResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1033,11 +1042,17 @@ export const BusinessService = {
     }
   },
 
-  async getTenantMetadata(id: string): Promise<TenantMetadataResponse> {
+  async getTenantMetadata(
+    id: string,
+    businessId: string
+  ): Promise<TenantMetadataResponse> {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.TENANT_METADATA.replace('{id}', id);
-      const result = await client.get(endpoint).json<TenantMetadataResponse>();
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<TenantMetadataResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1059,8 +1074,9 @@ export const BusinessService = {
         '{id}',
         businessId
       );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .get(endpoint)
+        .get(endpoint, { searchParams })
         .json<GetBusinessClientsResponse>();
       return result;
     } catch (error: unknown) {
@@ -1124,17 +1140,28 @@ export const BusinessService = {
       throw error;
     }
   },
-};
 
-export const ProductsService = {
-  async createProduct(
-    data: CreateProductInput
-  ): Promise<CreateProductResponse> {
+  async getBusinessStatistics(
+    businessId: string
+  ): Promise<BusinessStatisticsResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
+      const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS.replace(
+        '{id}',
+        businessId
+      );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .post(API_CONFIG.PRODUCTS.CREATE, { json: data })
-        .json<CreateProductResponse>();
+        .get(endpoint, { searchParams })
+        .json<BusinessStatisticsResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1146,16 +1173,30 @@ export const ProductsService = {
       throw error;
     }
   },
+};
 
+export const ProductsService = {
   async getProducts(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    businessId?: string,
+    search?: string
   ): Promise<ProductListResponse> {
     const client = createAuthenticatedClient();
     try {
+      const headers: Record<string, string> = {};
+      const searchParams: Record<string, string | number> = { page, limit };
+      if (businessId) {
+        searchParams.businessId = businessId;
+      }
+      if (search) {
+        searchParams.search = search;
+      }
+
       const result = await client
         .get(API_CONFIG.PRODUCTS.LIST, {
-          searchParams: { page, limit } as Record<string, string | number>,
+          searchParams,
+          headers,
         })
         .json<ProductListResponse>();
       return result;
@@ -1170,11 +1211,45 @@ export const ProductsService = {
     }
   },
 
-  async getProductById(id: string): Promise<ProductDetailResponse> {
+  async createProduct(
+    data: CreateProductInput
+  ): Promise<CreateProductResponse> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
-        .get(API_CONFIG.PRODUCTS.GET.replace('{id}', id))
+        .post(API_CONFIG.PRODUCTS.CREATE, {
+          json: data,
+        })
+        .json<CreateProductResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getProductById(
+    id: string,
+    businessId: string
+  ): Promise<ProductDetailResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
+    const client = createAuthenticatedClient();
+    try {
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(API_CONFIG.PRODUCTS.GET.replace('{id}', id), { searchParams })
         .json<ProductDetailResponse>();
       return result;
     } catch (error: unknown) {
@@ -1195,7 +1270,9 @@ export const ProductsService = {
     const client = createAuthenticatedClient();
     try {
       const result = await client
-        .patch(API_CONFIG.PRODUCTS.UPDATE.replace('{id}', id), { json: data })
+        .patch(API_CONFIG.PRODUCTS.UPDATE.replace('{id}', id), {
+          json: data,
+        })
         .json<UpdateProductResponse>();
       return result;
     } catch (error: unknown) {
@@ -1209,13 +1286,12 @@ export const ProductsService = {
     }
   },
 
-  async deleteProduct(id: string): Promise<ProductMessageResponse> {
+  async deleteProduct(id: string, businessId: string): Promise<void> {
     const client = createAuthenticatedClient();
     try {
-      const result = await client
-        .delete(API_CONFIG.PRODUCTS.DELETE.replace('{id}', id))
-        .json<ProductMessageResponse>();
-      return result;
+      await client.delete(API_CONFIG.PRODUCTS.DELETE.replace('{id}', id), {
+        json: { businessId },
+      });
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
         const errorData = await safeParseJson(
@@ -1227,11 +1303,15 @@ export const ProductsService = {
     }
   },
 
-  async importProducts(file: File): Promise<ProductImportResponse> {
+  async importProducts(
+    file: File,
+    businessId: string
+  ): Promise<ProductImportResponse> {
     const client = createAuthenticatedClient();
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('businessId', businessId);
       const result = await client
         .post(API_CONFIG.PRODUCTS.IMPORT, { body: formData })
         .json<ProductImportResponse>();
@@ -1272,6 +1352,7 @@ export const InvoicesService = {
 
   // 2. List Issued Invoices
   async listIssuedInvoices(params?: {
+    businessId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -1282,6 +1363,7 @@ export const InvoicesService = {
         page: params?.page ?? 1,
         limit: params?.limit ?? 10,
       };
+      if (params?.businessId) searchParams.businessId = params.businessId;
       if (params?.status) searchParams.status = params.status;
       const result = await client
         .get(API_CONFIG.INVOICES.LIST_ISSUED, { searchParams })
@@ -1299,11 +1381,19 @@ export const InvoicesService = {
   },
 
   // 3. Get Single Issued Invoice
-  async getIssuedInvoice(id: string): Promise<InvoiceResponse> {
+  async getIssuedInvoice(
+    id: string,
+    businessId: string
+  ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = {
+        businessId,
+      };
       const result = await client
-        .get(API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id))
+        .get(API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id), {
+          searchParams,
+        })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -1369,6 +1459,7 @@ export const InvoicesService = {
 
   // 6. Get Invoices Received by Business
   async getReceivedInvoicesByBusiness(params?: {
+    businessId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -1380,6 +1471,7 @@ export const InvoicesService = {
         limit: params?.limit ?? 10,
       };
       if (params?.status) searchParams.status = params.status;
+      if (params?.businessId) searchParams.businessId = params.businessId;
       const result = await client
         .get(API_CONFIG.INVOICES.LIST_RECEIVED_BUSINESS, { searchParams })
         .json<ReceivedInvoiceListResponse>();
@@ -1424,15 +1516,24 @@ export const InvoicesService = {
   },
 
   // 8. Get Full Invoice Details (Business Recipient)
-  async getReceivedInvoiceDetails(receiptId: string): Promise<InvoiceResponse> {
+  async getReceivedInvoiceDetails(
+    receiptId: string,
+    businessId: string
+  ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = {
+        businessId,
+      };
       const result = await client
         .get(
           API_CONFIG.INVOICES.GET_RECEIVED_DETAILS.replace(
             '{receiptId}',
             receiptId
-          )
+          ),
+          {
+            searchParams,
+          }
         )
         .json<InvoiceResponse>();
       return result;
@@ -1449,18 +1550,45 @@ export const InvoicesService = {
 
   // 9. Get Full Invoice Details (Individual Recipient)
   async getReceivedIndividualInvoiceDetails(
-    receiptId: string
+    receiptId: string,
+    businessId?: string
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = {};
+      if (businessId) searchParams.businessId = businessId;
       const result = await client
         .get(
           API_CONFIG.INVOICES.GET_RECEIVED_INDIVIDUAL_DETAILS.replace(
             '{receiptId}',
             receiptId
-          )
+          ),
+          {
+            searchParams,
+          }
         )
         .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  // 10. Import Invoices from File
+  async importInvoices(file: File): Promise<InvoiceImportResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await client
+        .post(API_CONFIG.INVOICES.IMPORT, { body: formData })
+        .json<InvoiceImportResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Card,
@@ -51,6 +51,7 @@ export default function BusinessApplication({
   const router = useRouter();
   const t = dictionary.pages.businessApplication;
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<BusinessApplicationInput>({
     resolver: zodResolver(BusinessApplicationSchema),
@@ -67,6 +68,9 @@ export default function BusinessApplication({
     mutationFn: (data: BusinessApplicationInput) =>
       BusinessService.applyForBusiness(data),
     onSuccess: () => {
+      // Invalidate business-related queries
+      queryClient.invalidateQueries({ queryKey: ['my-businesses'] });
+      queryClient.invalidateQueries({ queryKey: ['business-applications'] });
       setShowSuccessDialog(true);
     },
     onError: (error: unknown) => {
@@ -82,8 +86,8 @@ export default function BusinessApplication({
     applicationMutation.isPending || applicationMutation.isSuccess;
 
   return (
-    <main className="bg-muted/30 flex min-h-[calc(100vh-4rem)] items-center justify-center py-8">
-      <Card className="mx-4 w-full max-w-lg">
+    <main className="bg-muted/30 flex min-h-screen items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
           <CardDescription className="text-base">

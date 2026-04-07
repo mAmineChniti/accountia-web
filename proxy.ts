@@ -55,6 +55,7 @@ export async function proxy(request: NextRequest) {
     '/settings',
     '/invoices',
     '/business-application',
+    '/business/', // Business management routes (all business-specific pages)
   ];
   const adminOnlyRoutes = ['/dashboard/admin', '/dashboard/businesses'];
 
