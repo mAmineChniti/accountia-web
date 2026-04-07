@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FileText,
   AlertCircle,
@@ -29,6 +29,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -89,6 +96,7 @@ export function IssuedInvoices({
   businessId: string;
 }) {
   const t = dictionary.pages.invoices;
+  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<
@@ -108,17 +116,43 @@ export function IssuedInvoices({
   });
 
   // Fetch invoice details when a specific invoice is selected
-  const { data: invoiceDetails, isLoading: isLoadingDetails } =
-    useQuery<InvoiceResponse>({
-      queryKey: ['invoice-issued-details', selectedInvoiceId, businessId],
-      queryFn: () =>
-        selectedInvoiceId
-          ? InvoicesService.getIssuedInvoice(selectedInvoiceId, businessId)
-          : Promise.reject(new Error('No invoice selected')),
-      enabled: !!selectedInvoiceId && isDetailsOpen,
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      gcTime: 60 * 60 * 1000, // 1 hour
-    });
+  const {
+    data: invoiceDetails,
+    isLoading: isLoadingDetails,
+    error: invoiceError,
+  } = useQuery<InvoiceResponse>({
+    queryKey: ['invoice-issued-details', selectedInvoiceId, businessId],
+    queryFn: () => {
+      if (!selectedInvoiceId) {
+        return Promise.reject(new Error('No invoice selected'));
+      }
+      return InvoicesService.getIssuedInvoice(selectedInvoiceId, businessId);
+    },
+    enabled: !!selectedInvoiceId && isDetailsOpen,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    retry: 1, // Retry once on failure
+  });
+
+  // Mutation for transitioning invoice status
+  const { mutate: transitionStatus, isPending: isTransitioning } = useMutation({
+    mutationFn: (newStatus: InvoiceStatus) =>
+      InvoicesService.transitionInvoice(selectedInvoiceId!, {
+        newStatus,
+        businessId,
+      }),
+    onSuccess: (data) => {
+      // Update invoice details in cache
+      queryClient.setQueryData(
+        ['invoice-issued-details', selectedInvoiceId, businessId],
+        data
+      );
+      // Also invalidate the invoices list to refresh it
+      queryClient.invalidateQueries({
+        queryKey: ['invoices-issued', businessId],
+      });
+    },
+  });
 
   const invoices = useMemo(
     () => invoicesResponse?.invoices ?? [],
@@ -540,21 +574,19 @@ export function IssuedInvoices({
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto border-0 p-0 shadow-2xl sm:rounded-2xl dark:bg-slate-950">
-          <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
-              </DialogTitle>
-              <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
-                {invoiceDetails?.invoiceNumber || (
-                  <Skeleton className="h-4 w-32" />
-                )}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
+            </DialogTitle>
+            {invoiceDetails?.invoiceNumber && (
+              <DialogDescription>
+                {invoiceDetails.invoiceNumber}
               </DialogDescription>
-            </DialogHeader>
-          </div>
+            )}
+          </DialogHeader>
 
-          <div className="px-6 py-4">
+          <div>
             {isLoadingDetails ? (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -573,7 +605,7 @@ export function IssuedInvoices({
             ) : invoiceDetails ? (
               <div className="space-y-8">
                 {/* Basic Info */}
-                <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                       {t.invoiceNumberLabel}
@@ -586,14 +618,39 @@ export function IssuedInvoices({
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                       {t.statusLabel}
                     </p>
-                    <Badge
-                      className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
+                    <Select
+                      value={invoiceDetails.status}
+                      onValueChange={(newStatus) =>
+                        transitionStatus(newStatus as InvoiceStatus)
+                      }
+                      disabled={isTransitioning}
                     >
-                      <span className="mr-1">
-                        {STATUS_ICONS[invoiceDetails.status]}
-                      </span>
-                      {invoiceDetails.status}
-                    </Badge>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(
+                          [
+                            'DRAFT',
+                            'ISSUED',
+                            'VIEWED',
+                            'PAID',
+                            'PARTIAL',
+                            'OVERDUE',
+                            'DISPUTED',
+                            'VOIDED',
+                            'ARCHIVED',
+                          ] as InvoiceStatus[]
+                        ).map((status) => (
+                          <SelectItem key={status} value={status}>
+                            <div className="flex items-center gap-2">
+                              <span>{STATUS_ICONS[status]}</span>
+                              {status}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -621,7 +678,7 @@ export function IssuedInvoices({
 
                 {/* Description */}
                 {invoiceDetails.description && (
-                  <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
+                  <div>
                     <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
                       {t.descriptionLabel}
                     </p>
@@ -638,7 +695,7 @@ export function IssuedInvoices({
                       <h4 className="text-lg font-semibold tracking-tight">
                         {t.lineItemsLabel}
                       </h4>
-                      <div className="border-border/50 overflow-hidden rounded-xl border shadow-xs">
+                      <div>
                         <Table>
                           <TableHeader className="bg-muted/50">
                             <TableRow>
@@ -684,7 +741,7 @@ export function IssuedInvoices({
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <div className="bg-primary/5 border-primary/10 flex items-center justify-between gap-12 rounded-xl border px-6 py-4">
+                        <div className="flex items-center justify-between gap-12">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
                             {t.amountLabel || 'Total'}
                           </span>
@@ -701,34 +758,38 @@ export function IssuedInvoices({
                     </div>
                   )}
               </div>
+            ) : invoiceError ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground font-semibold">
+                  {t.failedToLoadDetails}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {invoiceError instanceof Error
+                    ? invoiceError.message
+                    : 'Unknown error occurred'}
+                </p>
+              </div>
             ) : (
               <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
             )}
           </div>
 
-          <div className="bg-muted/20 border-t px-6 py-4">
-            <DialogFooter className="w-full sm:justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={exportToPDF}
-                className="hover:bg-muted gap-2 bg-white dark:bg-transparent"
-                disabled={isLoadingDetails || !invoiceDetails}
-              >
-                <Download className="h-4 w-4" />
-                {(t as Record<string, string>).exportPDF || 'Export PDF'}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={exportToPDF}
+              disabled={isLoadingDetails || !invoiceDetails}
+            >
+              <Download className="h-4 w-4" />
+              {(t as Record<string, string>).exportPDF || 'Export PDF'}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="default">
+                {(t as Record<string, string>).closeButtonLabel || 'Close'}
               </Button>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="default"
-                  className="shadow-md transition-shadow hover:shadow-lg"
-                >
-                  {(t as Record<string, string>).closeButtonLabel || 'Close'}
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </div>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

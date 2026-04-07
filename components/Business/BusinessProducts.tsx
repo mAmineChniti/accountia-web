@@ -282,93 +282,85 @@ export function BusinessProducts({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-      {/* Header Section */}
-      <div className="space-y-6">
-        {/* Title and Description */}
+    <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 rounded-lg p-2">
-              <Package className="text-primary h-6 w-6" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
-          </div>
-          <p className="text-muted-foreground ml-11">
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">
             {businessId
               ? t.description
               : t.adminSubtitle || 'Manage products across all businesses'}
           </p>
         </div>
+        {businessId && (
+          <CreateProductDialog
+            businessId={businessId}
+            dictionary={dictionary}
+          />
+        )}
+      </div>
 
-        {/* Actions Bar */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-sm flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder={t.searchPlaceholder}
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
+      {/* Search and Actions Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder={t.searchPlaceholder}
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                {t.export}
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={exportToCSV}
+                className="cursor-pointer gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                {t.exportCSV}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={exportToPDF}
+                className="cursor-pointer gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                {t.exportPDF}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {businessId && (
+            <ImportProductsDialog
+              businessId={businessId}
+              dictionary={dictionary}
             />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  {t.export}
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={exportToCSV}
-                  className="cursor-pointer gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  {t.exportCSV}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={exportToPDF}
-                  className="cursor-pointer gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  {t.exportPDF}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {businessId && (
-              <>
-                <ImportProductsDialog
-                  businessId={businessId}
-                  dictionary={dictionary}
-                />
-                <CreateProductDialog
-                  businessId={businessId}
-                  dictionary={dictionary}
-                />
-              </>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* Main Content Card */}
-      <Card className="dark:from-card dark:to-card/95 border-0 bg-linear-to-br from-white to-white/95 shadow-md">
-        <CardHeader className="border-border/50 border-b pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">{t.title || 'Products'}</h2>
-              <p className="text-muted-foreground text-sm">
-                {isLoading
-                  ? '...'
-                  : `${productsData?.total ?? filteredProducts.length} ${t.productsList || 'products'}`}
-              </p>
-            </div>
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">{t.title || 'Products'}</h2>
+            <p className="text-muted-foreground text-sm">
+              {isLoading
+                ? '...'
+                : `${productsData?.total ?? filteredProducts.length} ${t.productsList || 'products'}`}
+            </p>
           </div>
         </CardHeader>
         <CardContent>
