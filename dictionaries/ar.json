@@ -488,7 +488,28 @@
       "clientDetailsDescription": "معلومات عن المستخدم المعين",
       "name": "الاسم",
       "failedToLoadDetails": "فشل في تحميل تفاصيل العمل",
-      "businessNotFound": "العمل غير موجود"
+      "failedToLoadClients": "فشل في تحميل العملاء",
+      "errorLoading": "خطأ في التحميل",
+      "retry": "إعادة محاولة",
+      "businessNotFound": "العمل غير موجود",
+      "chatbot": {
+        "title": "Accountia AI",
+        "openButton": "فتح الدردشة",
+        "closeButton": "إغلاق الدردشة",
+        "online": "متصل",
+        "messagePlaceholder": "اكتب رسالتك...",
+        "clearChat": "مسح",
+        "disclaimer": "قد يرتكب Accountia AI أخطاء.",
+        "welcomeMessage": "مرحبا! اسأل أي أسئلة حول المحاسبة في عملك.",
+        "sendMessage": "إرسال الرسالة",
+        "loading": "جاري تحميل الرد...",
+        "errorFailed": "فشل في إرسال الرسالة",
+        "errorRetrying": "إعادة المحاولة...",
+        "errorTryAgain": "يرجى المحاولة مرة أخرى.",
+        "ariaLabel": "الدردشة مع Accountia AI",
+        "aiResponse": "رد من الذكاء الاصطناعي",
+        "userMessage": "رسالتك"
+      }
     },
     "notifications": {
       "title": "الإشعارات",
