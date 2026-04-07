@@ -1,11 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useState, useMemo } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Trash2, Plus, Check, Upload, ArrowLeft } from 'lucide-react';
+import {
+  Loader2,
+  Trash2,
+  Plus,
+  Check,
+  Upload,
+  ArrowLeft,
+  CalendarIcon,
+} from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -26,12 +34,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import {
   CreateInvoiceSchema,
   type CreateInvoiceInput,
+  INVOICE_RECIPIENT_TYPES,
 } from '@/types/RequestSchemas';
 import { InvoicesService, ProductsService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
@@ -87,18 +103,29 @@ export function CreateBusinessInvoicePage({
     },
   });
 
+  // Calculate default dates
+  const defaultDates = useMemo(() => {
+    const now = new Date();
+    const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return {
+      issuedDate: now.toISOString().split('T')[0],
+      dueDate: dueDate.toISOString().split('T')[0],
+    };
+  }, []);
+
   // Form setup
   const form = useForm<CreateInvoiceInput>({
     resolver: zodResolver(CreateInvoiceSchema),
     defaultValues: {
-      issuedDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0],
+      businessId,
+      issuedDate: defaultDates.issuedDate,
+      dueDate: defaultDates.dueDate,
       currency: 'TND',
       description: '',
       paymentTerms: '',
       recipient: {
+        type: INVOICE_RECIPIENT_TYPES.EXTERNAL,
+        platformId: '',
         displayName: '',
         email: '',
       },
@@ -114,14 +141,21 @@ export function CreateBusinessInvoicePage({
     },
   });
 
+  // Watch recipient type to conditionally render fields
+
+  const recipientType = useWatch({
+    control: form.control,
+    name: 'recipient.type',
+  });
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'lineItems',
   });
 
   // Calculate total
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const lineItems = form.watch('lineItems');
+
+  const lineItems = useWatch({ control: form.control, name: 'lineItems' });
   const total = lineItems.reduce((sum, item) => {
     return sum + (item.quantity * item.unitPrice || 0);
   }, 0);
@@ -150,6 +184,10 @@ export function CreateBusinessInvoicePage({
 
   const onSubmit = (data: CreateInvoiceInput) => {
     createInvoice(data);
+  };
+
+  const onError = () => {
+    toast.error(t.fetchError || 'Please check the form for errors');
   };
 
   return (
@@ -192,7 +230,10 @@ export function CreateBusinessInvoicePage({
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, onError)}
+          className="space-y-6"
+        >
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -201,16 +242,43 @@ export function CreateBusinessInvoicePage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="issuedDate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t.columnIssuedDate}</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value
+                                ? format(new Date(field.value), 'PPP')
+                                : 'Pick a date'}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) =>
+                              field.onChange(
+                                date?.toISOString().split('T')[0] || ''
+                              )
+                            }
+                            disabled={(date) => date > new Date('2100-01-01')}
+                            autoFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -222,9 +290,35 @@ export function CreateBusinessInvoicePage({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t.columnDueDate}</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value
+                                ? format(new Date(field.value), 'PPP')
+                                : 'Pick a date'}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) =>
+                              field.onChange(
+                                date?.toISOString().split('T')[0] || ''
+                              )
+                            }
+                            disabled={(date) => date > new Date('2100-01-01')}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -312,24 +406,46 @@ export function CreateBusinessInvoicePage({
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="recipient.displayName"
+                name="recipient.type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.recipientNameLabel || 'Name'}</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
+                    <FormLabel>
+                      {t.recipientTypeLabel || 'Recipient Type'}
+                    </FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={INVOICE_RECIPIENT_TYPES.EXTERNAL}>
+                          {t.externalContactLabel || 'External Contact'}
+                        </SelectItem>
+                        <SelectItem
+                          value={INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS}
+                        >
+                          {t.platformBusinessLabel || 'Platform Business'}
+                        </SelectItem>
+                        <SelectItem
+                          value={INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL}
+                        >
+                          {t.platformIndividualLabel || 'Platform Individual'}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Email field - required for all recipient types */}
               <FormField
                 control={form.control}
                 name="recipient.email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.recipientEmailLabel || 'Email'}</FormLabel>
+                    <FormLabel>{t.recipientEmailLabel || 'Email'} *</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
@@ -337,10 +453,44 @@ export function CreateBusinessInvoicePage({
                         {...field}
                       />
                     </FormControl>
+                    {recipientType ===
+                      INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t.autoSearchBusinessHint ||
+                          'System will auto-search for a registered business with this email'}
+                      </p>
+                    )}
+                    {recipientType ===
+                      INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL && (
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t.autoSearchIndividualHint ||
+                          'System will auto-search for a registered user with this email'}
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Display name - required for external recipients */}
+              {recipientType === INVOICE_RECIPIENT_TYPES.EXTERNAL && (
+                <FormField
+                  control={form.control}
+                  name="recipient.displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.recipientNameLabel || 'Name'} *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="John Doe or Company Name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -443,7 +593,7 @@ export function CreateBusinessInvoicePage({
                             />
                           </div>
 
-                          {/* Unit Price */}
+                          {/* Unit Price - Read Only */}
                           <div className="col-span-3">
                             <FormField
                               control={form.control}
@@ -456,14 +606,9 @@ export function CreateBusinessInvoicePage({
                                   <FormControl>
                                     <Input
                                       type="number"
-                                      min="0"
-                                      step="0.01"
                                       {...field}
-                                      onChange={(e) =>
-                                        field.onChange(
-                                          Number.parseFloat(e.target.value) || 0
-                                        )
-                                      }
+                                      disabled
+                                      className="bg-muted cursor-not-allowed"
                                     />
                                   </FormControl>
                                   <FormMessage />

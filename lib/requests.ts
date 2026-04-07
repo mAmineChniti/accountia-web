@@ -928,11 +928,17 @@ export const BusinessService = {
     }
   },
 
-  async getBusinessById(id: string): Promise<BusinessDetailResponse> {
+  async getBusinessById(
+    id: string,
+    businessId: string
+  ): Promise<BusinessDetailResponse> {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_BUSINESS.replace('{id}', id);
-      const result = await client.get(endpoint).json<BusinessDetailResponse>();
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<BusinessDetailResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1036,11 +1042,17 @@ export const BusinessService = {
     }
   },
 
-  async getTenantMetadata(id: string): Promise<TenantMetadataResponse> {
+  async getTenantMetadata(
+    id: string,
+    businessId: string
+  ): Promise<TenantMetadataResponse> {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.TENANT_METADATA.replace('{id}', id);
-      const result = await client.get(endpoint).json<TenantMetadataResponse>();
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<TenantMetadataResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -1062,8 +1074,9 @@ export const BusinessService = {
         '{id}',
         businessId
       );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .get(endpoint)
+        .get(endpoint, { searchParams })
         .json<GetBusinessClientsResponse>();
       return result;
     } catch (error: unknown) {
@@ -1145,8 +1158,9 @@ export const BusinessService = {
         '{id}',
         businessId
       );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .get(endpoint)
+        .get(endpoint, { searchParams })
         .json<BusinessStatisticsResponse>();
       return result;
     } catch (error: unknown) {
@@ -1219,11 +1233,23 @@ export const ProductsService = {
     }
   },
 
-  async getProductById(id: string): Promise<ProductDetailResponse> {
+  async getProductById(
+    id: string,
+    businessId: string
+  ): Promise<ProductDetailResponse> {
+    // Validate businessId before constructing endpoint
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .get(API_CONFIG.PRODUCTS.GET.replace('{id}', id))
+        .get(API_CONFIG.PRODUCTS.GET.replace('{id}', id), { searchParams })
         .json<ProductDetailResponse>();
       return result;
     } catch (error: unknown) {
@@ -1326,6 +1352,7 @@ export const InvoicesService = {
 
   // 2. List Issued Invoices
   async listIssuedInvoices(params?: {
+    businessId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -1336,6 +1363,7 @@ export const InvoicesService = {
         page: params?.page ?? 1,
         limit: params?.limit ?? 10,
       };
+      if (params?.businessId) searchParams.businessId = params.businessId;
       if (params?.status) searchParams.status = params.status;
       const result = await client
         .get(API_CONFIG.INVOICES.LIST_ISSUED, { searchParams })
@@ -1353,11 +1381,19 @@ export const InvoicesService = {
   },
 
   // 3. Get Single Issued Invoice
-  async getIssuedInvoice(id: string): Promise<InvoiceResponse> {
+  async getIssuedInvoice(
+    id: string,
+    businessId: string
+  ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = {
+        businessId,
+      };
       const result = await client
-        .get(API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id))
+        .get(API_CONFIG.INVOICES.GET_ISSUED.replace('{id}', id), {
+          searchParams,
+        })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -1482,12 +1518,13 @@ export const InvoicesService = {
   // 8. Get Full Invoice Details (Business Recipient)
   async getReceivedInvoiceDetails(
     receiptId: string,
-    businessId?: string
+    businessId: string
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string> = {};
-      if (businessId) searchParams.businessId = businessId;
+      const searchParams: Record<string, string> = {
+        businessId,
+      };
       const result = await client
         .get(
           API_CONFIG.INVOICES.GET_RECEIVED_DETAILS.replace(

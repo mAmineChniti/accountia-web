@@ -181,11 +181,12 @@ export const UpdateProductSchema = z.object({
 
 // ============= Invoices Schemas =============
 
-const InvoiceRecipientTypeEnum = z.enum([
-  'PLATFORM_BUSINESS',
-  'PLATFORM_INDIVIDUAL',
-  'EXTERNAL',
-]);
+// Recipient type enum for use throughout the app
+export const INVOICE_RECIPIENT_TYPES = {
+  EXTERNAL: 'EXTERNAL',
+  PLATFORM_BUSINESS: 'PLATFORM_BUSINESS',
+  PLATFORM_INDIVIDUAL: 'PLATFORM_INDIVIDUAL',
+} as const;
 
 const InvoiceStatusEnum = z.enum([
   'DRAFT',
@@ -199,12 +200,30 @@ const InvoiceStatusEnum = z.enum([
   'ARCHIVED',
 ]);
 
-export const CreateInvoiceRecipientSchema = z.object({
-  type: InvoiceRecipientTypeEnum,
-  platformId: z.string().min(1).optional(),
-  email: z.email().optional(),
-  displayName: z.string().optional(),
+// Separate schemas for each recipient type to enforce magic search requirements
+const ExternalRecipientSchema = z.object({
+  type: z.literal(INVOICE_RECIPIENT_TYPES.EXTERNAL),
+  email: z.email('Valid email is required'),
+  displayName: z
+    .string()
+    .min(1, 'Display name is required for external recipients'),
+  platformId: z.string().optional(), // Not used for external
 });
+
+const PlatformRecipientSchema = z.object({
+  type: z.enum([
+    INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS,
+    INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL,
+  ]),
+  email: z.email('Valid email is required for magic search'),
+  platformId: z.string().min(1).optional(), // Optional - if not provided, magic search by email
+  displayName: z.string().optional(), // Not typically used for platform recipients
+});
+
+export const CreateInvoiceRecipientSchema = z.union([
+  ExternalRecipientSchema,
+  PlatformRecipientSchema,
+]);
 
 export const CreateInvoiceLineItemSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
