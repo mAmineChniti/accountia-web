@@ -23,6 +23,14 @@ import type { ChatMessage } from '@/types/ResponseInterfaces';
 import type { Dictionary } from '@/get-dictionary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const CHAT_STORAGE_KEY = 'accountia_chat_history';
 const MAX_RETRIES = 3;
@@ -110,12 +118,12 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
   const { mutate, isPending } = sendMessageMutation;
 
   const handleRetry = useCallback(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0 || !businessId) return;
 
     const lastUserMsg = messages.at(-1);
     if (lastUserMsg?.role === 'user') {
       const inputPayload: ChatMessageInput = {
-        businessId: businessId || 'default-business-id',
+        businessId,
         query: lastUserMsg.content,
         history: messages.slice(0, -1).map((m) => ({
           role: m.role,
@@ -127,7 +135,7 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
   }, [messages, businessId, mutate]);
 
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isPending) return;
+    if (!inputValue.trim() || isPending || !businessId) return;
 
     const userMsg: ChatMessage = { role: 'user', content: inputValue.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -136,7 +144,7 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
     setRetryCount(0);
 
     const inputPayload: ChatMessageInput = {
-      businessId: businessId || 'default-business-id',
+      businessId,
       query: userMsg.content,
       history: messages.map((m) => ({ role: m.role, content: m.content })),
     };
@@ -163,77 +171,91 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
   return (
     <>
       {/* Floating Chat Button */}
-      <button
+      <Button
         onClick={() => setIsOpen((prev) => !prev)}
+        disabled={!businessId}
         className={cn(
-          'shadow-primary/40 hover:shadow-primary/50 fixed right-6 bottom-6 z-40 flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl',
-          'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary/50 cursor-pointer border-none focus:ring-4 focus:outline-none',
+          'fixed right-6 bottom-6 z-40 h-16 w-16 rounded-full !p-0 shadow-lg transition-all duration-300',
           isOpen
             ? 'pointer-events-none scale-0 opacity-0'
-            : 'scale-100 opacity-100 hover:scale-110'
+            : 'scale-100 opacity-100 hover:scale-110 hover:shadow-xl',
+          !businessId && 'cursor-not-allowed opacity-50'
         )}
         aria-label={t.openButton}
         aria-expanded={isOpen}
+        title={
+          businessId ? undefined : 'Chat unavailable - business not loaded'
+        }
       >
-        <Bot width={30} height={30} aria-hidden />
-      </button>
+        <Bot
+          className="h-full w-full shrink-0"
+          width={30}
+          height={30}
+          aria-hidden
+        />
+      </Button>
 
       {/* Chat Window */}
-      <div
+      <Card
         className={cn(
-          'border-border bg-background fixed right-6 bottom-6 z-40 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col overflow-hidden rounded-2xl border shadow-2xl transition-all duration-300',
+          'fixed right-6 bottom-6 z-40 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col !p-0 transition-all duration-300',
           isOpen
-            ? 'scale-100 opacity-100'
-            : 'pointer-events-none scale-0 opacity-0'
+            ? 'scale-100 opacity-100 shadow-2xl'
+            : 'pointer-events-none scale-75 opacity-0 shadow-none'
         )}
         role="dialog"
         aria-label={t.ariaLabel}
         aria-hidden={!isOpen}
       >
         {/* Header */}
-        <header className="bg-primary text-primary-foreground flex items-center justify-between p-4 drop-shadow-md">
+        <CardHeader className="bg-primary text-primary-foreground flex flex-row items-center justify-between !gap-3 gap-4 border-b !border-none !px-4 !py-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-primary-foreground/20 self-center rounded-xl p-2 backdrop-blur-sm">
+            <div className="bg-primary-foreground/20 rounded-lg p-2 backdrop-blur-sm">
               <Bot size={24} className="text-primary-foreground" aria-hidden />
             </div>
             <div>
-              <h3 className="text-lg leading-tight font-semibold tracking-tight">
+              <h3 className="leading-tight font-semibold tracking-tight">
                 {t.title}
               </h3>
-              <p className="text-primary-foreground/80 mt-0.5 flex items-center gap-1 text-xs">
+              <div className="mt-0.5 flex items-center gap-1">
                 <Sparkles
                   size={10}
                   className="fill-primary-foreground/80"
                   aria-hidden
-                />{' '}
-                {t.online}
-              </p>
+                />
+                <Badge
+                  variant="secondary"
+                  className="bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30 text-xs"
+                >
+                  {t.online}
+                </Badge>
+              </div>
             </div>
           </div>
           <Button
             onClick={() => setIsOpen(false)}
             variant="ghost"
-            size="sm"
-            className="text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground rounded-full p-2"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/20"
             aria-label={t.closeButton}
           >
             <X size={20} aria-hidden />
           </Button>
-        </header>
+        </CardHeader>
 
         {/* Messages Area */}
-        <div
-          className="bg-muted/30 dark:bg-muted/10 flex-1 space-y-5 overflow-y-auto scroll-smooth p-4"
+        <CardContent
+          className="flex-1 space-y-4 overflow-y-auto p-4"
           role="log"
           aria-live="polite"
           aria-label="Chat messages"
         >
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center space-y-4 px-4 text-center opacity-70">
-              <div className="bg-primary/10 text-primary mb-2 flex h-16 w-16 items-center justify-center rounded-full shadow-sm">
-                <MessageSquare size={30} aria-hidden />
+            <div className="flex h-full flex-col items-center justify-center space-y-4 text-center">
+              <div className="bg-primary/10 rounded-full p-4">
+                <MessageSquare size={28} className="text-primary" aria-hidden />
               </div>
-              <p className="text-muted-foreground text-sm leading-relaxed text-balance">
+              <p className="text-muted-foreground text-sm">
                 {t.welcomeMessage}
               </p>
             </div>
@@ -242,16 +264,16 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
               <div
                 key={index}
                 className={cn(
-                  'flex w-full transition-all duration-500',
+                  'flex transition-all duration-500',
                   msg.role === 'user' ? 'justify-end' : 'justify-start'
                 )}
               >
                 <div
                   className={cn(
-                    'max-w-[85%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm',
+                    'max-w-[85%] rounded-lg px-3 py-2 text-sm',
                     msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                      : 'border-border bg-card text-card-foreground rounded-bl-sm border'
+                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                      : 'bg-muted text-muted-foreground rounded-bl-none border'
                   )}
                   role="article"
                   aria-label={`${
@@ -266,28 +288,26 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
 
           {/* Error Message */}
           {error && (
-            <div className="flex justify-start">
-              <div className="border-border bg-destructive/10 text-destructive flex items-center gap-2 rounded-2xl rounded-bl-sm border px-4 py-3 text-sm">
-                <AlertCircle size={16} aria-hidden />
-                <span>{error}</span>
-              </div>
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle size={16} />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {/* Loading State */}
           {isPending && (
             <div className="flex justify-start">
-              <div className="border-border bg-card flex flex-row items-center gap-3 rounded-2xl rounded-bl-sm border px-4 py-3.5 shadow-sm">
+              <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <Bot
-                  size={18}
+                  size={16}
                   className="text-primary animate-pulse"
                   aria-hidden
                 />
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   {[0, 150, 300].map((delay) => (
                     <span
                       key={delay}
-                      className="bg-primary/60 h-1.5 w-1.5 animate-bounce rounded-full"
+                      className="bg-primary/60 h-1 w-1 animate-bounce rounded-full"
                       style={{ animationDelay: `${delay}ms` }}
                       aria-hidden
                     />
@@ -298,12 +318,12 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
             </div>
           )}
 
-          <div ref={messagesEndRef} className="h-1" />
-        </div>
+          <div ref={messagesEndRef} />
+        </CardContent>
 
         {/* Input Area */}
-        <footer className="border-border bg-background border-t p-4">
-          <div className="border-border bg-muted/50 focus-within:border-primary focus-within:ring-primary/30 relative flex items-center overflow-hidden rounded-full border shadow-sm transition-all focus-within:ring-2">
+        <CardFooter className="flex-col gap-3 border-t py-3">
+          <div className="relative flex w-full items-center gap-2">
             <Input
               ref={inputRef}
               type="text"
@@ -312,35 +332,25 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
               onKeyDown={handleKeyDown}
               placeholder={t.messagePlaceholder}
               disabled={isPending}
-              className="border-none bg-transparent py-3.5 pr-14 pl-5 text-[15px] focus:outline-none"
               aria-label="Message input"
+              className="text-sm"
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isPending}
-              className={cn(
-                'absolute right-1.5 h-auto rounded-full p-2 transition-all duration-200',
-                inputValue.trim() && !isPending
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-offset-2 focus:outline-none'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
-              )}
-              variant="ghost"
-              size="sm"
+              size="icon"
+              className="shrink-0"
               aria-label={t.sendMessage}
             >
               {isPending ? (
-                <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Send
-                  size={18}
-                  className={inputValue.trim() ? 'ml-0.5' : ''}
-                  aria-hidden
-                />
+                <Send size={16} aria-hidden />
               )}
             </Button>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs">
-            <p className="text-muted-foreground tracking-wide">
+          <div className="flex w-full items-center justify-between">
+            <p className="text-muted-foreground text-xs tracking-wide">
               {t.disclaimer}
             </p>
             {messages.length > 0 && (
@@ -348,15 +358,15 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
                 onClick={clearChat}
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground h-auto p-1"
+                className="h-auto p-0 text-xs"
                 aria-label={t.clearChat}
               >
                 {t.clearChat}
               </Button>
             )}
           </div>
-        </footer>
-      </div>
+        </CardFooter>
+      </Card>
     </>
   );
 }
