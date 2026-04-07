@@ -375,7 +375,28 @@
       "clientDetailsDescription": "Informations sur l'utilisateur assigné",
       "name": "Nom",
       "failedToLoadDetails": "Impossible de charger les détails de l'entreprise",
-      "businessNotFound": "Entreprise non trouvée"
+      "failedToLoadClients": "Impossible de charger les clients",
+      "errorLoading": "Erreur de chargement",
+      "retry": "Réessayer",
+      "businessNotFound": "Entreprise non trouvée",
+      "chatbot": {
+        "title": "Accountia AI",
+        "openButton": "Ouvrir le chat",
+        "closeButton": "Fermer le chat",
+        "online": "En ligne",
+        "messagePlaceholder": "Écrivez votre message...",
+        "clearChat": "Effacer",
+        "disclaimer": "Accountia AI peut faire des erreurs.",
+        "welcomeMessage": "Bonjour ! Posez-moi vos questions sur la comptabilité de votre entreprise.",
+        "sendMessage": "Envoyer le message",
+        "loading": "Chargement de la réponse...",
+        "errorFailed": "Impossible d'envoyer le message",
+        "errorRetrying": "Nouvelle tentative...",
+        "errorTryAgain": "Veuillez réessayer.",
+        "ariaLabel": "Discuter avec Accountia AI",
+        "aiResponse": "Réponse de l'IA",
+        "userMessage": "Votre message"
+      }
     },
     "notifications": {
       "title": "Notifications",

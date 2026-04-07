@@ -2,14 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  FileText,
-  Building2,
-  Phone,
-  Globe,
-  Users,
-} from 'lucide-react';
+import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -21,8 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -31,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Chatbot } from '@/components/chat/Chatbot';
+import { Chatbot } from '@/components/Business/Chatbot';
 
 export function Business({
   businessId,
@@ -43,13 +36,21 @@ export function Business({
   lang: Locale;
 }) {
   const t = dictionary.pages.business;
+  const containerClass = 'w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8';
   const [selectedClient, setSelectedClient] = useState<
     ClientData | undefined
   >();
 
-  const { data: clientsData, isLoading: isLoadingUsers } = useQuery({
+  const {
+    data: clientsData,
+    isLoading: isLoadingUsers,
+    isError: isClientsError,
+    refetch: refetchClients,
+  } = useQuery({
     queryKey: ['business-clients', businessId],
     queryFn: () => BusinessService.getBusinessClients(businessId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
   const {
@@ -59,6 +60,8 @@ export function Business({
   } = useQuery({
     queryKey: ['business', businessId],
     queryFn: () => BusinessService.getBusinessById(businessId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
   });
   const clients = clientsData?.clients ?? [];
 
@@ -66,7 +69,7 @@ export function Business({
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         {/* Header Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-64" />
@@ -93,7 +96,7 @@ export function Business({
 
   if (error || !business) {
     return (
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+      <div className={containerClass}>
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
           <div className="text-sm">
@@ -110,15 +113,25 @@ export function Business({
     approved:
       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
     rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+    neutral: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
+  };
+
+  // Normalize and safely lookup status color
+  const getStatusColorClass = (status: string) => {
+    const key = (status || '').toLowerCase().trim();
+    if (Object.prototype.hasOwnProperty.call(statusColors, key)) {
+      return statusColors[key as keyof typeof statusColors];
+    }
+    return statusColors.neutral;
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className={containerClass}>
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">{business.name}</h1>
-          <Badge className={statusColors[business.status]}>
+          <Badge className={getStatusColorClass(business.status)}>
             {business.status.charAt(0).toUpperCase() + business.status.slice(1)}
           </Badge>
         </div>
@@ -222,140 +235,144 @@ export function Business({
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button size="lg" className="gap-2">
-          <FileText className="h-5 w-5" />
-          {t.createInvoiceButton}
-        </Button>
-
-        {/* Clients Section */}
-        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {t.clientsSection} ({clients.length})
-            </CardTitle>
-            <CardDescription>{t.clientsDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingUsers ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : clients.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <Users className="text-muted-foreground h-12 w-12" />
-                <p className="text-foreground font-medium">
-                  {t.noClientsAssigned}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t.noClientsAssignedHint}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {clients.map((client) => (
-                  <button
-                    key={client.id}
-                    onClick={() => setSelectedClient(client)}
-                    className="border-border hover:bg-accent hover:text-accent-foreground focus:ring-ring w-full rounded-lg border p-3 text-left transition-colors focus:ring-2 focus:outline-none"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">
-                          {client.firstName} {client.lastName}
-                        </p>
-                        <p className="text-muted-foreground text-sm">
-                          {client.email}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Client Details Dialog */}
-        <Dialog
-          open={!!selectedClient}
-          onOpenChange={(open) => {
-            if (!open) setSelectedClient(undefined);
-          }}
-        >
-          <DialogContent className="max-w-md">
-            {selectedClient && (
-              <>
-                <DialogHeader>
-                  <DialogTitle>{t.clientDetailsTitle}</DialogTitle>
-                  <DialogDescription>
-                    {t.clientDetailsDescription}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground text-sm font-medium">
-                      {t.name}
-                    </p>
-                    <p className="font-medium">
-                      {selectedClient.firstName} {selectedClient.lastName}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-muted-foreground text-sm font-medium">
-                      {t.email}
-                    </p>
-                    <a
-                      href={`mailto:${selectedClient.email}`}
-                      className="font-medium text-blue-600 hover:underline dark:text-blue-400"
-                    >
-                      {selectedClient.email}
-                    </a>
-                  </div>
-
-                  {selectedClient.phoneNumber && (
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground text-sm font-medium">
-                        {t.phone}
-                      </p>
+      {/* Clients Section */}
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {t.clientsSection} ({clients.length})
+          </CardTitle>
+          <CardDescription>{t.clientsDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingUsers ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : isClientsError ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <AlertCircle className="text-destructive h-10 w-10" />
+              <p className="text-foreground font-medium">
+                {t.failedToLoadClients || t.errorLoading}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void refetchClients();
+                }}
+              >
+                {t.retry || 'Retry'}
+              </Button>
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <Users className="text-muted-foreground h-12 w-12" />
+              <p className="text-foreground font-medium">
+                {t.noClientsAssigned}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {t.noClientsAssignedHint}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {clients.map((client) => (
+                <button
+                  key={client.id}
+                  onClick={() => setSelectedClient(client)}
+                  className="border-border hover:bg-accent hover:text-accent-foreground focus:ring-ring w-full rounded-lg border p-3 text-left transition-colors focus:ring-2 focus:outline-none"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
                       <p className="font-medium">
-                        {selectedClient.phoneNumber}
+                        {client.firstName} {client.lastName}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        {client.email}
                       </p>
                     </div>
-                  )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* Client Details Dialog */}
+      <Dialog
+        open={!!selectedClient}
+        onOpenChange={(open) => {
+          if (!open) setSelectedClient(undefined);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          {selectedClient && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t.clientDetailsTitle}</DialogTitle>
+                <DialogDescription>
+                  {t.clientDetailsDescription}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-sm font-medium">
+                    {t.name}
+                  </p>
+                  <p className="font-medium">
+                    {selectedClient.firstName} {selectedClient.lastName}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-sm font-medium">
+                    {t.email}
+                  </p>
+                  <a
+                    href={`mailto:${selectedClient.email}`}
+                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {selectedClient.email}
+                  </a>
+                </div>
+
+                {selectedClient.phoneNumber && (
                   <div className="space-y-2">
                     <p className="text-muted-foreground text-sm font-medium">
-                      {t.created}
+                      {t.phone}
                     </p>
-                    <p className="font-medium">
-                      {new Date(selectedClient.createdAt).toLocaleDateString(
-                        lang,
-                        {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        }
-                      )}
-                    </p>
+                    <p className="font-medium">{selectedClient.phoneNumber}</p>
                   </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+                )}
 
-      {/* Bot Chat UI */}
-      <Chatbot businessId={businessId} />
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-sm font-medium">
+                    {t.created}
+                  </p>
+                  <p className="font-medium">
+                    {new Date(selectedClient.createdAt).toLocaleDateString(
+                      lang,
+                      {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }
+                    )}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }

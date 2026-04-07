@@ -375,7 +375,28 @@
       "clientDetailsDescription": "Information about the assigned user",
       "name": "Name",
       "failedToLoadDetails": "Failed to load business details",
-      "businessNotFound": "Business not found"
+      "failedToLoadClients": "Failed to load clients",
+      "errorLoading": "Error loading",
+      "retry": "Retry",
+      "businessNotFound": "Business not found",
+      "chatbot": {
+        "title": "Accountia AI",
+        "openButton": "Open chat",
+        "closeButton": "Close chat",
+        "online": "Online",
+        "messagePlaceholder": "Write your message...",
+        "clearChat": "Clear",
+        "disclaimer": "Accountia AI may make mistakes.",
+        "welcomeMessage": "Hello! Ask me any questions about your business accounting.",
+        "sendMessage": "Send message",
+        "loading": "Loading response...",
+        "errorFailed": "Failed to send message",
+        "errorRetrying": "Retrying...",
+        "errorTryAgain": "Please try again.",
+        "ariaLabel": "Chat with Accountia AI",
+        "aiResponse": "AI response",
+        "userMessage": "Your message"
+      }
     },
     "notifications": {
       "title": "Notifications",
