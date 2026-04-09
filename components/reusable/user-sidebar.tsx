@@ -11,6 +11,7 @@ import {
   FileText,
   Package,
   BarChart3,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -69,6 +70,13 @@ const getPlatformNavigation = (
     label: dictionary.admin.businessManagement.navLabel,
     tooltip: dictionary.tooltips.businessManagement,
     icon: <Building2 className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'logs',
+    href: `/${lang}/dashboard/logs`,
+    label: dictionary.admin.logs.navLabel,
+    tooltip: dictionary.tooltips.logs,
+    icon: <ScrollText className="h-4 w-4 shrink-0" />,
   },
 ];
 

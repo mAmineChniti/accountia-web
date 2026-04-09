@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { getToken } from '@/actions/cookies';
 import { NotificationsService } from '@/lib/requests';
 import { env } from '@/env';
-import type { Notification } from '@/types/ResponseInterfaces';
+import type { Notification } from '@/types/services';
 
 export interface UseNotificationsOptions {
   businessId?: string;

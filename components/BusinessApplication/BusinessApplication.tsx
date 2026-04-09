@@ -36,9 +36,10 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
 import {
-  BusinessApplicationSchema,
-  type BusinessApplicationInput,
-} from '@/types/RequestSchemas';
+  CreateBusinessApplicationSchema,
+  type CreateBusinessApplicationFormInput,
+  type CreateBusinessApplicationInput,
+} from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function BusinessApplication({
@@ -53,19 +54,24 @@ export default function BusinessApplication({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  const form = useForm<BusinessApplicationInput>({
-    resolver: zodResolver(BusinessApplicationSchema),
+  const form = useForm<
+    CreateBusinessApplicationFormInput,
+    unknown,
+    CreateBusinessApplicationInput
+  >({
+    resolver: zodResolver(CreateBusinessApplicationSchema),
     defaultValues: {
       businessName: '',
       description: '',
       website: '',
+      businessEmail: '',
       phone: '',
     },
     mode: 'onChange',
   });
 
   const applicationMutation = useMutation({
-    mutationFn: (data: BusinessApplicationInput) =>
+    mutationFn: (data: CreateBusinessApplicationInput) =>
       BusinessService.applyForBusiness(data),
     onSuccess: () => {
       // Invalidate business-related queries
@@ -78,7 +84,7 @@ export default function BusinessApplication({
     },
   });
 
-  const onSubmit = (data: BusinessApplicationInput) => {
+  const onSubmit = (data: CreateBusinessApplicationInput) => {
     applicationMutation.mutate(data);
   };
 
@@ -112,6 +118,29 @@ export default function BusinessApplication({
                         id="businessName"
                         placeholder={t.businessNamePlaceholder}
                         aria-invalid={!!form.formState.errors.businessName}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage role="alert" aria-live="polite" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Business Email */}
+              <FormField
+                control={form.control}
+                name="businessEmail"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel htmlFor="businessEmail">
+                      {t.businessEmailLabel}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        id="businessEmail"
+                        type="email"
+                        placeholder={t.businessEmailPlaceholder}
+                        aria-invalid={!!form.formState.errors.businessEmail}
                         {...field}
                       />
                     </FormControl>

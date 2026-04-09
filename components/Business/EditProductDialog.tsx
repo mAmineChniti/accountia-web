@@ -7,10 +7,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
-import { UpdateProductSchema } from '@/types/RequestSchemas';
-import type { UpdateProductInput } from '@/types/RequestSchemas';
+import { UpdateProductSchema } from '@/types/services';
+import type { UpdateProductInput } from '@/types/services';
 import { ProductsService } from '@/lib/requests';
-import { type Product } from '@/types/ResponseInterfaces';
+import { type Product } from '@/types/services';
 import {
   Dialog,
   DialogContent,

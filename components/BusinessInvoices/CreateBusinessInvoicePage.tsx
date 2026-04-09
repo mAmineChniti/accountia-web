@@ -48,10 +48,10 @@ import {
   CreateInvoiceSchema,
   type CreateInvoiceInput,
   INVOICE_RECIPIENT_TYPES,
-} from '@/types/RequestSchemas';
+} from '@/types/services';
 import { InvoicesService, ProductsService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
-import type { ProductListResponse } from '@/types/ResponseInterfaces';
+import type { ProductListResponse } from '@/types/services';
 import { ImportInvoicesModal } from '../Invoices/ImportInvoicesModal';
 
 interface CreateBusinessInvoicePageProps {
@@ -733,7 +733,7 @@ export function CreateBusinessInvoicePage({
           router.push(`/${lang}/business/${businessId}/invoices`)
         }
         dictionary={dictionary}
-        _lang={lang}
+        businessId={businessId}
       />
     </div>
   );

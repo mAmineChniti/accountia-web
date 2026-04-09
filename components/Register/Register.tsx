@@ -44,7 +44,7 @@ import { toast } from 'sonner';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService, ApiError } from '@/lib/requests';
-import { RegisterSchema, type RegisterInput } from '@/types/RequestSchemas';
+import { RegisterSchema, type RegisterInput } from '@/types/services';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {

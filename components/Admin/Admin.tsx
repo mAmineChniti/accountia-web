@@ -63,7 +63,7 @@ import type {
   UserSummary,
   UsersListResponse,
   ChangeRoleResponse,
-} from '@/types/ResponseInterfaces';
+} from '@/types/services';
 import { AuthService } from '@/lib/requests';
 import { toast } from 'sonner';
 import { localizeErrorMessage } from '@/lib/error-localization';
@@ -80,14 +80,7 @@ const formatDateOnly = (value?: string | null): string => {
 };
 
 const EMPTY_USERS: UserSummary[] = [];
-
-const ALL_ROLES: Role[] = [
-  'PLATFORM_OWNER',
-  'PLATFORM_ADMIN',
-  'BUSINESS_OWNER',
-  'BUSINESS_ADMIN',
-  'CLIENT',
-];
+const ALL_ROLES: Role[] = ['PLATFORM_OWNER', 'PLATFORM_ADMIN', 'CLIENT'];
 
 export default function Admin({
   dictionary,

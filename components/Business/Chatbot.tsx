@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChatService } from '@/lib/requests';
-import type { ChatMessageInput } from '@/types/RequestSchemas';
-import type { ChatMessage } from '@/types/ResponseInterfaces';
+import type { ChatMessageInput } from '@/types/services';
+import type { ChatMessage } from '@/types/services';
 import type { Dictionary } from '@/get-dictionary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,9 +92,15 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
       return ChatService.sendMessage(payload);
     },
     onSuccess: (response) => {
+      const safeResponse =
+        typeof response.response === 'string' &&
+        response.response.trim().length > 0
+          ? response.response
+          : t.emptyResponse;
+
       const assistantMsg: ChatMessage = {
         role: 'assistant',
-        content: response.message || 'Unable to process response',
+        content: safeResponse,
       };
       setMessages((prev) => [...prev, assistantMsg]);
       setError(undefined);
@@ -175,7 +181,7 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
         onClick={() => setIsOpen((prev) => !prev)}
         disabled={!businessId}
         className={cn(
-          'fixed right-6 bottom-6 z-40 h-16 w-16 rounded-full !p-0 shadow-lg transition-all duration-300',
+          'fixed right-6 bottom-6 z-40 h-16 w-16 rounded-full p-0! shadow-lg transition-all duration-300',
           isOpen
             ? 'pointer-events-none scale-0 opacity-0'
             : 'scale-100 opacity-100 hover:scale-110 hover:shadow-xl',
@@ -187,18 +193,13 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
           businessId ? undefined : 'Chat unavailable - business not loaded'
         }
       >
-        <Bot
-          className="h-full w-full shrink-0"
-          width={30}
-          height={30}
-          aria-hidden
-        />
+        <Bot className="size-8 shrink-0" width={48} height={48} aria-hidden />
       </Button>
 
       {/* Chat Window */}
       <Card
         className={cn(
-          'fixed right-6 bottom-6 z-40 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col !p-0 transition-all duration-300',
+          'fixed right-6 bottom-6 z-40 flex h-[600px] max-h-[calc(100vh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] origin-bottom-right flex-col p-0! transition-all duration-300',
           isOpen
             ? 'scale-100 opacity-100 shadow-2xl'
             : 'pointer-events-none scale-75 opacity-0 shadow-none'
@@ -208,10 +209,10 @@ export function Chatbot({ businessId, dictionary }: ChatbotProps) {
         aria-hidden={!isOpen}
       >
         {/* Header */}
-        <CardHeader className="bg-primary text-primary-foreground flex flex-row items-center justify-between !gap-3 gap-4 border-b !border-none !px-4 !py-4 py-4">
+        <CardHeader className="bg-primary text-primary-foreground flex flex-row items-center justify-between gap-4 border-b border-none! px-4! py-4">
           <div className="flex items-center gap-3">
             <div className="bg-primary-foreground/20 rounded-lg p-2 backdrop-blur-sm">
-              <Bot size={24} className="text-primary-foreground" aria-hidden />
+              <Bot size={28} className="text-primary-foreground" aria-hidden />
             </div>
             <div>
               <h3 className="leading-tight font-semibold tracking-tight">

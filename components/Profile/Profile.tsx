@@ -42,8 +42,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthService } from '@/lib/requests';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { UpdateUserSchema, type UpdateUserInput } from '@/types/RequestSchemas';
-import type { TwoFASetupResponse } from '@/types/ResponseInterfaces';
+import { UpdateUserSchema, type UpdateUserInput } from '@/types/services';
+import type { TwoFASetupResponse } from '@/types/services';
 import { toast } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
 import {

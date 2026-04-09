@@ -6,7 +6,7 @@ import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
-import { type ClientData } from '@/types/ResponseInterfaces';
+import { type ClientData } from '@/types/services';
 import {
   Card,
   CardContent,
@@ -24,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Chatbot } from '@/components/Business/Chatbot';
 
 export function Business({
   businessId,
@@ -59,7 +58,7 @@ export function Business({
     error,
   } = useQuery({
     queryKey: ['business', businessId],
-    queryFn: () => BusinessService.getBusinessById(businessId),
+    queryFn: () => BusinessService.getBusinessById(businessId, businessId),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
@@ -372,7 +371,6 @@ export function Business({
           )}
         </DialogContent>
       </Dialog>
-      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }

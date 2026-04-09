@@ -65,6 +65,22 @@ export async function getToken(): Promise<AuthCookieData | undefined> {
   }
 }
 
+export async function getTokenAllowExpired(): Promise<
+  AuthCookieData | undefined
+> {
+  try {
+    const cookieStore = await cookies();
+    const tokenCookie = cookieStore.get('token');
+    if (!tokenCookie) {
+      return undefined;
+    }
+
+    return JSON.parse(tokenCookie.value) as AuthCookieData;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getUser(): Promise<UserCookieData | undefined> {
   try {
     const cookieStore = await cookies();

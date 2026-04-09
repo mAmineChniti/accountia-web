@@ -41,7 +41,7 @@ import type {
   BusinessApplicationItem,
   BusinessApplicationsListResponse,
   BusinessItem,
-} from '@/types/ResponseInterfaces';
+} from '@/types/services';
 import type { Dictionary } from '@/get-dictionary';
 
 type ReviewAction = 'approved' | 'rejected';
