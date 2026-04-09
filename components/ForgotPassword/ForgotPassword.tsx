@@ -30,7 +30,7 @@ import { AuthService } from '@/lib/requests';
 import {
   ForgotPasswordSchema,
   type ForgotPasswordInput,
-} from '@/types/RequestSchemas';
+} from '@/types/services';
 
 export default function ForgotPassword({
   dictionary,

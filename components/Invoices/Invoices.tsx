@@ -49,7 +49,7 @@ import type {
   ReceivedInvoiceListResponse,
   InvoiceStatus,
   InvoiceReceiptResponseDto,
-} from '@/types/ResponseInterfaces';
+} from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 
 type FilterStatus = 'ALL' | InvoiceStatus;

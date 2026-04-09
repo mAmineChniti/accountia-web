@@ -30,10 +30,7 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService } from '@/lib/requests';
-import {
-  ResetPasswordSchema,
-  type ResetPasswordInput,
-} from '@/types/RequestSchemas';
+import { ResetPasswordSchema, type ResetPasswordInput } from '@/types/services';
 import ResetPasswordSkeleton from './ResetPasswordSkeleton';
 import { localizeErrorMessage } from '@/lib/error-localization';
 

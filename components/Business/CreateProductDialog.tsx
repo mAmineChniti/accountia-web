@@ -7,8 +7,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
-import { CreateProductSchema } from '@/types/RequestSchemas';
-import type { CreateProductInput } from '@/types/RequestSchemas';
+import { CreateProductSchema } from '@/types/services';
+import type { CreateProductInput } from '@/types/services';
 import { ProductsService } from '@/lib/requests';
 import {
   Dialog,

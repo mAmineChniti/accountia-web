@@ -1,8 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   FileText,
   AlertCircle,
@@ -15,7 +20,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { InvoicesService } from '@/lib/requests';
+import { BusinessService, InvoicesService } from '@/lib/requests';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import {
@@ -56,7 +61,8 @@ import {
 import type {
   InvoiceStatus,
   InvoiceResponse,
-} from '@/types/ResponseInterfaces';
+  ClientPodiumItem,
+} from '@/types/services';
 
 type FilterStatus = 'ALL' | InvoiceStatus | 'PODIUM';
 
@@ -86,6 +92,18 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
 };
 
+const ALLOWED_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
+  DRAFT: ['ISSUED', 'VOIDED'],
+  ISSUED: ['VIEWED', 'PAID', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  VIEWED: ['PAID', 'PARTIAL', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  PAID: ['ARCHIVED'],
+  PARTIAL: ['PAID', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  OVERDUE: ['PAID', 'PARTIAL', 'DISPUTED', 'VOIDED'],
+  DISPUTED: ['PAID', 'VOIDED'],
+  VOIDED: ['ARCHIVED'],
+  ARCHIVED: [],
+};
+
 export function IssuedInvoices({
   lang,
   dictionary,
@@ -103,17 +121,60 @@ export function IssuedInvoices({
     string | undefined
   >();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagesByNumber, setPagesByNumber] = useState<
+    Record<number, InvoiceResponse[]>
+  >({});
+  const previousBusinessIdRef = useRef<string>(businessId);
 
   const {
     data: invoicesResponse,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['invoices-issued', businessId],
-    queryFn: () => InvoicesService.listIssuedInvoices({ businessId }),
+    queryKey: ['invoices-issued', businessId, currentPage],
+    queryFn: () =>
+      InvoicesService.listIssuedInvoices({
+        businessId,
+        page: currentPage,
+        limit: 10,
+      }),
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
+
+  const { data: clientPodiumResponse, isLoading: isLoadingPodium } = useQuery({
+    queryKey: ['business-client-podium', businessId],
+    queryFn: () => BusinessService.getClientPodium(businessId),
+    enabled: filterStatus === 'PODIUM',
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Store invoices by page so refetches replace the corresponding page slice.
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!invoicesResponse?.invoices || !invoicesResponse.page) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      setPagesByNumber((previousPages) => ({
+        ...previousPages,
+        [invoicesResponse.page]: invoicesResponse.invoices,
+      }));
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [invoicesResponse]);
 
   // Fetch invoice details when a specific invoice is selected
   const {
@@ -134,13 +195,50 @@ export function IssuedInvoices({
     retry: 1, // Retry once on failure
   });
 
+  // Reset pagination only when businessId actually changes (not on first mount)
+  useEffect(() => {
+    let isMounted = true;
+
+    if (previousBusinessIdRef.current === businessId) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    previousBusinessIdRef.current = businessId;
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      setCurrentPage(1);
+      setPagesByNumber({});
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [businessId]);
+
   // Mutation for transitioning invoice status
   const { mutate: transitionStatus, isPending: isTransitioning } = useMutation({
-    mutationFn: (newStatus: InvoiceStatus) =>
-      InvoicesService.transitionInvoice(selectedInvoiceId!, {
+    mutationFn: (newStatus: InvoiceStatus) => {
+      const payload: {
+        newStatus: InvoiceStatus;
+        businessId: string;
+        amountPaid?: number;
+      } = {
         newStatus,
         businessId,
-      }),
+      };
+
+      if (
+        newStatus === 'PAID' &&
+        invoiceDetails &&
+        Number.isFinite(invoiceDetails.totalAmount)
+      ) {
+        payload.amountPaid = invoiceDetails.totalAmount;
+      }
+
+      return InvoicesService.transitionInvoice(selectedInvoiceId!, payload);
+    },
     onSuccess: (data) => {
       // Update invoice details in cache
       queryClient.setQueryData(
@@ -155,17 +253,19 @@ export function IssuedInvoices({
   });
 
   const invoices = useMemo(
-    () => invoicesResponse?.invoices ?? [],
-    [invoicesResponse?.invoices]
+    () =>
+      Object.keys(pagesByNumber)
+        .map(Number)
+        .toSorted((a, b) => a - b)
+        .flatMap((page) => pagesByNumber[page] ?? []),
+    [pagesByNumber]
   );
+  const totalPages = invoicesResponse?.totalPages ?? 0;
 
   const filteredInvoices = useMemo(() => {
     let results = invoices;
 
-    if (filterStatus === 'PODIUM') {
-      results = results.filter((inv) => inv.status === 'PAID');
-      results = results.toSorted((a, b) => b.totalAmount - a.totalAmount);
-    } else if (filterStatus !== 'ALL') {
+    if (filterStatus !== 'ALL' && filterStatus !== 'PODIUM') {
       results = results.filter((inv) => inv.status === filterStatus);
     }
 
@@ -183,6 +283,24 @@ export function IssuedInvoices({
 
     return results;
   }, [invoices, filterStatus, searchQuery]);
+
+  const podiumClients = useMemo(() => {
+    const podium = clientPodiumResponse?.podium ?? [];
+    if (!searchQuery.trim()) {
+      return podium;
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    return podium.filter((client) => {
+      const searchFields = [
+        client.clientName,
+        client.clientEmail,
+        client.totalPaidInvoices.toString(),
+        client.totalPaidAmount.toString(),
+      ].map((f) => f.toLowerCase());
+      return searchFields.some((field) => field.includes(query));
+    });
+  }, [clientPodiumResponse?.podium, searchQuery]);
 
   // Export Invoice to PDF
   const exportToPDF = () => {
@@ -285,7 +403,7 @@ export function IssuedInvoices({
     };
   }, [invoices]);
 
-  if (isLoading) {
+  if (isFetching && !invoicesResponse) {
     return (
       <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
         {/* Header Skeleton */}
@@ -341,7 +459,7 @@ export function IssuedInvoices({
           <CardHeader className="pb-2">
             <CardDescription>{t.totalInvoices}</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? '—' : stats.total}
+              {isLoading ? '—' : (invoicesResponse?.total ?? stats.total)}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -457,7 +575,7 @@ export function IssuedInvoices({
                   : ''
               }
             >
-              🏆 Top Paid Clients
+              {t.topPayingClientsFilter}
             </Button>
             {(['DRAFT', 'ISSUED', 'PAID', 'OVERDUE'] as const).map((status) => {
               const statusLabel =
@@ -485,7 +603,11 @@ export function IssuedInvoices({
         </CardHeader>
 
         <CardContent>
-          {filteredInvoices.length === 0 ? (
+          {(
+            filterStatus === 'PODIUM'
+              ? !isLoadingPodium && podiumClients.length === 0
+              : filteredInvoices.length === 0
+          ) ? (
             <div className="flex flex-col items-center gap-2 py-12 text-center">
               {searchQuery ? (
                 <>
@@ -499,15 +621,61 @@ export function IssuedInvoices({
                   <Briefcase className="text-muted-foreground h-12 w-12" />
                   <div>
                     <p className="text-foreground font-medium">
-                      {t.noInvoices}
+                      {filterStatus === 'PODIUM'
+                        ? t.noTopPayingClients
+                        : t.noInvoices}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      {t.noIssuedInvoicesHint}
+                      {filterStatus === 'PODIUM'
+                        ? t.noTopPayingClientsHint
+                        : t.noIssuedInvoicesHint}
                     </p>
                   </div>
                 </>
               )}
             </div>
+          ) : filterStatus === 'PODIUM' ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t.rank}</TableHead>
+                  <TableHead>{t.recipient}</TableHead>
+                  <TableHead>{t.recipientEmailLabel}</TableHead>
+                  <TableHead className="text-right">{t.totalPaid}</TableHead>
+                  <TableHead className="text-right">
+                    {t.totalInvoices}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(podiumClients as ClientPodiumItem[]).map((client, index) => {
+                  const rankBadge = client.medal || `${index + 1}.`;
+
+                  return (
+                    <TableRow
+                      key={client.clientId}
+                      className="hover:bg-muted/50"
+                    >
+                      <TableCell className="font-medium">{rankBadge}</TableCell>
+                      <TableCell className="font-medium">
+                        {client.clientName || t.unknownClient}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {client.clientEmail || '—'}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {client.totalPaidAmount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {client.totalPaidInvoices}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <Table>
               <TableHeader>
@@ -521,12 +689,9 @@ export function IssuedInvoices({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map((invoice, index) => (
+                {filteredInvoices.map((invoice, _index) => (
                   <TableRow key={invoice.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
-                      {filterStatus === 'PODIUM' && index === 0 && '🥇 '}
-                      {filterStatus === 'PODIUM' && index === 1 && '🥈 '}
-                      {filterStatus === 'PODIUM' && index === 2 && '🥉 '}
                       {invoice.invoiceNumber}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -568,6 +733,25 @@ export function IssuedInvoices({
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Load More Button */}
+          {filterStatus !== 'PODIUM' && currentPage < totalPages && (
+            <div className="flex justify-center border-t pt-4">
+              <Button
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={isFetching}
+                variant="outline"
+              >
+                {isFetching ? t.loadingMoreInvoices : t.loadMoreInvoices}
+              </Button>
+            </div>
+          )}
+
+          {filterStatus === 'PODIUM' && isLoadingPodium && (
+            <div className="text-muted-foreground flex justify-center border-t pt-4 text-sm">
+              {t.loadingTopPayingClients}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -618,39 +802,36 @@ export function IssuedInvoices({
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                       {t.statusLabel}
                     </p>
-                    <Select
-                      value={invoiceDetails.status}
-                      onValueChange={(newStatus) =>
-                        transitionStatus(newStatus as InvoiceStatus)
-                      }
-                      disabled={isTransitioning}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(
-                          [
-                            'DRAFT',
-                            'ISSUED',
-                            'VIEWED',
-                            'PAID',
-                            'PARTIAL',
-                            'OVERDUE',
-                            'DISPUTED',
-                            'VOIDED',
-                            'ARCHIVED',
-                          ] as InvoiceStatus[]
-                        ).map((status) => (
-                          <SelectItem key={status} value={status}>
-                            <div className="flex items-center gap-2">
-                              <span>{STATUS_ICONS[status]}</span>
-                              {status}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {(() => {
+                      const availableStatuses = [
+                        invoiceDetails.status,
+                        ...ALLOWED_STATUS_TRANSITIONS[invoiceDetails.status],
+                      ];
+
+                      return (
+                        <Select
+                          value={invoiceDetails.status}
+                          onValueChange={(newStatus) =>
+                            transitionStatus(newStatus as InvoiceStatus)
+                          }
+                          disabled={isTransitioning}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableStatuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                <div className="flex items-center gap-2">
+                                  <span>{STATUS_ICONS[status]}</span>
+                                  {status}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      );
+                    })()}
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">

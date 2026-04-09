@@ -45,10 +45,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
-import type {
-  InvoiceStatus,
-  InvoiceResponse,
-} from '@/types/ResponseInterfaces';
+import type { InvoiceStatus, InvoiceResponse } from '@/types/services';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 

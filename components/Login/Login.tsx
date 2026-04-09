@@ -39,9 +39,9 @@ import {
   type LoginInput,
   TwoFALoginSchema,
   type TwoFALoginInput,
-} from '@/types/RequestSchemas';
+} from '@/types/services';
 import { setTokens, setUser } from '@/actions/cookies';
-import type { AuthResponseDto } from '@/types/ResponseInterfaces';
+import type { AuthResponseDto } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 
 export default function Login({

@@ -37,10 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import {
-  type Product,
-  type ProductListResponse,
-} from '@/types/ResponseInterfaces';
+import { type Product, type ProductListResponse } from '@/types/services';
 import { CreateProductDialog } from './CreateProductDialog';
 import { EditProductDialog } from './EditProductDialog';
 import { ImportProductsDialog } from './ImportProductsDialog';

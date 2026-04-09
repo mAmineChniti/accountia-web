@@ -21,18 +21,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { InvoicesService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
-import type { InvoiceImportResponse } from '@/types/ResponseInterfaces';
+import type { BulkImportInvoicesResponseDto } from '@/types/services';
 
 interface ImportInvoicesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   dictionary: Dictionary;
-  _lang: Locale;
+  businessId: string;
 }
 
 const ACCEPTED_FILE_TYPES = new Set([
@@ -59,19 +58,21 @@ export function ImportInvoicesModal({
   onClose,
   onSuccess,
   dictionary,
-  _lang,
+  businessId,
 }: ImportInvoicesModalProps) {
   const t = dictionary.pages.invoices;
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [dragActive, setDragActive] = useState(false);
-  const [result, setResult] = useState<InvoiceImportResponse | undefined>();
+  const [result, setResult] = useState<
+    BulkImportInvoicesResponseDto | undefined
+  >();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
-    mutationFn: (file: File): Promise<InvoiceImportResponse> =>
-      InvoicesService.importInvoices(file),
-    onSuccess: (data: InvoiceImportResponse) => {
+    mutationFn: (file: File): Promise<BulkImportInvoicesResponseDto> =>
+      InvoicesService.importInvoices(file, businessId),
+    onSuccess: (data: BulkImportInvoicesResponseDto) => {
       // Invalidate all invoice queries (both issued and received) across all scopes
       queryClient.invalidateQueries({
         predicate: (query) => {

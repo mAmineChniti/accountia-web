@@ -1,4 +1,4 @@
-import type { UserCookieData } from '@/types/auth';
+import type { UserCookieData } from './auth';
 
 export interface AuthenticatedSession {
   authenticated: true;
