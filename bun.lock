@@ -5,7 +5,7 @@
     "": {
       "name": "accountia-web",
       "dependencies": {
-        "@formatjs/intl-localematcher": "^0.8.1",
+        "@formatjs/intl-localematcher": "^0.8.2",
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-direction": "^1.1.1",
