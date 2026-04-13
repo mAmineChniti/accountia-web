@@ -18,6 +18,7 @@ import {
   Clock,
   Download,
 } from 'lucide-react';
+import { CommentsSidebar } from '@/components/Comments/CommentsSidebar';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { BusinessService, InvoicesService } from '@/lib/requests';
@@ -108,10 +109,12 @@ export function IssuedInvoices({
   lang,
   dictionary,
   businessId,
+  currentUserId,
 }: {
   lang: Locale;
   dictionary: Dictionary;
   businessId: string;
+  currentUserId: string;
 }) {
   const t = dictionary.pages.invoices;
   const queryClient = useQueryClient();
@@ -758,7 +761,7 @@ export function IssuedInvoices({
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>
               {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
@@ -954,6 +957,18 @@ export function IssuedInvoices({
               <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
             )}
           </div>
+
+          {/* Comments */}
+          {selectedInvoiceId && !isLoadingDetails && (
+            <div className="border-t pt-4">
+              <CommentsSidebar
+                businessId={businessId}
+                entityType="invoice"
+                entityId={selectedInvoiceId}
+                currentUserId={currentUserId}
+              />
+            </div>
+          )}
 
           <DialogFooter>
             <Button

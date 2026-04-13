@@ -437,8 +437,8 @@ export const BusinessService = {
       );
       const payload = {
         ...(data as InviteBusinessUserInput & { businessId?: string }),
+        businessId,
       };
-      delete payload.businessId;
       const result = await client
         .post(endpoint, { json: payload })
         .json<BusinessInviteResponseDto>();

@@ -4,6 +4,7 @@ export interface BusinessItem {
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  role?: string;
 }
 
 export interface BusinessDetailData {
