@@ -16,6 +16,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -72,9 +73,11 @@ const sanitizeCsvValue = (value: string | number): string => {
 
 export function BusinessProducts({
   businessId,
+  lang,
   dictionary,
 }: {
   businessId: string;
+  lang: Locale;
   dictionary: Dictionary;
 }) {
   const queryClient = useQueryClient();
@@ -265,8 +268,8 @@ export function BusinessProducts({
         p.description.length > 50
           ? p.description.slice(0, 50) + '...'
           : p.description,
-        `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
-        `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
+        `${p.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t.currency}`,
+        `${p.cost.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t.currency}`,
         p.quantity.toString(),
       ];
       tableRows.push(productData);
@@ -330,7 +333,7 @@ export function BusinessProducts({
           <AlertCircle className="h-5 w-5" />
           <div className="text-sm">{t.errorLoading}</div>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {dictionary.common.retry}
           </Button>
         </div>
       </div>
@@ -359,8 +362,10 @@ export function BusinessProducts({
 
       <Tabs defaultValue="list" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="list">Liste</TabsTrigger>
-          <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
+          <TabsTrigger value="list">{t.tabs?.list || 'List'}</TabsTrigger>
+          <TabsTrigger value="ai-insights">
+            {t.tabs?.insights || 'AI Insights'}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list">
@@ -526,16 +531,16 @@ export function BusinessProducts({
                             {product.description}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {product.unitPrice.toLocaleString(undefined, {
+                            {product.unitPrice.toLocaleString(lang, {
                               minimumFractionDigits: 2,
                             })}{' '}
-                            TND
+                            {t.currency}
                           </TableCell>
                           <TableCell className="text-right font-medium text-orange-600 dark:text-orange-400">
-                            {product.cost.toLocaleString(undefined, {
+                            {product.cost.toLocaleString(lang, {
                               minimumFractionDigits: 2,
                             })}{' '}
-                            TND
+                            {t.currency}
                           </TableCell>
                           <TableCell className="text-right">
                             <span

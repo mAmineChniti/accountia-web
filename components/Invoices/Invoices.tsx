@@ -144,7 +144,7 @@ export default function Invoices({
   dictionary: Dictionary;
   lang: Locale;
 }) {
-  const t = dictionary.pages.invoices;
+  const t = dictionary.pages.invoices; // Dictionary type re-evaluation
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -875,14 +875,14 @@ export default function Invoices({
                       {isStartingCheckout ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
+                          {t.payment.processing}
                         </>
                       ) : (
                         <>
                           <CreditCard className="mr-2 h-4 w-4" />
                           {mockInvoicePaymentsEnabled
-                            ? 'Pay now (demo form)'
-                            : 'Pay now'}
+                            ? t.payNowDemo || 'Pay now (demo form)'
+                            : t.payment.payNow}
                         </>
                       )}
                     </Button>
@@ -916,16 +916,14 @@ export default function Invoices({
       >
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Paiement sécurisé</DialogTitle>
-            <DialogDescription>
-              Complétez vos informations de carte
-            </DialogDescription>
+            <DialogTitle>{t.payment.securePayment}</DialogTitle>
+            <DialogDescription>{t.payment.completeCardInfo}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 rounded-xl border bg-white p-4">
             <div className="grid gap-2">
               <label className="text-sm font-semibold">
-                Nom du titulaire *
+                {t.payment.cardholderName}
               </label>
               <Input
                 value={mockPaymentForm.cardholderName}
@@ -935,7 +933,7 @@ export default function Invoices({
                     cardholderName: e.target.value,
                   }))
                 }
-                placeholder="Nom complet"
+                placeholder={t.payment.cardholderPlaceholder}
                 className={
                   mockPaymentErrors.cardholderName ? 'border-red-500' : ''
                 }
@@ -949,7 +947,7 @@ export default function Invoices({
 
             <div className="grid gap-2">
               <label className="text-sm font-semibold">
-                Informations de la carte *
+                {t.payment.cardInfo}
               </label>
               <Input
                 value={mockPaymentForm.cardNumber}
@@ -972,7 +970,9 @@ export default function Invoices({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <label className="text-sm font-semibold">MM/AA *</label>
+                <label className="text-sm font-semibold">
+                  {t.payment.expiry}
+                </label>
                 <Input
                   value={mockPaymentForm.expiry}
                   onChange={(e) =>
@@ -992,7 +992,7 @@ export default function Invoices({
                 ) : undefined}
               </div>
               <div className="grid gap-2">
-                <label className="text-sm font-semibold">CVC *</label>
+                <label className="text-sm font-semibold">{t.payment.cvc}</label>
                 <Input
                   value={mockPaymentForm.cvc}
                   onChange={(e) =>
@@ -1014,7 +1014,9 @@ export default function Invoices({
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-semibold">Pays ou région *</label>
+              <label className="text-sm font-semibold">
+                {t.payment.country}
+              </label>
               <select
                 value={mockPaymentForm.country}
                 onChange={(e) =>
@@ -1046,14 +1048,14 @@ export default function Invoices({
                 className="flex-1"
                 onClick={() => setMockPaymentInvoice(undefined)}
               >
-                Cancel
+                {t.payment.cancel}
               </Button>
               <Button
                 className="flex-1"
                 disabled={isSubmittingMockPayment}
                 onClick={() => {
                   if (!validateMockPaymentForm()) {
-                    toast.error('Veuillez corriger les champs obligatoires');
+                    toast.error(t.payment.requiredFieldsError);
                     return;
                   }
                   // Show confirmation before processing
@@ -1063,10 +1065,10 @@ export default function Invoices({
                 {isSubmittingMockPayment ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    {t.payment.processing}
                   </>
                 ) : (
-                  'Payer maintenant'
+                  t.payment.payNow
                 )}
               </Button>
             </div>
@@ -1086,9 +1088,9 @@ export default function Invoices({
       >
         <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Complete your payment</DialogTitle>
+            <DialogTitle>{t.payment.completeYourPayment}</DialogTitle>
             <DialogDescription>
-              {paymentInvoiceLabel || 'Secure card payment powered by Stripe'}
+              {paymentInvoiceLabel || t.payment.secureCardPayment}
             </DialogDescription>
           </DialogHeader>
 
@@ -1102,7 +1104,7 @@ export default function Invoices({
               </EmbeddedCheckoutProvider>
             ) : (
               <div className="text-muted-foreground flex min-h-[400px] items-center justify-center text-sm">
-                Loading payment form...
+                {t.payment.loadingForm}
               </div>
             )}
           </div>
@@ -1122,12 +1124,10 @@ export default function Invoices({
               <CreditCard className="text-primary h-16 w-16" />
             </div>
             <DialogTitle className="text-center text-xl">
-              Confirmer le paiement
+              {t.payment.confirmTitle}
             </DialogTitle>
             <DialogDescription className="space-y-1 text-center">
-              <span className="block">
-                Êtes-vous sûr de vouloir effectuer ce paiement ?
-              </span>
+              <span className="block">{t.payment.confirmQuestion}</span>
               <span className="text-primary block text-lg font-bold">
                 {mockPaymentInvoice?.totalAmount?.toLocaleString(lang, {
                   minimumFractionDigits: 2,
@@ -1146,7 +1146,7 @@ export default function Invoices({
               variant="outline"
               onClick={() => setShowMockConfirm(false)}
             >
-              Annuler
+              {t.payment.cancel}
             </Button>
             <Button
               type="button"
@@ -1159,12 +1159,12 @@ export default function Invoices({
               {isSubmittingMockPayment ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Traitement...
+                  {t.payment.processing}
                 </>
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Oui, confirmer le paiement
+                  {t.payment.confirmAction}
                 </>
               )}
             </Button>
@@ -1187,12 +1187,10 @@ export default function Invoices({
               <CreditCard className="text-primary h-16 w-16" />
             </div>
             <DialogTitle className="text-center text-xl">
-              Confirmer le paiement
+              {t.payment.confirmTitle}
             </DialogTitle>
             <DialogDescription className="space-y-1 text-center">
-              <span className="block">
-                Êtes-vous sûr d&apos;avoir bien effectué ce paiement ?
-              </span>
+              <span className="block">{t.payment.confirmQuestionStripe}</span>
               {paidInvoiceReceipt && (
                 <>
                   <span className="text-primary block text-lg font-bold">
@@ -1218,7 +1216,7 @@ export default function Invoices({
                 setPaidInvoiceReceipt(undefined);
               }}
             >
-              Non, fermer
+              {t.payment.noConfirm}
             </Button>
             <Button
               type="button"
@@ -1229,7 +1227,7 @@ export default function Invoices({
               }}
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              Oui, confirmer
+              {t.payment.confirmActionStripe}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1253,29 +1251,35 @@ export default function Invoices({
               </div>
             </div>
             <DialogTitle className="text-center text-xl text-green-700">
-              Paiement Reçu !
+              {t.payment.successTitle}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Votre paiement a été traité avec succès.
+              {t.payment.successDescription}
             </DialogDescription>
           </DialogHeader>
 
           {/* Receipt Card */}
           <div className="bg-muted/30 space-y-3 rounded-xl border p-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Facture</span>
+              <span className="text-muted-foreground">
+                {t.payment.receiptInvoice}
+              </span>
               <span className="font-semibold">
                 {paidInvoiceReceipt?.invoiceNumber ?? '—'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">De</span>
+              <span className="text-muted-foreground">
+                {t.payment.receiptFrom}
+              </span>
               <span className="font-semibold">
                 {paidInvoiceReceipt?.issuerBusinessName ?? '—'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Date</span>
+              <span className="text-muted-foreground">
+                {t.payment.receiptDate}
+              </span>
               <span className="font-semibold">
                 {new Date().toLocaleDateString(lang, {
                   year: 'numeric',
@@ -1285,7 +1289,7 @@ export default function Invoices({
               </span>
             </div>
             <div className="flex items-center justify-between border-t pt-3">
-              <span className="text-base font-bold">Total payé</span>
+              <span className="text-base font-bold">{t.payment.totalPaid}</span>
               <span className="text-lg font-bold text-green-700">
                 {paidInvoiceReceipt?.totalAmount?.toLocaleString(lang, {
                   minimumFractionDigits: 2,
@@ -1304,7 +1308,7 @@ export default function Invoices({
                 setPaidInvoiceReceipt(undefined);
               }}
             >
-              Fermer
+              {t.payment.close}
             </Button>
           </DialogFooter>
         </DialogContent>

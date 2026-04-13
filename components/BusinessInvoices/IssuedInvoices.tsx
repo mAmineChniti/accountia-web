@@ -977,11 +977,11 @@ export function IssuedInvoices({
               disabled={isLoadingDetails || !invoiceDetails}
             >
               <Download className="h-4 w-4" />
-              {(t as Record<string, string>).exportPDF || 'Export PDF'}
+              {t.exportPDF || 'Export PDF'}
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="default">
-                {(t as Record<string, string>).closeButtonLabel || 'Close'}
+                {t.closeButtonLabel || 'Close'}
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -997,15 +997,25 @@ export function IssuedInvoices({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Êtes-vous sûr ?</DialogTitle>
+            <DialogTitle>
+              {t.statusTransition?.confirmTitle ?? 'Êtes-vous sûr ?'}
+            </DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette
-              action est irréversible et indique que vous avez bien reçu les
-              fonds pour un total de{' '}
-              {invoiceDetails?.totalAmount?.toLocaleString(lang, {
-                minimumFractionDigits: 2,
-              })}{' '}
-              {invoiceDetails?.currency}.
+              {t.statusTransition?.confirmDescription
+                ? t.statusTransition.confirmDescription
+                    .replace(
+                      '{amount}',
+                      invoiceDetails?.totalAmount?.toLocaleString(lang, {
+                        minimumFractionDigits: 2,
+                      }) ?? ''
+                    )
+                    .replace('{currency}', invoiceDetails?.currency ?? '')
+                : `Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de ${invoiceDetails?.totalAmount?.toLocaleString(
+                    lang,
+                    {
+                      minimumFractionDigits: 2,
+                    }
+                  )} ${invoiceDetails?.currency}.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1013,7 +1023,7 @@ export function IssuedInvoices({
               variant="outline"
               onClick={() => setPendingStatusChange(undefined)}
             >
-              Annuler
+              {t.statusTransition?.cancel ?? 'Annuler'}
             </Button>
             <Button
               onClick={() => {
@@ -1023,7 +1033,7 @@ export function IssuedInvoices({
                 setPendingStatusChange(undefined);
               }}
             >
-              Confirmer le paiement
+              {t.statusTransition?.confirm ?? 'Confirmer le paiement'}
             </Button>
           </DialogFooter>
         </DialogContent>

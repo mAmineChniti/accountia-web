@@ -286,10 +286,11 @@ export function Business({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Stripe Connect
+            {t.stripe?.title || 'Stripe Connect'}
           </CardTitle>
           <CardDescription>
-            Connect your Stripe account to receive invoice payments directly.
+            {t.stripe?.description ||
+              'Connect your Stripe account to receive invoice payments directly.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -299,7 +300,7 @@ export function Business({
             <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-3 rounded-lg p-4">
               <div className="flex items-center gap-2 text-sm">
                 <CircleAlert className="h-4 w-4" />
-                Unable to verify Stripe status.
+                {t.stripe?.verifyError || 'Unable to verify Stripe status.'}
               </div>
               <Button
                 type="button"
@@ -308,7 +309,7 @@ export function Business({
                   void refetchStripeStatus();
                 }}
               >
-                Retry
+                {t.retry || 'Retry'}
               </Button>
             </div>
           ) : (
@@ -319,17 +320,18 @@ export function Business({
                     {stripeStatus?.isConnected ? (
                       <>
                         <CircleCheck className="h-4 w-4 text-emerald-600" />
-                        Connected
+                        {t.stripe?.connected || 'Connected'}
                       </>
                     ) : (
                       <>
                         <CircleAlert className="h-4 w-4 text-amber-600" />
-                        Not connected
+                        {t.stripe?.notConnected || 'Not connected'}
                       </>
                     )}
                   </div>
                   <p className="text-muted-foreground text-sm">
                     {stripeStatus?.message ||
+                      t.stripe?.connectHint ||
                       'Connect Stripe to start receiving payments.'}
                   </p>
                 </div>
@@ -341,16 +343,17 @@ export function Business({
                 >
                   <LinkIcon className="mr-2 h-4 w-4" />
                   {connectStripeMutation.isPending
-                    ? 'Preparing link...'
+                    ? t.stripe?.preparingLink || 'Preparing link...'
                     : stripeStatus?.isConnected
-                      ? 'Update Stripe setup'
-                      : 'Connect Stripe'}
+                      ? t.stripe?.updateSetup || 'Update Stripe setup'
+                      : t.stripe?.connectStripe || 'Connect Stripe'}
                 </Button>
               </div>
 
               {stripeStatus?.stripeConnectId ? (
                 <p className="text-muted-foreground text-xs">
-                  Account: {stripeStatus.stripeConnectId}
+                  {t.stripe?.account || 'Account'}:{' '}
+                  {stripeStatus.stripeConnectId}
                 </p>
               ) : undefined}
             </div>
