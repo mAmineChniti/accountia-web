@@ -108,8 +108,10 @@ export const API_CONFIG = {
     DELETE_CLIENT: 'business/{id}/clients/{clientId}',
     GET_STATISTICS: 'business/statistics',
     GET_CLIENT_PODIUM: 'business/client-podium',
-    INVITE_USER: 'business/{id}/invites',
-    RESEND_INVITE: 'business/{id}/invites/resend',
+    INVITE_USER: 'business/invites',
+    RESEND_INVITE: 'business/invites/resend',
+    GET_PENDING_INVITES: 'business/invites/pending',
+    REVOKE_INVITE: 'business/invites/{id}',
   },
   PRODUCTS: {
     CREATE: 'products',

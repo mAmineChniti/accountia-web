@@ -30,22 +30,24 @@ export const UpdateBusinessSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-const InviteBusinessUserOpenApiSchema = z.object({
+export const BusinessRoleSchema = z.enum(['ADMIN', 'MEMBER', 'CLIENT']);
+export type BusinessRole = z.infer<typeof BusinessRoleSchema>;
+
+// POST /business/invites — canonical shape per API docs
+export const InviteBusinessUserSchema = z.object({
   invitedEmail: z.email(),
-  businessRole: z.string().min(1),
+  businessRole: BusinessRoleSchema,
 });
 
-const InviteBusinessUserLegacySchema = z.object({
-  email: z.email(),
-  role: z.string().min(1),
-});
-
-export const InviteBusinessUserSchema = z.union([
-  InviteBusinessUserOpenApiSchema,
-  InviteBusinessUserLegacySchema,
-]);
-
+// POST /business/invites/resend
 export const ResendInviteSchema = z.object({
+  businessId: z.string().min(1),
+  inviteId: z.string().min(1),
+});
+
+// DELETE /business/invites/:inviteId
+export const RevokeInviteSchema = z.object({
+  businessId: z.string().min(1),
   inviteId: z.string().min(1),
 });
 
@@ -79,11 +81,13 @@ export type ReviewBusinessApplicationInput = z.infer<
 export type UpdateBusinessInput = z.infer<typeof UpdateBusinessSchema>;
 export type InviteBusinessUserInput = z.infer<typeof InviteBusinessUserSchema>;
 export type ResendInviteInput = z.infer<typeof ResendInviteSchema>;
+export type RevokeInviteInput = z.infer<typeof RevokeInviteSchema>;
 export type AssignBusinessUserInput = z.infer<typeof AssignBusinessUserSchema>;
 export type ChangeClientRoleInput = z.infer<typeof ChangeClientRoleSchema>;
 
+// DTO input aliases (for OpenAPI-aligned usage)
 export type InviteBusinessUserDtoInput = z.infer<
-  typeof InviteBusinessUserOpenApiSchema
+  typeof InviteBusinessUserSchema
 >;
 export type ChangeClientRoleDtoInput = z.infer<
   typeof ChangeClientRoleOpenApiSchema
