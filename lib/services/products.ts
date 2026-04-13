@@ -5,6 +5,7 @@ import type {
   ProductDetailResponse,
   UpdateProductResponse,
   ProductImportResponse,
+  StockInsightsResponse,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
@@ -134,6 +135,35 @@ export const ProductsService = {
       const result = await client
         .post(API_CONFIG.PRODUCTS.IMPORT, { body: formData, searchParams })
         .json<ProductImportResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async getStockInsights(
+    businessId: string,
+    lookbackDays = 30,
+    planningHorizonDays = 30
+  ): Promise<StockInsightsResponse> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
+
+    const client = createAuthenticatedClient();
+    try {
+      const searchParams: Record<string, string | number> = {
+        businessId,
+        lookbackDays,
+        planningHorizonDays,
+      };
+      const result = await client
+        .get(API_CONFIG.PRODUCTS.STOCK_INSIGHTS, { searchParams })
+        .json<StockInsightsResponse>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

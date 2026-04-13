@@ -34,6 +34,35 @@ export interface ProductImportResponse extends BaseResponse {
   errors: string[];
 }
 
+export interface StockInsightItem {
+  productId: string;
+  productName: string;
+  currentQuantity: number;
+  soldLastPeriod: number;
+  dailySalesRate: number;
+  estimatedDaysUntilStockout: number | null;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  safetyStock: number;
+  recommendedReorderQuantity: number;
+  reason: string;
+  recommendation: string;
+}
+
+export interface StockInsightsResponse extends BaseResponse {
+  businessId: string;
+  generatedAt: string;
+  lookbackDays: number;
+  planningHorizonDays: number;
+  summary: {
+    totalProducts: number;
+    highRiskCount: number;
+    mediumRiskCount: number;
+    lowRiskCount: number;
+    totalRecommendedUnits: number;
+  };
+  items: StockInsightItem[];
+}
+
 export type ProductMessageResponse = BaseResponse;
 
 export type ProductResponseDto = BaseResponse & Product;

@@ -22,6 +22,8 @@ import type {
   TenantMetadataResponse,
   BusinessStatisticsResponse,
   ClientPodiumResponse,
+  StripeOnboardingLinkResponse,
+  StripeConnectStatusResponse,
 } from '@/types/services';
 import {
   ApiError,
@@ -467,6 +469,54 @@ export const BusinessService = {
       const result = await client
         .post(endpoint, { json: data })
         .json<BusinessInviteResponseDto>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getStripeOnboardingLink(
+    businessId: string
+  ): Promise<StripeOnboardingLinkResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.STRIPE_ONBOARDING_LINK.replace(
+        '{id}',
+        businessId
+      );
+      const result = await client
+        .get(endpoint)
+        .json<StripeOnboardingLinkResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getStripeConnectStatus(
+    businessId: string
+  ): Promise<StripeConnectStatusResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.STRIPE_STATUS.replace(
+        '{id}',
+        businessId
+      );
+      const result = await client
+        .get(endpoint)
+        .json<StripeConnectStatusResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

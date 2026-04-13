@@ -121,6 +121,9 @@ export function IssuedInvoices({
     string | undefined
   >();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<
+    InvoiceStatus | undefined
+  >();
   const [currentPage, setCurrentPage] = useState(1);
   const [pagesByNumber, setPagesByNumber] = useState<
     Record<number, InvoiceResponse[]>
@@ -248,6 +251,13 @@ export function IssuedInvoices({
       // Also invalidate the invoices list to refresh it
       queryClient.invalidateQueries({
         queryKey: ['invoices-issued', businessId],
+      });
+    },
+    onError: (error: unknown) => {
+      import('sonner').then(({ toast }) => {
+        toast.error(
+          error instanceof Error ? error.message : 'Transformation failed'
+        );
       });
     },
   });
@@ -811,9 +821,13 @@ export function IssuedInvoices({
                       return (
                         <Select
                           value={invoiceDetails.status}
-                          onValueChange={(newStatus) =>
-                            transitionStatus(newStatus as InvoiceStatus)
-                          }
+                          onValueChange={(newStatus) => {
+                            if (newStatus === 'PAID') {
+                              setPendingStatusChange('PAID');
+                            } else {
+                              transitionStatus(newStatus as InvoiceStatus);
+                            }
+                          }}
                           disabled={isTransitioning}
                         >
                           <SelectTrigger className="w-full">
@@ -970,6 +984,47 @@ export function IssuedInvoices({
                 {(t as Record<string, string>).closeButtonLabel || 'Close'}
               </Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for PAID Status */}
+      <Dialog
+        open={pendingStatusChange !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Êtes-vous sûr ?</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette
+              action est irréversible et indique que vous avez bien reçu les
+              fonds pour un total de{' '}
+              {invoiceDetails?.totalAmount?.toLocaleString(lang, {
+                minimumFractionDigits: 2,
+              })}{' '}
+              {invoiceDetails?.currency}.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingStatusChange(undefined)}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => {
+                if (pendingStatusChange) {
+                  transitionStatus(pendingStatusChange);
+                }
+                setPendingStatusChange(undefined);
+              }}
+            >
+              Confirmer le paiement
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

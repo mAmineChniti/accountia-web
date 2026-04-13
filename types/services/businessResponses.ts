@@ -118,6 +118,17 @@ export interface BusinessInviteResponseDto {
   invite: BusinessInvite;
 }
 
+export interface StripeOnboardingLinkResponse {
+  onboardingUrl: string;
+  message?: string;
+}
+
+export interface StripeConnectStatusResponse {
+  isConnected: boolean;
+  stripeConnectId?: string;
+  message: string;
+}
+
 export interface BusinessStatisticsResponse {
   businessId: string;
   businessName: string;

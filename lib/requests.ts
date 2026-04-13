@@ -110,6 +110,8 @@ export const API_CONFIG = {
     GET_CLIENT_PODIUM: 'business/client-podium',
     INVITE_USER: 'business/{id}/invites',
     RESEND_INVITE: 'business/{id}/invites/resend',
+    STRIPE_ONBOARDING_LINK: 'business/{id}/stripe/onboarding-link',
+    STRIPE_STATUS: 'business/{id}/stripe/status',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -118,6 +120,7 @@ export const API_CONFIG = {
     UPDATE: 'products/{id}',
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
+    STOCK_INSIGHTS: 'products/stock-insights',
   },
   INVOICES: {
     // Issuer Endpoints
@@ -134,6 +137,10 @@ export const API_CONFIG = {
     GET_RECEIVED_DETAILS: 'invoices/received/{receiptId}/details',
     GET_RECEIVED_INDIVIDUAL_DETAILS:
       'invoices/received/individual/{receiptId}/details',
+    CREATE_INDIVIDUAL_CHECKOUT:
+      'invoices/received/individual/{receiptId}/payments/checkout',
+    CREATE_INDIVIDUAL_MOCK_PAYMENT:
+      'invoices/received/individual/{receiptId}/payments/mock',
   },
   CHAT: {
     SEND_MESSAGE: 'chat/message',

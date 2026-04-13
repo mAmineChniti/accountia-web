@@ -1,5 +1,7 @@
 import type {
   CreateInvoiceInput,
+  CreateInvoiceCheckoutSessionInput,
+  MockInvoicePaymentInput,
   UpdateInvoiceInput,
   TransitionInvoiceInput,
 } from '@/types/services';
@@ -7,6 +9,7 @@ import type {
   InvoiceResponse,
   InvoiceListResponse,
   ReceivedInvoiceListResponse,
+  InvoiceCheckoutSessionResponse,
   ImportTemplateResponseDto,
   BulkImportInvoicesResponseDto,
 } from '@/types/services';
@@ -204,6 +207,45 @@ export const InvoicesService = {
         );
       const result = await client
         .get(endpoint, { searchParams })
+        .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async createIndividualCheckoutSession(
+    receiptId: string,
+    payload?: CreateInvoiceCheckoutSessionInput
+  ): Promise<InvoiceCheckoutSessionResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.INVOICES.CREATE_INDIVIDUAL_CHECKOUT.replace(
+        '{receiptId}',
+        encodeURIComponent(receiptId)
+      );
+      const result = await client
+        .post(endpoint, { json: payload ?? {} })
+        .json<InvoiceCheckoutSessionResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async createIndividualMockPayment(
+    receiptId: string,
+    payload: MockInvoicePaymentInput
+  ): Promise<InvoiceResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint =
+        API_CONFIG.INVOICES.CREATE_INDIVIDUAL_MOCK_PAYMENT.replace(
+          '{receiptId}',
+          encodeURIComponent(receiptId)
+        );
+      const result = await client
+        .post(endpoint, { json: payload })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
