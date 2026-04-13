@@ -1,4 +1,0 @@
-
-> accountia-web@0.1.0 lint
-> eslint --fix . --max-warnings=0
-
