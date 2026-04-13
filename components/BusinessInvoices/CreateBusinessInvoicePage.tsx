@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +13,8 @@ import {
   Upload,
   ArrowLeft,
   CalendarIcon,
+  Building2,
+  User,
 } from 'lucide-react';
 import {
   Form,
@@ -49,7 +51,19 @@ import {
   type CreateInvoiceInput,
   INVOICE_RECIPIENT_TYPES,
 } from '@/types/services';
-import { InvoicesService, ProductsService } from '@/lib/requests';
+import {
+  InvoicesService,
+  ProductsService,
+  BusinessService,
+} from '@/lib/requests';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from '@/components/ui/combobox';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import type { ProductListResponse } from '@/types/services';
 import { ImportInvoicesModal } from '../Invoices/ImportInvoicesModal';
@@ -77,8 +91,8 @@ export function CreateBusinessInvoicePage({
     useQuery<ProductListResponse>({
       queryKey: ['products', businessId],
       queryFn: () => ProductsService.getProducts(1, 100, businessId),
-      staleTime: 15 * 60 * 1000, // 15 minutes - products change infrequently
-      gcTime: 60 * 60 * 1000, // 1 hour - keep products cached longer
+      staleTime: 15 * 60 * 1000,
+      gcTime: 60 * 60 * 1000,
     });
 
   const products = productsData?.products ?? [];
@@ -142,11 +156,63 @@ export function CreateBusinessInvoicePage({
   });
 
   // Watch recipient type to conditionally render fields
-
   const recipientType = useWatch({
     control: form.control,
     name: 'recipient.type',
   });
+
+  // Fetch other businesses for platform business recipient type
+  const { data: otherBusinessesData, isLoading: isLoadingBusinesses } =
+    useQuery({
+      queryKey: ['other-businesses'],
+      queryFn: () => BusinessService.getOtherBusinesses(),
+      enabled: recipientType === INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS,
+      staleTime: 5 * 60 * 1000,
+    });
+
+  const otherBusinesses = otherBusinessesData?.businesses ?? [];
+
+  // Fetch business clients for platform individual recipient type
+  const { data: clientsData, isLoading: isLoadingClients } = useQuery({
+    queryKey: ['business-clients', businessId],
+    queryFn: () => BusinessService.getBusinessClients(businessId),
+    enabled: recipientType === INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const clients = clientsData?.clients ?? [];
+
+  // Reset platform-specific fields when recipient type changes
+  useEffect(() => {
+    if (recipientType === INVOICE_RECIPIENT_TYPES.EXTERNAL) {
+      form.setValue('recipient.platformId', '');
+      form.setValue('recipient.displayName', '');
+    } else {
+      form.setValue('recipient.displayName', '');
+    }
+  }, [recipientType, form]);
+
+  // Handle business selection from combobox
+  const handleBusinessSelect = (businessId: string) => {
+    const business = otherBusinesses.find((b) => b.id === businessId);
+    if (business) {
+      form.setValue('recipient.platformId', business.id);
+      form.setValue('recipient.email', business.email);
+      form.setValue('recipient.displayName', business.name);
+    }
+  };
+
+  // Handle client selection from combobox
+  const handleClientSelect = (clientId: string) => {
+    const client = clients.find((c) => c.id === clientId);
+    if (client) {
+      form.setValue('recipient.platformId', client.id);
+      form.setValue('recipient.email', client.email);
+      const displayName =
+        `${client.firstName || ''} ${client.lastName || ''}`.trim();
+      form.setValue('recipient.displayName', displayName);
+    }
+  };
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -439,57 +505,170 @@ export function CreateBusinessInvoicePage({
                 )}
               />
 
-              {/* Email field - required for all recipient types */}
-              <FormField
-                control={form.control}
-                name="recipient.email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t.recipientEmailLabel || 'Email'} *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john@example.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    {recipientType ===
-                      INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS && (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {t.autoSearchBusinessHint ||
-                          'System will auto-search for a registered business with this email'}
-                      </p>
-                    )}
-                    {recipientType ===
-                      INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL && (
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {t.autoSearchIndividualHint ||
-                          'System will auto-search for a registered user with this email'}
-                      </p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Display name - required for external recipients */}
-              {recipientType === INVOICE_RECIPIENT_TYPES.EXTERNAL && (
+              {/* Combobox for selecting Platform Business */}
+              {recipientType === INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS && (
                 <FormField
                   control={form.control}
-                  name="recipient.displayName"
+                  name="recipient.platformId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.recipientNameLabel || 'Name'} *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="John Doe or Company Name"
-                          {...field}
+                      <FormLabel>
+                        {t.selectBusinessLabel || 'Select Business'} *
+                      </FormLabel>
+                      <Combobox
+                        value={field.value}
+                        onValueChange={(value = '') => {
+                          field.onChange(value);
+                          if (value) {
+                            handleBusinessSelect(value);
+                          }
+                        }}
+                      >
+                        <ComboboxInput
+                          placeholder={
+                            t.searchBusinessPlaceholder ||
+                            'Search by name or email...'
+                          }
+                          showClear
+                          disabled={isLoadingBusinesses}
                         />
-                      </FormControl>
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {isLoadingBusinesses ? (
+                              <ComboboxEmpty>Loading...</ComboboxEmpty>
+                            ) : otherBusinesses.length === 0 ? (
+                              <ComboboxEmpty>No businesses found</ComboboxEmpty>
+                            ) : (
+                              otherBusinesses.map((business) => (
+                                <ComboboxItem
+                                  key={business.id}
+                                  value={business.id}
+                                >
+                                  <Building2 className="text-muted-foreground mr-2 h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {business.name}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                      {business.email}
+                                    </span>
+                                  </div>
+                                </ComboboxItem>
+                              ))
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              )}
+
+              {/* Combobox for selecting Platform Individual */}
+              {recipientType ===
+                INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL && (
+                <FormField
+                  control={form.control}
+                  name="recipient.platformId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t.selectIndividualLabel || 'Select Individual'} *
+                      </FormLabel>
+                      <Combobox
+                        value={field.value}
+                        onValueChange={(value = '') => {
+                          field.onChange(value);
+                          if (value) {
+                            handleClientSelect(value);
+                          }
+                        }}
+                      >
+                        <ComboboxInput
+                          placeholder={
+                            t.searchIndividualPlaceholder ||
+                            'Search by name or email...'
+                          }
+                          showClear
+                          disabled={isLoadingClients}
+                        />
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {isLoadingClients ? (
+                              <ComboboxEmpty>Loading...</ComboboxEmpty>
+                            ) : clients.length === 0 ? (
+                              <ComboboxEmpty>No clients found</ComboboxEmpty>
+                            ) : (
+                              clients.map((client) => (
+                                <ComboboxItem key={client.id} value={client.id}>
+                                  <User className="text-muted-foreground mr-2 h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {`${client.firstName || ''} ${client.lastName || ''}`.trim()}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                      {client.email}
+                                    </span>
+                                  </div>
+                                </ComboboxItem>
+                              ))
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Email and Name fields - only for external recipients */}
+              {recipientType === INVOICE_RECIPIENT_TYPES.EXTERNAL && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="recipient.email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t.recipientEmailLabel || 'Email'} *
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="john@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {t.externalEmailHint ||
+                            'Invoice will be sent to this email address'}
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="recipient.displayName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {t.recipientNameLabel || 'Name'} *
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="John Doe or Company Name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
             </CardContent>
           </Card>

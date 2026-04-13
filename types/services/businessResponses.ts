@@ -94,6 +94,17 @@ export interface GetBusinessClientsResponse {
   clients: ClientData[];
 }
 
+export interface OtherBusiness {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface GetOtherBusinessesResponse {
+  message: string;
+  businesses: OtherBusiness[];
+}
+
 export interface ChangeClientRoleResponse {
   message: string;
   businessUser: AssignedBusinessUser;
@@ -118,35 +129,68 @@ export interface BusinessInviteResponseDto {
   invite: BusinessInvite;
 }
 
+export interface MonthlyDataPointDto {
+  date: string;
+  value: number;
+}
+
+export interface TimeSeriesDataDto {
+  historical: MonthlyDataPointDto[];
+  predicted: MonthlyDataPointDto[];
+}
+
+export interface ProductStatsDto {
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  unitCost: number;
+  soldQuantity: number;
+  revenue: number;
+  totalCost: number;
+  grossProfit: number;
+  profitMarginPercent: number;
+}
+
 export interface BusinessStatisticsResponse {
+  message: string;
   businessId: string;
-  businessName: string;
-  products: {
-    totalProducts: number;
-    totalValue: number;
-    lowStockProducts: number;
+  period: {
+    start: string;
+    end: string;
   };
-  invoices: {
+  kpis: {
+    totalRevenue: number;
+    totalCOGS: number;
+    grossProfit: number;
+    netProfit: number;
+    profitMarginPercent: number;
+  };
+  revenueTimeSeries: {
+    revenue: TimeSeriesDataDto;
+    cogs: TimeSeriesDataDto;
+    grossProfit: TimeSeriesDataDto;
+    salesVolume: TimeSeriesDataDto;
+  };
+  invoiceStatistics: {
     totalInvoices: number;
-    paidAmount: number;
-    pendingAmount: number;
-    overdueAmount: number;
     paidInvoices: number;
     pendingInvoices: number;
     overdueInvoices: number;
+    paidAmount: number;
+    pendingAmount: number;
+    overdueAmount: number;
   };
-  productProfitability: Array<{
-    productId: string;
-    productName: string;
-    unitPrice: number;
-    unitCost: number;
-    soldQuantity: number;
-    revenue: number;
-    totalCost: number;
-    grossProfit: number;
-    profitMarginPercent: number;
-  }>;
-  lastUpdated: string;
+  productStatistics: {
+    totalProducts: number;
+    totalInventoryValue: number;
+    lowStockProducts: number;
+  };
+  salesAnalytics: {
+    salesVolume: TimeSeriesDataDto;
+    topProducts: ProductStatsDto[];
+    underperformingProducts: ProductStatsDto[];
+    salesTrend: 'growth' | 'decline' | 'stagnation';
+  };
 }
 
 export interface ClientPodiumItem {

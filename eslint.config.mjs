@@ -7,11 +7,13 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import reactCompiler from 'eslint-plugin-react-compiler';
+import eslintPluginJsonc from 'eslint-plugin-jsonc';
 
 const eslintConfig = defineConfig([
   unicornPlugin.configs.all,
   ...nextVitals,
   ...nextTs,
+  ...eslintPluginJsonc.configs['recommended-with-jsonc'],
   eslintPluginPrettierRecommended,
   prettier,
   reactCompiler.configs.recommended,
