@@ -10,11 +10,11 @@ import {
   MoreVertical,
   Trash2,
   Download,
-  FileText,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// These were removed because they were unused according to ESLint: FileText, jsPDF, autoTable
+import * as XLSX from 'xlsx';
 
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
@@ -53,25 +53,30 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Sanitize CSV values to prevent formula injection and escape quotes
-const sanitizeCsvValue = (value: string | number): string => {
-  if (typeof value === 'number') return value.toString();
-  let sanitized = String(value);
-  // Escape formula injection
-  if (/^[+=@\-]/.test(sanitized)) {
-    sanitized = "'" + sanitized;
-  }
-  // Escape quotes by doubling them and wrap in quotes
-  sanitized = '"' + sanitized.replaceAll('"', '""') + '"';
-  return sanitized;
+
+// Utility to strip markdown characters - Moved to outer scope to satisfy unicorn/consistent-function-scoping
+const cleanMarkdown = (text: string): string => {
+  return text
+    .replaceAll(/[#*`~]/g, '') // Remove basic markdown symbols
+    .replaceAll(/\[([^\]]+)]\([^)]+\)/g, '$1') // Extract text from links
+    .replaceAll(/^[*+-]\s+/gm, '• ') // Standardize bullets
+    .trim();
 };
 
 export function BusinessProducts({
   businessId,
   dictionary,
+  lang,
 }: {
   businessId: string;
   dictionary: Dictionary;
+  lang: string;
 }) {
+  console.log('[BusinessProducts] Lang:', lang);
+  console.log(
+    '[BusinessProducts] Title Key:',
+    dictionary.pages.businessProducts.aiAnalysisSectionTitle
+  );
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessProducts;
   const [searchQuery, setSearchQuery] = useState('');
@@ -147,121 +152,283 @@ export function BusinessProducts({
     );
   }, [products, searchQuery]);
 
-  // Export to CSV
-  const exportToCSV = () => {
+  // Export to AI Report (Excel/CSV)
+  const exportToAiCSV = async () => {
     if (products.length === 0) return;
 
-    const headers = [
-      t.columnId,
-      t.columnName,
-      t.columnDescription,
-      t.columnUnitPrice,
-      t.columnCost,
-      t.columnQuantity,
-      t.columnCreatedAt,
-    ].map((h) => sanitizeCsvValue(h));
+    const loadingToast = toast.loading('Generating AI analysis for report...');
 
-    const rows = filteredProducts.map((p) => [
-      sanitizeCsvValue(String(p.id)),
-      sanitizeCsvValue(p.name),
-      sanitizeCsvValue(p.description),
-      sanitizeCsvValue(String(p.unitPrice)),
-      sanitizeCsvValue(String(p.cost)),
-      sanitizeCsvValue(String(p.quantity)),
-      sanitizeCsvValue(String(p.createdAt)),
-    ]);
+    try {
+      // Fetch all products (bypass the 10-item pagination constraint) for the export
+      const allProductsRes = await ProductsService.getProducts(
+        1,
+        10_000,
+        businessId,
+        searchQuery
+      );
+      const allProductsList = allProductsRes.products || [];
 
-    const csvContent = [headers, ...rows].map((e) => e.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `products_${businessId || 'global'}_${new Date().toISOString().split('T')[0]}.csv`
-    );
-    link.style.visibility = 'hidden';
-    document.body.append(link);
-    link.click();
-    link.remove();
+      const { summary } = await ProductsService.generateAiReport(
+        businessId,
+        lang
+      );
+      const cleanedSummary = cleanMarkdown(summary);
+
+      // Prepare data for Excel using ALL products
+      const rows = allProductsList.map((p) => ({
+        [t.columnName || 'Name']: p.name,
+        [t.columnDescription || 'Description']: p.description,
+        [t.columnUnitPrice || 'Unit Price']:
+          `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
+        [t.columnCost || 'Cost']:
+          `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND`,
+        [t.columnQuantity || 'Quantity']: p.quantity,
+      }));
+
+      // Create a worksheet
+      const wb = XLSX.utils.book_new();
+
+      // We'll create a single sheet with the summary at the top and table below
+      const headerSection = [
+        ['ACCOUNTIA - IA BUSINESS REPORT'],
+        [`Generated on: ${new Date().toLocaleString()}`],
+        [],
+        ['STRATEGIC ANALYSIS SUMMARY'],
+        [cleanedSummary],
+        [],
+        ['PRODUCT INVENTORY DETAILS'],
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(headerSection);
+
+      // Append products data starting after the header section
+      XLSX.utils.sheet_add_json(ws, rows, { origin: 'A8', skipHeader: false });
+
+      // Apply some basic column width styling
+      ws['!cols'] = [
+        { wch: 30 }, // Name
+        { wch: 50 }, // Description
+        { wch: 15 }, // Unit Price
+        { wch: 15 }, // Cost
+        { wch: 10 }, // Quantity
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'IA Report');
+
+      // Export to XLSX (opens perfectly in Excel)
+      XLSX.writeFile(
+        wb,
+        `IA_Report_${businessId}_${new Date().toISOString().split('T')[0]}.xlsx`
+      );
+
+      toast.dismiss(loadingToast);
+      toast.success('AI Report generated successfully!');
+    } catch (error: unknown) {
+      toast.dismiss(loadingToast);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to generate AI report';
+      toast.error(errorMessage);
+      console.error(error);
+    }
   };
 
-  // Export to PDF
-  const exportToPDF = () => {
+  // Export to AI Report
+  const exportToAiPDF = async () => {
     if (products.length === 0) return;
 
-    const doc = new jsPDF();
-    const tableColumn = [
-      t.productNameLabel || 'Name',
-      t.descriptionLabel || 'Description',
-      t.unitPriceLabel || 'Price',
-      t.costPriceLabel || 'Cost',
-      t.initialQuantityLabel || 'Qty',
-    ];
-    const tableRows: Array<string | number>[] = [];
+    const loadingToast = toast.loading('Generating AI analysis...');
 
-    for (const p of filteredProducts) {
-      const productData = [
-        p.name,
-        p.description.length > 50
-          ? p.description.slice(0, 50) + '...'
-          : p.description,
-        `${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
-        `${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`,
-        p.quantity.toString(),
-      ];
-      tableRows.push(productData);
+    try {
+      const { summary } = await ProductsService.generateAiReport(
+        businessId,
+        lang
+      );
+
+      const isArabic = lang === 'ar';
+
+      // 1. Process Markdown smartly into HTML
+      const mdLines = summary.split('\n');
+      let renderedMarkdown = '';
+      let inList = false;
+
+      for (const rawLine of mdLines) {
+        let line = rawLine.trim();
+        if (!line) {
+          if (inList) {
+            renderedMarkdown += '</ul>';
+            inList = false;
+          }
+          renderedMarkdown += '<div style="height: 12px;"></div>';
+          continue;
+        }
+
+        // Fix bold tags
+        line = line.replaceAll(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Lists
+        if (line.startsWith('* ') || line.startsWith('- ')) {
+          if (!inList) {
+            renderedMarkdown += `<ul style="margin-top: 8px; margin-bottom: 8px; padding-inline-start: 24px; list-style-type: disc;">`;
+            inList = true;
+          }
+          renderedMarkdown += `<li>${line.slice(2)}</li>`;
+        } else {
+          if (inList) {
+            renderedMarkdown += '</ul>';
+            inList = false;
+          }
+          renderedMarkdown += `<p style="margin: 0 0 8px 0;">${line}</p>`;
+        }
+      }
+      if (inList) renderedMarkdown += '</ul>';
+
+      // Fetch all products (bypass the 10-item pagination constraint) for the export
+      const allProductsRes = await ProductsService.getProducts(
+        1,
+        10_000,
+        businessId,
+        searchQuery
+      );
+      const allProductsList = allProductsRes.products || [];
+
+      // 2. Build the table rows HTML dynamically
+      const tableHeadersHtml = `
+         <tr>
+           <th>${t.columnName || 'Name'}</th>
+           <th>${t.columnDescription || 'Description'}</th>
+           <th style="text-align: end;">${t.columnUnitPrice || 'Unit Price'}</th>
+           <th style="text-align: end;">${t.columnCost || 'Cost Price'}</th>
+           <th style="text-align: end;">${t.columnQuantity || 'Quantity'}</th>
+         </tr>
+      `;
+
+      const tableBodyHtml = allProductsList
+        .map(
+          (p: Product, i: number) => `
+         <tr style="background-color: ${i % 2 === 0 ? '#ffffff' : '#fafafa'};">
+           <td>${p.name}</td>
+           <td>${p.description.length > 50 ? p.description.slice(0, 50) + '...' : p.description}</td>
+           <td style="text-align: end;">${p.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND</td>
+           <td style="text-align: end;">${p.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })} TND</td>
+           <td style="text-align: end;">${p.quantity}</td>
+         </tr>
+      `
+        )
+        .join('');
+
+      // 3. Build the final beautiful HTML document
+      const htmlContent = `
+         <!DOCTYPE html>
+         <html lang="${isArabic ? 'ar' : lang || 'en'}" dir="${isArabic ? 'rtl' : 'ltr'}">
+         <head>
+           <meta charset="UTF-8">
+           <title>Accountia - IA Report</title>
+           <style>
+             @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+             body { 
+               font-family: ${isArabic ? "'Cairo', sans-serif" : "'Inter', sans-serif"}; 
+               color: #222; 
+               margin: 0; 
+               padding: 40px; 
+               line-height: 1.6;
+             }
+             .header-title { color: #8a2222; font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+             .sub-title { color: #555; font-size: 16px; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #eaeaea; }
+             
+             table { 
+               width: 100%; 
+               border-collapse: collapse; 
+               margin-top: 25px; 
+               margin-bottom: 40px; 
+               font-size: 13px; 
+             }
+             th, td { 
+               border: 1px solid #e0e0e0; 
+               padding: 10px 14px; 
+               text-align: start; 
+             }
+             th { 
+               background-color: #fcebeb; 
+               color: #8a2222; 
+               font-weight: 700; 
+             }
+             
+             .ai-section { 
+               background-color: #fdfafb; 
+               padding: 25px 30px; 
+               border-radius: 8px; 
+               border-${isArabic ? 'right' : 'left'}: 5px solid #8a2222; 
+               margin-top: 30px;
+               page-break-inside: avoid;
+             }
+             .ai-title { 
+               color: #8a2222; 
+               font-size: 20px; 
+               font-weight: 700; 
+               margin-top: 0; 
+               margin-bottom: 16px;
+             }
+             strong { color: #111; font-weight: 700; }
+             
+             @media print {
+                body { padding: 0; }
+                .ai-section { border: 1px solid #f0f0f0; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                thead { display: table-header-group; }
+             }
+           </style>
+         </head>
+         <body>
+           <div class="header-title">Accountia</div>
+           <div class="sub-title">${t.aiReportPdfHeader || 'IA Business Report & Inventory Analysis'}</div>
+           
+           <table>
+             <thead>${tableHeadersHtml}</thead>
+             <tbody>${tableBodyHtml}</tbody>
+           </table>
+
+           <div class="ai-section">
+              <h3 class="ai-title">${t.aiAnalysisSectionTitle || 'Intelligence Artificielle - Analyse'}</h3>
+              <div style="font-size: 14px; color: #444;">
+                 ${renderedMarkdown}
+              </div>
+           </div>
+           
+           <${'script'}>
+             window.onload = function() {
+                // Wait briefly for the web fonts (Cairo/Inter) to load before triggering print
+                setTimeout(function() {
+                  window.print();
+                }, 800);
+             }
+           </${'script'}>
+         </body>
+         </html>
+      `;
+
+      toast.dismiss(loadingToast);
+
+      // 4. Open an invisible (or visible new tab) to render HTML and ask user to Save as PDF
+      const printWindow = window.open('', '', 'width=900,height=800');
+      if (printWindow) {
+        printWindow.document.open();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      } else {
+        toast.error('Veuillez autoriser les pop-ups pour afficher le rapport.');
+      }
+
+      toast.success('AI Report generated successfully!');
+      toast.success('AI Report generated successfully!');
+    } catch (error: unknown) {
+      toast.dismiss(loadingToast);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to generate AI report';
+      toast.error(errorMessage);
+      console.error(error);
     }
-
-    // Brand Header
-    doc.setFontSize(22);
-    doc.setTextColor(138, 34, 34); // Primary Maroon color from Accountia theme
-    doc.text('Accountia', 14, 20);
-
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    const reportTitle = businessId ? `${t.title} - Business Rapport` : t.title;
-    doc.text(reportTitle, 14, 28);
-
-    doc.setDrawColor(230, 230, 230);
-    doc.line(14, 32, 196, 32);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 40,
-      styles: {
-        fontSize: 10,
-        cellPadding: 4,
-        font: 'helvetica',
-      },
-      headStyles: {
-        fillColor: [138, 34, 34], // Primary color
-        textColor: [255, 255, 255],
-        fontSize: 11,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [250, 250, 250],
-      },
-      margin: { top: 40 },
-    });
-
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      const footerText = `Page ${i} of ${pageCount}`;
-      const dateText = `Generated on ${new Date().toLocaleString()}`;
-      doc.text(footerText, 196 - doc.getTextWidth(footerText), 285);
-      doc.text(dateText, 14, 285);
-    }
-
-    doc.save(
-      `products_${businessId || 'global'}_${new Date().toISOString().split('T')[0]}.pdf`
-    );
   };
 
   if (error) {
@@ -323,18 +490,18 @@ export function BusinessProducts({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
-                onClick={exportToCSV}
-                className="cursor-pointer gap-2"
+                onClick={exportToAiCSV}
+                className="text-primary cursor-pointer gap-2 font-semibold"
               >
-                <FileText className="h-4 w-4" />
-                {t.exportCSV}
+                <Sparkles className="text-primary h-4 w-4" />
+                {t.aiReportCSV || 'IA Report (CSV)'}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={exportToPDF}
-                className="cursor-pointer gap-2"
+                onClick={exportToAiPDF}
+                className="text-primary cursor-pointer gap-2 font-semibold"
               >
-                <FileText className="h-4 w-4" />
-                {t.exportPDF}
+                <Sparkles className="text-primary h-4 w-4" />
+                {t.aiReportPDF || 'IA Report (PDF)'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

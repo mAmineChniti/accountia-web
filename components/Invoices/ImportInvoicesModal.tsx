@@ -9,6 +9,7 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import {
   Dialog,
@@ -24,6 +25,7 @@ import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { InvoicesService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
+import { AiFileAnalysisPanel } from '@/components/reusable/AiFileAnalysisPanel';
 import type { BulkImportInvoicesResponseDto } from '@/types/services';
 
 interface ImportInvoicesModalProps {
@@ -64,14 +66,19 @@ export function ImportInvoicesModal({
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [dragActive, setDragActive] = useState(false);
+  const [useSmartAi] = useState(true);
   const [result, setResult] = useState<
     BulkImportInvoicesResponseDto | undefined
   >();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
-    mutationFn: (file: File): Promise<BulkImportInvoicesResponseDto> =>
-      InvoicesService.importInvoices(file, businessId),
+    mutationFn: (file: File): Promise<BulkImportInvoicesResponseDto> => {
+      if (useSmartAi) {
+        return InvoicesService.importInvoicesSmart(file, businessId);
+      }
+      return InvoicesService.importInvoices(file, businessId);
+    },
     onSuccess: (data: BulkImportInvoicesResponseDto) => {
       // Invalidate all invoice queries (both issued and received) across all scopes
       queryClient.invalidateQueries({
@@ -200,8 +207,17 @@ export function ImportInvoicesModal({
           </DialogTitle>
           <DialogDescription>
             {result
-              ? t.importCompleteDescription ||
-                'Your invoices have been imported successfully'
+              ? result.successCount > 0
+                ? result.failedCount > 0
+                  ? t.importPartialDescription ||
+                    'Certaines factures ont été importées, mais d&apos;autres ont échoué.'
+                  : t.importCompleteDescription ||
+                    'Toutes vos factures ont été importées avec succès.'
+                : result.warningCount > 0
+                  ? t.importWarningDescription ||
+                    'Aucune nouvelle facture n&apos;a été importée car elles existent déjà.'
+                  : t.importFailedDescription ||
+                    'L&apos;importation a échoué. Aucune facture n&apos;a été importée.'
               : t.importInvoicesDescription ||
                 'Upload a CSV or Excel file to import invoices'}
           </DialogDescription>
@@ -211,14 +227,40 @@ export function ImportInvoicesModal({
           // Success Result
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-center">
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
-                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
-              </div>
+              {result.successCount > 0 ? (
+                <div
+                  className={`rounded-full p-3 ${
+                    result.failedCount > 0
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                      : 'bg-green-100 dark:bg-green-900/30'
+                  }`}
+                >
+                  {result.failedCount > 0 ? (
+                    <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                  ) : (
+                    <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
+                  )}
+                </div>
+              ) : result.warningCount > 0 ? (
+                <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900/30">
+                  <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                </div>
+              ) : (
+                <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/30">
+                  <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 text-center">
               <p className="text-lg font-semibold">
-                {t.importSuccess || 'Import Completed'}
+                {result.successCount > 0
+                  ? result.failedCount > 0
+                    ? t.importPartialTitle || 'Importation Partielle'
+                    : t.importSuccess || 'Importation Réussie'
+                  : result.warningCount > 0
+                    ? t.importWarningTitle || 'Doublons Détectés'
+                    : t.importFailedTitle || 'Échec de l&apos;Importation'}
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-green-50 dark:bg-green-950/30">
@@ -265,6 +307,54 @@ export function ImportInvoicesModal({
                 )}
               </div>
             </div>
+
+            {/* Detailed Errors/Warnings List */}
+            {(result.failedCount > 0 || result.warningCount > 0) && (
+              <div
+                className={`mt-4 max-h-[200px] overflow-y-auto rounded-lg border p-3 ${
+                  result.failedCount > 0
+                    ? 'border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/20'
+                    : 'border-yellow-200 bg-yellow-50/50 dark:border-yellow-900/50 dark:bg-yellow-950/20'
+                }`}
+              >
+                <p
+                  className={`mb-2 text-sm font-bold ${
+                    result.failedCount > 0
+                      ? 'text-red-800 dark:text-red-300'
+                      : 'text-yellow-800 dark:text-yellow-300'
+                  }`}
+                >
+                  {t.importDetailsLabel || 'Import Details'} (
+                  {result.failedCount + result.warningCount}) :
+                </p>
+                <ul
+                  className={`list-inside list-disc space-y-1 text-xs ${
+                    result.failedCount > 0
+                      ? 'text-red-700 dark:text-red-400'
+                      : 'text-yellow-700 dark:text-yellow-400'
+                  }`}
+                >
+                  {result.results
+                    .filter(
+                      (r) => r.status === 'error' || r.status === 'warning'
+                    )
+                    .slice(0, 10)
+                    .map((err, idx) => (
+                      <li key={idx}>
+                        <span className="font-semibold">
+                          {err.invoiceNumber || `Row ${idx + 1}`}:
+                        </span>{' '}
+                        {err.message}
+                      </li>
+                    ))}
+                  {result.failedCount > 10 && (
+                    <li className="font-italic list-none pt-1 opacity-70">
+                      ... et {result.failedCount - 10} autres erreurs.
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           // File Upload Form
@@ -315,28 +405,44 @@ export function ImportInvoicesModal({
 
             {/* Selected File Display */}
             {selectedFile && (
-              <Card className="bg-muted/30">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
-                    <FileIcon className="text-muted-foreground h-5 w-5" />
-                    <div>
-                      <p className="text-sm font-medium">{selectedFile.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(selectedFile.size / 1024).toFixed(2)} KB
-                      </p>
+              <>
+                <Card className="bg-muted/30">
+                  <CardContent className="flex items-center justify-between py-4">
+                    <div className="flex items-center gap-3">
+                      <FileIcon className="text-muted-foreground h-5 w-5" />
+                      <div>
+                        <p className="text-sm font-medium">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {(selectedFile.size / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(undefined)}
-                    disabled={isImporting}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedFile(undefined)}
+                      disabled={isImporting}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+                {selectedFile && useSmartAi && (
+                  <AiFileAnalysisPanel
+                    file={selectedFile}
+                    mode="invoices"
+                    onFileCorrected={(correctedFile) =>
+                      setSelectedFile(correctedFile)
+                    }
+                    onError={() => {
+                      // We keep IA active even on error, just show the help help
+                    }}
+                  />
+                )}
+              </>
             )}
 
             {/* File Format Info */}
@@ -390,6 +496,19 @@ export function ImportInvoicesModal({
                 </div>
               </CardContent>
             </Card>
+
+            <div className="border-primary/20 bg-primary/10 flex items-center space-x-2 rounded-lg border p-3">
+              <div className="flex flex-col">
+                <span className="text-primary flex items-center gap-1 text-sm font-semibold">
+                  <Sparkles className="h-3 w-3 animate-pulse" />
+                  IA Smart Auto-Fix : Activée
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  L&apos;IA analysera automatiquement le fichier pour mapper les
+                  colonnes intelligemment.
+                </span>
+              </div>
+            </div>
           </div>
         )}
 

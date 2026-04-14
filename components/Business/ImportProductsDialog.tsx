@@ -9,10 +9,13 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
+import { AiFileAnalysisPanel } from '@/components/reusable/AiFileAnalysisPanel';
+
 import {
   Dialog,
   DialogContent,
@@ -35,15 +38,15 @@ const ACCEPTED_FILE_TYPES = new Set([
   'text/csv',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/pdf',
 ]);
 
-const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx'];
+const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx', '.pdf'];
 
 const isValidFile = (file: File): boolean => {
   if (ACCEPTED_FILE_TYPES.has(file.type)) {
     return true;
   }
-
   const fileName = file.name.toLowerCase();
   return ACCEPTED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
 };
@@ -56,22 +59,17 @@ export function ImportProductsDialog({
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [dragActive, setDragActive] = useState(false);
+  const [useSmartAi] = useState(true); // always true, AI is always active
   const [importResult, setImportResult] = useState<
-    | {
-        imported: number;
-        failed: number;
-        errors: string[];
-      }
-    | undefined
+    { imported: number; failed: number; errors: string[] } | undefined
   >();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessProducts;
 
-  // Handle dialog open/close to reset state when closing
+  // Handle dialog open/close
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      // Reset file and import state when dialog closes
       setSelectedFile(undefined);
       setImportResult(undefined);
       setDragActive(false);
@@ -80,15 +78,20 @@ export function ImportProductsDialog({
   };
 
   const mutation = useMutation({
-    mutationFn: (file: File) =>
-      ProductsService.importProducts(file, businessId),
+    mutationFn: (file: File) => {
+      if (file.type === 'application/pdf') {
+        return ProductsService.importProductsAi(file, businessId);
+      }
+      if (useSmartAi) {
+        return ProductsService.importProductsSmart(file, businessId);
+      }
+      return ProductsService.importProducts(file, businessId);
+    },
     onSuccess: (result) => {
       setImportResult(result);
-      // Invalidate all product queries for this business to refresh the list
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId],
       });
-      // Also invalidate products query used in invoice creation
       queryClient.invalidateQueries({
         queryKey: ['products', businessId],
       });
@@ -106,11 +109,8 @@ export function ImportProductsDialog({
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // Always reset input value so re-selecting same file triggers onChange
     event.target.value = '';
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     if (isValidFile(file)) {
       setSelectedFile(file);
@@ -138,9 +138,7 @@ export function ImportProductsDialog({
     setDragActive(false);
 
     const file = e.dataTransfer.files?.[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     if (isValidFile(file)) {
       setSelectedFile(file);
@@ -156,7 +154,6 @@ export function ImportProductsDialog({
       toast.error(t.importSelectFile || 'Please select a file to import');
       return;
     }
-
     mutation.mutate(selectedFile);
   };
 
@@ -283,7 +280,7 @@ export function ImportProductsDialog({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.xls,.xlsx"
+                accept=".csv,.xls,.xlsx,.pdf"
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={mutation.isPending}
@@ -291,28 +288,42 @@ export function ImportProductsDialog({
             </div>
 
             {selectedFile && (
-              <Card className="bg-muted/30">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
-                    <FileIcon className="text-muted-foreground h-5 w-5" />
-                    <div>
-                      <p className="text-sm font-medium">{selectedFile.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(selectedFile.size / 1024).toFixed(2)} KB
-                      </p>
+              <>
+                <Card className="bg-muted/30">
+                  <CardContent className="flex items-center justify-between py-4">
+                    <div className="flex items-center gap-3">
+                      <FileIcon className="text-muted-foreground h-5 w-5" />
+                      <div>
+                        <p className="text-sm font-medium">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {(selectedFile.size / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(undefined)}
-                    disabled={mutation.isPending}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedFile(undefined)}
+                      disabled={mutation.isPending}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+                <AiFileAnalysisPanel
+                  file={selectedFile}
+                  mode="products"
+                  onFileCorrected={(correctedFile) =>
+                    setSelectedFile(correctedFile)
+                  }
+                  onError={() => {
+                    // Keep AI active, just show the error help in the panel
+                  }}
+                />
+              </>
             )}
 
             <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30">
@@ -326,6 +337,9 @@ export function ImportProductsDialog({
                     <ul className="space-y-1 text-xs">
                       <li>• CSV (.csv)</li>
                       <li>• Excel (.xls, .xlsx)</li>
+                      <li>
+                        • PDF (.pdf) - <strong>AI Powered Extraction!</strong>
+                      </li>
                     </ul>
                     <p className="mt-2 text-xs font-semibold">
                       {t.importRequiredColumnsTitle || 'Required columns'}
@@ -338,6 +352,19 @@ export function ImportProductsDialog({
                 </div>
               </CardContent>
             </Card>
+
+            <div className="border-primary/20 bg-primary/10 flex items-center space-x-2 rounded-lg border p-3">
+              <div className="flex flex-col">
+                <span className="text-primary flex items-center gap-1 text-sm font-semibold">
+                  <Sparkles className="h-3 w-3 animate-pulse" />
+                  IA Smart Auto-Fix : Activée
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  L&apos;IA analysera automatiquement le fichier pour mapper les
+                  données intelligemment.
+                </span>
+              </div>
+            </div>
           </div>
         )}
 

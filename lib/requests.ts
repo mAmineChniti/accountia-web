@@ -118,6 +118,7 @@ export const API_CONFIG = {
     UPDATE: 'products/{id}',
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
+    IMPORT_SMART: 'products/import-smart',
   },
   INVOICES: {
     // Issuer Endpoints
@@ -127,7 +128,9 @@ export const API_CONFIG = {
     UPDATE_ISSUED: 'invoices/issued/{id}',
     TRANSITION: 'invoices/issued/{id}/transition',
     IMPORT: 'invoices/import',
+    IMPORT_SMART: 'invoices/import-smart',
     IMPORT_TEMPLATE: 'invoices/import/template',
+    AI_EXTRACT: 'invoices/ai-extract',
     // Recipient Endpoints
     LIST_RECEIVED_BUSINESS: 'invoices/received/business',
     LIST_RECEIVED_INDIVIDUAL: 'invoices/received/individual',

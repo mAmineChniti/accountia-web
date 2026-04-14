@@ -215,7 +215,7 @@ export function CreateBusinessInvoicePage({
         </div>
       </div>
 
-      {/* Import Button */}
+      {/* Import Buttons */}
       <div className="flex gap-2">
         <Button
           type="button"
@@ -225,7 +225,7 @@ export function CreateBusinessInvoicePage({
           disabled={isCreating}
         >
           <Upload className="mr-2 h-4 w-4" />
-          {t.importInvoices || 'Import from File'}
+          {t.importInvoices || 'Import Bulk Invoices'}
         </Button>
       </div>
 

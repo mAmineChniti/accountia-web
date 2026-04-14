@@ -245,4 +245,46 @@ export const InvoicesService = {
       return handleServiceError(error);
     }
   },
+  // 12. Extract Invoice data via AI
+  async extractAiInvoice(file: File, businessId: string): Promise<unknown> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.INVOICES.AI_EXTRACT, {
+          body: formData,
+          searchParams,
+          timeout: 60_000,
+        })
+        .json<unknown>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  // 13. Smart Bulk Import with AI Correction
+  async importInvoicesSmart(
+    file: File,
+    businessId: string
+  ): Promise<BulkImportInvoicesResponseDto> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.INVOICES.IMPORT_SMART, {
+          body: formData,
+          searchParams,
+          timeout: 60_000, // AI mapping might take some time
+        })
+        .json<BulkImportInvoicesResponseDto>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
 };

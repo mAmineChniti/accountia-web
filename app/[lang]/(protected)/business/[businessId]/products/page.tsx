@@ -9,5 +9,11 @@ export default async function BusinessProductsPage({
 }) {
   const { lang, businessId } = await params;
   const dictionary = await getDictionary(lang);
-  return <BusinessProducts businessId={businessId} dictionary={dictionary} />;
+  return (
+    <BusinessProducts
+      businessId={businessId}
+      dictionary={dictionary}
+      lang={lang}
+    />
+  );
 }

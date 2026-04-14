@@ -98,11 +98,13 @@ export interface ReceivedInvoiceListResponse {
 }
 
 export interface BulkImportResultItem {
-  itemNumber: number;
-  success: boolean;
-  message: string;
-  itemId?: string;
-  errors?: string[];
+  invoiceNumber?: string;
+  invoiceId?: string;
+  status: 'success' | 'error' | 'warning';
+  message?: string;
+  warnings?: string[];
+  lineItemsCount?: number;
+  totalAmount?: number;
 }
 
 export interface BulkImportInvoicesResponseDto {
@@ -111,9 +113,10 @@ export interface BulkImportInvoicesResponseDto {
   failedCount: number;
   warningCount: number;
   results: BulkImportResultItem[];
-  importStartedAt: string;
-  importCompletedAt: string;
-  processingTimeMs: number;
+  generalErrors?: string[];
+  importStartedAt?: string;
+  importCompletedAt?: string;
+  processingTimeMs?: number;
 }
 
 export type InvoiceResponseDto = InvoiceResponse;
