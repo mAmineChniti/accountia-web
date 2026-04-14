@@ -18,7 +18,11 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_BACKEND: z.url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
-    NEXT_PUBLIC_MOCK_INVOICE_PAYMENTS: z.string().optional(),
+    NEXT_PUBLIC_MOCK_INVOICE_PAYMENTS: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform((v) => v === 'true')
+      .pipe(z.boolean().default(false)),
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
 

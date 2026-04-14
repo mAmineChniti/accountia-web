@@ -407,6 +407,15 @@
       "importWarningMessage": "Import completed with {count} warning(s). Review details below.",
       "importFailureMessage": "Import failed: {count} invoice(s) could not be imported.",
       "warningsLabel": "Warnings",
+      "importFailed": "Import Failed",
+      "importPartialTitle": "Import Partially Completed",
+      "importFailedDetailsTitle": "Failed rows details (first 5)",
+      "importPartialSuccess": "Successfully imported {count} invoices ({failed} failed)",
+      "rowPrefix": "Row {n}",
+      "importPartialDescription": "The import has finished, but some rows had issues. Review the details below.",
+      "importFailedDescription": "No invoices were imported. Review the failed rows and try again.",
+      "importSuccessDescription": "Your invoices have been imported successfully",
+      "importCompletedLabel": "Import Completed",
       "dragDropText": "Drag and drop your file here",
       "dragDropSubText": "or click to browse",
       "browseButton": "Browse Files",
@@ -414,6 +423,7 @@
       "csvFormat": "CSV (.csv)",
       "excelFormat": "Excel (.xls, .xlsx)",
       "fileRequirements": "Required columns: invoiceNumber, recipientType, issuedDate, dueDate. Optional: recipientPlatformId, recipientEmail, recipientDisplayName, and line item details.",
+      "productIdsRequiredNote": "For invoice import, fill productIds with valid product IDs. productNames alone may not be enough for the importer to match line items.",
       "requiredColumnsLabel": "Required columns:",
       "requiredColumnsList": "invoiceNumber, recipientType, issuedDate, dueDate",
       "optionalColumnsLabel": "Optional columns:",
@@ -461,7 +471,22 @@
         "loadingForm": "Loading payment form...",
         "receiptInvoice": "Invoice",
         "receiptFrom": "From",
-        "receiptDate": "Date"
+        "receiptDate": "Date",
+        "demoCardLabel": "Select a demo card",
+        "demoCardSuccess": "Success Card (Stripe Test)",
+        "demoCardDeclined": "Declined Card (Stripe Test)",
+        "demoCardExpired": "Expired Card (Stripe Test)",
+        "useThisCard": "Use this card",
+        "validation": {
+          "nameRequired": "Cardholder name is required",
+          "numberInvalid": "Invalid card number (16 digits)",
+          "expiryInvalid": "Invalid expiry (MM/YY)",
+          "cvcInvalid": "Invalid CVC",
+          "countryRequired": "Country is required"
+        },
+        "verificationFailed": "Payment verification failed. Please check your status later.",
+        "errorVerifying": "Error verifying payment",
+        "verifyingPayment": "Verifying payment..."
       },
       "statusTransition": {
         "confirmTitle": "Are you sure?",
@@ -500,6 +525,18 @@
       "website": "Website",
       "created": "Created",
       "lastUpdated": "Last Updated",
+      "stripe": {
+        "title": "Stripe Connect",
+        "description": "Connect your Stripe account to receive invoice payments directly.",
+        "verifyError": "Unable to verify Stripe status.",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "connectHint": "Connect Stripe to start receiving payments.",
+        "preparingLink": "Preparing link...",
+        "updateSetup": "Update Stripe setup",
+        "connectStripe": "Connect Stripe",
+        "account": "Account"
+      },
       "createInvoiceButton": "Create Invoice",
       "statistics": "Business Statistics",
       "statisticsDescription": "Products and invoices overview for your business",
@@ -566,7 +603,20 @@
         "sold": "sold",
         "revenueSummary": "Revenue Summary",
         "byInvoiceStatus": "By Invoice Status",
-        "lastUpdated": "Last updated"
+        "lastUpdated": "Last updated",
+        "stockInsightsTitle": "AI Stock Insights",
+        "stockInsightsDescription": "Local AI (no external API): stockout risk and reorder recommendations",
+        "highRiskProducts": "High risk products",
+        "mediumRiskProducts": "Medium risk products",
+        "lowRiskProducts": "Low risk products",
+        "recommendedReorderUnits": "Recommended reorder units",
+        "stockLabel": "Stock",
+        "soldLastPeriod": "Sold ({days}d)",
+        "dailyRate": "Daily rate",
+        "recommendationLabel": "Recommendation",
+        "reorderLabel": "Reorder",
+        "noStockInsights": "No stock insights available yet.",
+        "stockInsightsError": "Failed to load stock insights."
       },
       "errorLoading": "Failed to load clients",
       "clientDetailsTitle": "Client Details",
@@ -676,7 +726,32 @@
       "importRequiredColumnsList": "name, description, unitPrice, cost, quantity",
       "importCompleteTitle": "Import Complete",
       "importCompleteDescription": "Your products have been imported. Review the summary below.",
-      "closeLabel": "Close"
+      "closeLabel": "Close",
+      "tabs": {
+        "list": "List",
+        "insights": "AI Insights"
+      },
+      "stockInsights": {
+        "title": "AI Stock Insights",
+        "description": "Local AI operational board for stockout risk, reorder planning, and weekly purchasing priorities.",
+        "lastUpdated": "Updated: {date}",
+        "emptyState": "No stock insights available for this business yet.",
+        "errorState": "Failed to load stock insights.",
+        "criticalReorders": "Critical reorders",
+        "immediateAction": "Immediate action",
+        "thisWeekQueue": "This week queue",
+        "planPurchasing": "Plan purchasing cycle",
+        "healthyProducts": "Healthy products",
+        "noUrgentReorder": "No urgent reorder",
+        "riskExposure": "Risk exposure",
+        "unitsToReorder": "+ {count} units to reorder",
+        "stockoutTimeline": "Stockout timeline",
+        "horizon": "horizon {days}d",
+        "noStockoutTrend": "No stockout trend",
+        "days": "{days} days",
+        "actionQueue": "Action queue",
+        "prioritizedByAi": "Prioritized by AI"
+      }
     }
   },
   "errorMessages": {
@@ -729,7 +804,8 @@
     "cannotUnassignBusinessOwner": "Cannot unassign business owner",
     "platformAdminCannotDeleteOwner": "Platform admins cannot delete platform owners",
     "adminAccountsCannotSelfDelete": "Admin accounts cannot be deleted via self-service",
-    "noUpdateFieldsProvided": "No update fields provided"
+    "noUpdateFieldsProvided": "No update fields provided",
+    "invalidCurrency": "The currency of this invoice is not accepted by your payment account. Use a supported currency (EUR/USD) or configure conversion."
   },
   "tooltips": {
     "aiInsights": "Learn more about AI-powered insights",

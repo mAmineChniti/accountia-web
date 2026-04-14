@@ -90,9 +90,11 @@ export function Business({
   const connectStripeMutation = useMutation({
     mutationFn: () => BusinessService.getStripeOnboardingLink(businessId),
     onSuccess: (data) => {
-      toast.success(data.message || 'Stripe onboarding link generated');
       if (data.onboardingUrl) {
+        toast.success(data.message || 'Stripe onboarding link generated');
         globalThis.location.assign(data.onboardingUrl);
+      } else {
+        toast.error('Failed to generate onboarding link');
       }
     },
     onError: (mutationError) => {

@@ -113,7 +113,7 @@ export function localizeErrorMessage(
     lowerMessage.includes('invalid currency') ||
     lowerMessage.includes('unsupported invoice currency')
   ) {
-    return "La devise de cette facture n'est pas acceptée par votre compte de paiement. Utilisez une devise supportée (EUR/USD) ou configurez la conversion.";
+    return dictionary.errorMessages.invalidCurrency ?? fallback;
   }
 
   const messageKey = ERROR_MESSAGE_TO_KEY[message as ErrorMessageKey];

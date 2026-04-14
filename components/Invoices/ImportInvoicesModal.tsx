@@ -61,7 +61,6 @@ export function ImportInvoicesModal({
   businessId,
 }: ImportInvoicesModalProps) {
   const t = dictionary.pages.invoices;
-  const tAny = t as Record<string, string | undefined>;
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [dragActive, setDragActive] = useState(false);
@@ -100,7 +99,7 @@ export function ImportInvoicesModal({
       // Handle warnings: keep modal open for review
       if (data.warningCount > 0) {
         const warningMessage = (
-          tAny.importWarningMessage ||
+          t.importWarningMessage ||
           'Import completed with {count} warning(s). Review details below.'
         ).replace('{count}', data.warningCount.toString());
         toast.warning(warningMessage);
@@ -110,7 +109,7 @@ export function ImportInvoicesModal({
       // Handle failures: show error if all rows failed
       if (data.successCount === 0 && data.failedCount > 0) {
         const failureMessage = (
-          tAny.importFailureMessage ||
+          t.importFailureMessage ||
           'Import failed: {count} invoice(s) could not be imported.'
         ).replace('{count}', data.failedCount.toString());
         toast.error(failureMessage);
@@ -121,7 +120,7 @@ export function ImportInvoicesModal({
       const successMessage =
         data.failedCount > 0
           ? `Successfully imported ${data.successCount} invoices (${data.failedCount} failed)`
-          : tAny.importSuccessMessage ||
+          : t.importSuccessMessage ||
             `Successfully imported ${data.successCount} invoices`;
       toast.success(successMessage);
     },
@@ -129,7 +128,7 @@ export function ImportInvoicesModal({
       const errorMessage = localizeErrorMessage(
         error,
         dictionary,
-        tAny.importErrorMessage || 'Failed to import invoices'
+        t.importErrorMessage || 'Failed to import invoices'
       );
       toast.error(errorMessage);
     },
@@ -243,8 +242,8 @@ export function ImportInvoicesModal({
             <div className="space-y-2 text-center">
               <p className="text-lg font-semibold">
                 {importStatus === 'failed'
-                  ? tAny.importFailed || 'Import Failed'
-                  : tAny.importSuccess || 'Import Completed'}
+                  ? t.importFailed || 'Import Failed'
+                  : t.importSuccess || 'Import Completed'}
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-green-50 dark:bg-green-950/30">
@@ -254,7 +253,7 @@ export function ImportInvoicesModal({
                         {result.successCount}
                       </div>
                       <div className="text-sm text-green-700 dark:text-green-300">
-                        {tAny.importedLabel || 'Imported'}
+                        {t.importedLabel || 'Imported'}
                       </div>
                     </div>
                   </CardContent>
@@ -268,7 +267,7 @@ export function ImportInvoicesModal({
                           {result.failedCount}
                         </div>
                         <div className="text-sm text-red-700 dark:text-red-300">
-                          {tAny.failedLabel || 'Failed'}
+                          {t.failedLabel || 'Failed'}
                         </div>
                       </div>
                     </CardContent>
@@ -283,7 +282,7 @@ export function ImportInvoicesModal({
                           {result.warningCount}
                         </div>
                         <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                          {tAny.warningsLabel || 'Warnings'}
+                          {t.warningsLabel || 'Warnings'}
                         </div>
                       </div>
                     </CardContent>
@@ -295,7 +294,7 @@ export function ImportInvoicesModal({
                 <Card className="border-red-200 bg-red-50 text-left dark:border-red-900 dark:bg-red-950/20">
                   <CardContent className="space-y-2 pt-4">
                     <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                      {tAny.importFailedDetailsTitle ||
+                      {t.importFailedDetailsTitle ||
                         'Failed rows details (first 5)'}
                     </p>
                     <div className="space-y-1 text-xs text-red-800 dark:text-red-200">
@@ -457,7 +456,7 @@ export function ImportInvoicesModal({
                         'Recipient type rules: PLATFORM_BUSINESS requires platformId, PLATFORM_INDIVIDUAL/EXTERNAL requires email. EXTERNAL also requires displayName.'}
                     </p>
                     <p className="mt-2 text-xs text-blue-700 dark:text-blue-200">
-                      {tAny.productIdsRequiredNote ||
+                      {t.productIdsRequiredNote ||
                         'For invoice import, fill productIds with valid product IDs. productNames alone may not be enough for the importer to match line items.'}
                     </p>
                   </div>
@@ -487,12 +486,12 @@ export function ImportInvoicesModal({
               {isImporting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {tAny.importingLabel || 'Importing...'}
+                  {t.importingLabel || 'Importing...'}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  {tAny.importButton || 'Import'}
+                  {t.importButton || 'Import'}
                 </>
               )}
             </Button>

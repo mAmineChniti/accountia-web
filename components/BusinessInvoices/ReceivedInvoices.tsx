@@ -136,20 +136,16 @@ export function ReceivedInvoices({
     doc.setFontSize(16);
     doc.setTextColor(50);
     doc.text(
-      `${(t as Record<string, string>).invoiceDetailsTitle || 'Receipt'} #${invoiceDetails.invoiceNumber}`,
+      `${t.invoiceDetailsTitle || 'Receipt'} #${invoiceDetails.invoiceNumber}`,
       14,
       30
     );
 
     doc.setFontSize(10);
     doc.setTextColor(100);
+    doc.text(`${t.statusLabel || 'Status'}: ${invoiceDetails.status}`, 14, 38);
     doc.text(
-      `${(t as Record<string, string>).statusLabel || 'Status'}: ${invoiceDetails.status}`,
-      14,
-      38
-    );
-    doc.text(
-      `${(t as Record<string, string>).issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      `${t.issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
       14,
       44
     );
@@ -157,10 +153,10 @@ export function ReceivedInvoices({
     // Line items
     if (invoiceDetails.lineItems && invoiceDetails.lineItems.length > 0) {
       const tableColumn = [
-        (t as Record<string, string>).itemLabel || 'Item',
-        (t as Record<string, string>).quantityLabel || 'Qty',
-        (t as Record<string, string>).priceLabel || 'Price',
-        (t as Record<string, string>).totalLabel || 'Total',
+        t.itemLabel || 'Item',
+        t.quantityLabel || 'Qty',
+        t.priceLabel || 'Price',
+        t.totalLabel || 'Total',
       ];
       const tableRows: Array<string | number>[] = [];
 
@@ -192,7 +188,7 @@ export function ReceivedInvoices({
     // @ts-expect-error - required by library
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
     doc.text(
-      `${(t as Record<string, string>).amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+      `${t.amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
       14,
       finalY + 15
     );
@@ -541,8 +537,7 @@ export function ReceivedInvoices({
               <DialogTitle className="text-2xl font-bold tracking-tight">
                 {isLoadingDetails
                   ? 'Loading...'
-                  : (t as Record<string, string>).invoiceDetailsTitle ||
-                    'Invoice Details'}
+                  : t.invoiceDetailsTitle || 'Invoice Details'}
               </DialogTitle>
               <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
                 {invoiceDetails?.invoiceNumber || (
@@ -574,8 +569,7 @@ export function ReceivedInvoices({
                 <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {(t as Record<string, string>).invoiceNumberLabel ||
-                        'Invoice Number'}
+                      {t.invoiceNumberLabel || 'Invoice Number'}
                     </p>
                     <p className="font-mono font-medium">
                       {invoiceDetails.invoiceNumber}
@@ -583,7 +577,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {(t as Record<string, string>).statusLabel || 'Status'}
+                      {t.statusLabel || 'Status'}
                     </p>
                     <Badge
                       className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
@@ -596,7 +590,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {(t as Record<string, string>).amountLabel || 'Amount'}
+                      {t.amountLabel || 'Amount'}
                     </p>
                     <p className="text-primary text-lg font-bold">
                       {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -607,8 +601,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {(t as Record<string, string>).columnIssuedDate ||
-                        'Issued Date'}
+                      {t.columnIssuedDate || 'Issued Date'}
                     </p>
                     <p className="font-medium">
                       {new Date(invoiceDetails.issuedDate).toLocaleDateString(
@@ -623,8 +616,7 @@ export function ReceivedInvoices({
                 {invoiceDetails.description && (
                   <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
                     <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-                      {(t as Record<string, string>).descriptionLabel ||
-                        'Description'}
+                      {t.descriptionLabel || 'Description'}
                     </p>
                     <p className="text-sm leading-relaxed">
                       {invoiceDetails.description}
@@ -637,28 +629,21 @@ export function ReceivedInvoices({
                   invoiceDetails.lineItems.length > 0 && (
                     <div className="space-y-4">
                       <h4 className="text-lg font-semibold tracking-tight">
-                        {(t as Record<string, string>).lineItemsLabel ||
-                          'Line Items'}
+                        {t.lineItemsLabel || 'Line Items'}
                       </h4>
                       <div className="border-border/50 overflow-hidden rounded-xl border shadow-xs">
                         <Table>
                           <TableHeader className="bg-muted/50">
                             <TableRow>
-                              <TableHead>
-                                {(t as Record<string, string>).itemLabel ||
-                                  'Item'}
+                              <TableHead>{t.itemLabel || 'Item'}</TableHead>
+                              <TableHead className="text-right">
+                                {t.quantityLabel || 'Qty'}
                               </TableHead>
                               <TableHead className="text-right">
-                                {(t as Record<string, string>).quantityLabel ||
-                                  'Qty'}
+                                {t.priceLabel || 'Price'}
                               </TableHead>
                               <TableHead className="text-right">
-                                {(t as Record<string, string>).priceLabel ||
-                                  'Price'}
-                              </TableHead>
-                              <TableHead className="text-right">
-                                {(t as Record<string, string>).totalLabel ||
-                                  'Total'}
+                                {t.totalLabel || 'Total'}
                               </TableHead>
                             </TableRow>
                           </TableHeader>
@@ -692,8 +677,7 @@ export function ReceivedInvoices({
                       <div className="flex justify-end pt-4">
                         <div className="bg-primary/5 border-primary/10 flex items-center justify-between gap-12 rounded-xl border px-6 py-4">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-                            {(t as Record<string, string>).amountLabel ||
-                              'Total'}
+                            {t.amountLabel || 'Total'}
                           </span>
                           <span className="text-primary text-2xl font-bold">
                             {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -710,8 +694,7 @@ export function ReceivedInvoices({
               </div>
             ) : (
               <p className="text-muted-foreground">
-                {(t as Record<string, string>).fetchError ||
-                  'Failed to load invoice details'}
+                {t.fetchError || 'Failed to load invoice details'}
               </p>
             )}
           </div>

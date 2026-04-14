@@ -66,7 +66,11 @@ export default function BusinessStatistics({
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  const { data: stockInsights, isLoading: stockInsightsLoading } = useQuery({
+  const {
+    data: stockInsights,
+    isLoading: stockInsightsLoading,
+    isError: stockInsightsError,
+  } = useQuery({
     queryKey: ['product-stock-insights', businessId],
     queryFn: () => ProductsService.getStockInsights(businessId),
     staleTime: 5 * 60 * 1000,
@@ -773,10 +777,12 @@ export default function BusinessStatistics({
 
             <Card className="bg-card/90 border-0 shadow-sm xl:col-span-12">
               <CardHeader>
-                <CardTitle className="text-base">AI Stock Insights</CardTitle>
+                <CardTitle className="text-base">
+                  {text.stockInsightsTitle || 'AI Stock Insights'}
+                </CardTitle>
                 <CardDescription>
-                  Local AI (no external API): stockout risk and reorder
-                  recommendations
+                  {text.stockInsightsDescription ||
+                    'Local AI (no external API): stockout risk and reorder recommendations'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -786,16 +792,21 @@ export default function BusinessStatistics({
                       <Skeleton key={i} className="h-20 w-full" />
                     ))}
                   </div>
+                ) : stockInsightsError ? (
+                  <p className="text-destructive text-sm">
+                    {text.stockInsightsError ||
+                      'Failed to load stock insights.'}
+                  </p>
                 ) : !stockInsights || stockInsights.items.length === 0 ? (
                   <p className="text-muted-foreground text-sm">
-                    No stock insights available yet.
+                    {text.noStockInsights || 'No stock insights available yet.'}
                   </p>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                       <div className="rounded-lg border p-3">
                         <p className="text-muted-foreground text-xs">
-                          High risk products
+                          {text.highRiskProducts || 'High risk products'}
                         </p>
                         <p className="text-xl font-semibold">
                           {stockInsights.summary.highRiskCount}
@@ -803,7 +814,7 @@ export default function BusinessStatistics({
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-muted-foreground text-xs">
-                          Medium risk products
+                          {text.mediumRiskProducts || 'Medium risk products'}
                         </p>
                         <p className="text-xl font-semibold">
                           {stockInsights.summary.mediumRiskCount}
@@ -811,7 +822,7 @@ export default function BusinessStatistics({
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-muted-foreground text-xs">
-                          Low risk products
+                          {text.lowRiskProducts || 'Low risk products'}
                         </p>
                         <p className="text-xl font-semibold">
                           {stockInsights.summary.lowRiskCount}
@@ -819,7 +830,8 @@ export default function BusinessStatistics({
                       </div>
                       <div className="rounded-lg border p-3">
                         <p className="text-muted-foreground text-xs">
-                          Recommended reorder units
+                          {text.recommendedReorderUnits ||
+                            'Recommended reorder units'}
                         </p>
                         <p className="text-xl font-semibold">
                           {stockInsights.summary.totalRecommendedUnits}
@@ -836,16 +848,24 @@ export default function BusinessStatistics({
                           <div>
                             <p className="font-medium">{item.productName}</p>
                             <p className="text-muted-foreground text-xs">
-                              Stock: {item.currentQuantity} | Sold (
-                              {stockInsights.lookbackDays}d):{' '}
-                              {item.soldLastPeriod} | Daily rate:{' '}
+                              {text.stockLabel || 'Stock'}:{' '}
+                              {item.currentQuantity} |{' '}
+                              {(
+                                text.soldLastPeriod || 'Sold ({days}d)'
+                              ).replace(
+                                '{days}',
+                                stockInsights.lookbackDays.toString()
+                              )}
+                              : {item.soldLastPeriod} |{' '}
+                              {text.dailyRate || 'Daily rate'}:{' '}
                               {item.dailySalesRate}
                             </p>
                             <p className="text-muted-foreground text-xs">
                               {item.reason}
                             </p>
                             <p className="text-xs font-medium">
-                              Recommendation: {item.recommendation}
+                              {text.recommendationLabel || 'Recommendation'}:{' '}
+                              {item.recommendation}
                             </p>
                           </div>
 
@@ -862,7 +882,8 @@ export default function BusinessStatistics({
                               {item.riskLevel}
                             </span>
                             <span className="text-muted-foreground text-xs">
-                              Reorder: {item.recommendedReorderQuantity}
+                              {text.reorderLabel || 'Reorder'}:{' '}
+                              {item.recommendedReorderQuantity}
                             </span>
                           </div>
                         </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   EmbeddedCheckout,
@@ -116,20 +116,6 @@ const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
   'DISPUTED',
 ]);
 
-const formatCardNumber = (value: string): string => {
-  const digits = value.replaceAll(/\D/g, '').slice(0, 16);
-  return digits.replaceAll(/(.{4})/g, '$1 ').trim();
-};
-
-const formatExpiry = (value: string): string => {
-  const digits = value.replaceAll(/\D/g, '').slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-};
-
-const formatCvc = (value: string): string =>
-  value.replaceAll(/\D/g, '').slice(0, 4);
-
 const stripePublishableKey = env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripePublishableKey
   ? loadStripe(stripePublishableKey)
@@ -156,39 +142,9 @@ export default function Invoices({
   const [mockPaymentInvoice, setMockPaymentInvoice] = useState<
     InvoiceReceiptResponseDto | undefined
   >();
-  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const [paidInvoiceReceipt, setPaidInvoiceReceipt] = useState<
-    InvoiceReceiptResponseDto | undefined
-  >();
+  const queryClient = useQueryClient();
   const [showMockConfirm, setShowMockConfirm] = useState(false);
-  // Keep as false initially - useEffect (client-only) will set it to true
-  // if we're coming back from a Stripe payment redirect
-  const [showStripeConfirm, setShowStripeConfirm] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(globalThis.location.search);
-    if (params.get('payment') !== 'success') return;
-
-    // Recover invoice data saved before Stripe redirect
-    const stored = sessionStorage.getItem('pending_payment_invoice');
-    let recovered: InvoiceReceiptResponseDto | undefined;
-    if (stored) {
-      try {
-        recovered = JSON.parse(stored) as InvoiceReceiptResponseDto;
-      } catch {
-        // ignore parse error
-      }
-      sessionStorage.removeItem('pending_payment_invoice');
-    }
-
-    queueMicrotask(() => {
-      if (recovered) setPaidInvoiceReceipt(recovered);
-      setShowStripeConfirm(true);
-    });
-
-    // Clean up URL
-    globalThis.history.replaceState({}, '', globalThis.location.pathname);
-  }, []);
   const [mockPaymentForm, setMockPaymentForm] = useState({
     cardholderName: '',
     cardNumber: '',
@@ -223,46 +179,29 @@ export default function Invoices({
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
+  // Handle successful verification
+  // useEffect de vérification supprimé car plus nécessaire
+
+  // Handle verification error
+  // useEffect d'erreur de vérification supprimé car plus nécessaire
+
   const invoices = useMemo(
     () => invoicesData?.receipts ?? [],
     [invoicesData?.receipts]
   );
 
   const { mutate: startCheckout, isPending: isStartingCheckout } = useMutation({
-    mutationFn: (invoice: InvoiceReceiptResponseDto) =>
-      InvoicesService.createIndividualCheckoutSession(invoice.id, {
-        successUrl: `${globalThis.location.origin}/${lang}/invoices?payment=success`,
-        cancelUrl: `${globalThis.location.origin}/${lang}/invoices?payment=cancelled`,
-      }),
-    onSuccess: (data, invoice) => {
-      if (!data.clientSecret) {
-        if (data.checkoutUrl) {
-          globalThis.location.assign(data.checkoutUrl);
-          return;
-        }
-        toast.error(t.fetchError || 'Unable to start payment');
-        return;
-      }
-      if (!stripePublishableKey || !stripePromise) {
-        toast.error(
-          'Stripe publishable key is missing in the frontend configuration.'
-        );
-        return;
-      }
-
+    mutationFn: async (invoice: InvoiceReceiptResponseDto) => {
+      // Appel du backend pour obtenir la session Stripe
+      return InvoicesService.createIndividualCheckoutSession(invoice.id);
+    },
+    onSuccess: async (data) => {
+      // Stripe Embedded Checkout gère l'affichage du succès/échec
       setSelectedInvoice(undefined);
-      // Save invoice to sessionStorage before Stripe redirects away
-      sessionStorage.setItem(
-        'pending_payment_invoice',
-        JSON.stringify(invoice)
-      );
-      setPaymentInvoiceLabel(
-        `${invoice.invoiceNumber} • ${invoice.totalAmount.toLocaleString(lang, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} ${invoice.currency}`
-      );
-      setPaymentClientSecret(data.clientSecret);
+      setPaymentInvoiceLabel('');
+      setPaymentClientSecret(data.clientSecret ?? '');
+      // Invalider la requête pour rafraîchir la liste
+      await queryClient.invalidateQueries({ queryKey: ['received-invoices'] });
     },
     onError: (error: unknown) => {
       toast.error(localizeErrorMessage(error, dictionary, t.fetchError));
@@ -286,8 +225,6 @@ export default function Invoices({
         );
       },
       onSuccess: () => {
-        setPaidInvoiceReceipt(mockPaymentInvoice);
-        setShowPaymentSuccess(true);
         setMockPaymentInvoice(undefined);
         setMockPaymentForm({
           cardholderName: '',
@@ -319,24 +256,27 @@ export default function Invoices({
       country: '',
     };
 
+    const v = t.payment.validation;
+
     if (!mockPaymentForm.cardholderName.trim()) {
-      errors.cardholderName = 'Nom du titulaire requis';
+      errors.cardholderName = v?.nameRequired || 'Nom du titulaire requis';
     }
 
     if (!/^\d{4}(?:\s\d{4}){3}$/.test(mockPaymentForm.cardNumber)) {
-      errors.cardNumber = 'Numéro de carte invalide (16 chiffres)';
+      errors.cardNumber =
+        v?.numberInvalid || 'Numéro de carte invalide (16 chiffres)';
     }
 
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(mockPaymentForm.expiry)) {
-      errors.expiry = 'Date invalide (MM/AA)';
+      errors.expiry = v?.expiryInvalid || 'Date invalide (MM/AA)';
     }
 
     if (!/^\d{3,4}$/.test(mockPaymentForm.cvc)) {
-      errors.cvc = 'CVC invalide';
+      errors.cvc = v?.cvcInvalid || 'CVC invalide';
     }
 
     if (!mockPaymentForm.country.trim()) {
-      errors.country = 'Pays requis';
+      errors.country = v?.countryRequired || 'Pays requis';
     }
 
     setMockPaymentErrors(errors);
@@ -491,9 +431,6 @@ export default function Invoices({
 
       {/* Main Table Card — blurred while awaiting payment confirmation */}
       <div className="relative">
-        {showStripeConfirm && (
-          <div className="bg-background/60 absolute inset-0 z-10 rounded-lg backdrop-blur-sm" />
-        )}
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader className="space-y-4">
             <div>
@@ -920,126 +857,167 @@ export default function Invoices({
             <DialogDescription>{t.payment.completeCardInfo}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 rounded-xl border bg-white p-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold">
-                {t.payment.cardholderName}
+          <div className="space-y-6 rounded-xl border bg-white p-6 shadow-sm">
+            {/* Demo Cards Selection */}
+            <div className="space-y-3">
+              <label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
+                {t.payment.demoCardLabel || 'Select a demo card'}
               </label>
-              <Input
-                value={mockPaymentForm.cardholderName}
-                onChange={(e) =>
-                  setMockPaymentForm((prev) => ({
-                    ...prev,
-                    cardholderName: e.target.value,
-                  }))
-                }
-                placeholder={t.payment.cardholderPlaceholder}
-                className={
-                  mockPaymentErrors.cardholderName ? 'border-red-500' : ''
-                }
-              />
-              {mockPaymentErrors.cardholderName ? (
-                <p className="text-xs text-red-600">
-                  {mockPaymentErrors.cardholderName}
-                </p>
-              ) : undefined}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {[
+                  {
+                    name: t.payment.demoCardSuccess || 'Success Card',
+                    number: '4242 4242 4242 4242',
+                    expiry: '12/29',
+                    cvc: '123',
+                  },
+                  {
+                    name: t.payment.demoCardDeclined || 'Declined Card',
+                    number: '4000 4000 4000 0002',
+                    expiry: '12/29',
+                    cvc: '123',
+                  },
+                  {
+                    name: t.payment.demoCardExpired || 'Expired Card',
+                    number: '4000 4000 4000 0003',
+                    expiry: '01/20',
+                    cvc: '123',
+                  },
+                ].map((card) => (
+                  <Button
+                    key={card.number}
+                    type="button"
+                    variant="outline"
+                    className="hover:border-primary hover:bg-primary/5 flex h-auto flex-col items-start px-4 py-3 transition-all"
+                    onClick={() => {
+                      setMockPaymentForm((prev) => ({
+                        ...prev,
+                        cardNumber: card.number,
+                        expiry: card.expiry,
+                        cvc: card.cvc,
+                      }));
+                    }}
+                  >
+                    <span className="text-sm font-bold">{card.name}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {card.number}
+                    </span>
+                  </Button>
+                ))}
+              </div>
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold">
-                {t.payment.cardInfo}
-              </label>
-              <Input
-                value={mockPaymentForm.cardNumber}
-                onChange={(e) =>
-                  setMockPaymentForm((prev) => ({
-                    ...prev,
-                    cardNumber: formatCardNumber(e.target.value),
-                  }))
-                }
-                placeholder="4242 4242 4242 4242"
-                inputMode="numeric"
-                className={mockPaymentErrors.cardNumber ? 'border-red-500' : ''}
-              />
-              {mockPaymentErrors.cardNumber ? (
-                <p className="text-xs text-red-600">
-                  {mockPaymentErrors.cardNumber}
-                </p>
-              ) : undefined}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="text-muted-foreground bg-white px-2 font-medium">
+                  {t.payment.cardInfo || 'Card Information'}
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <label className="text-sm font-semibold">
-                  {t.payment.expiry}
+                  {t.payment.cardholderName}
                 </label>
                 <Input
-                  value={mockPaymentForm.expiry}
+                  value={mockPaymentForm.cardholderName}
                   onChange={(e) =>
                     setMockPaymentForm((prev) => ({
                       ...prev,
-                      expiry: formatExpiry(e.target.value),
+                      cardholderName: e.target.value,
                     }))
                   }
-                  placeholder="12/29"
-                  inputMode="numeric"
-                  className={mockPaymentErrors.expiry ? 'border-red-500' : ''}
+                  placeholder={t.payment.cardholderPlaceholder}
+                  className={
+                    mockPaymentErrors.cardholderName ? 'border-red-500' : ''
+                  }
                 />
-                {mockPaymentErrors.expiry ? (
+                {mockPaymentErrors.cardholderName ? (
                   <p className="text-xs text-red-600">
-                    {mockPaymentErrors.expiry}
+                    {mockPaymentErrors.cardholderName}
                   </p>
                 ) : undefined}
               </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-semibold">{t.payment.cvc}</label>
-                <Input
-                  value={mockPaymentForm.cvc}
-                  onChange={(e) =>
-                    setMockPaymentForm((prev) => ({
-                      ...prev,
-                      cvc: formatCvc(e.target.value),
-                    }))
-                  }
-                  placeholder="123"
-                  inputMode="numeric"
-                  className={mockPaymentErrors.cvc ? 'border-red-500' : ''}
-                />
-                {mockPaymentErrors.cvc ? (
-                  <p className="text-xs text-red-600">
-                    {mockPaymentErrors.cvc}
-                  </p>
-                ) : undefined}
-              </div>
-            </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold">
-                {t.payment.country}
-              </label>
-              <select
-                value={mockPaymentForm.country}
-                onChange={(e) =>
-                  setMockPaymentForm((prev) => ({
-                    ...prev,
-                    country: e.target.value,
-                  }))
-                }
-                className={`h-10 rounded-md border bg-white px-3 text-sm ${
-                  mockPaymentErrors.country ? 'border-red-500' : 'border-input'
-                }`}
-              >
-                <option value="Tunisie">Tunisie</option>
-                <option value="France">France</option>
-                <option value="Maroc">Maroc</option>
-                <option value="Algérie">Algérie</option>
-                <option value="Canada">Canada</option>
-              </select>
-              {mockPaymentErrors.country ? (
-                <p className="text-xs text-red-600">
-                  {mockPaymentErrors.country}
-                </p>
-              ) : undefined}
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold">
+                  {t.payment.cardInfo}
+                </label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+                  <div className="sm:col-span-2">
+                    <Input
+                      value={mockPaymentForm.cardNumber}
+                      readOnly
+                      placeholder="4242 4242 4242 4242"
+                      className={
+                        mockPaymentErrors.cardNumber ? 'border-red-500' : ''
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      value={mockPaymentForm.expiry}
+                      readOnly
+                      placeholder="12/29"
+                      className={
+                        mockPaymentErrors.expiry ? 'border-red-500' : ''
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      value={mockPaymentForm.cvc}
+                      readOnly
+                      placeholder="123"
+                      className={mockPaymentErrors.cvc ? 'border-red-500' : ''}
+                    />
+                  </div>
+                </div>
+                {(mockPaymentErrors.cardNumber ||
+                  mockPaymentErrors.expiry ||
+                  mockPaymentErrors.cvc) && (
+                  <p className="text-xs text-red-600">
+                    {mockPaymentErrors.cardNumber ||
+                      mockPaymentErrors.expiry ||
+                      mockPaymentErrors.cvc}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold">
+                  {t.payment.country}
+                </label>
+                <select
+                  value={mockPaymentForm.country}
+                  onChange={(e) =>
+                    setMockPaymentForm((prev) => ({
+                      ...prev,
+                      country: e.target.value,
+                    }))
+                  }
+                  className={`focus:ring-primary h-10 rounded-md border bg-white px-3 text-sm focus:ring-2 ${
+                    mockPaymentErrors.country
+                      ? 'border-red-500'
+                      : 'border-input'
+                  }`}
+                >
+                  <option value="Tunisie">Tunisie</option>
+                  <option value="France">France</option>
+                  <option value="Maroc">Maroc</option>
+                  <option value="Algérie">Algérie</option>
+                  <option value="Canada">Canada</option>
+                </select>
+                {mockPaymentErrors.country ? (
+                  <p className="text-xs text-red-600">
+                    {mockPaymentErrors.country}
+                  </p>
+                ) : undefined}
+              </div>
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -1167,148 +1145,6 @@ export default function Invoices({
                   {t.payment.confirmAction}
                 </>
               )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Stripe Post-Payment Confirmation Dialog */}
-      <Dialog
-        open={showStripeConfirm}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowStripeConfirm(false);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mb-4 flex justify-center">
-              <CreditCard className="text-primary h-16 w-16" />
-            </div>
-            <DialogTitle className="text-center text-xl">
-              {t.payment.confirmTitle}
-            </DialogTitle>
-            <DialogDescription className="space-y-1 text-center">
-              <span className="block">{t.payment.confirmQuestionStripe}</span>
-              {paidInvoiceReceipt && (
-                <>
-                  <span className="text-primary block text-lg font-bold">
-                    {paidInvoiceReceipt.totalAmount?.toLocaleString(lang, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{' '}
-                    {paidInvoiceReceipt.currency}
-                  </span>
-                  <span className="block text-sm">
-                    {paidInvoiceReceipt.invoiceNumber}
-                  </span>
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:justify-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowStripeConfirm(false);
-                setPaidInvoiceReceipt(undefined);
-              }}
-            >
-              {t.payment.noConfirm}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setShowStripeConfirm(false);
-                setShowPaymentSuccess(true);
-                void refetch();
-              }}
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {t.payment.confirmActionStripe}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Success / Receipt Dialog */}
-      <Dialog
-        open={showPaymentSuccess}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowPaymentSuccess(false);
-            setPaidInvoiceReceipt(undefined);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mb-2 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-10 w-10 text-green-600" />
-              </div>
-            </div>
-            <DialogTitle className="text-center text-xl text-green-700">
-              {t.payment.successTitle}
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              {t.payment.successDescription}
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Receipt Card */}
-          <div className="bg-muted/30 space-y-3 rounded-xl border p-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t.payment.receiptInvoice}
-              </span>
-              <span className="font-semibold">
-                {paidInvoiceReceipt?.invoiceNumber ?? '—'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t.payment.receiptFrom}
-              </span>
-              <span className="font-semibold">
-                {paidInvoiceReceipt?.issuerBusinessName ?? '—'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t.payment.receiptDate}
-              </span>
-              <span className="font-semibold">
-                {new Date().toLocaleDateString(lang, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-t pt-3">
-              <span className="text-base font-bold">{t.payment.totalPaid}</span>
-              <span className="text-lg font-bold text-green-700">
-                {paidInvoiceReceipt?.totalAmount?.toLocaleString(lang, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) ?? '—'}{' '}
-                {paidInvoiceReceipt?.currency ?? ''}
-              </span>
-            </div>
-          </div>
-
-          <DialogFooter className="sm:justify-center">
-            <Button
-              type="button"
-              onClick={() => {
-                setShowPaymentSuccess(false);
-                setPaidInvoiceReceipt(undefined);
-              }}
-            >
-              {t.payment.close}
             </Button>
           </DialogFooter>
         </DialogContent>

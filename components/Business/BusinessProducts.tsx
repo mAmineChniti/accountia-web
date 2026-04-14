@@ -111,14 +111,17 @@ export function BusinessProducts({
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const { data: stockInsightsData, isLoading: isStockInsightsLoading } =
-    useQuery({
-      queryKey: ['product-stock-insights', businessId],
-      queryFn: () => ProductsService.getStockInsights(businessId),
-      staleTime: 10 * 60 * 1000,
-      gcTime: 60 * 60 * 1000,
-      enabled: Boolean(businessId),
-    });
+  const {
+    data: stockInsightsData,
+    isLoading: isStockInsightsLoading,
+    isError: isStockInsightsError,
+  } = useQuery({
+    queryKey: ['product-stock-insights', businessId],
+    queryFn: () => ProductsService.getStockInsights(businessId),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    enabled: Boolean(businessId),
+  });
 
   const stockInsights = stockInsightsData as StockInsightsResponse | undefined;
 
@@ -268,8 +271,8 @@ export function BusinessProducts({
         p.description.length > 50
           ? p.description.slice(0, 50) + '...'
           : p.description,
-        `${p.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t.currency}`,
-        `${p.cost.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t.currency}`,
+        `${p.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${p.currency}`,
+        `${p.cost.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${p.currency}`,
         p.quantity.toString(),
       ];
       tableRows.push(productData);
@@ -534,13 +537,13 @@ export function BusinessProducts({
                             {product.unitPrice.toLocaleString(lang, {
                               minimumFractionDigits: 2,
                             })}{' '}
-                            {t.currency}
+                            {product.currency}
                           </TableCell>
                           <TableCell className="text-right font-medium text-orange-600 dark:text-orange-400">
                             {product.cost.toLocaleString(lang, {
                               minimumFractionDigits: 2,
                             })}{' '}
-                            {t.currency}
+                            {product.currency}
                           </TableCell>
                           <TableCell className="text-right">
                             <span
@@ -623,17 +626,22 @@ export function BusinessProducts({
           <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
             <CardHeader className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold">AI Stock Insights</h2>
+                <h2 className="text-lg font-semibold">
+                  {t.stockInsights?.title || 'AI Stock Insights'}
+                </h2>
                 {stockInsights && (
                   <span className="text-muted-foreground text-xs">
-                    Updated:{' '}
-                    {new Date(stockInsights.generatedAt).toLocaleString()}
+                    {t.stockInsights?.lastUpdated?.replace(
+                      '{date}',
+                      new Date(stockInsights.generatedAt).toLocaleString(lang)
+                    ) ||
+                      `Updated: ${new Date(stockInsights.generatedAt).toLocaleString()}`}
                   </span>
                 )}
               </div>
               <p className="text-muted-foreground text-sm">
-                Local AI operational board for stockout risk, reorder planning,
-                and weekly purchasing priorities.
+                {t.stockInsights?.description ||
+                  'Local AI operational board for stockout risk, reorder planning, and weekly purchasing priorities.'}
               </p>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -643,56 +651,71 @@ export function BusinessProducts({
                     <Skeleton key={i} className="h-20 w-full" />
                   ))}
                 </div>
+              ) : isStockInsightsError ? (
+                <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
+                  <AlertCircle className="h-5 w-5" />
+                  <p className="text-sm">
+                    {t.stockInsights?.errorState ||
+                      'Failed to load stock insights.'}
+                  </p>
+                </div>
               ) : !stockInsights || prioritizedInsights.length === 0 ? (
                 <p className="text-muted-foreground text-sm">
-                  No stock insights available for this business yet.
+                  {t.stockInsights?.emptyState ||
+                    'No stock insights available for this business yet.'}
                 </p>
               ) : (
                 <>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                     <div className="rounded-xl border bg-red-500/5 p-4">
                       <p className="text-muted-foreground text-xs">
-                        Critical reorders
+                        {t.stockInsights?.criticalReorders ||
+                          'Critical reorders'}
                       </p>
                       <p className="text-2xl font-semibold">
                         {stockInsights.summary.highRiskCount}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Immediate action
+                        {t.stockInsights?.immediateAction || 'Immediate action'}
                       </p>
                     </div>
                     <div className="rounded-xl border bg-amber-500/5 p-4">
                       <p className="text-muted-foreground text-xs">
-                        This week queue
+                        {t.stockInsights?.thisWeekQueue || 'This week queue'}
                       </p>
                       <p className="text-2xl font-semibold">
                         {urgentReorders.length}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Plan purchasing cycle
+                        {t.stockInsights?.planPurchasing ||
+                          'Plan purchasing cycle'}
                       </p>
                     </div>
                     <div className="rounded-xl border bg-emerald-500/5 p-4">
                       <p className="text-muted-foreground text-xs">
-                        Healthy products
+                        {t.stockInsights?.healthyProducts || 'Healthy products'}
                       </p>
                       <p className="text-2xl font-semibold">
                         {stockInsights.summary.lowRiskCount}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        No urgent reorder
+                        {t.stockInsights?.noUrgentReorder ||
+                          'No urgent reorder'}
                       </p>
                     </div>
                     <div className="bg-primary/5 rounded-xl border p-4">
                       <p className="text-muted-foreground text-xs">
-                        Risk exposure
+                        {t.stockInsights?.riskExposure || 'Risk exposure'}
                       </p>
                       <p className="text-2xl font-semibold">
                         {riskExposurePercent.toFixed(1)}%
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        + {stockInsights.summary.totalRecommendedUnits} units to
-                        reorder
+                        {t.stockInsights?.unitsToReorder?.replace(
+                          '{count}',
+                          stockInsights.summary.totalRecommendedUnits.toString()
+                        ) ||
+                          `+ ${stockInsights.summary.totalRecommendedUnits} units to reorder`}
                       </p>
                     </div>
                   </div>
@@ -701,10 +724,14 @@ export function BusinessProducts({
                     <div className="space-y-3 rounded-xl border p-4 xl:col-span-6">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold">
-                          Stockout timeline
+                          {t.stockInsights?.stockoutTimeline ||
+                            'Stockout timeline'}
                         </h3>
                         <span className="text-muted-foreground text-xs">
-                          horizon {stockInsights.planningHorizonDays}d
+                          {t.stockInsights?.horizon?.replace(
+                            '{days}',
+                            stockInsights.planningHorizonDays.toString()
+                          ) || `horizon ${stockInsights.planningHorizonDays}d`}
                         </span>
                       </div>
                       <div className="space-y-3">
@@ -729,8 +756,13 @@ export function BusinessProducts({
                                 </span>
                                 <span className="text-muted-foreground">
                                   {item.estimatedDaysUntilStockout === null
-                                    ? 'No stockout trend'
-                                    : `${item.estimatedDaysUntilStockout} days`}
+                                    ? t.stockInsights?.noStockoutTrend ||
+                                      'No stockout trend'
+                                    : t.stockInsights?.days?.replace(
+                                        '{days}',
+                                        item.estimatedDaysUntilStockout.toString()
+                                      ) ||
+                                      `${item.estimatedDaysUntilStockout} days`}
                                 </span>
                               </div>
                               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
@@ -753,9 +785,12 @@ export function BusinessProducts({
 
                     <div className="space-y-3 rounded-xl border p-4 xl:col-span-6">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold">Action queue</h3>
+                        <h3 className="text-sm font-semibold">
+                          {t.stockInsights?.actionQueue || 'Action queue'}
+                        </h3>
                         <span className="text-muted-foreground text-xs">
-                          Prioritized by AI
+                          {t.stockInsights?.prioritizedByAi ||
+                            'Prioritized by AI'}
                         </span>
                       </div>
                       <div className="space-y-2">
