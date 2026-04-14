@@ -12,6 +12,14 @@ import {
   Package,
   BarChart3,
   ScrollText,
+  Receipt,
+  TrendingUp,
+  ClipboardList,
+  Truck,
+  ShoppingCart,
+  RefreshCw,
+  Users,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -247,11 +255,27 @@ export default function UserSidebar({
                     const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
                     const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
                     const statisticsHref = `/${lang}/business/${business.id}/statistics`;
+                    const expensesHref = `/${lang}/business/${business.id}/expenses`;
+                    const analyticsHref = `/${lang}/business/${business.id}/analytics`;
+                    const reportsHref = `/${lang}/business/${business.id}/reports`;
+                    const vendorsHref = `/${lang}/business/${business.id}/vendors`;
+                    const purchaseOrdersHref = `/${lang}/business/${business.id}/purchase-orders`;
+                    const recurringInvoicesHref = `/${lang}/business/${business.id}/recurring-invoices`;
+                    const membersHref = `/${lang}/business/${business.id}/members`;
+                    const clientPortalHref = `/${lang}/business/${business.id}/client-portal`;
                     const isBusinessActive =
                       pathname === businessHref ||
                       pathname === issuedInvoicesHref ||
                       pathname === receivedInvoicesHref ||
-                      pathname === statisticsHref;
+                      pathname === statisticsHref ||
+                      pathname === expensesHref ||
+                      pathname === analyticsHref ||
+                      pathname === reportsHref ||
+                      pathname === vendorsHref ||
+                      pathname === purchaseOrdersHref ||
+                      pathname === recurringInvoicesHref ||
+                      pathname === membersHref ||
+                      pathname === clientPortalHref;
                     const isExpanded = expandedBusinesses.has(business.id);
 
                     return (
@@ -339,6 +363,94 @@ export default function UserSidebar({
                                     {dictionary.pages.business.statistics ||
                                       'Statistics'}
                                   </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === expensesHref}
+                              >
+                                <Link href={expensesHref}>
+                                  <Receipt className="h-4 w-4" />
+                                  <span>Expenses</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === analyticsHref}
+                              >
+                                <Link href={analyticsHref}>
+                                  <TrendingUp className="h-4 w-4" />
+                                  <span>Analytics</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === reportsHref}
+                              >
+                                <Link href={reportsHref}>
+                                  <ClipboardList className="h-4 w-4" />
+                                  <span>VAT Reports</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === vendorsHref}
+                              >
+                                <Link href={vendorsHref}>
+                                  <Truck className="h-4 w-4" />
+                                  <span>Vendors</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === purchaseOrdersHref}
+                              >
+                                <Link href={purchaseOrdersHref}>
+                                  <ShoppingCart className="h-4 w-4" />
+                                  <span>Purchase Orders</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === recurringInvoicesHref}
+                              >
+                                <Link href={recurringInvoicesHref}>
+                                  <RefreshCw className="h-4 w-4" />
+                                  <span>Recurring Invoices</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === membersHref}
+                              >
+                                <Link href={membersHref}>
+                                  <Users className="h-4 w-4" />
+                                  <span>Team Members</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === clientPortalHref}
+                              >
+                                <Link href={clientPortalHref}>
+                                  <Globe className="h-4 w-4" />
+                                  <span>Client Portal</span>
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>

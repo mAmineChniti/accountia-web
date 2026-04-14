@@ -149,6 +149,59 @@ export const API_CONFIG = {
   HEALTH: {
     CHECK: 'health',
   },
+  REPORTS: {
+    VAT: 'reports/vat',
+  },
+  COMMENTS: {
+    CREATE: 'comments',
+    LIST: 'comments',
+    UPDATE: 'comments/{id}',
+    DELETE: 'comments/{id}',
+  },
+  EXPENSES: {
+    CREATE: 'expenses',
+    LIST: 'expenses',
+    SUMMARY: 'expenses/summary',
+    GET: 'expenses/{id}',
+    UPDATE: 'expenses/{id}',
+    SUBMIT: 'expenses/{id}/submit',
+    REVIEW: 'expenses/{id}/review',
+    REIMBURSE: 'expenses/{id}/reimburse',
+    DELETE: 'expenses/{id}',
+  },
+  RECURRING_INVOICES: {
+    CREATE: 'recurring-invoices',
+    LIST: 'recurring-invoices',
+    GET: 'recurring-invoices/{id}',
+    UPDATE: 'recurring-invoices/{id}',
+    DELETE: 'recurring-invoices/{id}',
+  },
+  ANALYTICS: {
+    DASHBOARD: 'analytics/dashboard',
+  },
+  VENDORS: {
+    CREATE: 'vendors',
+    LIST: 'vendors',
+    GET: 'vendors/{id}',
+    UPDATE: 'vendors/{id}',
+    DELETE: 'vendors/{id}',
+  },
+  PURCHASE_ORDERS: {
+    CREATE: 'purchase-orders',
+    LIST: 'purchase-orders',
+    GET: 'purchase-orders/{id}',
+    UPDATE: 'purchase-orders/{id}',
+    SUBMIT: 'purchase-orders/{id}/submit',
+    APPROVE: 'purchase-orders/{id}/approve',
+    RECEIVE: 'purchase-orders/{id}/receive',
+    DELETE: 'purchase-orders/{id}',
+  },
+  CLIENT_PORTAL: {
+    GENERATE_TOKEN: 'client-portal/generate-token',
+    VERIFY: 'client-portal/verify/{token}',
+    INVOICES: 'client-portal/{token}/invoices',
+    INVOICE_DETAIL: 'client-portal/{token}/invoices/{invoiceId}',
+  },
 } as const;
 
 export const createAuthenticatedClient = () => {
@@ -197,3 +250,12 @@ export { InvoicesService } from '@/lib/services/invoices';
 export { ChatService } from '@/lib/services/chat';
 export { NotificationsService } from '@/lib/services/notifications';
 export { AuditService } from '@/lib/services/audit';
+export { ExpensesService } from '@/lib/services/expenses';
+export { AnalyticsService } from '@/lib/services/analytics';
+export { VendorsService } from '@/lib/services/vendors';
+export { PurchaseOrdersService } from '@/lib/services/purchase-orders';
+export { ReportsService } from '@/lib/services/reports';
+export { CommentsService } from '@/lib/services/comments';
+export { RecurringInvoicesService } from '@/lib/services/recurring-invoices';
+export { ClientPortalAdminService } from '@/lib/services/client-portal-admin';
+export type { GeneratePortalTokenResponse } from '@/lib/services/client-portal-admin';
