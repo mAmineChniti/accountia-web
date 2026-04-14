@@ -1,3 +1,5 @@
+import type { BusinessRole } from './businessSchemas';
+
 export interface BusinessItem {
   id: string;
   name: string;
@@ -64,7 +66,7 @@ export interface AssignedBusinessUser {
   id: string;
   businessId: string;
   userId: string;
-  role: string;
+  role: BusinessRole;
   assignedBy: string;
   isActive: boolean;
   createdAt: string;
@@ -94,6 +96,17 @@ export interface GetBusinessClientsResponse {
   clients: ClientData[];
 }
 
+export interface OtherBusiness {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface GetOtherBusinessesResponse {
+  message: string;
+  businesses: OtherBusiness[];
+}
+
 export interface ChangeClientRoleResponse {
   message: string;
   businessUser: AssignedBusinessUser;
@@ -108,14 +121,54 @@ export interface BusinessInvite {
   businessId: string;
   invitedEmail: string;
   inviterId: string;
-  businessRole: string;
+  /** Populated in GET /business/invites/pending responses */
+  inviterName?: string;
+  businessRole: BusinessRole;
+  status?: 'pending' | 'accepted' | 'revoked';
   emailSent: boolean;
+  /** Expiry timestamp, present in pending invites list */
+  expiresAt?: string | null;
+  acceptedAt?: string | null;
+  processedBy?: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface BusinessInviteResponseDto {
   message: string;
-  invite: BusinessInvite;
+  invite?: BusinessInvite;
+}
+
+export interface BusinessInvitesListResponse {
+  message: string;
+  invites: BusinessInvite[];
+}
+
+/** Response for DELETE /business/invites/:inviteId */
+export interface RevokeInviteResponse {
+  message: string;
+}
+
+export interface MonthlyDataPointDto {
+  date: string;
+  value: number;
+}
+
+export interface TimeSeriesDataDto {
+  historical: MonthlyDataPointDto[];
+  predicted: MonthlyDataPointDto[];
+}
+
+export interface ProductStatsDto {
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  unitCost: number;
+  soldQuantity: number;
+  revenue: number;
+  totalCost: number;
+  grossProfit: number;
+  profitMarginPercent: number;
 }
 
 export interface StripeOnboardingLinkResponse {
@@ -130,34 +183,45 @@ export interface StripeConnectStatusResponse {
 }
 
 export interface BusinessStatisticsResponse {
+  message: string;
   businessId: string;
-  businessName: string;
-  products: {
-    totalProducts: number;
-    totalValue: number;
-    lowStockProducts: number;
+  period: {
+    start: string;
+    end: string;
   };
-  invoices: {
+  kpis: {
+    totalRevenue: number;
+    totalCOGS: number;
+    grossProfit: number;
+    netProfit: number;
+    profitMarginPercent: number;
+  };
+  revenueTimeSeries: {
+    revenue: TimeSeriesDataDto;
+    cogs: TimeSeriesDataDto;
+    grossProfit: TimeSeriesDataDto;
+    salesVolume: TimeSeriesDataDto;
+  };
+  invoiceStatistics: {
     totalInvoices: number;
-    paidAmount: number;
-    pendingAmount: number;
-    overdueAmount: number;
     paidInvoices: number;
     pendingInvoices: number;
     overdueInvoices: number;
+    paidAmount: number;
+    pendingAmount: number;
+    overdueAmount: number;
   };
-  productProfitability: Array<{
-    productId: string;
-    productName: string;
-    unitPrice: number;
-    unitCost: number;
-    soldQuantity: number;
-    revenue: number;
-    totalCost: number;
-    grossProfit: number;
-    profitMarginPercent: number;
-  }>;
-  lastUpdated: string;
+  productStatistics: {
+    totalProducts: number;
+    totalInventoryValue: number;
+    lowStockProducts: number;
+  };
+  salesAnalytics: {
+    salesVolume: TimeSeriesDataDto;
+    topProducts: ProductStatsDto[];
+    underperformingProducts: ProductStatsDto[];
+    salesTrend: 'growth' | 'decline' | 'stagnation';
+  };
 }
 
 export interface ClientPodiumItem {
@@ -207,3 +271,5 @@ export type BusinessesListResponseDto = AllBusinessesResponse;
 export type BusinessResponseDto = BusinessDetailResponse;
 export type BusinessUserResponseDto = AssignUserResponse;
 export type BusinessStatisticsResponseDto = BusinessStatisticsResponse;
+
+export { type BusinessRole } from './businessSchemas';

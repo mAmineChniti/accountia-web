@@ -12,6 +12,7 @@ import {
   Package,
   BarChart3,
   ScrollText,
+  UserPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -244,11 +245,13 @@ export default function UserSidebar({
                 <SidebarMenu className="gap-2">
                   {businesses.map((business) => {
                     const businessHref = `/${lang}/business/${business.id}`;
+                    const invitesHref = `/${lang}/business/${business.id}/invites`;
                     const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
                     const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
                     const statisticsHref = `/${lang}/business/${business.id}/statistics`;
                     const isBusinessActive =
                       pathname === businessHref ||
+                      pathname === invitesHref ||
                       pathname === issuedInvoicesHref ||
                       pathname === receivedInvoicesHref ||
                       pathname === statisticsHref;
@@ -306,6 +309,22 @@ export default function UserSidebar({
                                   <FileText className="h-4 w-4" />
                                   <span>
                                     {dictionary.pages.invoices.receivedInvoices}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === invitesHref}
+                              >
+                                <Link href={invitesHref}>
+                                  <UserPlus className="h-4 w-4" />
+                                  <span>
+                                    {
+                                      dictionary.pages.business.invites
+                                        .sectionTitle
+                                    }
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>

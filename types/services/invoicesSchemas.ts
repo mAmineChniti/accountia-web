@@ -39,8 +39,8 @@ const PlatformRecipientSchema = z.object({
     INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS,
     INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL,
   ]),
-  email: z.email('Valid email is required for magic search'),
-  platformId: z.string().min(1).optional(),
+  email: z.email('Valid email is required'),
+  platformId: z.string().min(1, 'Please select a recipient from the list'),
   displayName: z.string().optional(),
 });
 

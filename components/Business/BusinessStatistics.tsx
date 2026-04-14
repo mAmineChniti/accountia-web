@@ -1,19 +1,24 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Package,
+  Receipt,
+  DollarSign,
+  Percent,
+} from 'lucide-react';
 import {
   Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Label,
+  Line,
   CartesianGrid,
-  Pie,
-  PieChart,
   XAxis,
   YAxis,
+  ComposedChart,
 } from 'recharts';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
@@ -36,6 +41,8 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import { Chatbot } from '@/components/Business/Chatbot';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 export default function BusinessStatistics({
   businessId,
@@ -77,55 +84,161 @@ export default function BusinessStatistics({
     gcTime: 30 * 60 * 1000,
   });
 
-  const invoiceDistributionConfig = {
-    paid: {
-      label: text.paid,
-      color: '#10b981',
+  // Prepare chart data as ONE continuous dataset
+  // This creates a seamless line where historical transitions to predicted
+  const prepareTimeSeriesData = useCallback(
+    (
+      historical: { date: string; value: number }[],
+      predicted: { date: string; value: number }[]
+    ) => {
+      if (historical.length === 0 && predicted.length === 0) return [];
+
+      // Sort both arrays by date
+      const sortedHist = [...historical].toSorted((a, b) =>
+        a.date.localeCompare(b.date)
+      );
+      const sortedPred = [...predicted].toSorted((a, b) =>
+        a.date.localeCompare(b.date)
+      );
+
+      // Build unified chronological dataset
+      const unifiedData: Array<{
+        date: string;
+        value: number;
+        type: 'historical' | 'predicted';
+      }> = [];
+
+      // Add all historical points
+      for (const d of sortedHist) {
+        unifiedData.push({ date: d.date, value: d.value, type: 'historical' });
+      }
+
+      // Add predicted points (may overlap with last historical date)
+      for (const d of sortedPred) {
+        unifiedData.push({ date: d.date, value: d.value, type: 'predicted' });
+      }
+
+      // Sort by date
+      unifiedData.sort((a, b) => a.date.localeCompare(b.date));
+
+      // Find the index where predicted data starts
+      let firstPredictedIndex = unifiedData.findIndex(
+        (d) => d.type === 'predicted'
+      );
+      if (firstPredictedIndex === -1) firstPredictedIndex = unifiedData.length;
+
+      // Transform to chart format
+      // Historical line: goes from first historical to first predicted (inclusive)
+      // Predicted line: goes from first predicted onwards (inclusive)
+      return unifiedData.map((d, index) => {
+        // Historical line includes all points up to and including first predicted
+        const isHistoricalSegment =
+          d.type === 'historical' ||
+          (d.type === 'predicted' && index === firstPredictedIndex);
+
+        // Predicted line starts from first predicted and continues
+        const isPredictedSegment =
+          d.type === 'predicted' && index >= firstPredictedIndex;
+
+        return {
+          date: d.date,
+          // Historical: all historical points + the first predicted point (connection)
+          historicalValue: isHistoricalSegment ? d.value : undefined,
+          // Predicted: first predicted point onwards
+          predictedValue: isPredictedSegment ? d.value : undefined,
+          type: d.type,
+        };
+      });
     },
-    pending: {
-      label: text.pending,
-      color: '#f59e0b',
+    []
+  );
+
+  // Memoized chart data - called unconditionally at top level
+  const revenueChartData = useMemo(() => {
+    if (!statistics) return [];
+    return prepareTimeSeriesData(
+      statistics.revenueTimeSeries.revenue.historical,
+      statistics.revenueTimeSeries.revenue.predicted
+    );
+  }, [statistics, prepareTimeSeriesData]);
+
+  const salesVolumeData = useMemo(() => {
+    if (!statistics) return [];
+    return prepareTimeSeriesData(
+      statistics.revenueTimeSeries.salesVolume.historical,
+      statistics.revenueTimeSeries.salesVolume.predicted
+    );
+  }, [statistics, prepareTimeSeriesData]);
+
+  const profitAnalysisData = useMemo(() => {
+    if (!statistics) return [];
+    const allDates = new Set([
+      ...statistics.revenueTimeSeries.revenue.historical.map((d) => d.date),
+      ...statistics.revenueTimeSeries.revenue.predicted.map((d) => d.date),
+    ]);
+    const sortedDates = [...allDates].toSorted();
+
+    return sortedDates.map((date) => {
+      const revPoint =
+        statistics.revenueTimeSeries.revenue.historical.find(
+          (d) => d.date === date
+        ) ??
+        statistics.revenueTimeSeries.revenue.predicted.find(
+          (d) => d.date === date
+        );
+      const cogsPoint =
+        statistics.revenueTimeSeries.cogs.historical.find(
+          (d) => d.date === date
+        ) ??
+        statistics.revenueTimeSeries.cogs.predicted.find(
+          (d) => d.date === date
+        );
+
+      return {
+        date,
+        revenue: revPoint?.value ?? 0,
+        cogs: cogsPoint?.value ?? 0,
+        grossProfit: (revPoint?.value ?? 0) - (cogsPoint?.value ?? 0),
+      };
+    });
+  }, [statistics]);
+
+  // Chart configurations with distinct colors for historical vs predicted
+  // Historical: solid blue (#2563eb), Predicted: dashed orange (#f97316)
+  const revenueChartConfig = {
+    historicalValue: {
+      label: text.historicalData,
+      color: '#2563eb',
     },
-    overdue: {
-      label: text.overdue,
-      color: '#ef4444',
+    predictedValue: {
+      label: text.predictedData,
+      color: '#f97316',
     },
   } satisfies ChartConfig;
 
-  const profitabilityConfig = {
-    profit: {
-      label: text.profit,
-      color: '#10b981',
-    },
+  const profitAnalysisConfig = {
     revenue: {
       label: text.revenue,
-      color: '#0ea5e9',
+      color: '#2563eb',
+    },
+    cogs: {
+      label: text.cogs,
+      color: '#dc2626',
+    },
+    grossProfit: {
+      label: text.grossProfit,
+      color: '#16a34a',
     },
   } satisfies ChartConfig;
 
-  const cashflowConfig = {
-    paidAmount: {
-      label: text.paid,
-      color: '#10b981',
+  const salesVolumeConfig = {
+    historicalValue: {
+      label: text.historicalVolume,
+      color: '#7c3aed',
     },
-    pendingAmount: {
-      label: text.pending,
-      color: '#f59e0b',
-    },
-    overdueAmount: {
-      label: text.overdue,
-      color: '#ef4444',
-    },
-  } satisfies ChartConfig;
-
-  const healthConfig = {
-    collected: {
-      label: text.collected,
-      color: '#10b981',
-    },
-    open: {
-      label: text.open,
-      color: '#e5e7eb',
+    predictedValue: {
+      label: text.predictedVolume,
+      color: '#f97316',
     },
   } satisfies ChartConfig;
 
@@ -159,105 +272,34 @@ export default function BusinessStatistics({
       </Alert>
     );
   } else {
-    const profitability = statistics.productProfitability ?? [];
-    const profitabilityWithSales = profitability.filter(
-      (item) => item.soldQuantity > 0
-    );
-    const totalRevenue = profitabilityWithSales.reduce(
-      (sum, item) => sum + item.revenue,
-      0
-    );
-    const totalGrossProfit = profitabilityWithSales.reduce(
-      (sum, item) => sum + item.grossProfit,
-      0
-    );
-    const overallProfitMargin =
-      totalRevenue > 0 ? (totalGrossProfit / totalRevenue) * 100 : 0;
+    const {
+      kpis,
+      invoiceStatistics,
+      productStatistics,
+      salesAnalytics,
+      revenueTimeSeries,
+      period,
+    } = statistics;
+    const resolvedCurrency = 'TND';
 
-    const topProfitableProducts = profitabilityWithSales
-      .toSorted((a, b) => b.grossProfit - a.grossProfit)
-      .slice(0, 5);
-    const invoiceStatusData = [
-      {
-        status: 'paid',
-        value: statistics.invoices.paidInvoices,
-        fill: 'var(--color-paid)',
-      },
-      {
-        status: 'pending',
-        value: statistics.invoices.pendingInvoices,
-        fill: 'var(--color-pending)',
-      },
-      {
-        status: 'overdue',
-        value: statistics.invoices.overdueInvoices,
-        fill: 'var(--color-overdue)',
-      },
-    ];
-    const invoiceAmountData = [
-      {
-        bucket: text.paid,
-        paidAmount: statistics.invoices.paidAmount,
-        pendingAmount: 0,
-        overdueAmount: 0,
-      },
-      {
-        bucket: text.pending,
-        paidAmount: 0,
-        pendingAmount: statistics.invoices.pendingAmount,
-        overdueAmount: 0,
-      },
-      {
-        bucket: text.overdue,
-        paidAmount: 0,
-        pendingAmount: 0,
-        overdueAmount: statistics.invoices.overdueAmount,
-      },
-    ];
-
-    const hasNoData =
-      statistics.products.totalProducts === 0 &&
-      statistics.products.totalValue === 0 &&
-      statistics.invoices.totalInvoices === 0;
+    // Calculate metrics
     const totalInvoiceAmount =
-      statistics.invoices.paidAmount +
-      statistics.invoices.pendingAmount +
-      statistics.invoices.overdueAmount;
+      invoiceStatistics.paidAmount +
+      invoiceStatistics.pendingAmount +
+      invoiceStatistics.overdueAmount;
     const collectionRate =
       totalInvoiceAmount > 0
-        ? (statistics.invoices.paidAmount / totalInvoiceAmount) * 100
+        ? (invoiceStatistics.paidAmount / totalInvoiceAmount) * 100
         : 0;
-    const openAmount =
-      statistics.invoices.pendingAmount + statistics.invoices.overdueAmount;
-    const productCoverage =
-      statistics.products.totalProducts > 0
-        ? ((statistics.products.totalProducts -
-            statistics.products.lowStockProducts) /
-            statistics.products.totalProducts) *
-          100
-        : 100;
-    const openInvoicesCount =
-      statistics.invoices.pendingInvoices + statistics.invoices.overdueInvoices;
-    const pendingInvoicesCount =
-      statistics.invoices.pendingInvoices ??
-      openInvoicesCount - statistics.invoices.overdueInvoices;
-    const marginLeaders = profitabilityWithSales
-      .toSorted((a, b) => b.profitMarginPercent - a.profitMarginPercent)
-      .slice(0, 4);
-    const collectionDonutData = [
-      {
-        status: 'collected',
-        value: Number(collectionRate.toFixed(2)),
-        fill: 'var(--color-collected)',
-      },
-      {
-        status: 'open',
-        value: Number((100 - collectionRate).toFixed(2)),
-        fill: 'var(--color-open)',
-      },
-    ];
-    const resolvedCurrency =
-      (statistics as { currency?: string }).currency ?? 'TND';
+
+    // Check if there are any predicted values to show
+    const hasPredictedRevenue = revenueTimeSeries.revenue.predicted.length > 0;
+    const hasPredictedVolume =
+      revenueTimeSeries.salesVolume.predicted.length > 0;
+
+    const hasNoData =
+      productStatistics.totalProducts === 0 &&
+      invoiceStatistics.totalInvoices === 0;
 
     content = (
       <>
@@ -267,306 +309,175 @@ export default function BusinessStatistics({
           </Alert>
         )}
 
-        <Card className="border-border/60 bg-card/95 border shadow-sm">
-          <CardContent className="grid gap-6 p-6 lg:grid-cols-4">
-            <div className="lg:col-span-2">
-              <p className="text-muted-foreground text-xs tracking-[0.14em] uppercase">
-                {statistics.businessName}
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold">
-                {text.businessPerformanceSnapshot}
-              </h2>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                <span className="border-border bg-muted/40 rounded-full border px-3 py-1.5">
-                  {statistics.invoices.totalInvoices} {text.totalInvoices}
-                </span>
-                <span className="border-border bg-muted/40 rounded-full border px-3 py-1.5">
-                  {formatMoney(
-                    statistics.invoices.paidAmount,
-                    resolvedCurrency
-                  )}{' '}
-                  {text.collected}
-                </span>
-                <span className="border-border bg-muted/40 rounded-full border px-3 py-1.5">
-                  {statistics.products.totalProducts} {text.totalProducts}
+        {/* KPI SECTION - Top Priority */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="border-0 bg-linear-to-br from-blue-500/10 to-blue-600/5 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-blue-600" />
+                <span className="text-muted-foreground text-xs">
+                  {text.totalRevenue}
                 </span>
               </div>
-            </div>
-            <div className="border-border bg-muted/30 space-y-3 rounded-lg border p-4">
+              <p className="mt-2 text-2xl font-bold">
+                {formatMoney(kpis.totalRevenue, resolvedCurrency)}
+              </p>
               <p className="text-muted-foreground text-xs">
-                {text.collectionRate}
+                {text.period}: {period.start} - {period.end}
               </p>
-              <p className="text-3xl font-semibold">
-                {collectionRate.toFixed(1)}%
-              </p>
-              <div className="bg-muted h-1.5 rounded-full">
-                <div
-                  className="bg-primary h-1.5 rounded-full"
-                  style={{ width: `${Math.min(collectionRate, 100)}%` }}
-                />
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-linear-to-br from-red-500/10 to-red-600/5 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-red-600" />
+                <span className="text-muted-foreground text-xs">
+                  {text.totalCOGS}
+                </span>
               </div>
-            </div>
-            <div className="border-border bg-muted/30 space-y-3 rounded-lg border p-4">
+              <p className="mt-2 text-2xl font-bold">
+                {formatMoney(kpis.totalCOGS, resolvedCurrency)}
+              </p>
               <p className="text-muted-foreground text-xs">
-                {text.stockReadiness}
+                {text.costOfGoodsSold}
               </p>
-              <p className="text-3xl font-semibold">
-                {productCoverage.toFixed(1)}%
-              </p>
-              <div className="bg-muted h-1.5 rounded-full">
-                <div
-                  className="bg-secondary h-1.5 rounded-full"
-                  style={{ width: `${Math.min(productCoverage, 100)}%` }}
-                />
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-linear-to-br from-emerald-500/10 to-emerald-600/5 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <span className="text-muted-foreground text-xs">
+                  {text.grossProfit}
+                </span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="mt-2 text-2xl font-bold">
+                {formatMoney(kpis.grossProfit, resolvedCurrency)}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {text.revenueMinusCOGS}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-linear-to-br from-purple-500/10 to-purple-600/5 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-purple-600" />
+                <span className="text-muted-foreground text-xs">
+                  {text.netProfit}
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold">
+                {formatMoney(kpis.netProfit, resolvedCurrency)}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {text.afterAllExpenses}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-linear-to-br from-amber-500/10 to-amber-600/5 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Percent className="h-4 w-4 text-amber-600" />
+                <span className="text-muted-foreground text-xs">
+                  {text.profitMargin}
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold">
+                {kpis.profitMarginPercent.toFixed(1)}%
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {text.grossProfitMargin}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         {!hasNoData && (
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-4">
-              <CardHeader>
-                <CardTitle className="text-base">{text.invoiceMix}</CardTitle>
-                <CardDescription>{text.paidVsPendingVsOverdue}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={invoiceDistributionConfig}
-                  className="aspect-auto h-[270px] w-full"
-                >
-                  <PieChart>
-                    <Pie
-                      data={invoiceStatusData}
-                      dataKey="value"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={102}
-                      paddingAngle={3}
-                      cornerRadius={10}
-                      startAngle={90}
-                      endAngle={-270}
-                      strokeWidth={2}
-                    >
-                      <Label
-                        content={({ viewBox }) => {
-                          if (
-                            !viewBox ||
-                            !('cx' in viewBox) ||
-                            !('cy' in viewBox)
-                          ) {
-                            return;
-                          }
-
-                          return (
-                            <text
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                            >
-                              <tspan
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                className="fill-foreground text-xl font-semibold"
-                              >
-                                {statistics.invoices.totalInvoices}
-                              </tspan>
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy ?? 0) + 20}
-                                className="fill-muted-foreground text-xs"
-                              >
-                                {text.totalInvoices}
-                              </tspan>
-                            </text>
-                          );
-                        }}
-                      />
-                    </Pie>
-                    <ChartTooltip
-                      cursor={false}
-                      content={
-                        <ChartTooltipContent hideLabel nameKey="status" />
-                      }
-                    />
-                    <ChartLegend
-                      content={<ChartLegendContent nameKey="status" />}
-                    />
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-4">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {text.cashCollectionHealth}
-                </CardTitle>
-                <CardDescription>{text.paidVsOpenReceivables}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={healthConfig}
-                  className="aspect-auto h-[270px] w-full"
-                >
-                  <PieChart>
-                    <Pie
-                      data={collectionDonutData}
-                      dataKey="value"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={72}
-                      outerRadius={102}
-                      paddingAngle={2}
-                      cornerRadius={10}
-                      startAngle={90}
-                      endAngle={-270}
-                      strokeWidth={2}
-                    >
-                      <Label
-                        content={({ viewBox }) => {
-                          if (
-                            !viewBox ||
-                            !('cx' in viewBox) ||
-                            !('cy' in viewBox)
-                          ) {
-                            return;
-                          }
-
-                          return (
-                            <text
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                            >
-                              <tspan
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                className="fill-foreground text-xl font-semibold"
-                              >
-                                {collectionRate.toFixed(1)}%
-                              </tspan>
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy ?? 0) + 20}
-                                className="fill-muted-foreground text-xs"
-                              >
-                                {text.collectionRate}
-                              </tspan>
-                            </text>
-                          );
-                        }}
-                      />
-                    </Pie>
-                    <ChartTooltip
-                      cursor={false}
-                      content={
-                        <ChartTooltipContent
-                          formatter={(value) => `${Number(value).toFixed(1)}%`}
-                          nameKey="status"
-                        />
-                      }
-                    />
-                    <ChartLegend
-                      content={<ChartLegendContent nameKey="status" />}
-                    />
-                  </PieChart>
-                </ChartContainer>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-muted/30 rounded-md border p-3">
-                    <p className="text-muted-foreground text-xs">
-                      {text.collected}
-                    </p>
-                    <p className="font-semibold">
-                      {formatMoney(
-                        statistics.invoices.paidAmount,
-                        resolvedCurrency
-                      )}
-                    </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* MAIN FINANCIAL CHART - Revenue with Forecast */}
+            <Card className="border-0 shadow-sm lg:col-span-8">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">
+                      {text.revenueForecast}
+                    </CardTitle>
+                    <CardDescription>
+                      {text.historicalVsAIPredicted}
+                    </CardDescription>
                   </div>
-                  <div className="bg-muted/30 rounded-md border p-3">
-                    <p className="text-muted-foreground text-xs">
-                      {text.openAmount}
-                    </p>
-                    <p className="font-semibold">
-                      {formatMoney(openAmount, resolvedCurrency)}
-                    </p>
-                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {period.start} → {period.end}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-4">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {text.operationalSignals}
-                </CardTitle>
-                <CardDescription>{text.quickRiskIndicators}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground text-xs">
-                    {text.pendingInvoices}
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {pendingInvoicesCount}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {text.overdueInvoices}:{' '}
-                    {statistics.invoices.overdueInvoices}
-                  </p>
-                </div>
-                <div className="bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground text-xs">
-                    {text.lowStockProducts}
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {statistics.products.lowStockProducts}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {statistics.products.lowStockProducts > 0
-                      ? text.lowStockHint
-                      : text.allInStockHint}
-                  </p>
-                </div>
-                <div className="bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground text-xs">
-                    {text.grossProfit}
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {formatMoney(totalGrossProfit, resolvedCurrency)}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {text.margin}: {overallProfitMargin.toFixed(1)}%
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-7">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {text.invoiceValueLandscape}
-                </CardTitle>
-                <CardDescription>{text.amountsByStatus}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer
-                  config={cashflowConfig}
-                  className="aspect-auto h-[300px] w-full"
+                  config={revenueChartConfig}
+                  className="aspect-auto h-[320px] w-full"
                 >
-                  <AreaChart
-                    data={invoiceAmountData}
-                    margin={{ left: 8, right: 8 }}
+                  <ComposedChart
+                    data={revenueChartData}
+                    margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
                   >
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="bucket" tickLine={false} axisLine={false} />
+                    <defs>
+                      <linearGradient
+                        id="historicalGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#2563eb"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#2563eb"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id="predictedGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#f97316"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#f97316"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      stroke="#e5e7eb"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tickFormatter={(value) => {
+                        const [year, month] = String(value).split('-');
+                        return `${month}/${year.slice(2)}`;
+                      }}
+                    />
                     <YAxis
                       tickLine={false}
                       axisLine={false}
@@ -575,7 +486,142 @@ export default function BusinessStatistics({
                       }
                     />
                     <ChartTooltip
-                      cursor={false}
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value, name) => {
+                            return [
+                              formatMoney(Number(value), resolvedCurrency),
+                              name === 'predictedValue'
+                                ? text.predictedData
+                                : text.historicalData,
+                            ];
+                          }}
+                        />
+                      }
+                    />
+                    {/* Historical line - solid, stops where prediction starts */}
+                    <Line
+                      type="linear"
+                      dataKey="historicalValue"
+                      stroke="#2563eb"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#2563eb' }}
+                      connectNulls={true}
+                      isAnimationActive={false}
+                      name="historical"
+                    />
+                    {/* Predicted line - dashed, starts where historical ends */}
+                    {hasPredictedRevenue && (
+                      <Line
+                        type="linear"
+                        dataKey="predictedValue"
+                        stroke="#f97316"
+                        strokeWidth={3}
+                        strokeDasharray="6 3"
+                        dot={false}
+                        activeDot={{ r: 6, fill: '#f97316' }}
+                        connectNulls={true}
+                        isAnimationActive={false}
+                        name="predicted"
+                      />
+                    )}
+                    <ChartLegend content={<ChartLegendContent />} />
+                  </ComposedChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* SALES TREND INDICATOR */}
+            <Card className="border-0 shadow-sm lg:col-span-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">
+                  {text.businessTrend}
+                </CardTitle>
+                <CardDescription>
+                  {text.overallPerformanceDirection}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center justify-center py-6">
+                  <div
+                    className={`rounded-full p-6 ${
+                      salesAnalytics.salesTrend === 'growth'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                        : salesAnalytics.salesTrend === 'decline'
+                          ? 'bg-red-100 dark:bg-red-900/30'
+                          : 'bg-amber-100 dark:bg-amber-900/30'
+                    }`}
+                  >
+                    {salesAnalytics.salesTrend === 'growth' ? (
+                      <TrendingUp className="h-12 w-12 text-emerald-600" />
+                    ) : salesAnalytics.salesTrend === 'decline' ? (
+                      <TrendingDown className="h-12 w-12 text-red-600" />
+                    ) : (
+                      <Minus className="h-12 w-12 text-amber-600" />
+                    )}
+                  </div>
+                  <p
+                    className={`mt-4 text-2xl font-bold ${
+                      salesAnalytics.salesTrend === 'growth'
+                        ? 'text-emerald-600'
+                        : salesAnalytics.salesTrend === 'decline'
+                          ? 'text-red-600'
+                          : 'text-amber-600'
+                    }`}
+                  >
+                    {salesAnalytics.salesTrend === 'growth'
+                      ? text.growth
+                      : salesAnalytics.salesTrend === 'decline'
+                        ? text.decline
+                        : text.stagnation}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {text.basedOnSalesVolume}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* COST VS PROFIT ANALYSIS */}
+            <Card className="border-0 shadow-sm lg:col-span-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">
+                  {text.profitabilityAnalysis}
+                </CardTitle>
+                <CardDescription>{text.revenueCOGSAndProfit}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={profitAnalysisConfig}
+                  className="aspect-auto h-[280px] w-full"
+                >
+                  <ComposedChart
+                    data={profitAnalysisData}
+                    margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
+                  >
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--muted))"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => {
+                        const [year, month] = String(value).split('-');
+                        return `${month}/${year.slice(2)}`;
+                      }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        `${Math.round(Number(value) / 1000)}k`
+                      }
+                    />
+                    <ChartTooltip
                       content={
                         <ChartTooltipContent
                           formatter={(value) =>
@@ -586,191 +632,468 @@ export default function BusinessStatistics({
                     />
                     <Area
                       type="monotone"
-                      dataKey="paidAmount"
-                      stroke="var(--color-paidAmount)"
-                      fill="var(--color-paidAmount)"
-                      fillOpacity={0.2}
+                      dataKey="revenue"
+                      stroke="#2563eb"
+                      fill="#2563eb"
+                      fillOpacity={0.15}
                       strokeWidth={2}
                     />
                     <Area
                       type="monotone"
-                      dataKey="pendingAmount"
-                      stroke="var(--color-pendingAmount)"
-                      fill="var(--color-pendingAmount)"
-                      fillOpacity={0.2}
+                      dataKey="cogs"
+                      stroke="#dc2626"
+                      fill="#dc2626"
+                      fillOpacity={0.15}
                       strokeWidth={2}
                     />
-                    <Area
+                    <Line
                       type="monotone"
-                      dataKey="overdueAmount"
-                      stroke="var(--color-overdueAmount)"
-                      fill="var(--color-overdueAmount)"
-                      fillOpacity={0.2}
-                      strokeWidth={2}
+                      dataKey="grossProfit"
+                      stroke="#16a34a"
+                      strokeWidth={3}
+                      dot={{ fill: '#16a34a', strokeWidth: 2, r: 4 }}
                     />
                     <ChartLegend content={<ChartLegendContent />} />
-                  </AreaChart>
+                  </ComposedChart>
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-5">
-              <CardHeader>
+            {/* SALES VOLUME CHART */}
+            <Card className="border-0 shadow-sm lg:col-span-6">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-base">
-                  {text.performanceNotes}
+                  {text.salesVolumeForecast}
                 </CardTitle>
-                <CardDescription>{text.focusAreas}</CardDescription>
+                <CardDescription>
+                  {text.unitsSoldHistoricalVsPredicted}
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="rounded-lg border p-3">
-                  <p className="text-muted-foreground text-xs">
-                    {text.receivablesExposure}
-                  </p>
-                  <p className="mt-1 font-semibold">
-                    {formatMoney(openAmount, resolvedCurrency)} -{' '}
-                    {openInvoicesCount} {text.openInvoices}
-                  </p>
+              <CardContent>
+                <ChartContainer
+                  config={salesVolumeConfig}
+                  className="aspect-auto h-[280px] w-full"
+                >
+                  <ComposedChart
+                    data={salesVolumeData}
+                    margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="volumeHistorical"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#7c3aed"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#7c3aed"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id="volumePredicted"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#f97316"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#f97316"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      stroke="#e5e7eb"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => {
+                        const [year, month] = String(value).split('-');
+                        return `${month}/${year.slice(2)}`;
+                      }}
+                    />
+                    <YAxis tickLine={false} axisLine={false} />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value, name) => {
+                            return [
+                              `${value} ${text.units}`,
+                              name === 'predictedValue'
+                                ? text.predictedData
+                                : text.historicalData,
+                            ];
+                          }}
+                        />
+                      }
+                    />
+                    {/* Historical line - solid, stops where prediction starts */}
+                    <Line
+                      type="linear"
+                      dataKey="historicalValue"
+                      stroke="#7c3aed"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#7c3aed' }}
+                      connectNulls={true}
+                      isAnimationActive={false}
+                      name="historical"
+                    />
+                    {/* Predicted line - dashed, starts where historical ends */}
+                    {hasPredictedVolume && (
+                      <Line
+                        type="linear"
+                        dataKey="predictedValue"
+                        stroke="#f97316"
+                        strokeWidth={3}
+                        strokeDasharray="6 3"
+                        dot={false}
+                        activeDot={{ r: 6, fill: '#f97316' }}
+                        connectNulls={true}
+                        isAnimationActive={false}
+                        name="predicted"
+                      />
+                    )}
+                    <ChartLegend content={<ChartLegendContent />} />
+                  </ComposedChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* INVOICE STATISTICS */}
+            <Card className="border-0 shadow-sm lg:col-span-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Receipt className="h-4 w-4" />
+                  {text.invoiceStatus}
+                </CardTitle>
+                <CardDescription>
+                  {text.paymentCollectionOverview}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {text.collectionRate}
+                    </span>
+                    <span className="font-semibold">
+                      {collectionRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress value={collectionRate} className="h-2" />
                 </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-muted-foreground text-xs">
-                    {text.profitabilityCoverage}
-                  </p>
-                  <p className="mt-1 font-semibold">
-                    {profitabilityWithSales.length}{' '}
-                    {text.productsGeneratedPaidSales}
-                  </p>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-muted-foreground text-xs">
-                    {text.inventoryHealth}
-                  </p>
-                  <p className="mt-1 font-semibold">
-                    {statistics.products.lowStockProducts}{' '}
-                    {text.lowStockFlagged}
-                  </p>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="rounded-lg bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                    <p className="text-xs font-medium text-emerald-600">
+                      {text.paid}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {invoiceStatistics.paidInvoices}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatMoney(
+                        invoiceStatistics.paidAmount,
+                        resolvedCurrency
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
+                    <p className="text-xs font-medium text-amber-600">
+                      {text.pending}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {invoiceStatistics.pendingInvoices}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatMoney(
+                        invoiceStatistics.pendingAmount,
+                        resolvedCurrency
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
+                    <p className="text-xs font-medium text-red-600">
+                      {text.overdue}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {invoiceStatistics.overdueInvoices}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatMoney(
+                        invoiceStatistics.overdueAmount,
+                        resolvedCurrency
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                    <p className="text-xs font-medium text-blue-600">
+                      {text.totalInvoices}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {invoiceStatistics.totalInvoices}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatMoney(totalInvoiceAmount, resolvedCurrency)}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-8">
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {text.topProfitableProducts}
+            {/* PRODUCT INVENTORY */}
+            <Card className="border-0 shadow-sm lg:col-span-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Package className="h-4 w-4" />
+                  {text.inventoryStatus}
                 </CardTitle>
                 <CardDescription>
-                  {text.revenueAndProfitPerProduct}
+                  {text.productAndStockOverview}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {topProfitableProducts.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    {text.noProfitabilityData}
-                  </p>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                    <p className="text-xs font-medium text-blue-600">
+                      {text.totalProducts}
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {productStatistics.totalProducts}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
+                    <p className="text-xs font-medium text-purple-600">
+                      {text.inventoryValue}
+                    </p>
+                    <p className="text-lg font-bold">
+                      {formatMoney(
+                        productStatistics.totalInventoryValue,
+                        resolvedCurrency
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {productStatistics.lowStockProducts > 0 ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:bg-red-900/20">
+                    <p className="flex items-center gap-2 text-sm font-medium text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      {productStatistics.lowStockProducts} {text.lowStockAlert}
+                    </p>
+                  </div>
                 ) : (
-                  <ChartContainer
-                    config={profitabilityConfig}
-                    className="aspect-auto h-[300px] w-full"
-                  >
-                    <BarChart
-                      data={topProfitableProducts.map((item) => ({
-                        product: item.productName,
-                        profit: item.grossProfit,
-                        revenue: item.revenue,
-                      }))}
-                      margin={{ left: 8, right: 8 }}
-                    >
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="product"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        tickFormatter={(value) =>
-                          typeof value === 'string' && value.length > 12
-                            ? `${value.slice(0, 12)}...`
-                            : String(value)
-                        }
-                      />
-                      <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) =>
-                          `${Math.round(Number(value) / 1000)}k`
-                        }
-                      />
-                      <ChartTooltip
-                        cursor={false}
-                        content={
-                          <ChartTooltipContent
-                            formatter={(value) =>
-                              formatMoney(Number(value), resolvedCurrency)
-                            }
-                          />
-                        }
-                      />
-                      <Bar
-                        dataKey="profit"
-                        fill="var(--color-profit)"
-                        radius={6}
-                      />
-                      <Bar
-                        dataKey="revenue"
-                        fill="var(--color-revenue)"
-                        radius={6}
-                        fillOpacity={0.45}
-                      />
-                      <ChartLegend content={<ChartLegendContent />} />
-                    </BarChart>
-                  </ChartContainer>
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                    <p className="text-sm font-medium text-emerald-600">
+                      {text.allProductsInStock}
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            {marginLeaders.length > 0 && (
-              <Card className="bg-card/90 border-0 shadow-sm xl:col-span-4">
-                <CardHeader>
-                  <CardTitle className="text-base">
+            {/* TOP PRODUCTS */}
+            <Card className="border-0 shadow-sm lg:col-span-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">{text.topProducts}</CardTitle>
+                <CardDescription>
+                  {text.bestPerformingByRevenue}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {salesAnalytics.topProducts
+                    .slice(0, 4)
+                    .map((product, index) => (
+                      <div
+                        key={product.productId}
+                        className="bg-muted/50 flex items-center justify-between rounded-lg p-2"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="bg-primary/10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {product.productName}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {product.soldQuantity} {text.sold}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold">
+                            {formatMoney(product.revenue, resolvedCurrency)}
+                          </p>
+                          <p className="text-xs text-emerald-600">
+                            {product.profitMarginPercent.toFixed(0)}%{' '}
+                            {text.margin}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* UNDERPERFORMING PRODUCTS */}
+            {salesAnalytics.underperformingProducts &&
+              salesAnalytics.underperformingProducts.length > 0 && (
+                <Card className="border-0 shadow-sm lg:col-span-12">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base text-red-600">
+                      {text.underperformingProducts}
+                    </CardTitle>
+                    <CardDescription>
+                      {text.lowestProfitMarginsReview}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {salesAnalytics.underperformingProducts
+                        .slice(0, 6)
+                        .map((product) => (
+                          <div
+                            key={product.productId}
+                            className="rounded-lg border border-red-200 bg-red-50/50 p-4 dark:bg-red-900/10"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium">
+                                  {product.productName}
+                                </p>
+                                <p className="text-muted-foreground mt-1 text-xs">
+                                  {product.soldQuantity} {text.sold} ·{' '}
+                                  {text.revenue}:{' '}
+                                  {formatMoney(
+                                    product.revenue,
+                                    resolvedCurrency
+                                  )}
+                                </p>
+                              </div>
+                              <Badge variant="destructive" className="text-xs">
+                                {product.profitMarginPercent.toFixed(1)}%{' '}
+                                {text.margin}
+                              </Badge>
+                            </div>
+                            <div className="mt-3">
+                              <div className="mb-1 flex justify-between text-xs">
+                                <span className="text-muted-foreground">
+                                  {text.margin}
+                                </span>
+                                <span className="font-medium text-red-600">
+                                  {text.lowProfitability}
+                                </span>
+                              </div>
+                              <Progress
+                                value={Math.max(0, product.profitMarginPercent)}
+                                className="h-1.5 bg-red-200"
+                              />
+                            </div>
+                            <div className="mt-3 flex justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                {text.cost}:{' '}
+                                {formatMoney(
+                                  product.unitCost,
+                                  resolvedCurrency
+                                )}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {text.price}:{' '}
+                                {formatMoney(
+                                  product.unitPrice,
+                                  resolvedCurrency
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+            {/* MARGIN LEADERS */}
+            {salesAnalytics.topProducts.some((p) => p.soldQuantity > 0) && (
+              <Card className="border-0 shadow-sm lg:col-span-12">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-emerald-600">
                     {text.marginLeaders}
                   </CardTitle>
                   <CardDescription>
-                    {text.highestMarginProducts}
+                    {text.highestProfitMarginProducts}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {marginLeaders.map((item) => (
-                    <div key={item.productId} className="rounded-lg border p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium">{item.productName}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {item.soldQuantity} {text.sold}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                          {item.profitMarginPercent.toFixed(1)}% {text.margin}
-                        </span>
-                      </div>
-                      <div className="bg-muted mt-3 h-2 rounded-full">
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {salesAnalytics.topProducts
+                      .filter((p) => p.soldQuantity > 0)
+                      .toSorted(
+                        (a, b) => b.profitMarginPercent - a.profitMarginPercent
+                      )
+                      .slice(0, 4)
+                      .map((product) => (
                         <div
-                          className="h-2 rounded-full bg-emerald-500"
-                          style={{
-                            width: `${Math.min(
-                              Math.max(item.profitMarginPercent, 0),
-                              100
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="mt-3 flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {text.profit}
-                        </span>
-                        <span className="font-medium">
-                          {formatMoney(item.grossProfit, resolvedCurrency)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                          key={product.productId}
+                          className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:bg-emerald-900/10"
+                        >
+                          <div className="flex items-start justify-between">
+                            <p className="font-medium">{product.productName}</p>
+                            <Badge className="bg-emerald-600 text-xs">
+                              {product.profitMarginPercent.toFixed(1)}%
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            {product.soldQuantity} {text.unitsSold}
+                          </p>
+                          <div className="mt-3 space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                {text.revenue}
+                              </span>
+                              <span className="font-medium">
+                                {formatMoney(product.revenue, resolvedCurrency)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                {text.profit}
+                              </span>
+                              <span className="font-medium text-emerald-600">
+                                {formatMoney(
+                                  product.grossProfit,
+                                  resolvedCurrency
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          <Progress
+                            value={Math.min(100, product.profitMarginPercent)}
+                            className="mt-3 h-1.5 bg-emerald-200"
+                          />
+                        </div>
+                      ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -895,11 +1218,6 @@ export default function BusinessStatistics({
             </Card>
           </div>
         )}
-
-        <div className="text-muted-foreground text-xs">
-          {text.lastUpdated}:{' '}
-          {new Date(statistics.lastUpdated).toLocaleString(lang)}
-        </div>
       </>
     );
   }

@@ -172,7 +172,6 @@ export function Business({
     }
     return statusColors.neutral;
   };
-
   return (
     <div className={containerClass}>
       {/* Header */}
@@ -383,7 +382,7 @@ export function Business({
             <div className="flex flex-col items-center gap-3 py-8 text-center">
               <AlertCircle className="text-destructive h-10 w-10" />
               <p className="text-foreground font-medium">
-                {t.failedToLoadClients || t.errorLoading}
+                {t.failedToLoadClients}
               </p>
               <Button
                 type="button"
