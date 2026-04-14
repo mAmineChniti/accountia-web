@@ -270,6 +270,9 @@
       "accountExists": "حساب بهذا البريد الإلكتروني موجود بالفعل",
       "personalInfoLabel": "المعلومات الشخصية",
       "accountInfoLabel": "معلومات الحساب",
+      "inviteBannerTitle": "لقد تمت دعوتك",
+      "inviteBannerDescription": "سجل بنفس البريد الإلكتروني للانضمام تلقائياً إلى عملك المدعو",
+      "inviteBannerEmail": "البريد الإلكتروني المدعو",
       "continueWithGoogle": "التسجيل مع Google",
       "authNavLabel": "الملاحة المصادقة"
     },
@@ -611,9 +614,6 @@
         "price": "السعر",
         "units": "وحدات"
       },
-      "clientDetailsTitle": "تفاصيل العميل",
-      "clientDetailsDescription": "معلومات عن المستخدم المعين",
-      "errorLoading": "فشل في تحميل العملاء",
       "name": "الاسم",
       "failedToLoadDetails": "فشل في تحميل تفاصيل العمل",
       "businessNotFound": "العمل غير موجود",

@@ -25,6 +25,7 @@ import type {
   TenantMetadataResponse,
   BusinessStatisticsResponse,
   ClientPodiumResponse,
+  GetOtherBusinessesResponse,
 } from '@/types/services';
 import {
   ApiError,
@@ -286,14 +287,30 @@ export const BusinessService = {
   ): Promise<GetBusinessClientsResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.GET_CLIENTS.replace(
-        '{id}',
-        businessId
-      );
+      const endpoint = API_CONFIG.BUSINESS.GET_CLIENTS;
       const searchParams: Record<string, string> = { businessId };
       const result = await client
         .get(endpoint, { searchParams })
         .json<GetBusinessClientsResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getOtherBusinesses(): Promise<GetOtherBusinessesResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.GET_OTHER_BUSINESSES;
+      const result = await client
+        .get(endpoint)
+        .json<GetOtherBusinessesResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -371,9 +388,9 @@ export const BusinessService = {
   },
 
   async getBusinessStatistics(
-    businessId: string
+    businessId: string,
+    predictionHorizonDays?: number
   ): Promise<BusinessStatisticsResponse> {
-    // Validate businessId before constructing endpoint
     if (
       !businessId ||
       typeof businessId !== 'string' ||
@@ -384,9 +401,15 @@ export const BusinessService = {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS;
-      const searchParams: Record<string, string> = { businessId };
+      const body: Record<string, number> = {};
+      if (predictionHorizonDays !== undefined) {
+        body.predictionHorizonDays = predictionHorizonDays;
+      }
       const result = await client
-        .get(endpoint, { searchParams })
+        .post(endpoint, {
+          searchParams: { businessId },
+          json: body,
+        })
         .json<BusinessStatisticsResponse>();
       return result;
     } catch (error: unknown) {
@@ -443,8 +466,8 @@ export const BusinessService = {
     try {
       const endpoint = API_CONFIG.BUSINESS.INVITE_USER;
       const payload = {
+        ...data,
         businessId,
-        ...(data as InviteBusinessUserInput),
       };
       const result = await client
         .post(endpoint, { json: payload })
@@ -521,7 +544,7 @@ export const BusinessService = {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.REVOKE_INVITE.replace(
-        '{id}',
+        '{inviteId}',
         inviteId
       );
       const searchParams: Record<string, string> = {

@@ -94,6 +94,8 @@
         "features": "Fonctionnalités",
         "solutions": "Solutions",
         "pricing": "Tarifs",
+        "statisticsTitle": "Statistiques",
+        "statisticsSubtitle": "Aperçu des revenus et dépenses",
         "getStarted": "Commencer",
         "login": "Connexion",
         "register": "S'inscrire",
@@ -276,6 +278,9 @@
       "accountExists": "Un compte avec cet email existe déjà",
       "personalInfoLabel": "Informations personnelles",
       "accountInfoLabel": "Informations du compte",
+      "inviteBannerTitle": "Vous avez été invité",
+      "inviteBannerDescription": "Inscrivez-vous avec le même e-mail pour rejoindre automatiquement votre entreprise invitée",
+      "inviteBannerEmail": "E-mail invité",
       "continueWithGoogle": "S'inscrire avec Google",
       "authNavLabel": "Navigation d'authentification"
     },
@@ -617,9 +622,6 @@
         "price": "Prix",
         "units": "unités"
       },
-      "clientDetailsTitle": "Détails du client",
-      "clientDetailsDescription": "Informations sur l'utilisateur assigné",
-      "errorLoading": "Impossible de charger les clients",
       "name": "Nom",
       "failedToLoadDetails": "Impossible de charger les détails de l'entreprise",
       "businessNotFound": "Entreprise non trouvée",

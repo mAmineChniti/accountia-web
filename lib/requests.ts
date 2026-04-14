@@ -103,15 +103,16 @@ export const API_CONFIG = {
     ASSIGN_USER: 'business/{id}/users',
     UNASSIGN_USER: 'business/{id}/users/{userId}',
     TENANT_METADATA: 'business/{id}/tenant/metadata',
-    GET_CLIENTS: 'business/{id}/clients',
+    GET_CLIENTS: 'business/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
     DELETE_CLIENT: 'business/{id}/clients/{clientId}',
     GET_STATISTICS: 'business/statistics',
     GET_CLIENT_PODIUM: 'business/client-podium',
+    GET_OTHER_BUSINESSES: 'business/other',
     INVITE_USER: 'business/invites',
     RESEND_INVITE: 'business/invites/resend',
     GET_PENDING_INVITES: 'business/invites/pending',
-    REVOKE_INVITE: 'business/invites/{id}',
+    REVOKE_INVITE: 'business/invites/{inviteId}',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -120,6 +121,7 @@ export const API_CONFIG = {
     UPDATE: 'products/{id}',
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
+    STOCK_INSIGHTS: 'products/stock-insights',
   },
   INVOICES: {
     // Issuer Endpoints
