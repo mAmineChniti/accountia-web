@@ -93,4 +93,11 @@ export type ChangeClientRoleDtoInput = z.infer<
   typeof ChangeClientRoleOpenApiSchema
 >;
 
+export const inviteFormSchema = z.object({
+  invitedEmail: z.email('Please enter a valid email address'),
+  businessRole: z.string().min(1, 'Please choose a role'),
+});
+
+export type InviteFormValues = z.infer<typeof inviteFormSchema>;
+
 // Named exports are provided by the `export const` declarations above.

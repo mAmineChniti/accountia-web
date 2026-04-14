@@ -503,7 +503,10 @@
         "noLabel": "No",
         "createdLabel": "Created",
         "actionsLabel": "Actions",
-        "resendButton": "Resend"
+        "resendButton": "Resend",
+        "revokeButton": "Revoke",
+        "revokeSuccess": "Invite revoked successfully",
+        "revokeError": "Failed to revoke invite"
       },
       "failedToLoadClients": "Failed to load clients",
       "retry": "Retry",

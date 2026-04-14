@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -85,7 +85,6 @@ export default function Register({
   lang: Locale;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showEmailNotConfirmedDialog, setShowEmailNotConfirmedDialog] =
     useState(false);
@@ -115,16 +114,6 @@ export default function Register({
     },
     mode: 'onChange',
   });
-
-  const invitedEmail =
-    searchParams.get('invitedEmail') || searchParams.get('email') || '';
-  const invitedBusinessName = searchParams.get('businessName') || '';
-
-  useEffect(() => {
-    if (invitedEmail) {
-      form.setValue('email', invitedEmail);
-    }
-  }, [invitedEmail, form]);
 
   const registerMutation = useMutation({
     mutationFn: (data: RegisterInput) => AuthService.register(data),
@@ -215,23 +204,6 @@ export default function Register({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {invitedEmail || invitedBusinessName ? (
-            <div className="border-primary/20 bg-primary/5 text-primary-foreground rounded-lg border p-4 text-sm">
-              <p className="font-semibold">
-                {dictionary.pages.register.inviteBannerTitle}
-              </p>
-              <p className="mt-1">
-                {invitedBusinessName
-                  ? `${dictionary.pages.register.inviteBannerDescription} ${invitedBusinessName}.`
-                  : dictionary.pages.register.inviteBannerDescription}
-              </p>
-              {invitedEmail ? (
-                <p className="text-muted-foreground mt-2 text-xs">
-                  {dictionary.pages.register.inviteBannerEmail}: {invitedEmail}
-                </p>
-              ) : undefined}
-            </div>
-          ) : undefined}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <fieldset

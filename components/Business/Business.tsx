@@ -6,9 +6,7 @@ import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
-import { type UserCookieData } from '@/types/auth';
 import { type ClientData } from '@/types/services';
-import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -31,12 +29,10 @@ export function Business({
   businessId,
   dictionary,
   lang,
-  user,
 }: {
   businessId: string;
   dictionary: Dictionary;
   lang: Locale;
-  user?: UserCookieData;
 }) {
   const t = dictionary.pages.business;
   const containerClass = 'w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8';
@@ -234,23 +230,6 @@ export function Business({
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-        <CardHeader>
-          <CardTitle>{t.invites.sectionTitle}</CardTitle>
-          <CardDescription>{t.invites.sectionDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            {t.invites.sectionDescription}
-          </p>
-          <Button asChild>
-            <Link href={`/${lang}/business/${businessId}/invites`}>
-              {t.invites.sectionTitle}
-            </Link>
-          </Button>
         </CardContent>
       </Card>
 
