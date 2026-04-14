@@ -96,6 +96,13 @@ export const ProductsService = {
   },
 
   async deleteProduct(id: string, businessId: string): Promise<void> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const searchParams: Record<string, string> = { businessId };
@@ -138,13 +145,30 @@ export const ProductsService = {
     lookbackDays?: number,
     planningHorizonDays?: number
   ): Promise<StockInsightsResponse> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const searchParams: Record<string, string | number> = { businessId };
-      if (lookbackDays !== undefined) {
+      if (
+        lookbackDays !== undefined &&
+        Number.isFinite(lookbackDays) &&
+        Number.isInteger(lookbackDays) &&
+        lookbackDays > 0
+      ) {
         searchParams.lookbackDays = lookbackDays;
       }
-      if (planningHorizonDays !== undefined) {
+      if (
+        planningHorizonDays !== undefined &&
+        Number.isFinite(planningHorizonDays) &&
+        Number.isInteger(planningHorizonDays) &&
+        planningHorizonDays > 0
+      ) {
         searchParams.planningHorizonDays = planningHorizonDays;
       }
       const result = await client

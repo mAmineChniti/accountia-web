@@ -138,7 +138,7 @@ export default function BusinessInvites({
 
   const revokeMutation = useMutation({
     mutationFn: (inviteId: string) =>
-      BusinessService.revokeInvite(inviteId, { businessId, inviteId }),
+      BusinessService.revokeInvite({ businessId, inviteId }),
     onSuccess: () => {
       toast.success(t.revokeSuccess || 'Invite revoked successfully');
       queryClient.invalidateQueries({
@@ -379,6 +379,9 @@ export default function BusinessInvites({
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                aria-label={
+                                  t.moreActionsLabel || 'More actions'
+                                }
                                 disabled={
                                   resendMutation.isPending ||
                                   revokeMutation.isPending

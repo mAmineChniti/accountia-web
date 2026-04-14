@@ -487,6 +487,13 @@ export const BusinessService = {
   async getBusinessInvites(
     businessId: string
   ): Promise<BusinessInvitesListResponse> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_PENDING_INVITES;
@@ -534,18 +541,26 @@ export const BusinessService = {
    * Revoke a pending invitation.
    * DELETE /business/invites/:inviteId?businessId=<businessId>
    */
-  async revokeInvite(
-    inviteId: string,
-    data: RevokeInviteInput
-  ): Promise<RevokeInviteResponse> {
-    if (!inviteId || typeof inviteId !== 'string' || inviteId.trim() === '') {
+  async revokeInvite(data: RevokeInviteInput): Promise<RevokeInviteResponse> {
+    if (
+      !data.inviteId ||
+      typeof data.inviteId !== 'string' ||
+      data.inviteId.trim() === ''
+    ) {
       throw new Error('Invalid inviteId: must be a non-empty string');
+    }
+    if (
+      !data.businessId ||
+      typeof data.businessId !== 'string' ||
+      data.businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
     }
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.REVOKE_INVITE.replace(
         '{inviteId}',
-        inviteId
+        data.inviteId
       );
       const searchParams: Record<string, string> = {
         businessId: data.businessId,

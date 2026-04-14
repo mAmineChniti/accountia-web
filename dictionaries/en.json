@@ -512,6 +512,7 @@
         "noLabel": "No",
         "createdLabel": "Created",
         "actionsLabel": "Actions",
+        "moreActionsLabel": "More actions",
         "resendButton": "Resend",
         "revokeButton": "Revoke",
         "revokeSuccess": "Invite revoked successfully",

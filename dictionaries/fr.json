@@ -512,6 +512,7 @@
         "noLabel": "Non",
         "createdLabel": "Créée",
         "actionsLabel": "Actions",
+        "moreActionsLabel": "Plus d'actions",
         "resendButton": "Renvoyer",
         "revokeButton": "Révoquer",
         "revokeSuccess": "Invitation révoquée avec succès",

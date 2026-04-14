@@ -504,6 +504,7 @@
         "noLabel": "لا",
         "createdLabel": "تم الإنشاء",
         "actionsLabel": "الإجراءات",
+        "moreActionsLabel": "المزيد من الإجراءات",
         "resendButton": "إعادة الإرسال",
         "revokeButton": "إلغاء",
         "revokeSuccess": "تم إلغاء الدعوة بنجاح",

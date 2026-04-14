@@ -95,7 +95,7 @@ export type ChangeClientRoleDtoInput = z.infer<
 
 export const inviteFormSchema = z.object({
   invitedEmail: z.email('Please enter a valid email address'),
-  businessRole: z.string().min(1, 'Please choose a role'),
+  businessRole: BusinessRoleSchema,
 });
 
 export type InviteFormValues = z.infer<typeof inviteFormSchema>;
