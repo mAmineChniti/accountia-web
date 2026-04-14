@@ -5,6 +5,7 @@ import type {
   ProductDetailResponse,
   UpdateProductResponse,
   ProductImportResponse,
+  StockInsightsResponse,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
@@ -102,12 +103,11 @@ export const ProductsService = {
     ) {
       throw new Error('Invalid businessId: must be a non-empty string');
     }
-
     const client = createAuthenticatedClient();
     try {
+      const searchParams: Record<string, string> = { businessId };
       await client.delete(API_CONFIG.PRODUCTS.DELETE.replace('{id}', id), {
-        json: { businessId },
-        searchParams: { businessId },
+        searchParams,
       });
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -134,6 +134,46 @@ export const ProductsService = {
       const result = await client
         .post(API_CONFIG.PRODUCTS.IMPORT, { body: formData, searchParams })
         .json<ProductImportResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async getStockInsights(
+    businessId: string,
+    lookbackDays?: number,
+    planningHorizonDays?: number
+  ): Promise<StockInsightsResponse> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
+    const client = createAuthenticatedClient();
+    try {
+      const searchParams: Record<string, string | number> = { businessId };
+      if (
+        lookbackDays !== undefined &&
+        Number.isFinite(lookbackDays) &&
+        Number.isInteger(lookbackDays) &&
+        lookbackDays > 0
+      ) {
+        searchParams.lookbackDays = lookbackDays;
+      }
+      if (
+        planningHorizonDays !== undefined &&
+        Number.isFinite(planningHorizonDays) &&
+        Number.isInteger(planningHorizonDays) &&
+        planningHorizonDays > 0
+      ) {
+        searchParams.planningHorizonDays = planningHorizonDays;
+      }
+      const result = await client
+        .get(API_CONFIG.PRODUCTS.STOCK_INSIGHTS, { searchParams })
+        .json<StockInsightsResponse>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

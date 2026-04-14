@@ -123,7 +123,6 @@ export function Business({
     }
     return statusColors.neutral;
   };
-
   return (
     <div className={containerClass}>
       {/* Header */}

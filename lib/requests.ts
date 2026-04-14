@@ -109,8 +109,10 @@ export const API_CONFIG = {
     GET_STATISTICS: 'business/statistics',
     GET_CLIENT_PODIUM: 'business/client-podium',
     GET_OTHER_BUSINESSES: 'business/other',
-    INVITE_USER: 'business/{id}/invites',
-    RESEND_INVITE: 'business/{id}/invites/resend',
+    INVITE_USER: 'business/invites',
+    RESEND_INVITE: 'business/invites/resend',
+    GET_PENDING_INVITES: 'business/invites/pending',
+    REVOKE_INVITE: 'business/invites/{inviteId}',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -119,6 +121,7 @@ export const API_CONFIG = {
     UPDATE: 'products/{id}',
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
+    STOCK_INSIGHTS: 'products/stock-insights',
   },
   INVOICES: {
     // Issuer Endpoints
