@@ -139,4 +139,66 @@ export const ProductsService = {
       return handleServiceError(error);
     }
   },
+
+  async importProductsAi(
+    file: File,
+    businessId: string
+  ): Promise<ProductImportResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post('products/import-ai', { body: formData, searchParams })
+        .json<ProductImportResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async importProductsSmart(
+    file: File,
+    businessId: string
+  ): Promise<ProductImportResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.PRODUCTS.IMPORT_SMART, {
+          body: formData,
+          searchParams,
+          timeout: 60_000, // AI mapping might take some time
+        })
+        .json<ProductImportResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async generateAiReport(
+    businessId: string,
+    lang?: string
+  ): Promise<{ summary: string }> {
+    const client = createAuthenticatedClient();
+    try {
+      const searchParams: Record<string, string> = { businessId };
+      if (lang) {
+        searchParams.lang = lang;
+      }
+      const result = await client
+        .get('products/export-ai', {
+          searchParams,
+          timeout: 60_000, // 60 seconds timeout to allow Gemini to finish generating
+        })
+        .json<{ summary: string }>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
 };
