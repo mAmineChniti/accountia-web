@@ -1,3 +1,5 @@
+import type { BusinessRole } from './businessSchemas';
+
 export interface BusinessItem {
   id: string;
   name: string;
@@ -59,8 +61,6 @@ export interface ReviewApplicationResponse {
 }
 
 export type BusinessApplicationResponse = ReviewApplicationResponse;
-
-export type BusinessRole = 'ADMIN' | 'MEMBER' | 'CLIENT';
 
 export interface AssignedBusinessUser {
   id: string;
@@ -216,3 +216,5 @@ export type BusinessesListResponseDto = AllBusinessesResponse;
 export type BusinessResponseDto = BusinessDetailResponse;
 export type BusinessUserResponseDto = AssignUserResponse;
 export type BusinessStatisticsResponseDto = BusinessStatisticsResponse;
+
+export { type BusinessRole } from './businessSchemas';
