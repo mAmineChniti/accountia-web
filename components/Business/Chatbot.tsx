@@ -44,36 +44,51 @@ interface ChatbotProps {
 export function Chatbot({ businessId, dictionary }: ChatbotProps) {
   const t = dictionary.pages.business.chatbot;
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (globalThis.window === undefined || !businessId) return [];
-    const savedMessages = localStorage.getItem(
-      `${CHAT_STORAGE_KEY}_${businessId}`
-    );
-    if (savedMessages) {
-      try {
-        return JSON.parse(savedMessages);
-      } catch (error_) {
-        console.error('Failed to parse saved messages:', error_);
-        return [];
-      }
-    }
-    return [];
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  // Load chat history from localStorage on mount only
+  useEffect(() => {
+    setHistoryLoaded(false);
+    if (!businessId) {
+      setMessages([]);
+      setHistoryLoaded(true);
+      return;
+    }
+
+    const savedMessages = localStorage.getItem(
+      `${CHAT_STORAGE_KEY}_${businessId}`
+    );
+    if (!savedMessages) {
+      setMessages([]);
+      setHistoryLoaded(true);
+      return;
+    }
+
+    try {
+      setMessages(JSON.parse(savedMessages));
+    } catch (error_) {
+      console.error('Failed to parse saved messages:', error_);
+      setMessages([]);
+    } finally {
+      setHistoryLoaded(true);
+    }
+  }, [businessId]);
 
   // Save chat history to localStorage
   useEffect(() => {
-    if (businessId && messages.length > 0) {
+    if (businessId && historyLoaded && messages.length > 0) {
       localStorage.setItem(
         `${CHAT_STORAGE_KEY}_${businessId}`,
         JSON.stringify(messages)
       );
     }
-  }, [messages, businessId]);
+  }, [messages, businessId, historyLoaded]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
