@@ -709,7 +709,7 @@ export function ReceivedInvoices({
                 disabled={isLoadingDetails || !invoiceDetails}
               >
                 <Download className="h-4 w-4" />
-                {(t as Record<string, string>).exportPDF || 'Export PDF'}
+                {t.exportPDF || 'Export PDF'}
               </Button>
               <DialogClose asChild>
                 <Button
@@ -717,7 +717,7 @@ export function ReceivedInvoices({
                   variant="default"
                   className="shadow-md transition-shadow hover:shadow-lg"
                 >
-                  {(t as Record<string, string>).closeButtonLabel || 'Close'}
+                  {t.closeButtonLabel || 'Close'}
                 </Button>
               </DialogClose>
             </DialogFooter>
