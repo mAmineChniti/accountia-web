@@ -71,14 +71,12 @@ export const CreateInvoiceSchema = z.object({
 });
 
 export const UpdateInvoiceSchema = z.object({
-  businessId: z.string().min(1, 'Business ID is required'),
   description: z.string().optional(),
   paymentTerms: z.string().optional(),
   dueDate: OptionalDateSchema,
 });
 
 export const TransitionInvoiceSchema = z.object({
-  businessId: z.string().min(1, 'Business ID is required'),
   newStatus: InvoiceStatusEnum,
   amountPaid: z.number().min(0).optional(),
   reason: z.string().optional(),

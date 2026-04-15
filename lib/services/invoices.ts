@@ -83,6 +83,7 @@ export const InvoicesService = {
   // 4. Update Draft Invoice
   async updateInvoice(
     id: string,
+    businessId: string,
     data: UpdateInvoiceInput
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
@@ -91,8 +92,12 @@ export const InvoicesService = {
         '{id}',
         encodeURIComponent(id)
       );
+      const payload = {
+        ...data,
+        businessId,
+      };
       const result = await client
-        .patch(endpoint, { json: data })
+        .patch(endpoint, { json: payload })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -103,6 +108,7 @@ export const InvoicesService = {
   // 5. Transition Invoice State
   async transitionInvoice(
     id: string,
+    businessId: string,
     data: TransitionInvoiceInput
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
@@ -111,8 +117,12 @@ export const InvoicesService = {
         '{id}',
         encodeURIComponent(id)
       );
+      const payload = {
+        ...data,
+        businessId,
+      };
       const result = await client
-        .post(endpoint, { json: data })
+        .post(endpoint, { json: payload })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -254,14 +264,11 @@ export const InvoicesService = {
   },
 
   // 10. Get Invoice Import Template
-  async getImportTemplate(
-    businessId: string
-  ): Promise<ImportTemplateResponseDto> {
+  async getImportTemplate(): Promise<ImportTemplateResponseDto> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .get(API_CONFIG.INVOICES.IMPORT_TEMPLATE, { searchParams })
+        .get(API_CONFIG.INVOICES.IMPORT_TEMPLATE)
         .json<ImportTemplateResponseDto>();
       return result;
     } catch (error: unknown) {

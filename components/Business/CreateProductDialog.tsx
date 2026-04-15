@@ -49,7 +49,6 @@ export function CreateProductDialog({
   const form = useForm<CreateProductInput>({
     resolver: zodResolver(CreateProductSchema),
     defaultValues: {
-      businessId,
       name: '',
       description: '',
       unitPrice: 0,
@@ -60,7 +59,7 @@ export function CreateProductDialog({
 
   const mutation = useMutation({
     mutationFn: (data: CreateProductInput) =>
-      ProductsService.createProduct(data),
+      ProductsService.createProduct(businessId, data),
     onSuccess: () => {
       toast.success(t.createSuccess);
       // Invalidate all product queries for this business to refresh the list

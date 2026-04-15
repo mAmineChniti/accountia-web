@@ -225,11 +225,9 @@ export function IssuedInvoices({
     mutationFn: (newStatus: InvoiceStatus) => {
       const payload: {
         newStatus: InvoiceStatus;
-        businessId: string;
         amountPaid?: number;
       } = {
         newStatus,
-        businessId,
       };
 
       if (
@@ -240,7 +238,11 @@ export function IssuedInvoices({
         payload.amountPaid = invoiceDetails.totalAmount;
       }
 
-      return InvoicesService.transitionInvoice(selectedInvoiceId!, payload);
+      return InvoicesService.transitionInvoice(
+        selectedInvoiceId!,
+        businessId,
+        payload
+      );
     },
     onSuccess: (data) => {
       // Update invoice details in cache

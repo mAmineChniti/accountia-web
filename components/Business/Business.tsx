@@ -70,7 +70,7 @@ export function Business({
     error,
   } = useQuery({
     queryKey: ['business', businessId],
-    queryFn: () => BusinessService.getBusinessById(businessId, businessId),
+    queryFn: () => BusinessService.getBusinessById(businessId),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
