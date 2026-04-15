@@ -69,6 +69,14 @@ export function ImportInvoicesModal({
   >();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const importStatus = result
+    ? result.successCount === 0 && result.failedCount > 0
+      ? 'failed'
+      : result.failedCount > 0 || result.warningCount > 0
+        ? 'partial'
+        : 'success'
+    : 'idle';
+
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
     mutationFn: (file: File): Promise<BulkImportInvoicesResponseDto> =>
       InvoicesService.importInvoices(file, businessId),
@@ -195,13 +203,16 @@ export function ImportInvoicesModal({
         <DialogHeader>
           <DialogTitle>
             {result
-              ? (t.importCompleteTitle ?? 'Import Complete')
+              ? importStatus === 'failed'
+                ? 'Import Failed'
+                : 'Import Complete'
               : (t.importInvoicesTitle ?? 'Import Invoices')}
           </DialogTitle>
           <DialogDescription>
             {result
-              ? t.importCompleteDescription ||
-                'Your invoices have been imported successfully'
+              ? importStatus === 'failed'
+                ? 'No invoices were imported. Review the failed rows and try again.'
+                : 'Your invoices have been imported successfully'
               : t.importInvoicesDescription ||
                 'Upload a CSV or Excel file to import invoices'}
           </DialogDescription>
@@ -211,14 +222,28 @@ export function ImportInvoicesModal({
           // Success Result
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-center">
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
-                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
+              <div
+                className={`rounded-full p-3 ${
+                  importStatus === 'failed'
+                    ? 'bg-red-100 dark:bg-red-900'
+                    : importStatus === 'partial'
+                      ? 'bg-yellow-100 dark:bg-yellow-900'
+                      : 'bg-green-100 dark:bg-green-900'
+                }`}
+              >
+                {importStatus === 'failed' ? (
+                  <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-300" />
+                ) : (
+                  <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-300" />
+                )}
               </div>
             </div>
 
             <div className="space-y-2 text-center">
               <p className="text-lg font-semibold">
-                {t.importSuccess || 'Import Completed'}
+                {importStatus === 'failed'
+                  ? t.importFailed || 'Import Failed'
+                  : t.importSuccess || 'Import Completed'}
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-green-50 dark:bg-green-950/30">
@@ -264,6 +289,50 @@ export function ImportInvoicesModal({
                   </Card>
                 )}
               </div>
+
+              {result.failedCount > 0 && (
+                <Card className="border-red-200 bg-red-50 text-left dark:border-red-900 dark:bg-red-950/20">
+                  <CardContent className="space-y-2 pt-4">
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                      {t.importFailedDetailsTitle ||
+                        'Failed rows details (first 5)'}
+                    </p>
+                    <div className="space-y-1 text-xs text-red-800 dark:text-red-200">
+                      {result.results
+                        .filter(
+                          (item) =>
+                            item.success === false ||
+                            ((item as unknown as Record<string, unknown>)
+                              .status as string | undefined) === 'error'
+                        )
+                        .slice(0, 5)
+                        .map((item, index) => {
+                          const fallbackMessage = item.message?.trim();
+                          const combinedErrors = item.errors?.join(', ');
+                          const detail =
+                            combinedErrors && combinedErrors.length > 0
+                              ? combinedErrors
+                              : fallbackMessage ||
+                                'Validation failed for this row';
+                          const legacyInvoiceNumber = (
+                            item as unknown as Record<string, unknown>
+                          ).invoiceNumber;
+                          const rowLabel =
+                            item.itemNumber ??
+                            (typeof legacyInvoiceNumber === 'string'
+                              ? legacyInvoiceNumber
+                              : undefined) ??
+                            index + 1;
+                          return (
+                            <p key={`${rowLabel}-${detail}`}>
+                              {`Row ${rowLabel}: ${detail}`}
+                            </p>
+                          );
+                        })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         ) : (
@@ -385,6 +454,10 @@ export function ImportInvoicesModal({
                     <p className="mt-2 text-xs">
                       {t.fileRequirements ||
                         'Recipient type rules: PLATFORM_BUSINESS requires platformId, PLATFORM_INDIVIDUAL/EXTERNAL requires email. EXTERNAL also requires displayName.'}
+                    </p>
+                    <p className="mt-2 text-xs text-blue-700 dark:text-blue-200">
+                      {t.productIdsRequiredNote ||
+                        'For invoice import, fill productIds with valid product IDs. productNames alone may not be enough for the importer to match line items.'}
                     </p>
                   </div>
                 </div>

@@ -121,6 +121,9 @@ export function IssuedInvoices({
     string | undefined
   >();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<
+    InvoiceStatus | undefined
+  >();
   const [currentPage, setCurrentPage] = useState(1);
   const [pagesByNumber, setPagesByNumber] = useState<
     Record<number, InvoiceResponse[]>
@@ -222,11 +225,9 @@ export function IssuedInvoices({
     mutationFn: (newStatus: InvoiceStatus) => {
       const payload: {
         newStatus: InvoiceStatus;
-        businessId: string;
         amountPaid?: number;
       } = {
         newStatus,
-        businessId,
       };
 
       if (
@@ -237,7 +238,11 @@ export function IssuedInvoices({
         payload.amountPaid = invoiceDetails.totalAmount;
       }
 
-      return InvoicesService.transitionInvoice(selectedInvoiceId!, payload);
+      return InvoicesService.transitionInvoice(
+        selectedInvoiceId!,
+        businessId,
+        payload
+      );
     },
     onSuccess: (data) => {
       // Update invoice details in cache
@@ -248,6 +253,13 @@ export function IssuedInvoices({
       // Also invalidate the invoices list to refresh it
       queryClient.invalidateQueries({
         queryKey: ['invoices-issued', businessId],
+      });
+    },
+    onError: (error: unknown) => {
+      import('sonner').then(({ toast }) => {
+        toast.error(
+          error instanceof Error ? error.message : 'Transformation failed'
+        );
       });
     },
   });
@@ -811,9 +823,13 @@ export function IssuedInvoices({
                       return (
                         <Select
                           value={invoiceDetails.status}
-                          onValueChange={(newStatus) =>
-                            transitionStatus(newStatus as InvoiceStatus)
-                          }
+                          onValueChange={(newStatus) => {
+                            if (newStatus === 'PAID') {
+                              setPendingStatusChange('PAID');
+                            } else {
+                              transitionStatus(newStatus as InvoiceStatus);
+                            }
+                          }}
                           disabled={isTransitioning}
                         >
                           <SelectTrigger className="w-full">
@@ -963,13 +979,64 @@ export function IssuedInvoices({
               disabled={isLoadingDetails || !invoiceDetails}
             >
               <Download className="h-4 w-4" />
-              {(t as Record<string, string>).exportPDF || 'Export PDF'}
+              {t.exportPDF || 'Export PDF'}
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="default">
-                {(t as Record<string, string>).closeButtonLabel || 'Close'}
+                {t.closeButtonLabel || 'Close'}
               </Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for PAID Status */}
+      <Dialog
+        open={pendingStatusChange !== undefined}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t.statusTransition?.confirmTitle ?? 'Êtes-vous sûr ?'}
+            </DialogTitle>
+            <DialogDescription>
+              {t.statusTransition?.confirmDescription
+                ? t.statusTransition.confirmDescription
+                    .replace(
+                      '{amount}',
+                      invoiceDetails?.totalAmount?.toLocaleString(lang, {
+                        minimumFractionDigits: 2,
+                      }) ?? ''
+                    )
+                    .replace('{currency}', invoiceDetails?.currency ?? '')
+                : `Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de ${invoiceDetails?.totalAmount?.toLocaleString(
+                    lang,
+                    {
+                      minimumFractionDigits: 2,
+                    }
+                  )} ${invoiceDetails?.currency}.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingStatusChange(undefined)}
+            >
+              {t.statusTransition?.cancel ?? 'Annuler'}
+            </Button>
+            <Button
+              onClick={() => {
+                if (pendingStatusChange) {
+                  transitionStatus(pendingStatusChange);
+                }
+                setPendingStatusChange(undefined);
+              }}
+            >
+              {t.statusTransition?.confirm ?? 'Confirmer le paiement'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

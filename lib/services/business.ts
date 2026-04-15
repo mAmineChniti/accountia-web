@@ -25,6 +25,8 @@ import type {
   TenantMetadataResponse,
   BusinessStatisticsResponse,
   ClientPodiumResponse,
+  StripeOnboardingLinkResponse,
+  StripeConnectStatusResponse,
   GetOtherBusinessesResponse,
 } from '@/types/services';
 import {
@@ -137,13 +139,10 @@ export const BusinessService = {
     }
   },
 
-  async getBusinessById(
-    id: string,
-    businessId: string
-  ): Promise<BusinessDetailResponse> {
+  async getBusinessById(businessId: string): Promise<BusinessDetailResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.GET_BUSINESS.replace('{id}', id);
+      const endpoint = API_CONFIG.BUSINESS.GET_BUSINESS;
       const searchParams: Record<string, string> = { businessId };
       const result = await client
         .get(endpoint, { searchParams })
@@ -161,15 +160,15 @@ export const BusinessService = {
   },
 
   async updateBusiness(
-    id: string,
+    businessId: string,
     data: UpdateBusinessInput
   ): Promise<BusinessDetailResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.UPDATE_BUSINESS.replace('{id}', id);
+      const endpoint = API_CONFIG.BUSINESS.UPDATE_BUSINESS;
       const payload = {
-        ...(data as UpdateBusinessInput),
-        businessId: id,
+        ...data,
+        businessId,
       };
       const result = await client
         .put(endpoint, { json: payload })
@@ -186,12 +185,12 @@ export const BusinessService = {
     }
   },
 
-  async deleteBusiness(id: string): Promise<BusinessMessageResponse> {
+  async deleteBusiness(businessId: string): Promise<BusinessMessageResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.DELETE_BUSINESS.replace('{id}', id);
+      const endpoint = API_CONFIG.BUSINESS.DELETE_BUSINESS;
       const result = await client
-        .delete(endpoint, { json: { businessId: id } })
+        .delete(endpoint, { json: { businessId } })
         .json<BusinessMessageResponse>();
       return result;
     } catch (error: unknown) {
@@ -211,12 +210,9 @@ export const BusinessService = {
   ): Promise<AssignUserResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.ASSIGN_USER.replace(
-        '{id}',
-        businessId
-      );
+      const endpoint = API_CONFIG.BUSINESS.ASSIGN_USER;
       const payload = {
-        ...(data as AssignBusinessUserInput),
+        ...data,
         businessId,
       };
       const result = await client
@@ -241,11 +237,12 @@ export const BusinessService = {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.UNASSIGN_USER.replace(
-        '{id}',
-        businessId
-      ).replace('{userId}', userId);
+        '{userId}',
+        userId
+      );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .delete(endpoint, { json: { businessId } })
+        .delete(endpoint, { searchParams })
         .json<BusinessMessageResponse>();
       return result;
     } catch (error: unknown) {
@@ -259,13 +256,10 @@ export const BusinessService = {
     }
   },
 
-  async getTenantMetadata(
-    id: string,
-    businessId: string
-  ): Promise<TenantMetadataResponse> {
+  async getTenantMetadata(businessId: string): Promise<TenantMetadataResponse> {
     const client = createAuthenticatedClient();
     try {
-      const endpoint = API_CONFIG.BUSINESS.TENANT_METADATA.replace('{id}', id);
+      const endpoint = API_CONFIG.BUSINESS.TENANT_METADATA;
       const searchParams: Record<string, string> = { businessId };
       const result = await client
         .get(endpoint, { searchParams })
@@ -369,11 +363,12 @@ export const BusinessService = {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.DELETE_CLIENT.replace(
-        '{id}',
-        businessId
-      ).replace('{clientId}', clientId);
+        '{clientId}',
+        clientId
+      );
+      const searchParams: Record<string, string> = { businessId };
       const result = await client
-        .delete(endpoint, { json: { businessId } })
+        .delete(endpoint, { searchParams })
         .json<BusinessMessageResponse>();
       return result;
     } catch (error: unknown) {
@@ -401,15 +396,12 @@ export const BusinessService = {
     const client = createAuthenticatedClient();
     try {
       const endpoint = API_CONFIG.BUSINESS.GET_STATISTICS;
-      const body: Record<string, number> = {};
+      const searchParams: Record<string, string> = { businessId };
       if (predictionHorizonDays !== undefined) {
-        body.predictionHorizonDays = predictionHorizonDays;
+        searchParams.predictionHorizonDays = String(predictionHorizonDays);
       }
       const result = await client
-        .post(endpoint, {
-          searchParams: { businessId },
-          json: body,
-        })
+        .get(endpoint, { searchParams })
         .json<BusinessStatisticsResponse>();
       return result;
     } catch (error: unknown) {
@@ -525,6 +517,79 @@ export const BusinessService = {
       const result = await client
         .post(endpoint, { json: data })
         .json<BusinessInviteResponseDto>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getStripeOnboardingLink(
+    businessId: string
+  ): Promise<StripeOnboardingLinkResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.STRIPE_ONBOARDING_LINK;
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<StripeOnboardingLinkResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getStripeConnectStatus(
+    businessId: string
+  ): Promise<StripeConnectStatusResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.STRIPE_STATUS;
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<StripeConnectStatusResponse>();
+      return result;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorData = await safeParseJson(
+          (error as HTTPErrorLike).response
+        );
+        throw ApiError.fromResponse(errorData);
+      }
+      throw error;
+    }
+  },
+
+  async getTeamMembers(
+    businessId: string
+  ): Promise<{ message: string; members: unknown[] }> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint = API_CONFIG.BUSINESS.GET_TEAM;
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<{ message: string; members: unknown[] }>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

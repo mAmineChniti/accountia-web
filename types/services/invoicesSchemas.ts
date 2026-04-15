@@ -71,14 +71,12 @@ export const CreateInvoiceSchema = z.object({
 });
 
 export const UpdateInvoiceSchema = z.object({
-  businessId: z.string().min(1, 'Business ID is required'),
   description: z.string().optional(),
   paymentTerms: z.string().optional(),
   dueDate: OptionalDateSchema,
 });
 
 export const TransitionInvoiceSchema = z.object({
-  businessId: z.string().min(1, 'Business ID is required'),
   newStatus: InvoiceStatusEnum,
   amountPaid: z.number().min(0).optional(),
   reason: z.string().optional(),
@@ -93,5 +91,23 @@ export type CreateInvoiceLineItemInput = z.infer<
 export type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>;
 export type UpdateInvoiceInput = z.infer<typeof UpdateInvoiceSchema>;
 export type TransitionInvoiceInput = z.infer<typeof TransitionInvoiceSchema>;
+
+export const CreateInvoiceCheckoutSessionSchema = z.object({
+  successUrl: z.url().optional(),
+  cancelUrl: z.url().optional(),
+});
+
+export const MockInvoicePaymentSchema = z.object({
+  cardholderName: z.string().min(2, 'Cardholder name is required'),
+  cardNumber: z.string().min(12, 'Card number is required'),
+  expiry: z.string().min(4, 'Expiry is required'),
+  cvc: z.string().min(3, 'CVC is required'),
+});
+
+export type CreateInvoiceCheckoutSessionInput = z.infer<
+  typeof CreateInvoiceCheckoutSessionSchema
+>;
+
+export type MockInvoicePaymentInput = z.infer<typeof MockInvoicePaymentSchema>;
 
 export { InvoiceStatusEnum };

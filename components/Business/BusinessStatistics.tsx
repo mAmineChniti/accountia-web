@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
-import { BusinessService } from '@/lib/requests';
+import { BusinessService, ProductsService } from '@/lib/requests';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Card,
@@ -71,6 +71,17 @@ export default function BusinessStatistics({
     queryFn: () => BusinessService.getBusinessStatistics(businessId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  const {
+    data: stockInsights,
+    isLoading: stockInsightsLoading,
+    isError: stockInsightsError,
+  } = useQuery({
+    queryKey: ['product-stock-insights', businessId],
+    queryFn: () => ProductsService.getStockInsights(businessId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Prepare chart data as ONE continuous dataset
@@ -1086,6 +1097,125 @@ export default function BusinessStatistics({
                 </CardContent>
               </Card>
             )}
+
+            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-12">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {text.stockInsightsTitle || 'AI Stock Insights'}
+                </CardTitle>
+                <CardDescription>
+                  {text.stockInsightsDescription ||
+                    'Local AI (no external API): stockout risk and reorder recommendations'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stockInsightsLoading ? (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : stockInsightsError ? (
+                  <p className="text-destructive text-sm">
+                    {text.stockInsightsError ||
+                      'Failed to load stock insights.'}
+                  </p>
+                ) : !stockInsights || stockInsights.items.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    {text.noStockInsights || 'No stock insights available yet.'}
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.highRiskProducts || 'High risk products'}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.highRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.mediumRiskProducts || 'Medium risk products'}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.mediumRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.lowRiskProducts || 'Low risk products'}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.lowRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.recommendedReorderUnits ||
+                            'Recommended reorder units'}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.totalRecommendedUnits}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {stockInsights.items.slice(0, 6).map((item) => (
+                        <div
+                          key={item.productId}
+                          className="flex flex-col gap-3 rounded-lg border p-3 md:flex-row md:items-center md:justify-between"
+                        >
+                          <div>
+                            <p className="font-medium">{item.productName}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {text.stockLabel || 'Stock'}:{' '}
+                              {item.currentQuantity} |{' '}
+                              {(
+                                text.soldLastPeriod || 'Sold ({days}d)'
+                              ).replace(
+                                '{days}',
+                                stockInsights.lookbackDays.toString()
+                              )}
+                              : {item.soldLastPeriod} |{' '}
+                              {text.dailyRate || 'Daily rate'}:{' '}
+                              {item.dailySalesRate}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {item.reason}
+                            </p>
+                            <p className="text-xs font-medium">
+                              {text.recommendationLabel || 'Recommendation'}:{' '}
+                              {item.recommendation}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                item.riskLevel === 'HIGH'
+                                  ? 'bg-red-500/15 text-red-700 dark:text-red-300'
+                                  : item.riskLevel === 'MEDIUM'
+                                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              }`}
+                            >
+                              {item.riskLevel}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              {text.reorderLabel || 'Reorder'}:{' '}
+                              {item.recommendedReorderQuantity}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </>

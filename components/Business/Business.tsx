@@ -1,12 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Building2, Phone, Globe, Users } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlertCircle,
+  Building2,
+  Phone,
+  Globe,
+  Users,
+  CreditCard,
+  CircleCheck,
+  CircleAlert,
+  Link as LinkIcon,
+} from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
 import { type ClientData } from '@/types/services';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -35,6 +46,7 @@ export function Business({
   lang: Locale;
 }) {
   const t = dictionary.pages.business;
+  const queryClient = useQueryClient();
   const containerClass = 'w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8';
   const [selectedClient, setSelectedClient] = useState<
     ClientData | undefined
@@ -58,10 +70,47 @@ export function Business({
     error,
   } = useQuery({
     queryKey: ['business', businessId],
-    queryFn: () => BusinessService.getBusinessById(businessId, businessId),
+    queryFn: () => BusinessService.getBusinessById(businessId),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
+
+  const {
+    data: stripeStatus,
+    isLoading: isLoadingStripeStatus,
+    isError: isStripeStatusError,
+    refetch: refetchStripeStatus,
+  } = useQuery({
+    queryKey: ['business-stripe-status', businessId],
+    queryFn: () => BusinessService.getStripeConnectStatus(businessId),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
+  const connectStripeMutation = useMutation({
+    mutationFn: () => BusinessService.getStripeOnboardingLink(businessId),
+    onSuccess: (data) => {
+      if (data.onboardingUrl) {
+        toast.success(data.message || 'Stripe onboarding link generated');
+        globalThis.location.assign(data.onboardingUrl);
+      } else {
+        toast.error('Failed to generate onboarding link');
+      }
+    },
+    onError: (mutationError) => {
+      const message =
+        mutationError instanceof Error
+          ? mutationError.message
+          : 'Unable to create Stripe onboarding link';
+      toast.error(message);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['business-stripe-status', businessId],
+      });
+    },
+  });
+
   const clients = clientsData?.clients ?? [];
 
   const business = businessData?.business;
@@ -230,6 +279,86 @@ export function Business({
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Stripe Connect */}
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            {t.stripe?.title || 'Stripe Connect'}
+          </CardTitle>
+          <CardDescription>
+            {t.stripe?.description ||
+              'Connect your Stripe account to receive invoice payments directly.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoadingStripeStatus ? (
+            <Skeleton className="h-16 w-full" />
+          ) : isStripeStatusError ? (
+            <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-3 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <CircleAlert className="h-4 w-4" />
+                {t.stripe?.verifyError || 'Unable to verify Stripe status.'}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void refetchStripeStatus();
+                }}
+              >
+                {t.retry || 'Retry'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {stripeStatus?.isConnected ? (
+                      <>
+                        <CircleCheck className="h-4 w-4 text-emerald-600" />
+                        {t.stripe?.connected || 'Connected'}
+                      </>
+                    ) : (
+                      <>
+                        <CircleAlert className="h-4 w-4 text-amber-600" />
+                        {t.stripe?.notConnected || 'Not connected'}
+                      </>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    {stripeStatus?.message ||
+                      t.stripe?.connectHint ||
+                      'Connect Stripe to start receiving payments.'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => connectStripeMutation.mutate()}
+                  disabled={connectStripeMutation.isPending}
+                  className="min-w-44"
+                >
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  {connectStripeMutation.isPending
+                    ? t.stripe?.preparingLink || 'Preparing link...'
+                    : stripeStatus?.isConnected
+                      ? t.stripe?.updateSetup || 'Update Stripe setup'
+                      : t.stripe?.connectStripe || 'Connect Stripe'}
+                </Button>
+              </div>
+
+              {stripeStatus?.stripeConnectId ? (
+                <p className="text-muted-foreground text-xs">
+                  {t.stripe?.account || 'Account'}:{' '}
+                  {stripeStatus.stripeConnectId}
+                </p>
+              ) : undefined}
+            </div>
+          )}
         </CardContent>
       </Card>
 

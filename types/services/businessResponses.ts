@@ -171,6 +171,17 @@ export interface ProductStatsDto {
   profitMarginPercent: number;
 }
 
+export interface StripeOnboardingLinkResponse {
+  onboardingUrl: string;
+  message?: string;
+}
+
+export interface StripeConnectStatusResponse {
+  isConnected: boolean;
+  stripeConnectId?: string;
+  message: string;
+}
+
 export interface BusinessStatisticsResponse {
   message: string;
   businessId: string;

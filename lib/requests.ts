@@ -97,15 +97,15 @@ export const API_CONFIG = {
     REVIEW_APPLICATION: 'business/applications/{id}/review',
     MY_BUSINESSES: 'business/my-businesses',
     ALL_BUSINESSES: 'business/all',
-    GET_BUSINESS: 'business/{id}',
-    UPDATE_BUSINESS: 'business/{id}',
-    DELETE_BUSINESS: 'business/{id}',
-    ASSIGN_USER: 'business/{id}/users',
-    UNASSIGN_USER: 'business/{id}/users/{userId}',
-    TENANT_METADATA: 'business/{id}/tenant/metadata',
+    GET_BUSINESS: 'business/details',
+    UPDATE_BUSINESS: 'business/update',
+    DELETE_BUSINESS: 'business/delete',
+    ASSIGN_USER: 'business/users',
+    UNASSIGN_USER: 'business/users/{userId}',
+    TENANT_METADATA: 'business/tenant/metadata',
     GET_CLIENTS: 'business/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
-    DELETE_CLIENT: 'business/{id}/clients/{clientId}',
+    DELETE_CLIENT: 'business/clients/{clientId}',
     GET_STATISTICS: 'business/statistics',
     GET_CLIENT_PODIUM: 'business/client-podium',
     GET_OTHER_BUSINESSES: 'business/other',
@@ -113,6 +113,9 @@ export const API_CONFIG = {
     RESEND_INVITE: 'business/invites/resend',
     GET_PENDING_INVITES: 'business/invites/pending',
     REVOKE_INVITE: 'business/invites/{inviteId}',
+    STRIPE_ONBOARDING_LINK: 'business/stripe/onboarding-link',
+    STRIPE_STATUS: 'business/stripe/status',
+    GET_TEAM: 'business/team',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -138,6 +141,10 @@ export const API_CONFIG = {
     GET_RECEIVED_DETAILS: 'invoices/received/{receiptId}/details',
     GET_RECEIVED_INDIVIDUAL_DETAILS:
       'invoices/received/individual/{receiptId}/details',
+    CREATE_INDIVIDUAL_CHECKOUT:
+      'invoices/received/individual/{receiptId}/payments/checkout',
+    CREATE_INDIVIDUAL_MOCK_PAYMENT:
+      'invoices/received/individual/{receiptId}/payments/mock',
   },
   CHAT: {
     SEND_MESSAGE: 'chat/message',

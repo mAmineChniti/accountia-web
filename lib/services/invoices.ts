@@ -1,5 +1,7 @@
 import type {
   CreateInvoiceInput,
+  CreateInvoiceCheckoutSessionInput,
+  MockInvoicePaymentInput,
   UpdateInvoiceInput,
   TransitionInvoiceInput,
 } from '@/types/services';
@@ -7,6 +9,7 @@ import type {
   InvoiceResponse,
   InvoiceListResponse,
   ReceivedInvoiceListResponse,
+  InvoiceCheckoutSessionResponse,
   ImportTemplateResponseDto,
   BulkImportInvoicesResponseDto,
 } from '@/types/services';
@@ -80,6 +83,7 @@ export const InvoicesService = {
   // 4. Update Draft Invoice
   async updateInvoice(
     id: string,
+    businessId: string,
     data: UpdateInvoiceInput
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
@@ -88,8 +92,12 @@ export const InvoicesService = {
         '{id}',
         encodeURIComponent(id)
       );
+      const payload = {
+        ...data,
+        businessId,
+      };
       const result = await client
-        .patch(endpoint, { json: data })
+        .patch(endpoint, { json: payload })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -100,6 +108,7 @@ export const InvoicesService = {
   // 5. Transition Invoice State
   async transitionInvoice(
     id: string,
+    businessId: string,
     data: TransitionInvoiceInput
   ): Promise<InvoiceResponse> {
     const client = createAuthenticatedClient();
@@ -108,8 +117,12 @@ export const InvoicesService = {
         '{id}',
         encodeURIComponent(id)
       );
+      const payload = {
+        ...data,
+        businessId,
+      };
       const result = await client
-        .post(endpoint, { json: data })
+        .post(endpoint, { json: payload })
         .json<InvoiceResponse>();
       return result;
     } catch (error: unknown) {
@@ -211,15 +224,51 @@ export const InvoicesService = {
     }
   },
 
-  // 10. Get Invoice Import Template
-  async getImportTemplate(
-    businessId: string
-  ): Promise<ImportTemplateResponseDto> {
+  async createIndividualCheckoutSession(
+    receiptId: string,
+    payload?: CreateInvoiceCheckoutSessionInput
+  ): Promise<InvoiceCheckoutSessionResponse> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string> = { businessId };
+      const endpoint = API_CONFIG.INVOICES.CREATE_INDIVIDUAL_CHECKOUT.replace(
+        '{receiptId}',
+        encodeURIComponent(receiptId)
+      );
       const result = await client
-        .get(API_CONFIG.INVOICES.IMPORT_TEMPLATE, { searchParams })
+        .post(endpoint, { json: payload ?? {} })
+        .json<InvoiceCheckoutSessionResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async createIndividualMockPayment(
+    receiptId: string,
+    payload: MockInvoicePaymentInput
+  ): Promise<InvoiceResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const endpoint =
+        API_CONFIG.INVOICES.CREATE_INDIVIDUAL_MOCK_PAYMENT.replace(
+          '{receiptId}',
+          encodeURIComponent(receiptId)
+        );
+      const result = await client
+        .post(endpoint, { json: payload })
+        .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  // 10. Get Invoice Import Template
+  async getImportTemplate(): Promise<ImportTemplateResponseDto> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .get(API_CONFIG.INVOICES.IMPORT_TEMPLATE)
         .json<ImportTemplateResponseDto>();
       return result;
     } catch (error: unknown) {

@@ -1,7 +1,9 @@
 import type { Locale } from '@/i18n-config';
 import type en from '@/dictionaries/en.json';
 
-const dictionaries = {
+type DictionaryContent = typeof en;
+
+const dictionaries: Record<Locale, () => Promise<DictionaryContent>> = {
   en: () => import('@/dictionaries/en.json').then((module) => module.default),
   fr: () => import('@/dictionaries/fr.json').then((module) => module.default),
   ar: () => import('@/dictionaries/ar.json').then((module) => module.default),
@@ -10,4 +12,4 @@ const dictionaries = {
 export const getDictionary = async (locale: Locale) =>
   dictionaries[locale]?.() ?? dictionaries.en();
 
-export type Dictionary = typeof en;
+export type Dictionary = DictionaryContent;

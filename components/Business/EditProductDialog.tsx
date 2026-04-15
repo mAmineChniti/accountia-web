@@ -52,7 +52,6 @@ export function EditProductDialog({
   const form = useForm<UpdateProductInput>({
     resolver: zodResolver(UpdateProductSchema),
     defaultValues: {
-      businessId,
       name: product.name,
       description: product.description,
       unitPrice: product.unitPrice,
@@ -65,7 +64,6 @@ export function EditProductDialog({
   useEffect(() => {
     if (open) {
       form.reset({
-        businessId,
         name: product.name,
         description: product.description,
         unitPrice: product.unitPrice,
@@ -82,12 +80,11 @@ export function EditProductDialog({
     product.cost,
     product.quantity,
     form,
-    businessId,
   ]);
 
   const mutation = useMutation({
     mutationFn: (data: UpdateProductInput) =>
-      ProductsService.updateProduct(product.id, data),
+      ProductsService.updateProduct(product.id, businessId, data),
     onSuccess: () => {
       toast.success(t.updateSuccess || 'Product updated successfully');
       // Invalidate all product queries for this business to refresh the list
@@ -176,7 +173,7 @@ export function EditProductDialog({
                 name="unitPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.unitPriceLabel} (TND)</FormLabel>
+                    <FormLabel>{t.unitPriceLabel}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
@@ -202,7 +199,7 @@ export function EditProductDialog({
                 name="cost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t.costPriceLabel} (TND)</FormLabel>
+                    <FormLabel>{t.costPriceLabel}</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
