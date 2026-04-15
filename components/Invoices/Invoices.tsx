@@ -60,6 +60,7 @@ import type {
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { env } from '@/env';
+import AccountiaChatbot from '@/components/reusable/AccountiaChatbot';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -1149,6 +1150,9 @@ export default function Invoices({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Accountia AI Chatbot — helps clients with invoices, payments, and platform questions */}
+      <AccountiaChatbot />
     </div>
   );
 }

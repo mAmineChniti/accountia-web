@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -81,6 +81,9 @@ export function CreateBusinessInvoicePage({
   dictionary,
   lang,
 }: CreateBusinessInvoicePageProps) {
+  // States for display values in recipient comboboxes
+  const [businessDisplayValue, setBusinessDisplayValue] = useState('');
+  const [clientDisplayValue, setClientDisplayValue] = useState('');
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = dictionary.pages.invoices;
@@ -182,16 +185,6 @@ export function CreateBusinessInvoicePage({
 
   const clients = clientsData?.clients ?? [];
 
-  // Reset platform-specific fields when recipient type changes
-  useEffect(() => {
-    if (recipientType === INVOICE_RECIPIENT_TYPES.EXTERNAL) {
-      form.setValue('recipient.platformId', '');
-      form.setValue('recipient.displayName', '');
-    } else {
-      form.setValue('recipient.displayName', '');
-    }
-  }, [recipientType, form]);
-
   // Handle business selection from combobox
   const handleBusinessSelect = (businessId: string) => {
     const business = otherBusinesses.find((b) => b.id === businessId);
@@ -199,6 +192,7 @@ export function CreateBusinessInvoicePage({
       form.setValue('recipient.platformId', business.id);
       form.setValue('recipient.email', business.email);
       form.setValue('recipient.displayName', business.name);
+      setBusinessDisplayValue(business.name || business.email || business.id);
     }
   };
 
@@ -211,6 +205,7 @@ export function CreateBusinessInvoicePage({
       const displayName =
         `${client.firstName || ''} ${client.lastName || ''}`.trim();
       form.setValue('recipient.displayName', displayName);
+      setClientDisplayValue(displayName || client.email || client.id);
     }
   };
 
@@ -478,7 +473,21 @@ export function CreateBusinessInvoicePage({
                     <FormLabel>
                       {t.recipientTypeLabel || 'Recipient Type'}
                     </FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Reset fields when type changes
+                        if (value === INVOICE_RECIPIENT_TYPES.EXTERNAL) {
+                          form.setValue('recipient.platformId', '');
+                          form.setValue('recipient.displayName', '');
+                        } else {
+                          form.setValue('recipient.displayName', '');
+                        }
+                        setBusinessDisplayValue('');
+                        setClientDisplayValue('');
+                      }}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -521,6 +530,8 @@ export function CreateBusinessInvoicePage({
                           field.onChange(value);
                           if (value) {
                             handleBusinessSelect(value);
+                          } else {
+                            setBusinessDisplayValue('');
                           }
                         }}
                       >
@@ -528,6 +539,10 @@ export function CreateBusinessInvoicePage({
                           placeholder={
                             t.searchBusinessPlaceholder ||
                             'Search by name or email...'
+                          }
+                          value={businessDisplayValue}
+                          onChange={(e) =>
+                            setBusinessDisplayValue(e.target.value)
                           }
                           showClear
                           disabled={isLoadingBusinesses}
@@ -582,6 +597,8 @@ export function CreateBusinessInvoicePage({
                           field.onChange(value);
                           if (value) {
                             handleClientSelect(value);
+                          } else {
+                            setClientDisplayValue('');
                           }
                         }}
                       >
@@ -589,6 +606,10 @@ export function CreateBusinessInvoicePage({
                           placeholder={
                             t.searchIndividualPlaceholder ||
                             'Search by name or email...'
+                          }
+                          value={clientDisplayValue}
+                          onChange={(e) =>
+                            setClientDisplayValue(e.target.value)
                           }
                           showClear
                           disabled={isLoadingClients}
