@@ -564,71 +564,76 @@ export default function Invoices({
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t.columnInvoiceNumber}</TableHead>
-                      <TableHead>{t.columnFrom}</TableHead>
-                      <TableHead>{t.columnAmount}</TableHead>
-                      <TableHead>{t.columnStatus}</TableHead>
-                      <TableHead>{t.columnDueDate}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInvoices.map((invoice) => (
-                      <TableRow
-                        key={invoice.id}
-                        className={cn(
-                          'cursor-pointer transition-colors',
-                          isOverdue(invoice) &&
-                            'bg-destructive/5 hover:bg-destructive/10',
-                          !isOverdue(invoice) &&
-                            (invoice.recipientViewed
-                              ? 'hover:bg-muted/50'
-                              : 'hover:bg-muted/50 font-medium')
-                        )}
-                        onClick={() => setSelectedInvoice(invoice)}
-                      >
-                        <TableCell>
-                          <span className="font-medium">
-                            {invoice.invoiceNumber}
-                          </span>
-                          {!invoice.recipientViewed && (
-                            <span className="mx-2 inline-block h-2 w-2 rounded-full bg-blue-500" />
-                          )}
-                        </TableCell>
-                        <TableCell>{invoice.issuerBusinessName}</TableCell>
-                        <TableCell className="font-medium">
-                          {invoice.totalAmount.toLocaleString(lang, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{' '}
-                          {invoice.currency}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={STATUS_COLORS[invoice.invoiceStatus]}
-                          >
-                            <span className="mr-1">
-                              {STATUS_ICONS[invoice.invoiceStatus]}
-                            </span>
-                            {getStatusLabel(invoice.invoiceStatus, dictionary)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell
-                          className={
-                            isOverdue(invoice)
-                              ? 'text-destructive font-medium'
-                              : ''
-                          }
-                        >
-                          {formatDate(invoice.dueDate)}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t.columnInvoiceNumber}</TableHead>
+                        <TableHead>{t.columnFrom}</TableHead>
+                        <TableHead>{t.columnAmount}</TableHead>
+                        <TableHead>{t.columnStatus}</TableHead>
+                        <TableHead>{t.columnDueDate}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInvoices.map((invoice) => (
+                        <TableRow
+                          key={invoice.id}
+                          className={cn(
+                            'cursor-pointer transition-colors',
+                            isOverdue(invoice) &&
+                              'bg-destructive/5 hover:bg-destructive/10',
+                            !isOverdue(invoice) &&
+                              (invoice.recipientViewed
+                                ? 'hover:bg-muted/50'
+                                : 'hover:bg-muted/50 font-medium')
+                          )}
+                          onClick={() => setSelectedInvoice(invoice)}
+                        >
+                          <TableCell>
+                            <span className="font-medium">
+                              {invoice.invoiceNumber}
+                            </span>
+                            {!invoice.recipientViewed && (
+                              <span className="mx-2 inline-block h-2 w-2 rounded-full bg-blue-500" />
+                            )}
+                          </TableCell>
+                          <TableCell>{invoice.issuerBusinessName}</TableCell>
+                          <TableCell className="font-medium">
+                            {invoice.totalAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                            {invoice.currency}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={STATUS_COLORS[invoice.invoiceStatus]}
+                            >
+                              <span className="mr-1">
+                                {STATUS_ICONS[invoice.invoiceStatus]}
+                              </span>
+                              {getStatusLabel(
+                                invoice.invoiceStatus,
+                                dictionary
+                              )}
+                            </Badge>
+                          </TableCell>
+                          <TableCell
+                            className={
+                              isOverdue(invoice)
+                                ? 'text-destructive font-medium'
+                                : ''
+                            }
+                          >
+                            {formatDate(invoice.dueDate)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Pagination */}
                 <Separator className="my-4" />

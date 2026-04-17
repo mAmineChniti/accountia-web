@@ -117,6 +117,11 @@ export class ChatSocketClient {
     });
 
     this.socket.on('disconnect', (reason: string) => {
+      // Reject all pending messages due to socket disconnect
+      for (const [, pending] of this.pendingMessages) {
+        pending.reject(`Socket disconnected: ${reason}`);
+      }
+      this.pendingMessages.clear();
       this.callbacks.onDisconnect?.(reason);
     });
   }

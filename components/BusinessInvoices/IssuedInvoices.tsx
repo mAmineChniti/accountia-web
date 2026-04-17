@@ -648,103 +648,111 @@ export function IssuedInvoices({
               )}
             </div>
           ) : filterStatus === 'PODIUM' ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.rank}</TableHead>
-                  <TableHead>{t.recipient}</TableHead>
-                  <TableHead>{t.recipientEmailLabel}</TableHead>
-                  <TableHead className="text-right">{t.totalPaid}</TableHead>
-                  <TableHead className="text-right">
-                    {t.totalInvoices}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(podiumClients as ClientPodiumItem[]).map((client, index) => {
-                  const rankBadge = client.medal || `${index + 1}.`;
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.rank}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
+                    <TableHead>{t.recipientEmailLabel}</TableHead>
+                    <TableHead className="text-right">{t.totalPaid}</TableHead>
+                    <TableHead className="text-right">
+                      {t.totalInvoices}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(podiumClients as ClientPodiumItem[]).map(
+                    (client, index) => {
+                      const rankBadge = client.medal || `${index + 1}.`;
 
-                  return (
-                    <TableRow
-                      key={client.clientId}
-                      className="hover:bg-muted/50"
-                    >
-                      <TableCell className="font-medium">{rankBadge}</TableCell>
+                      return (
+                        <TableRow
+                          key={client.clientId}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {rankBadge}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {client.clientName || t.unknownClient}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {client.clientEmail || '—'}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {client.totalPaidAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {client.totalPaidInvoices}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.invoiceNumber}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
+                    <TableHead>{t.amount}</TableHead>
+                    <TableHead>{t.status}</TableHead>
+                    <TableHead>{t.issuedDate}</TableHead>
+                    <TableHead className="text-right">{t.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.map((invoice, _index) => (
+                    <TableRow key={invoice.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {client.clientName || t.unknownClient}
+                        {invoice.invoiceNumber}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {client.clientEmail || '—'}
+                        {invoice.recipient.displayName ||
+                          invoice.recipient.email ||
+                          t.externalRecipient}
                       </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {client.totalPaidAmount.toLocaleString(lang, {
+                      <TableCell className="font-medium">
+                        {invoice.totalAmount.toLocaleString(lang, {
                           minimumFractionDigits: 2,
-                        })}
+                        })}{' '}
+                        {invoice.currency}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={STATUS_COLORS[invoice.status]}>
+                          <span className="mr-1">
+                            {STATUS_ICONS[invoice.status]}
+                          </span>
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(invoice.issuedDate).toLocaleDateString(lang)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {client.totalPaidInvoices}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInvoiceId(invoice.id);
+                            setIsDetailsOpen(true);
+                          }}
+                        >
+                          {t.view}
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.invoiceNumber}</TableHead>
-                  <TableHead>{t.recipient}</TableHead>
-                  <TableHead>{t.amount}</TableHead>
-                  <TableHead>{t.status}</TableHead>
-                  <TableHead>{t.issuedDate}</TableHead>
-                  <TableHead className="text-right">{t.actions}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map((invoice, _index) => (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {invoice.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {invoice.recipient.displayName ||
-                        invoice.recipient.email ||
-                        t.externalRecipient}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {invoice.totalAmount.toLocaleString(lang, {
-                        minimumFractionDigits: 2,
-                      })}{' '}
-                      {invoice.currency}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[invoice.status]}>
-                        <span className="mr-1">
-                          {STATUS_ICONS[invoice.status]}
-                        </span>
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(invoice.issuedDate).toLocaleDateString(lang)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedInvoiceId(invoice.id);
-                          setIsDetailsOpen(true);
-                        }}
-                      >
-                        {t.view}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
 
           {/* Load More Button */}

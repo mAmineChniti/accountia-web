@@ -14,14 +14,22 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Bot } from 'lucide-react';
+import { Bot, Menu } from 'lucide-react';
 import { type Dictionary } from '@/get-dictionary';
 import { ModeToggle } from '@/components/reusable/theme-toggle';
 import type { AuthenticatedSession } from '@/types/session';
+import * as React from 'react';
 
 export default function Navbar({
   lang,
@@ -32,6 +40,7 @@ export default function Navbar({
   dictionary: Dictionary;
   session?: AuthenticatedSession | null;
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const isAuthenticated = !!session?.authenticated;
   const dashboardHref = session?.isAdmin
     ? `/${lang}/dashboard/admin`
@@ -65,8 +74,104 @@ export default function Navbar({
             </span>
           </Link>
 
-          <NavigationMenu>
-            <NavigationMenuList className="hidden md:flex">
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="top" className="w-full">
+              <SheetHeader>
+                <SheetTitle className="text-left">
+                  {dictionary.brand.name}
+                </SheetTitle>
+              </SheetHeader>
+              <nav
+                className="mt-6 flex flex-col gap-4"
+                aria-label="Mobile navigation"
+              >
+                <Link
+                  href={`/${lang}#features`}
+                  className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {dictionary.pages.home.navigation.features}
+                </Link>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground px-3 text-xs font-semibold tracking-wider uppercase">
+                    {dictionary.pages.home.features.aiInsights.title}
+                  </p>
+                  <Link
+                    href={`/${lang}#features`}
+                    className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {dictionary.pages.home.features.aiInsights.description}
+                  </Link>
+                  <Link
+                    href={`/${lang}#features`}
+                    className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {
+                      dictionary.pages.home.features.realtimeAnalytics
+                        .description
+                    }
+                  </Link>
+                </div>
+                <Separator />
+                <Link
+                  href={`/${lang}#solutions`}
+                  className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {dictionary.pages.home.navigation.solutions}
+                </Link>
+                <div className="space-y-2">
+                  <Link
+                    href={`/${lang}#solutions`}
+                    className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {dictionary.pages.home.solutions.startups.title}
+                  </Link>
+                  <Link
+                    href={`/${lang}#solutions`}
+                    className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {dictionary.pages.home.solutions.smallBusiness.title}
+                  </Link>
+                  <Link
+                    href={`/${lang}#solutions`}
+                    className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {dictionary.pages.home.solutions.viewAllSolutions}
+                  </Link>
+                </div>
+                <Separator />
+                <Link
+                  href={`/${lang}#pricing`}
+                  className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {dictionary.pages.home.navigation.pricing}
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop Navigation */}
+          <NavigationMenu className="hidden md:block">
+            <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger>
                   {dictionary.pages.home.navigation.features}

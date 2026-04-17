@@ -1,4 +1,9 @@
-import { getTokenAllowExpired, setTokens, setUser } from '@/actions/cookies';
+import {
+  getTokenAllowExpired,
+  setTokens,
+  setUser,
+  getUser,
+} from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -324,8 +329,9 @@ export const AuthService = {
         })
         .json<UpdateUserResponse>();
 
-      // Update user cookie with new user data
+      // Update user cookie with new user data, preserving existing loginTime
       if (result.user) {
+        const currentUser = await getUser();
         await setUser({
           userId: result.user.id,
           username: result.user.username,
@@ -335,7 +341,7 @@ export const AuthService = {
           phoneNumber: result.user.phoneNumber,
           birthdate: result.user.birthdate,
           role: result.user.role ?? 'CLIENT',
-          loginTime: new Date().toISOString(),
+          loginTime: currentUser?.loginTime ?? new Date().toISOString(),
         });
       }
 
@@ -354,8 +360,9 @@ export const AuthService = {
         })
         .json<UpdateUserResponse>();
 
-      // Update user cookie with new user data
+      // Update user cookie with new user data, preserving existing loginTime
       if (result.user) {
+        const currentUser = await getUser();
         await setUser({
           userId: result.user.id,
           username: result.user.username,
@@ -365,7 +372,7 @@ export const AuthService = {
           phoneNumber: result.user.phoneNumber,
           birthdate: result.user.birthdate,
           role: result.user.role ?? 'CLIENT',
-          loginTime: new Date().toISOString(),
+          loginTime: currentUser?.loginTime ?? new Date().toISOString(),
         });
       }
 

@@ -375,93 +375,97 @@ export default function BusinessManagement({
               {t.applications.noResults}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.applications.columns.business}</TableHead>
-                  <TableHead>{t.applications.columns.applicantId}</TableHead>
-                  <TableHead>{t.applications.columns.phone}</TableHead>
-                  <TableHead>{t.applications.columns.status}</TableHead>
-                  <TableHead>{t.applications.columns.submitted}</TableHead>
-                  <TableHead className="text-right">
-                    {t.applications.columns.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredApplications.map((application) => {
-                  const isPending = application.status === 'pending';
-                  const isReviewing = pendingReviewAppIds.has(application.id);
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.applications.columns.business}</TableHead>
+                    <TableHead>{t.applications.columns.applicantId}</TableHead>
+                    <TableHead>{t.applications.columns.phone}</TableHead>
+                    <TableHead>{t.applications.columns.status}</TableHead>
+                    <TableHead>{t.applications.columns.submitted}</TableHead>
+                    <TableHead className="text-right">
+                      {t.applications.columns.actions}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredApplications.map((application) => {
+                    const isPending = application.status === 'pending';
+                    const isReviewing = pendingReviewAppIds.has(application.id);
 
-                  return (
-                    <TableRow key={application.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {application.businessName}
-                        </div>
-                        <div className="text-muted-foreground max-w-xs truncate text-xs">
-                          {application.description}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {application.applicantId}
-                      </TableCell>
-                      <TableCell>{application.phone}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(application.status)}>
-                          {t.status[
-                            application.status as keyof typeof t.status
-                          ] || application.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(application.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        {isPending ? (
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() =>
-                                reviewApplication(application, 'approved')
-                              }
-                              disabled={isReviewing}
-                            >
-                              {isReviewing ? (
-                                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                              ) : (
-                                <Check className="mr-1 h-4 w-4" />
-                              )}
-                              {t.actions.approve}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                reviewApplication(application, 'rejected')
-                              }
-                              disabled={isReviewing}
-                            >
-                              <XCircle className="mr-1 h-4 w-4" />
-                              {t.actions.reject}
-                            </Button>
+                    return (
+                      <TableRow key={application.id}>
+                        <TableCell>
+                          <div className="font-medium">
+                            {application.businessName}
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            {t.applications.reviewed}
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                          <div className="text-muted-foreground max-w-xs truncate text-xs">
+                            {application.description}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {application.applicantId}
+                        </TableCell>
+                        <TableCell>{application.phone}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(application.status)}>
+                            {t.status[
+                              application.status as keyof typeof t.status
+                            ] || application.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(application.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isPending ? (
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() =>
+                                  reviewApplication(application, 'approved')
+                                }
+                                disabled={isReviewing}
+                              >
+                                {isReviewing ? (
+                                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="mr-1 h-4 w-4" />
+                                )}
+                                {t.actions.approve}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                onClick={() =>
+                                  reviewApplication(application, 'rejected')
+                                }
+                                disabled={isReviewing}
+                              >
+                                <XCircle className="mr-1 h-4 w-4" />
+                                {t.actions.reject}
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">
+                              {t.applications.reviewed}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+      <Card className="border-none shadow-none">
         <CardHeader className="space-y-2">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -516,56 +520,59 @@ export default function BusinessManagement({
               {t.businesses.noResults}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.businesses.columns.name}</TableHead>
-                  <TableHead>{t.businesses.columns.phone}</TableHead>
-                  <TableHead>{t.businesses.columns.status}</TableHead>
-                  <TableHead>{t.businesses.columns.created}</TableHead>
-                  <TableHead className="text-right">
-                    {t.businesses.columns.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBusinesses.map((business) => {
-                  const isDeleting = deleteBusinessId === business.id;
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.businesses.columns.name}</TableHead>
+                    <TableHead>{t.businesses.columns.phone}</TableHead>
+                    <TableHead>{t.businesses.columns.status}</TableHead>
+                    <TableHead>{t.businesses.columns.created}</TableHead>
+                    <TableHead className="text-right">
+                      {t.businesses.columns.actions}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBusinesses.map((business) => {
+                    const isDeleting = deleteBusinessId === business.id;
 
-                  return (
-                    <TableRow key={business.id}>
-                      <TableCell className="font-medium">
-                        {business.name}
-                      </TableCell>
-                      <TableCell>{business.phone}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(business.status)}>
-                          {t.status[business.status as keyof typeof t.status] ||
-                            business.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(business.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeleteModalBusiness(business)}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="mr-1 h-4 w-4" />
-                          )}
-                          {dictionary.common.delete}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                    return (
+                      <TableRow key={business.id}>
+                        <TableCell className="font-medium">
+                          {business.name}
+                        </TableCell>
+                        <TableCell>{business.phone}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(business.status)}>
+                            {t.status[
+                              business.status as keyof typeof t.status
+                            ] || business.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(business.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeleteModalBusiness(business)}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? (
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="mr-1 h-4 w-4" />
+                            )}
+                            {dictionary.common.delete}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

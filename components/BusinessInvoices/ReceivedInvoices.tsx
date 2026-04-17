@@ -456,76 +456,80 @@ export function ReceivedInvoices({
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.invoiceNumber}</TableHead>
-                  <TableHead>{t.from}</TableHead>
-                  <TableHead>{t.amount}</TableHead>
-                  <TableHead>{t.status}</TableHead>
-                  <TableHead>{t.issuedDate}</TableHead>
-                  <TableHead>{t.viewed}</TableHead>
-                  <TableHead className="text-right">{t.actions}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {invoice.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {invoice.issuerBusinessName}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {invoice.totalAmount.toLocaleString(lang, {
-                        minimumFractionDigits: 2,
-                      })}{' '}
-                      {invoice.currency}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[invoice.invoiceStatus]}>
-                        <span className="mr-1">
-                          {STATUS_ICONS[invoice.invoiceStatus]}
-                        </span>
-                        {invoice.invoiceStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(invoice.issuedDate).toLocaleDateString(lang)}
-                    </TableCell>
-                    <TableCell>
-                      {invoice.recipientViewed ? (
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4 text-green-600" />
-                          <span className="text-muted-foreground text-sm">
-                            {invoice.recipientViewedAt
-                              ? new Date(
-                                  invoice.recipientViewedAt
-                                ).toLocaleDateString(lang)
-                              : 'Yes'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedInvoiceId(invoice.id);
-                          setIsDetailsOpen(true);
-                        }}
-                      >
-                        {t.view}
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.invoiceNumber}</TableHead>
+                    <TableHead>{t.from}</TableHead>
+                    <TableHead>{t.amount}</TableHead>
+                    <TableHead>{t.status}</TableHead>
+                    <TableHead>{t.issuedDate}</TableHead>
+                    <TableHead>{t.viewed}</TableHead>
+                    <TableHead className="text-right">{t.actions}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.map((invoice) => (
+                    <TableRow key={invoice.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        {invoice.invoiceNumber}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {invoice.issuerBusinessName}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {invoice.totalAmount.toLocaleString(lang, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        {invoice.currency}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={STATUS_COLORS[invoice.invoiceStatus]}>
+                          <span className="mr-1">
+                            {STATUS_ICONS[invoice.invoiceStatus]}
+                          </span>
+                          {invoice.invoiceStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(invoice.issuedDate).toLocaleDateString(lang)}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.recipientViewed ? (
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4 text-green-600" />
+                            <span className="text-muted-foreground text-sm">
+                              {invoice.recipientViewedAt
+                                ? new Date(
+                                    invoice.recipientViewedAt
+                                  ).toLocaleDateString(lang)
+                                : 'Yes'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInvoiceId(invoice.id);
+                            setIsDetailsOpen(true);
+                          }}
+                        >
+                          {t.view}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

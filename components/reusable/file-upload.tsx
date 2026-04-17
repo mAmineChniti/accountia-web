@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 
 interface FileUploadProps {
@@ -20,10 +21,11 @@ interface FileUploadProps {
   maxSize?: number; // in MB
   onFileSelect?: (file: File) => void;
   onFileClear?: () => void;
+  onFileReject?: (reason: string) => void;
   disabled?: boolean;
   isUploading?: boolean;
   uploadProgress?: number;
-  selectedFile?: File | null;
+  selectedFile?: File | undefined;
   className?: string;
   error?: string;
 }
@@ -56,6 +58,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       maxSize = 10,
       onFileSelect,
       onFileClear,
+      onFileReject,
       disabled = false,
       isUploading = false,
       uploadProgress = 0,
@@ -66,6 +69,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
     ref
   ) => {
     const [dragActive, setDragActive] = React.useState(false);
+
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     const handleDrag = (e: React.DragEvent) => {
@@ -78,11 +82,11 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       }
     };
 
-    const validateFile = (file: File): boolean => {
+    const validateFile = (file: File): string | undefined => {
       if (maxSize && file.size > maxSize * 1024 * 1024) {
-        return false;
+        return `File exceeds maximum size of ${maxSize} MB`;
       }
-      return true;
+      return undefined;
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -93,16 +97,26 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       if (disabled || isUploading) return;
 
       const file = e.dataTransfer.files?.[0];
-      if (file && validateFile(file)) {
-        onFileSelect?.(file);
+      if (file) {
+        const errorMessage = validateFile(file);
+        if (errorMessage) {
+          onFileReject?.(errorMessage);
+        } else {
+          onFileSelect?.(file);
+        }
       }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       e.preventDefault();
       const file = e.target.files?.[0];
-      if (file && validateFile(file)) {
-        onFileSelect?.(file);
+      if (file) {
+        const errorMessage = validateFile(file);
+        if (errorMessage) {
+          onFileReject?.(errorMessage);
+        } else {
+          onFileSelect?.(file);
+        }
       }
       // Reset input so same file can be selected again
       e.target.value = '';
@@ -230,7 +244,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             </p>
           </div>
 
-          <input
+          <Input
             ref={inputRef}
             type="file"
             accept={accept}
