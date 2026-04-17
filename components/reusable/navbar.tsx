@@ -173,6 +173,33 @@ export default function Navbar({
                 >
                   {dictionary.pages.home.navigation.pricing}
                 </Link>
+                <Separator />
+                {!isAuthenticated && (
+                  <>
+                    <Link
+                      href={`/${lang}/login`}
+                      className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {dictionary.pages.home.navigation.login}
+                    </Link>
+                    <Link
+                      href={`/${lang}/register`}
+                      className="text-foreground hover:bg-accent hover:text-accent-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {dictionary.pages.home.navigation.register}
+                    </Link>
+                    <Button size="sm" className="h-9 px-4" asChild>
+                      <Link
+                        href={`/${lang}/register`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {dictionary.pages.home.navigation.getStarted}
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -188,7 +215,7 @@ export default function Navbar({
                   {dictionary.pages.home.navigation.features}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 md:w-[400px] lg:w-[500px]">
+                  <div className="grid gap-3 p-6 md:w-[400px] md:grid-cols-2 lg:w-[500px]">
                     <div className="row-span-3">
                       <NavigationMenuLink asChild>
                         <a
@@ -249,7 +276,7 @@ export default function Navbar({
                   {dictionary.pages.home.navigation.solutions}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <div className="grid w-[400px] gap-3 p-4 md:w-[600px] md:grid-cols-3 lg:w-[700px]">
                     <div className="space-y-2">
                       <h4 className="font-medium">
                         {dictionary.pages.home.solutions.startups.title}
@@ -269,11 +296,19 @@ export default function Navbar({
                         }
                       </p>
                     </div>
-                    <Separator className="col-span-2" />
+                    <div className="space-y-2">
+                      <h4 className="font-medium">
+                        {dictionary.pages.home.solutions.enterprise.title}
+                      </h4>
+                      <p className="text-muted-foreground text-sm">
+                        {dictionary.pages.home.solutions.enterprise.description}
+                      </p>
+                    </div>
+                    <Separator className="col-span-3" />
                     <NavigationMenuLink asChild>
                       <a
                         href={`/${lang}#solutions`}
-                        className="hover:bg-accent hover:text-accent-foreground col-span-2 flex items-center justify-center rounded-md p-2 text-sm font-medium"
+                        className="hover:bg-accent hover:text-accent-foreground col-span-3 flex items-center justify-center rounded-md p-2 text-sm font-medium"
                       >
                         {dictionary.pages.home.solutions.viewAllSolutions} →
                       </a>
@@ -308,7 +343,7 @@ export default function Navbar({
                 </TooltipContent>
               </Tooltip>
             ) : (
-              <>
+              <div className="hidden items-center gap-2 md:flex md:gap-3">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link
@@ -347,7 +382,7 @@ export default function Navbar({
                     <p>{dictionary.tooltips.getStarted}</p>
                   </TooltipContent>
                 </Tooltip>
-              </>
+              </div>
             )}
             <Tooltip>
               <TooltipTrigger asChild>
