@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { type Dictionary } from '@/get-dictionary';
 
 // Get notification icon based on type
@@ -149,11 +150,10 @@ export function Notifications({
                         }
                       }}
                       disabled={isMarkingAsRead}
-                      className={`hover:bg-accent w-full px-4 py-3 text-left transition-colors ${
-                        notification.isRead
-                          ? ''
-                          : 'bg-blue-50 dark:bg-blue-950/20'
-                      }`}
+                      className={cn(
+                        'hover:bg-accent w-full px-4 py-3 text-left transition-colors',
+                        !notification.isRead && 'bg-blue-50 dark:bg-blue-950/20'
+                      )}
                     >
                       <div className="flex items-start gap-3">
                         {/* Icon */}
@@ -164,11 +164,12 @@ export function Notifications({
                         {/* Content */}
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-sm ${
+                            className={cn(
+                              'text-sm',
                               notification.isRead
                                 ? 'text-muted-foreground'
                                 : 'text-foreground font-medium'
-                            }`}
+                            )}
                           >
                             {notification.message}
                           </p>

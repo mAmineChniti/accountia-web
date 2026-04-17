@@ -32,6 +32,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -48,10 +50,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
+import { cn } from '@/lib/utils';
 import { InvoicesService } from '@/lib/requests';
+import { getStatusLabel } from '@/lib/status-labels';
 import { toast } from 'sonner';
 import type {
   ReceivedInvoiceListResponse,
@@ -60,6 +73,7 @@ import type {
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { env } from '@/env';
+import { Chatbot } from '@/components/Business/Chatbot';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -87,25 +101,6 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
     'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100',
   VOIDED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
   ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
-};
-
-const getStatusLabel = (
-  status: InvoiceStatus,
-  dictionary: Dictionary
-): string => {
-  const d = dictionary.pages.invoices;
-  const statusMap: Record<InvoiceStatus, string> = {
-    DRAFT: d.statusDraft,
-    ISSUED: d.statusIssued,
-    VIEWED: d.statusViewed,
-    PAID: d.statusPaid,
-    PARTIAL: d.statusPartial,
-    OVERDUE: d.statusOverdue,
-    DISPUTED: d.statusDisputed,
-    VOIDED: d.statusVoided,
-    ARCHIVED: d.statusArchived,
-  };
-  return statusMap[status] || status;
 };
 
 const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
@@ -150,7 +145,7 @@ export default function Invoices({
     cardNumber: '',
     expiry: '',
     cvc: '',
-    country: 'Tunisie',
+    country: 'Tunisia',
   });
   const [mockPaymentErrors, setMockPaymentErrors] = useState({
     cardholderName: '',
@@ -231,7 +226,7 @@ export default function Invoices({
           cardNumber: '',
           expiry: '',
           cvc: '',
-          country: 'Tunisie',
+          country: 'Tunisia',
         });
         setMockPaymentErrors({
           cardholderName: '',
@@ -259,24 +254,23 @@ export default function Invoices({
     const v = t.payment.validation;
 
     if (!mockPaymentForm.cardholderName.trim()) {
-      errors.cardholderName = v?.nameRequired || 'Nom du titulaire requis';
+      errors.cardholderName = v.nameRequired;
     }
 
     if (!/^\d{4}(?:\s\d{4}){3}$/.test(mockPaymentForm.cardNumber)) {
-      errors.cardNumber =
-        v?.numberInvalid || 'Numéro de carte invalide (16 chiffres)';
+      errors.cardNumber = v.numberInvalid;
     }
 
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(mockPaymentForm.expiry)) {
-      errors.expiry = v?.expiryInvalid || 'Date invalide (MM/AA)';
+      errors.expiry = v.expiryInvalid;
     }
 
     if (!/^\d{3,4}$/.test(mockPaymentForm.cvc)) {
-      errors.cvc = v?.cvcInvalid || 'CVC invalide';
+      errors.cvc = v.cvcInvalid;
     }
 
     if (!mockPaymentForm.country.trim()) {
-      errors.country = v?.countryRequired || 'Pays requis';
+      errors.country = v.countryRequired;
     }
 
     setMockPaymentErrors(errors);
@@ -438,7 +432,7 @@ export default function Invoices({
               <CardDescription>
                 {isLoading
                   ? '...'
-                  : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'}`}
+                  : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular : t.invoicePlural}`}
               </CardDescription>
             </div>
 
@@ -552,72 +546,89 @@ export default function Invoices({
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t.columnInvoiceNumber}</TableHead>
-                      <TableHead>{t.columnFrom}</TableHead>
-                      <TableHead>{t.columnAmount}</TableHead>
-                      <TableHead>{t.columnStatus}</TableHead>
-                      <TableHead>{t.columnDueDate}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInvoices.map((invoice) => (
-                      <TableRow
-                        key={invoice.id}
-                        className={`cursor-pointer transition-colors ${
-                          isOverdue(invoice)
-                            ? 'bg-destructive/5 hover:bg-destructive/10'
-                            : invoice.recipientViewed
-                              ? 'hover:bg-muted/50'
-                              : 'hover:bg-muted/50 font-medium'
-                        }`}
-                        onClick={() => setSelectedInvoice(invoice)}
-                      >
-                        <TableCell>
-                          <span className="font-medium">
-                            {invoice.invoiceNumber}
-                          </span>
-                          {!invoice.recipientViewed && (
-                            <span className="mx-2 inline-block h-2 w-2 rounded-full bg-blue-500" />
-                          )}
-                        </TableCell>
-                        <TableCell>{invoice.issuerBusinessName}</TableCell>
-                        <TableCell className="font-medium">
-                          {invoice.totalAmount.toLocaleString(lang, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{' '}
-                          {invoice.currency}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={STATUS_COLORS[invoice.invoiceStatus]}
-                          >
-                            <span className="mr-1">
-                              {STATUS_ICONS[invoice.invoiceStatus]}
-                            </span>
-                            {getStatusLabel(invoice.invoiceStatus, dictionary)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell
-                          className={
-                            isOverdue(invoice)
-                              ? 'text-destructive font-medium'
-                              : ''
-                          }
-                        >
-                          {formatDate(invoice.dueDate)}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t.columnInvoiceNumber}</TableHead>
+                        <TableHead>{t.columnFrom}</TableHead>
+                        <TableHead>{t.columnAmount}</TableHead>
+                        <TableHead>{t.columnStatus}</TableHead>
+                        <TableHead>{t.columnDueDate}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInvoices.map((invoice) => (
+                        <TableRow
+                          key={invoice.id}
+                          className={cn(
+                            'cursor-pointer transition-colors',
+                            isOverdue(invoice) &&
+                              'bg-destructive/5 hover:bg-destructive/10',
+                            !isOverdue(invoice) &&
+                              (invoice.recipientViewed
+                                ? 'hover:bg-muted/50'
+                                : 'hover:bg-muted/50 font-medium')
+                          )}
+                          onClick={() => setSelectedInvoice(invoice)}
+                          tabIndex={0}
+                          role="button"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedInvoice(invoice);
+                            }
+                          }}
+                          aria-label={`${t.invoiceDetailsTitle} ${invoice.invoiceNumber}`}
+                        >
+                          <TableCell>
+                            <span className="font-medium">
+                              {invoice.invoiceNumber}
+                            </span>
+                            {!invoice.recipientViewed && (
+                              <span className="mx-2 inline-block h-2 w-2 rounded-full bg-blue-500" />
+                            )}
+                          </TableCell>
+                          <TableCell>{invoice.issuerBusinessName}</TableCell>
+                          <TableCell className="font-medium">
+                            {invoice.totalAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{' '}
+                            {invoice.currency}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={STATUS_COLORS[invoice.invoiceStatus]}
+                            >
+                              <span className="mr-1">
+                                {STATUS_ICONS[invoice.invoiceStatus]}
+                              </span>
+                              {getStatusLabel(
+                                invoice.invoiceStatus,
+                                dictionary
+                              )}
+                            </Badge>
+                          </TableCell>
+                          <TableCell
+                            className={
+                              isOverdue(invoice)
+                                ? 'text-destructive font-medium'
+                                : ''
+                            }
+                          >
+                            {formatDate(invoice.dueDate)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Pagination */}
-                <div className="mt-6 flex items-center justify-between border-t pt-4">
+                <Separator className="my-4" />
+                <div className="flex items-center justify-between">
                   <div className="text-muted-foreground text-sm">
                     {t.pagination
                       .replace('{page}', currentPage.toString())
@@ -774,7 +785,8 @@ export default function Invoices({
                 </div>
 
                 {/* Sync Information */}
-                <div className="text-muted-foreground space-y-2 border-t pt-4 text-xs">
+                <Separator className="my-4" />
+                <div className="text-muted-foreground space-y-2 text-xs">
                   <div>
                     {t.lastSynced}: {formatDate(selectedInvoice.lastSyncedAt)}
                   </div>
@@ -818,7 +830,7 @@ export default function Invoices({
                         <>
                           <CreditCard className="mr-2 h-4 w-4" />
                           {mockInvoicePaymentsEnabled
-                            ? t.payNowDemo || 'Pay now (demo form)'
+                            ? t.payNowDemo
                             : t.payment.payNow}
                         </>
                       )}
@@ -860,25 +872,25 @@ export default function Invoices({
           <div className="space-y-6 rounded-xl border bg-white p-6 shadow-sm">
             {/* Demo Cards Selection */}
             <div className="space-y-3">
-              <label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
-                {t.payment.demoCardLabel || 'Select a demo card'}
-              </label>
+              <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
+                {t.payment.demoCardLabel}
+              </Label>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {[
                   {
-                    name: t.payment.demoCardSuccess || 'Success Card',
+                    name: t.payment.demoCardSuccess,
                     number: '4242 4242 4242 4242',
                     expiry: '12/29',
                     cvc: '123',
                   },
                   {
-                    name: t.payment.demoCardDeclined || 'Declined Card',
+                    name: t.payment.demoCardDeclined,
                     number: '4000 4000 4000 0002',
                     expiry: '12/29',
                     cvc: '123',
                   },
                   {
-                    name: t.payment.demoCardExpired || 'Expired Card',
+                    name: t.payment.demoCardExpired,
                     number: '4000 4000 4000 0003',
                     expiry: '01/20',
                     cvc: '123',
@@ -908,22 +920,24 @@ export default function Invoices({
             </div>
 
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
+              <Separator />
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="text-muted-foreground bg-white px-2 font-medium">
-                  {t.payment.cardInfo || 'Card Information'}
+                  {t.payment.cardInfo}
                 </span>
               </div>
             </div>
 
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <label className="text-sm font-semibold">
+                <Label
+                  htmlFor="cardholderName"
+                  className="text-sm font-semibold"
+                >
                   {t.payment.cardholderName}
-                </label>
+                </Label>
                 <Input
+                  id="cardholderName"
                   value={mockPaymentForm.cardholderName}
                   onChange={(e) =>
                     setMockPaymentForm((prev) => ({
@@ -932,9 +946,9 @@ export default function Invoices({
                     }))
                   }
                   placeholder={t.payment.cardholderPlaceholder}
-                  className={
-                    mockPaymentErrors.cardholderName ? 'border-red-500' : ''
-                  }
+                  className={cn(
+                    mockPaymentErrors.cardholderName && 'border-red-500'
+                  )}
                 />
                 {mockPaymentErrors.cardholderName ? (
                   <p className="text-xs text-red-600">
@@ -944,18 +958,19 @@ export default function Invoices({
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-semibold">
+                <Label htmlFor="cardNumber" className="text-sm font-semibold">
                   {t.payment.cardInfo}
-                </label>
+                </Label>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
                   <div className="sm:col-span-2">
                     <Input
+                      id="cardNumber"
                       value={mockPaymentForm.cardNumber}
                       readOnly
                       placeholder="4242 4242 4242 4242"
-                      className={
-                        mockPaymentErrors.cardNumber ? 'border-red-500' : ''
-                      }
+                      className={cn(
+                        mockPaymentErrors.cardNumber && 'border-red-500'
+                      )}
                     />
                   </div>
                   <div>
@@ -963,9 +978,9 @@ export default function Invoices({
                       value={mockPaymentForm.expiry}
                       readOnly
                       placeholder="12/29"
-                      className={
-                        mockPaymentErrors.expiry ? 'border-red-500' : ''
-                      }
+                      className={cn(
+                        mockPaymentErrors.expiry && 'border-red-500'
+                      )}
                     />
                   </div>
                   <div>
@@ -973,7 +988,7 @@ export default function Invoices({
                       value={mockPaymentForm.cvc}
                       readOnly
                       placeholder="123"
-                      className={mockPaymentErrors.cvc ? 'border-red-500' : ''}
+                      className={cn(mockPaymentErrors.cvc && 'border-red-500')}
                     />
                   </div>
                 </div>
@@ -989,29 +1004,96 @@ export default function Invoices({
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-semibold">
+                <Label className="text-sm font-semibold">
                   {t.payment.country}
-                </label>
-                <select
+                </Label>
+                <Select
                   value={mockPaymentForm.country}
-                  onChange={(e) =>
+                  onValueChange={(value) =>
                     setMockPaymentForm((prev) => ({
                       ...prev,
-                      country: e.target.value,
+                      country: value,
                     }))
                   }
-                  className={`focus:ring-primary h-10 rounded-md border bg-white px-3 text-sm focus:ring-2 ${
-                    mockPaymentErrors.country
-                      ? 'border-red-500'
-                      : 'border-input'
-                  }`}
                 >
-                  <option value="Tunisie">Tunisie</option>
-                  <option value="France">France</option>
-                  <option value="Maroc">Maroc</option>
-                  <option value="Algérie">Algérie</option>
-                  <option value="Canada">Canada</option>
-                </select>
+                  <SelectTrigger
+                    className={cn(
+                      mockPaymentErrors.country && 'border-red-500'
+                    )}
+                  >
+                    <SelectValue
+                      placeholder={t.payment.selectCountryPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAfrica}
+                      </SelectLabel>
+                      <SelectItem value="Tunisia">Tunisia</SelectItem>
+                      <SelectItem value="Algeria">Algeria</SelectItem>
+                      <SelectItem value="Morocco">Morocco</SelectItem>
+                      <SelectItem value="Libya">Libya</SelectItem>
+                      <SelectItem value="Egypt">Egypt</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.europe}
+                      </SelectLabel>
+                      <SelectItem value="France">France</SelectItem>
+                      <SelectItem value="Germany">Germany</SelectItem>
+                      <SelectItem value="United Kingdom">
+                        United Kingdom
+                      </SelectItem>
+                      <SelectItem value="Italy">Italy</SelectItem>
+                      <SelectItem value="Spain">Spain</SelectItem>
+                      <SelectItem value="Netherlands">Netherlands</SelectItem>
+                      <SelectItem value="Belgium">Belgium</SelectItem>
+                      <SelectItem value="Switzerland">Switzerland</SelectItem>
+                      <SelectItem value="Portugal">Portugal</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAmerica}
+                      </SelectLabel>
+                      <SelectItem value="United States">
+                        United States
+                      </SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                      <SelectItem value="Mexico">Mexico</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.middleEast}
+                      </SelectLabel>
+                      <SelectItem value="United Arab Emirates">
+                        United Arab Emirates
+                      </SelectItem>
+                      <SelectItem value="Saudi Arabia">Saudi Arabia</SelectItem>
+                      <SelectItem value="Qatar">Qatar</SelectItem>
+                      <SelectItem value="Kuwait">Kuwait</SelectItem>
+                      <SelectItem value="Bahrain">Bahrain</SelectItem>
+                      <SelectItem value="Oman">Oman</SelectItem>
+                      <SelectItem value="Jordan">Jordan</SelectItem>
+                      <SelectItem value="Lebanon">Lebanon</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>{t.payment.countryGroups.asia}</SelectLabel>
+                      <SelectItem value="China">China</SelectItem>
+                      <SelectItem value="Japan">Japan</SelectItem>
+                      <SelectItem value="India">India</SelectItem>
+                      <SelectItem value="Singapore">Singapore</SelectItem>
+                      <SelectItem value="South Korea">South Korea</SelectItem>
+                      <SelectItem value="Turkey">Turkey</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>{t.payment.countryGroups.other}</SelectLabel>
+                      <SelectItem value="Australia">Australia</SelectItem>
+                      <SelectItem value="Brazil">Brazil</SelectItem>
+                      <SelectItem value="South Africa">South Africa</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 {mockPaymentErrors.country ? (
                   <p className="text-xs text-red-600">
                     {mockPaymentErrors.country}
@@ -1076,7 +1158,20 @@ export default function Invoices({
             {paymentClientSecret && stripePromise ? (
               <EmbeddedCheckoutProvider
                 stripe={stripePromise}
-                options={{ clientSecret: paymentClientSecret }}
+                options={{
+                  clientSecret: paymentClientSecret,
+                  onComplete: () => {
+                    setPaymentClientSecret(undefined);
+                    setPaymentInvoiceLabel('');
+                    void queryClient
+                      .invalidateQueries({
+                        queryKey: ['received-invoices'],
+                      })
+                      .then(() => {
+                        toast.success(t.payment.successful);
+                      });
+                  },
+                }}
               >
                 <EmbeddedCheckout />
               </EmbeddedCheckoutProvider>
@@ -1149,6 +1244,9 @@ export default function Invoices({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chat Assistant - Individual Mode */}
+      <Chatbot dictionary={dictionary} key="individual" />
     </div>
   );
 }

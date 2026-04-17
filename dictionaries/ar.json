@@ -20,7 +20,6 @@
         "qrAlt": "رمز QR للمصادقة الثنائية",
         "manualKey": "مفتاح الإعداد اليدوي",
         "enterCode": "أدخل الرمز المكون من 6 أرقام",
-        "codePlaceholder": "123456",
         "enableButton": "تفعيل المصادقة الثنائية",
         "verifying": "جارٍ التحقق...",
         "setupSuccess": "بدأ إعداد المصادقة الثنائية",
@@ -75,19 +74,12 @@
       "resettingButton": "جاري إعادة التعيين...",
       "successMessage": "تم إعادة تعيين كلمة المرور بنجاح",
       "errorMessage": "فشل في إعادة تعيين كلمة المرور",
-      "invalidTokenTitle": "رابط غير صالح أو منتهي الصلاحية",
-      "invalidTokenDescription": "هذا الرابط لإعادة تعيين كلمة المرور لم يعد صالحًا.",
-      "invalidTokenMessage": "قد يكون رمز إعادة التعيين قد انتهت صلاحيته أو تم استخدامه بالفعل. يرجى طلب رابط جديد لإعادة تعيين كلمة المرور.",
-      "requestNewLink": "طلب رابط إعادة تعيين جديد",
       "tokenDetected": "تم اكتشاف رمز إعادة التعيين من رابط البريد الإلكتروني.",
       "backToLogin": "العودة إلى تسجيل الدخول"
     },
     "sidebar": {
       "businessesLabel": "الأنشطة التجارية",
-      "loading": "جاري التحميل...",
-      "noBusinessesFound": "لم يتم العثور على أنشطة تجارية",
-      "businessInactive": "غير نشط",
-      "viewYourBusinesses": "عرض أنشطتك التجارية"
+      "loading": "جاري التحميل..."
     },
     "home": {
       "navigation": {
@@ -153,9 +145,9 @@
         "viewAllSolutions": "عرض جميع الحلول",
         "startups": {
           "title": "الشركات الناشئة",
-          "description": "مثالي للشركات الجديدة التي تسعى لإنشاء أسس مالية قوية",
+          "description": "مثالي للشركات الجديدة التي تتطلع إلى تأسيس قواعد مالية متينة",
           "features": [
-            "إعداد وتكوين سهل",
+            "إعداد سهل ودخول",
             "تقارير جاهزة للمستثمرين",
             "تتبع معدل الحرق"
           ]
@@ -166,8 +158,8 @@
           "features": ["دعم متعدد العملات", "تكامل الرواتب", "إدارة المخزون"]
         },
         "enterprise": {
-          "title": "المؤسسات الكبيرة",
-          "description": "ميزات متقدمة للمؤسسات الكبيرة بمتطلبات معقدة",
+          "title": "الشركات الكبيرة",
+          "description": "ميزات متقدمة للمؤسسات الكبيرة ذات المتطلبات المعقدة",
           "features": ["سير عمل مخصص", "امتثال متقدم", "دعم مخصص"]
         }
       },
@@ -295,8 +287,9 @@
       "createBusinessButton": "إنشاء نشاط تجاري جديد",
       "refresh": "تحديث",
       "totalInvoices": "إجمالي الفواتير",
-      "totalPaid": "المدفوع",
-      "totalPending": "قيد الانتظار",
+      "totalPaidInvoices": "الفواتير المدفوعة",
+      "totalPaid": "إجمالي المدفوع",
+      "totalPending": "إجمالي المعلق",
       "invoiceList": "قائمة الفواتير",
       "noInvoices": "لا توجد فواتير حتى الآن",
       "noInvoicesHint": "ستظهر الفواتير المرسلة إليك هنا",
@@ -309,6 +302,7 @@
       "searchLabel": "بحث",
       "filterLabel": "تصفية حسب الحالة",
       "filterAll": "الكل",
+      "filterDraft": "مسودة",
       "filterIssued": "صادر",
       "filterPaid": "مدفوع",
       "filterOverdue": "متأخر",
@@ -316,6 +310,9 @@
       "topPayingClientsFilter": "🏆 أفضل العملاء دفعاً",
       "rank": "الترتيب",
       "unknownClient": "عميل غير معروف",
+      "unknown": "غير معروف",
+      "yesLabel": "نعم",
+      "multiCurrency": "عملات متنوعة",
       "invoiceNumber": "رقم الفاتورة",
       "recipient": "المستقبل",
       "amount": "المبلغ",
@@ -405,6 +402,7 @@
       "importedLabel": "مستوردة",
       "failedLabel": "فشلت",
       "importSuccessMessage": "تم استيراد الفواتير بنجاح",
+      "importSuccessWithCount": "{count, plural, one {تم استيراد فاتورة واحدة بنجاح} two {تم استيراد فاتورتين بنجاح} few {تم استيراد # فواتير بنجاح} many {تم استيراد # فاتورة بنجاح} other {تم استيراد # فاتورة بنجاح}}",
       "importErrorMessage": "فشل استيراد الفواتير",
       "importWarningMessage": "اكتمل الاستيراد مع {count} تحذير(ات). راجع التفاصيل أدناه.",
       "importFailureMessage": "فشل الاستيراد: لم يتمكن من استيراد {count} فاتورة(ات).",
@@ -434,6 +432,20 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "إغلاق",
       "invalidFileType": "يرجى تحميل ملف CSV أو Excel",
+      "fileUpload": {
+        "bytes": "بايت",
+        "kb": "كيلوبايت",
+        "mb": "ميغابايت",
+        "gb": "غيغابايت",
+        "maxSizeError": "الملف يتجاوز الحد الأقصى للحجم {maxSize} ميغابايت",
+        "fileTypeError": "نوع الملف غير مقبول. يرجى تحميل: {accept}",
+        "uploading": "جاري التحميل... {progress}%",
+        "readyToImport": "جاهز للاستيراد",
+        "dropHere": "أفلت ملفك هنا",
+        "dragDrop": "اسحب وأفلت ملفك",
+        "orClickToBrowse": "أو انقر للاستعراض من جهازك",
+        "maxFileSize": "الحد الأقصى لحجم الملف: {maxSize}ميغابايت"
+      },
       "invoiceDetailsTitle": "تفاصيل الفاتورة",
       "invoiceNumberLabel": "رقم الفاتورة",
       "statusLabel": "الحالة",
@@ -465,6 +477,7 @@
         "noConfirm": "لا، إغلاق",
         "successTitle": "تم استلام الدفع!",
         "successDescription": "تمت معالجة دفعتك بنجاح.",
+        "successful": "تم الدفع بنجاح!",
         "totalPaid": "إجمالي المدفوع",
         "processing": "جاري المعالجة...",
         "requiredFieldsError": "يرجى تصحيح الحقول المطلوبة",
@@ -480,11 +493,20 @@
         "demoCardExpired": "بطاقة منتهية الصلاحية (تجربة Stripe)",
         "useThisCard": "استخدم هذه البطاقة",
         "validation": {
-          "nameRequired": "اسم صاحب البطاقة مطلوب",
+          "nameRequired": "اسم حامل البطاقة مطلوب",
           "numberInvalid": "رقم البطاقة غير صالح (16 رقمًا)",
           "expiryInvalid": "تاريخ الصلاحية غير صالح (MM/YY)",
           "cvcInvalid": "رمز CVC غير صالح",
           "countryRequired": "الدولة مطلوبة"
+        },
+        "selectCountryPlaceholder": "اختر دولة",
+        "countryGroups": {
+          "northAfrica": "شمال أفريقيا",
+          "europe": "أوروبا",
+          "northAmerica": "أمريكا الشمالية",
+          "middleEast": "الشرق الأوسط",
+          "asia": "آسيا",
+          "other": "أخرى"
         },
         "verificationFailed": "فشل التحقق من الدفع. يرجى التحقق من حالتك لاحقًا.",
         "errorVerifying": "خطأ في التحقق من الدفع",
@@ -492,9 +514,10 @@
       },
       "statusTransition": {
         "confirmTitle": "هل أنت متأكد؟",
-        "confirmDescription": "هل أنت متأكد من أنك تريد وضع علامة على هذه الفاتورة كمدفوعة؟ هذا الإجراء غير قابل للتراجع ويشير إلى أنك قد استلمت أموالاً بمبلغ إجمالي قدره {amount} {currency}.",
+        "confirmDescription": "هل أنت متأكد من رغبتك في وضع علامة على هذه الفاتورة كمدفوعة؟ هذا الإجراء غير قابل للتراجع ويشير إلى أنك قد استلمت أموالاً بمبلغ إجمالي قدره {amount} {currency}.",
         "cancel": "إلغاء",
-        "confirm": "تأكيد الدفع"
+        "confirm": "تأكيد الدفع",
+        "errorMessage": "فشل تحديث حالة الفاتورة. يرجى المحاولة مرة أخرى."
       }
     },
     "businessApplication": {
@@ -656,7 +679,8 @@
         "soldLastPeriod": "تم بيعها ({days} يوم)",
         "dailyRate": "المعدل اليومي",
         "recommendationLabel": "التوصية",
-        "reorderLabel": "إعادة طلب",
+        "reorderLabel": "إعادة الطلب",
+        "reorderWithQuantity": "إعادة الطلب {quantity}",
         "noStockInsights": "لا توجد رؤى مخزون متاحة بعد.",
         "stockInsightsError": "فشل تحميل رؤى المخزون.",
         "historicalData": "بيانات تاريخية (فعلية)",
@@ -716,6 +740,7 @@
         "disclaimer": "قد يرتكب Accountia AI أخطاء.",
         "welcomeMessage": "مرحبا! اسأل أي أسئلة حول المحاسبة في عملك.",
         "sendMessage": "إرسال الرسالة",
+        "connectionFailed": "فشل الاتصال",
         "loading": "جاري تحميل الرد...",
         "emptyResponse": "لم أستطع إنشاء رد الآن. يرجى المحاولة مرة أخرى.",
         "errorFailed": "فشل في إرسال الرسالة",
@@ -827,6 +852,7 @@
         "noUrgentReorder": "لا يوجد إعادة طلب عاجل",
         "riskExposure": "التعرض للمخاطر",
         "unitsToReorder": "+ {count} وحدة لإعادة طلبها",
+        "reorderWithQuantity": "إعادة الطلب {quantity}",
         "stockoutTimeline": "الجدول الزمني لنفاد المخزون",
         "horizon": "الأفق {days} يومًا",
         "noStockoutTrend": "لا يوجد اتجاه لنفاد المخزون",
@@ -915,6 +941,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "شعار Accountia"
+  },
+  "a11y": {
+    "mainNav": "التنقل الرئيسي",
+    "toggleMenu": "تبديل القائمة",
+    "mobileNav": "التنقل المتنقل"
   },
   "admin": {
     "title": "لوحة تحكم المدير",
@@ -1044,7 +1075,6 @@
     "stats": {
       "totalUsers": "إجمالي المستخدمين",
       "totalAdmins": "المسؤولون",
-      "totalNormalUsers": "المستخدمون العاديون",
       "lastUpdated": "مزامنة المستخدمين",
       "placeholder": "—",
       "syncButton": "مزامنة",
@@ -1052,20 +1082,12 @@
       "upToDate": "محدّث"
     },
     "usersTitle": "المستخدمون",
-    "monthlyRevenue": "إجمالي الإيرادات",
-    "monthlyExpenses": "إجمالي المصروفات",
-    "netProfit": "صافي الربح",
-    "netLoss": "صافي الخسارة",
-    "loadingStatistics": "جاري تحميل الإحصائيات...",
-    "errorLoadingStatistics": "خطأ في تحميل الإحصائيات",
     "searchPlaceholder": "ابحث عن مستخدمين...",
     "dateFilterLabel": "تصفية حسب تاريخ التسجيل:",
     "dateFilterPlaceholder": "اختر نطاق التاريخ",
     "loadError": "فشل تحميل المستخدمين",
     "deleteError": "فشل حذف المستخدم",
     "noResults": "لم يتم العثور على نتائج.",
-    "adminBadge": "مسؤول",
-    "userBadge": "مستخدم",
     "roleColumn": "الدور",
     "changeRoleSuccess": "تم تحديث الدور بنجاح",
     "changeRoleError": "فشل تحديث الدور",
@@ -1076,7 +1098,6 @@
       "BUSINESS_ADMIN": "مسؤول الأعمال",
       "CLIENT": "عميل"
     },
-    "manageButton": "إدارة",
     "deleteDialog": {
       "title": "حذف المستخدم",
       "description": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
@@ -1088,11 +1109,8 @@
     "email": "البريد الإلكتروني",
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
-    "isAdmin": "مسؤول",
     "dateJoined": "تاريخ الانضمام",
     "actions": "إجراءات",
-    "confirmDeleteTitle": "تأكيد الحذف",
-    "confirmDeleteDescription": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
     "noUsers": "لم يتم العثور على مستخدمين.",
     "banUser": "حظر",
     "unbanUser": "رفع الحظر",
@@ -1100,7 +1118,6 @@
     "banError": "فشل حظر المستخدم",
     "unbanSuccess": "تم رفع حظر المستخدم بنجاح",
     "unbanError": "فشل رفع حظر المستخدم",
-    "bannedLabel": "محظور",
     "banDialog": {
       "title": "حظر المستخدم",
       "description": "هل أنت متأكد أنك تريد حظر {username}؟ لن يتمكن من تسجيل الدخول.",

@@ -20,7 +20,6 @@
         "qrAlt": "2FA QR code",
         "manualKey": "Manual setup key",
         "enterCode": "Enter the 6-digit code",
-        "codePlaceholder": "123456",
         "enableButton": "Enable 2FA",
         "verifying": "Verifying...",
         "setupSuccess": "2FA setup started",
@@ -75,19 +74,12 @@
       "resettingButton": "Resetting...",
       "successMessage": "Password reset successfully",
       "errorMessage": "Failed to reset password",
-      "invalidTokenTitle": "Invalid or Expired Link",
-      "invalidTokenDescription": "This password reset link is no longer valid.",
-      "invalidTokenMessage": "The reset token may have expired or was already used. Please request a new password reset link.",
-      "requestNewLink": "Request a new reset link",
       "tokenDetected": "Reset token detected from email link.",
       "backToLogin": "Back to Login"
     },
     "sidebar": {
       "businessesLabel": "Businesses",
-      "loading": "Loading...",
-      "noBusinessesFound": "No businesses found",
-      "businessInactive": "Inactive",
-      "viewYourBusinesses": "View your businesses"
+      "loading": "Loading..."
     },
     "home": {
       "navigation": {
@@ -303,6 +295,7 @@
       "createBusinessButton": "Create a New Business",
       "refresh": "Refresh",
       "totalInvoices": "Total Invoices",
+      "totalPaidInvoices": "Paid Invoices",
       "totalPaid": "Total Paid",
       "totalPending": "Total Pending",
       "invoiceList": "Invoice List",
@@ -317,6 +310,7 @@
       "searchLabel": "Search",
       "filterLabel": "Filter by Status",
       "filterAll": "All",
+      "filterDraft": "Draft",
       "filterIssued": "Issued",
       "filterPaid": "Paid",
       "filterOverdue": "Overdue",
@@ -324,6 +318,9 @@
       "topPayingClientsFilter": "🏆 Top Paying Clients",
       "rank": "Rank",
       "unknownClient": "Unknown Client",
+      "unknown": "Unknown",
+      "yesLabel": "Yes",
+      "multiCurrency": "various currencies",
       "invoiceNumber": "Invoice #",
       "recipient": "Recipient",
       "amount": "Amount",
@@ -413,6 +410,7 @@
       "importedLabel": "Imported",
       "failedLabel": "Failed",
       "importSuccessMessage": "Successfully imported invoices",
+      "importSuccessWithCount": "Successfully imported {count} invoices",
       "importErrorMessage": "Failed to import invoices",
       "importWarningMessage": "Import completed with {count} warning(s). Review details below.",
       "importFailureMessage": "Import failed: {count} invoice(s) could not be imported.",
@@ -442,6 +440,20 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "Close",
       "invalidFileType": "Please upload a CSV or Excel file",
+      "fileUpload": {
+        "bytes": "Bytes",
+        "kb": "KB",
+        "mb": "MB",
+        "gb": "GB",
+        "maxSizeError": "File exceeds maximum size of {maxSize} MB",
+        "fileTypeError": "File type not accepted. Please upload: {accept}",
+        "uploading": "Uploading... {progress}%",
+        "readyToImport": "Ready to import",
+        "dropHere": "Drop your file here",
+        "dragDrop": "Drag & drop your file",
+        "orClickToBrowse": "or click to browse from your computer",
+        "maxFileSize": "Maximum file size: {maxSize}MB"
+      },
       "invoiceDetailsTitle": "Invoice Details",
       "invoiceNumberLabel": "Invoice Number",
       "statusLabel": "Status",
@@ -473,6 +485,7 @@
         "noConfirm": "No, Close",
         "successTitle": "Payment Received!",
         "successDescription": "Your payment has been processed successfully.",
+        "successful": "Payment successful!",
         "totalPaid": "Total Paid",
         "processing": "Processing...",
         "requiredFieldsError": "Please correct the required fields",
@@ -494,6 +507,15 @@
           "cvcInvalid": "Invalid CVC",
           "countryRequired": "Country is required"
         },
+        "selectCountryPlaceholder": "Select a country",
+        "countryGroups": {
+          "northAfrica": "North Africa",
+          "europe": "Europe",
+          "northAmerica": "North America",
+          "middleEast": "Middle East",
+          "asia": "Asia",
+          "other": "Other"
+        },
         "verificationFailed": "Payment verification failed. Please check your status later.",
         "errorVerifying": "Error verifying payment",
         "verifyingPayment": "Verifying payment..."
@@ -502,7 +524,8 @@
         "confirmTitle": "Are you sure?",
         "confirmDescription": "Are you sure you want to mark this invoice as paid? This action is irreversible and indicates that you have received funds for an amount of {amount} {currency}.",
         "cancel": "Cancel",
-        "confirm": "Confirm Payment"
+        "confirm": "Confirm Payment",
+        "errorMessage": "Failed to update invoice status. Please try again."
       }
     },
     "businessApplication": {
@@ -665,6 +688,7 @@
         "dailyRate": "Daily rate",
         "recommendationLabel": "Recommendation",
         "reorderLabel": "Reorder",
+        "reorderWithQuantity": "Reorder {quantity}",
         "noStockInsights": "No stock insights available yet.",
         "stockInsightsError": "Failed to load stock insights.",
         "historicalData": "Historical (Actual)",
@@ -729,6 +753,7 @@
         "errorFailed": "Failed to send message",
         "errorRetrying": "Retrying...",
         "errorTryAgain": "Please try again.",
+        "connectionFailed": "Connection failed",
         "ariaLabel": "Chat with Accountia AI",
         "aiResponse": "AI response",
         "userMessage": "Your message"
@@ -835,6 +860,7 @@
         "noUrgentReorder": "No urgent reorder",
         "riskExposure": "Risk exposure",
         "unitsToReorder": "+ {count} units to reorder",
+        "reorderWithQuantity": "Reorder {quantity}",
         "stockoutTimeline": "Stockout timeline",
         "horizon": "horizon {days}d",
         "noStockoutTrend": "No stockout trend",
@@ -923,6 +949,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "Accountia Logo"
+  },
+  "a11y": {
+    "mainNav": "Main navigation",
+    "toggleMenu": "Toggle menu",
+    "mobileNav": "Mobile navigation"
   },
   "admin": {
     "title": "Admin Dashboard",
@@ -1052,7 +1083,6 @@
     "stats": {
       "totalUsers": "Total users",
       "totalAdmins": "Admins",
-      "totalNormalUsers": "Normal Users",
       "lastUpdated": "Sync Users",
       "placeholder": "—",
       "syncButton": "Sync",
@@ -1060,20 +1090,12 @@
       "upToDate": "Up to date"
     },
     "usersTitle": "Users",
-    "monthlyRevenue": "Total Revenues",
-    "monthlyExpenses": "Total Expenses",
-    "netProfit": "Net Profit",
-    "netLoss": "Net Loss",
-    "loadingStatistics": "Loading statistics...",
-    "errorLoadingStatistics": "Error loading statistics",
     "searchPlaceholder": "Search users...",
     "dateFilterLabel": "Filter by registration date:",
     "dateFilterPlaceholder": "Select date range",
     "loadError": "Failed to load users",
     "deleteError": "Failed to delete user",
     "noResults": "No results found.",
-    "adminBadge": "Admin",
-    "userBadge": "User",
     "roleColumn": "Role",
     "changeRoleSuccess": "Role updated successfully",
     "changeRoleError": "Failed to update role",
@@ -1084,7 +1106,6 @@
       "BUSINESS_ADMIN": "Business Admin",
       "CLIENT": "Client"
     },
-    "manageButton": "Manage",
     "deleteDialog": {
       "title": "Delete user",
       "description": "Are you sure you want to delete user {username}? This action cannot be undone.",
@@ -1096,11 +1117,8 @@
     "email": "Email",
     "firstName": "First Name",
     "lastName": "Last Name",
-    "isAdmin": "Admin",
     "dateJoined": "Date Joined",
     "actions": "Actions",
-    "confirmDeleteTitle": "Confirm Deletion",
-    "confirmDeleteDescription": "Are you sure you want to delete user {username}? This action cannot be undone.",
     "noUsers": "No users found.",
     "banUser": "Ban",
     "unbanUser": "Unban",
@@ -1108,7 +1126,6 @@
     "banError": "Failed to ban user",
     "unbanSuccess": "User unbanned successfully",
     "unbanError": "Failed to unban user",
-    "bannedLabel": "Banned",
     "banDialog": {
       "title": "Ban user",
       "description": "Are you sure you want to ban {username}? They will not be able to log in.",

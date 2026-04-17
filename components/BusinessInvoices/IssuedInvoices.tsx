@@ -21,8 +21,11 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { BusinessService, InvoicesService } from '@/lib/requests';
+import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
+import { formatDate } from '@/lib/date-utils';
+import { getStatusLabel } from '@/lib/status-labels';
 import {
   Card,
   CardContent,
@@ -258,7 +261,9 @@ export function IssuedInvoices({
     onError: (error: unknown) => {
       import('sonner').then(({ toast }) => {
         toast.error(
-          error instanceof Error ? error.message : 'Transformation failed'
+          error instanceof Error
+            ? error.message
+            : t.statusTransition?.errorMessage || t.fetchError
         );
       });
     },
@@ -328,16 +333,20 @@ export function IssuedInvoices({
     doc.setFontSize(16);
     doc.setTextColor(50);
     doc.text(
-      `${t.invoiceDetailsTitle || 'Invoice'} #${invoiceDetails.invoiceNumber}`,
+      `${t.invoiceDetailsTitle} #${invoiceDetails.invoiceNumber}`,
       14,
       30
     );
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t.statusLabel || 'Status'}: ${invoiceDetails.status}`, 14, 38);
     doc.text(
-      `${t.issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      `${t.statusLabel}: ${getStatusLabel(invoiceDetails.status, dictionary)}`,
+      14,
+      38
+    );
+    doc.text(
+      `${t.issuedDateLabel}: ${formatDate(invoiceDetails.issuedDate, lang)}`,
       14,
       44
     );
@@ -345,16 +354,16 @@ export function IssuedInvoices({
     // Line items
     if (invoiceDetails.lineItems && invoiceDetails.lineItems.length > 0) {
       const tableColumn = [
-        t.itemLabel || 'Item',
-        t.quantityLabel || 'Qty',
-        t.priceLabel || 'Price',
-        t.totalLabel || 'Total',
+        t.itemLabel,
+        t.quantityLabel,
+        t.priceLabel,
+        t.totalLabel,
       ];
       const tableRows: Array<string | number>[] = [];
 
       for (const item of invoiceDetails.lineItems) {
         tableRows.push([
-          item.description || item.productName || 'Item',
+          item.productName || item.description || t.unknown,
           item.quantity,
           `${item.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
           `${(item.quantity * item.unitPrice).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
@@ -380,7 +389,7 @@ export function IssuedInvoices({
     // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
     doc.text(
-      `${t.amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+      `${t.amountLabel}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
       14,
       finalY + 15
     );
@@ -536,11 +545,11 @@ export function IssuedInvoices({
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>{t.issuedInvoicesList || 'Invoice List'}</CardTitle>
+            <CardTitle>{t.issuedInvoicesList}</CardTitle>
             <CardDescription>
               {isLoading
                 ? '...'
-                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular || 'invoice' : t.invoicePlural || 'invoices'}`}
+                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular : t.invoicePlural}`}
             </CardDescription>
           </div>
 
@@ -592,7 +601,7 @@ export function IssuedInvoices({
             {(['DRAFT', 'ISSUED', 'PAID', 'OVERDUE'] as const).map((status) => {
               const statusLabel =
                 status === 'DRAFT'
-                  ? 'Draft'
+                  ? t.filterDraft
                   : status === 'ISSUED'
                     ? t.filterIssued
                     : status === 'PAID'
@@ -647,104 +656,114 @@ export function IssuedInvoices({
               )}
             </div>
           ) : filterStatus === 'PODIUM' ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.rank}</TableHead>
-                  <TableHead>{t.recipient}</TableHead>
-                  <TableHead>{t.recipientEmailLabel}</TableHead>
-                  <TableHead className="text-right">{t.totalPaid}</TableHead>
-                  <TableHead className="text-right">
-                    {t.totalInvoices}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(podiumClients as ClientPodiumItem[]).map((client, index) => {
-                  const rankBadge = client.medal || `${index + 1}.`;
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.rank}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
+                    <TableHead>{t.recipientEmailLabel}</TableHead>
+                    <TableHead className="text-right">{t.totalPaid}</TableHead>
+                    <TableHead className="text-right">
+                      {t.totalPaidInvoices || t.totalInvoices}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(podiumClients as ClientPodiumItem[]).map(
+                    (client, index) => {
+                      const rankBadge = client.medal || `${index + 1}.`;
 
-                  return (
-                    <TableRow
-                      key={client.clientId}
-                      className="hover:bg-muted/50"
-                    >
-                      <TableCell className="font-medium">{rankBadge}</TableCell>
+                      return (
+                        <TableRow
+                          key={client.clientId}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {rankBadge}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {client.clientName || t.unknownClient}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {client.clientEmail || '—'}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {client.totalPaidAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                            })}
+                            <span className="text-muted-foreground ml-1 text-xs">
+                              ({t.multiCurrency})
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {client.totalPaidInvoices}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.invoiceNumber}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
+                    <TableHead>{t.amount}</TableHead>
+                    <TableHead>{t.status}</TableHead>
+                    <TableHead>{t.issuedDate}</TableHead>
+                    <TableHead className="text-right">{t.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.map((invoice, _index) => (
+                    <TableRow key={invoice.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {client.clientName || t.unknownClient}
+                        {invoice.invoiceNumber}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {client.clientEmail || '—'}
+                        {invoice.recipient.displayName ||
+                          invoice.recipient.email ||
+                          t.externalRecipient}
                       </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {client.totalPaidAmount.toLocaleString(lang, {
+                      <TableCell className="font-medium">
+                        {invoice.totalAmount.toLocaleString(lang, {
                           minimumFractionDigits: 2,
-                        })}
+                        })}{' '}
+                        {invoice.currency}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={STATUS_COLORS[invoice.status]}>
+                          <span className="mr-1">
+                            {STATUS_ICONS[invoice.status]}
+                          </span>
+                          {getStatusLabel(invoice.status, dictionary)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(invoice.issuedDate, lang)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {client.totalPaidInvoices}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInvoiceId(invoice.id);
+                            setIsDetailsOpen(true);
+                          }}
+                        >
+                          {t.view}
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.invoiceNumber}</TableHead>
-                  <TableHead>{t.recipient}</TableHead>
-                  <TableHead>{t.amount}</TableHead>
-                  <TableHead>{t.status}</TableHead>
-                  <TableHead>{t.issuedDate}</TableHead>
-                  <TableHead className="text-right">{t.actions}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map((invoice, _index) => (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {invoice.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {invoice.recipient.displayName ||
-                        invoice.recipient.email ||
-                        t.externalRecipient ||
-                        'External Recipient'}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {invoice.totalAmount.toLocaleString(lang, {
-                        minimumFractionDigits: 2,
-                      })}{' '}
-                      {invoice.currency}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[invoice.status]}>
-                        <span className="mr-1">
-                          {STATUS_ICONS[invoice.status]}
-                        </span>
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(invoice.issuedDate).toLocaleDateString(lang)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedInvoiceId(invoice.id);
-                          setIsDetailsOpen(true);
-                        }}
-                      >
-                        {t.view}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
 
           {/* Load More Button */}
@@ -840,7 +859,7 @@ export function IssuedInvoices({
                               <SelectItem key={status} value={status}>
                                 <div className="flex items-center gap-2">
                                   <span>{STATUS_ICONS[status]}</span>
-                                  {status}
+                                  {getStatusLabel(status, dictionary)}
                                 </div>
                               </SelectItem>
                             ))}
@@ -865,10 +884,7 @@ export function IssuedInvoices({
                       {t.issuedDateLabel}
                     </p>
                     <p className="font-medium">
-                      {new Date(invoiceDetails.issuedDate).toLocaleDateString(
-                        lang,
-                        { year: 'numeric', month: 'short', day: 'numeric' }
-                      )}
+                      {formatDate(invoiceDetails.issuedDate, lang)}
                     </p>
                   </div>
                 </div>
@@ -914,7 +930,7 @@ export function IssuedInvoices({
                                 <TableCell className="font-medium">
                                   {item.productName ||
                                     item.description ||
-                                    'Unknown'}
+                                    t.unknown}
                                 </TableCell>
                                 <TableCell className="text-right">
                                   {item.quantity}
@@ -940,7 +956,7 @@ export function IssuedInvoices({
                       <div className="flex justify-end pt-4">
                         <div className="flex items-center justify-between gap-12">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-                            {t.amountLabel || 'Total'}
+                            {t.amountLabel}
                           </span>
                           <span className="text-primary text-2xl font-bold">
                             {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -963,7 +979,7 @@ export function IssuedInvoices({
                 <p className="text-muted-foreground text-sm">
                   {invoiceError instanceof Error
                     ? invoiceError.message
-                    : 'Unknown error occurred'}
+                    : t.unknown}
                 </p>
               </div>
             ) : (
@@ -979,11 +995,11 @@ export function IssuedInvoices({
               disabled={isLoadingDetails || !invoiceDetails}
             >
               <Download className="h-4 w-4" />
-              {t.exportPDF || 'Export PDF'}
+              {t.exportPDF}
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="default">
-                {t.closeButtonLabel || 'Close'}
+                {t.closeButtonLabel}
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -992,32 +1008,25 @@ export function IssuedInvoices({
 
       {/* Confirmation Dialog for PAID Status */}
       <Dialog
-        open={pendingStatusChange !== undefined}
+        open={pendingStatusChange !== undefined && !!invoiceDetails}
         onOpenChange={(open) => {
           if (!open) setPendingStatusChange(undefined);
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {t.statusTransition?.confirmTitle ?? 'Êtes-vous sûr ?'}
-            </DialogTitle>
+            <DialogTitle>{t.statusTransition.confirmTitle}</DialogTitle>
             <DialogDescription>
-              {t.statusTransition?.confirmDescription
+              {invoiceDetails
                 ? t.statusTransition.confirmDescription
                     .replace(
                       '{amount}',
-                      invoiceDetails?.totalAmount?.toLocaleString(lang, {
+                      invoiceDetails.totalAmount.toLocaleString(lang, {
                         minimumFractionDigits: 2,
-                      }) ?? ''
+                      })
                     )
-                    .replace('{currency}', invoiceDetails?.currency ?? '')
-                : `Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de ${invoiceDetails?.totalAmount?.toLocaleString(
-                    lang,
-                    {
-                      minimumFractionDigits: 2,
-                    }
-                  )} ${invoiceDetails?.currency}.`}
+                    .replace('{currency}', invoiceDetails.currency)
+                : ''}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1025,7 +1034,7 @@ export function IssuedInvoices({
               variant="outline"
               onClick={() => setPendingStatusChange(undefined)}
             >
-              {t.statusTransition?.cancel ?? 'Annuler'}
+              {t.statusTransition.cancel}
             </Button>
             <Button
               onClick={() => {
@@ -1035,11 +1044,19 @@ export function IssuedInvoices({
                 setPendingStatusChange(undefined);
               }}
             >
-              {t.statusTransition?.confirm ?? 'Confirmer le paiement'}
+              {t.statusTransition.confirm}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chat Assistant - Business Mode */}
+      <Chatbot
+        businessId={businessId}
+        context="issued"
+        dictionary={dictionary}
+        key={`${businessId}-issued`}
+      />
     </div>
   );
 }

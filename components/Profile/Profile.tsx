@@ -41,7 +41,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthService } from '@/lib/requests';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UpdateUserSchema, type UpdateUserInput } from '@/types/services';
 import type { TwoFASetupResponse } from '@/types/services';
 import { toast } from 'sonner';
@@ -87,6 +87,7 @@ export default function Profile({
   const [disable2FADialogOpen, setDisable2FADialogOpen] = useState(false);
   const [disable2FACode, setDisable2FACode] = useState('');
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [justEnteredEditMode, setJustEnteredEditMode] = useState(false);
   const accountForm = useForm<UpdateUserInput>({
     resolver: zodResolver(UpdateUserSchema),
@@ -202,7 +203,11 @@ export default function Profile({
     mutationFn: async (data: UpdateUserInput) => {
       return await AuthService.updateUser(data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update query cache with new user data immediately
+      if (data.user) {
+        queryClient.setQueryData(['user-profile'], data.user);
+      }
       refetch();
       setAccountEditMode(false);
       setSecurityEditMode(false);
@@ -767,9 +772,11 @@ export default function Profile({
                                   autoComplete="new-password"
                                   disabled={!securityEditMode}
                                 />
-                                <button
+                                <Button
                                   type="button"
-                                  className="absolute top-2 right-2"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-1 right-1 h-8 w-8"
                                   onClick={() => setShowPassword((v) => !v)}
                                   aria-label={
                                     showPassword
@@ -777,13 +784,14 @@ export default function Profile({
                                       : dictionary.common.showPassword
                                   }
                                   aria-pressed={showPassword}
+                                  disabled={!securityEditMode}
                                 >
                                   {showPassword ? (
                                     <EyeOff className="h-4 w-4" />
                                   ) : (
                                     <Eye className="h-4 w-4" />
                                   )}
-                                </button>
+                                </Button>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -808,9 +816,11 @@ export default function Profile({
                                   autoComplete="new-password"
                                   disabled={!securityEditMode}
                                 />
-                                <button
+                                <Button
                                   type="button"
-                                  className="absolute top-2 right-2"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-1 right-1 h-8 w-8"
                                   onClick={() =>
                                     setShowConfirmPassword((v) => !v)
                                   }
@@ -820,13 +830,14 @@ export default function Profile({
                                       : dictionary.common.showPassword
                                   }
                                   aria-pressed={showConfirmPassword}
+                                  disabled={!securityEditMode}
                                 >
                                   {showConfirmPassword ? (
                                     <EyeOff className="h-4 w-4" />
                                   ) : (
                                     <Eye className="h-4 w-4" />
                                   )}
-                                </button>
+                                </Button>
                               </div>
                             </FormControl>
                             <FormMessage />

@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Trash2,
   X,
@@ -490,170 +491,175 @@ export default function Admin({
                 : dictionary.admin.noResults}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('username')}
-                    >
-                      {dictionary.admin.username}
-                      {sortKey === 'username' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('email')}
-                    >
-                      {dictionary.admin.email}
-                      {sortKey === 'email' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead>{dictionary.admin.firstName}</TableHead>
-                  <TableHead>{dictionary.admin.lastName}</TableHead>
-                  <TableHead>{dictionary.admin.roleColumn}</TableHead>
-                  <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={() => toggleSort('dateJoined')}
-                    >
-                      {dictionary.admin.dateJoined}
-                      {sortKey === 'dateJoined' ? (
-                        sortDir === 'asc' ? (
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        )
-                      ) : (
-                        <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {dictionary.admin.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user: UserSummary) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.username}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.email}
-                    </TableCell>
-                    <TableCell>{user.firstName ?? '-'}</TableCell>
-                    <TableCell>{user.lastName ?? '-'}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={changingRoleUserId === user.id}
-                            className="h-8 gap-1.5 px-2 text-xs font-normal"
-                          >
-                            {changingRoleUserId === user.id && (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            )}
-                            {dictionary.admin.roles[user.role ?? 'CLIENT']}
-                            <ChevronDown className="h-3 w-3 opacity-60" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          {ALL_ROLES.map((role) => (
-                            <DropdownMenuItem
-                              key={role}
-                              onSelect={() => {
-                                if (role !== user.role) {
-                                  changeRoleMutation.mutate({
-                                    userId: user.id,
-                                    newRole: role,
-                                  });
-                                }
-                              }}
-                              className={cn(
-                                'text-xs',
-                                role === user.role && 'font-semibold'
-                              )}
-                            >
-                              {dictionary.admin.roles[role]}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                    <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant={
-                            user.isBanned === true ? 'outline' : 'secondary'
-                          }
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
-                            setBanModalUser(user);
-                            setBanAction(
-                              user.isBanned === true ? 'unban' : 'ban'
-                            );
-                          }}
-                          disabled={banningUserId === user.id}
-                          aria-label={
-                            user.isBanned === true
-                              ? dictionary.admin.unbanUser
-                              : dictionary.admin.banUser
-                          }
-                        >
-                          {user.isBanned === true ? (
-                            <ShieldCheck className="h-4 w-4" />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto gap-1 font-normal"
+                        onClick={() => toggleSort('username')}
+                      >
+                        {dictionary.admin.username}
+                        {sortKey === 'username' ? (
+                          sortDir === 'asc' ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
                           ) : (
-                            <Ban className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="rounded-full"
-                          onClick={() => {
-                            setModalUser(user);
-                            setDeleteError(undefined);
-                          }}
-                          disabled={deleteMutation.isPending}
-                          aria-label={dictionary.common.delete}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )
+                        ) : (
+                          <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto gap-1 font-normal"
+                        onClick={() => toggleSort('email')}
+                      >
+                        {dictionary.admin.email}
+                        {sortKey === 'email' ? (
+                          sortDir === 'asc' ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )
+                        ) : (
+                          <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </TableHead>
+                    <TableHead>{dictionary.admin.firstName}</TableHead>
+                    <TableHead>{dictionary.admin.lastName}</TableHead>
+                    <TableHead>{dictionary.admin.roleColumn}</TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto gap-1 font-normal"
+                        onClick={() => toggleSort('dateJoined')}
+                      >
+                        {dictionary.admin.dateJoined}
+                        {sortKey === 'dateJoined' ? (
+                          sortDir === 'asc' ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )
+                        ) : (
+                          <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {dictionary.admin.actions}
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user: UserSummary) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.username}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.email}
+                      </TableCell>
+                      <TableCell>{user.firstName ?? '-'}</TableCell>
+                      <TableCell>{user.lastName ?? '-'}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={changingRoleUserId === user.id}
+                              className="h-8 gap-1.5 px-2 text-xs font-normal"
+                            >
+                              {changingRoleUserId === user.id && (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              )}
+                              {dictionary.admin.roles[user.role ?? 'CLIENT']}
+                              <ChevronDown className="h-3 w-3 opacity-60" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {ALL_ROLES.map((role) => (
+                              <DropdownMenuItem
+                                key={role}
+                                onSelect={() => {
+                                  if (role !== user.role) {
+                                    changeRoleMutation.mutate({
+                                      userId: user.id,
+                                      newRole: role,
+                                    });
+                                  }
+                                }}
+                                className={cn(
+                                  'text-xs',
+                                  role === user.role && 'font-semibold'
+                                )}
+                              >
+                                {dictionary.admin.roles[role]}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                      <TableCell>{formatDateOnly(user.dateJoined)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant={
+                              user.isBanned === true ? 'outline' : 'secondary'
+                            }
+                            size="icon"
+                            className="rounded-full"
+                            onClick={() => {
+                              setBanModalUser(user);
+                              setBanAction(
+                                user.isBanned === true ? 'unban' : 'ban'
+                              );
+                            }}
+                            disabled={banningUserId === user.id}
+                            aria-label={
+                              user.isBanned === true
+                                ? dictionary.admin.unbanUser
+                                : dictionary.admin.banUser
+                            }
+                          >
+                            {user.isBanned === true ? (
+                              <ShieldCheck className="h-4 w-4" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="rounded-full"
+                            onClick={() => {
+                              setModalUser(user);
+                              setDeleteError(undefined);
+                            }}
+                            disabled={deleteMutation.isPending}
+                            aria-label={dictionary.common.delete}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -731,9 +737,9 @@ export default function Admin({
           </DialogHeader>
           {banAction === 'ban' && (
             <div className="space-y-3">
-              <label htmlFor="ban-reason" className="text-sm font-medium">
+              <Label htmlFor="ban-reason" className="text-sm font-medium">
                 {dictionary.admin.banDialog.reason}
-              </label>
+              </Label>
               <Input
                 id="ban-reason"
                 placeholder={dictionary.admin.banDialog.reason}

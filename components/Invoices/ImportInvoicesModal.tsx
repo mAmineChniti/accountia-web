@@ -1,15 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Loader2,
-  Upload,
-  FileIcon,
-  X,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
+import FileUpload from '@/components/reusable/file-upload';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +18,8 @@ import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { InvoicesService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
+import { cn } from '@/lib/utils';
+import { formatICU } from '@/lib/icu-formatter';
 import type { BulkImportInvoicesResponseDto } from '@/types/services';
 
 interface ImportInvoicesModalProps {
@@ -63,11 +59,10 @@ export function ImportInvoicesModal({
   const t = dictionary.pages.invoices;
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
-  const [dragActive, setDragActive] = useState(false);
   const [result, setResult] = useState<
     BulkImportInvoicesResponseDto | undefined
   >();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState<string | undefined>();
 
   const importStatus = result
     ? result.successCount === 0 && result.failedCount > 0
@@ -119,9 +114,13 @@ export function ImportInvoicesModal({
       // Success: show success toast with failed count if applicable
       const successMessage =
         data.failedCount > 0
-          ? `Successfully imported ${data.successCount} invoices (${data.failedCount} failed)`
-          : t.importSuccessMessage ||
-            `Successfully imported ${data.successCount} invoices`;
+          ? formatICU(t.importPartialSuccess, {
+              count: data.successCount,
+              failed: data.failedCount,
+            })
+          : formatICU(t.importSuccessWithCount, {
+              count: data.successCount,
+            });
       toast.success(successMessage);
     },
     onError: (error: unknown) => {
@@ -134,44 +133,19 @@ export function ImportInvoicesModal({
     },
   });
 
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
+  const handleFileSelect = (file: File) => {
+    if (isValidFile(file)) {
+      setSelectedFile(file);
+      setFileError(undefined);
+    } else {
+      setSelectedFile(undefined);
+      setFileError(t.invalidFileType || 'Please upload a CSV or Excel file');
     }
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (isValidFile(file)) {
-        setSelectedFile(file);
-      } else {
-        setSelectedFile(undefined);
-        toast.error(t.invalidFileType || 'Please upload a CSV or Excel file');
-      }
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (isValidFile(file)) {
-        setSelectedFile(file);
-      } else {
-        setSelectedFile(undefined);
-        toast.error(t.invalidFileType || 'Please upload a CSV or Excel file');
-      }
-    }
+  const handleFileClear = () => {
+    setSelectedFile(undefined);
+    setFileError(undefined);
   };
 
   const handleImport = () => {
@@ -188,14 +162,14 @@ export function ImportInvoicesModal({
       }
       setResult(undefined);
       setSelectedFile(undefined);
+      setFileError(undefined);
       onClose();
     } else {
       setSelectedFile(undefined);
+      setFileError(undefined);
       onClose();
     }
   };
-
-  if (!isOpen) return;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -204,15 +178,15 @@ export function ImportInvoicesModal({
           <DialogTitle>
             {result
               ? importStatus === 'failed'
-                ? 'Import Failed'
-                : 'Import Complete'
+                ? t.importFailed
+                : t.importCompleteTitle
               : (t.importInvoicesTitle ?? 'Import Invoices')}
           </DialogTitle>
           <DialogDescription>
             {result
               ? importStatus === 'failed'
-                ? 'No invoices were imported. Review the failed rows and try again.'
-                : 'Your invoices have been imported successfully'
+                ? t.importFailedDescription
+                : t.importSuccessDescription
               : t.importInvoicesDescription ||
                 'Upload a CSV or Excel file to import invoices'}
           </DialogDescription>
@@ -223,13 +197,13 @@ export function ImportInvoicesModal({
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-center">
               <div
-                className={`rounded-full p-3 ${
-                  importStatus === 'failed'
-                    ? 'bg-red-100 dark:bg-red-900'
-                    : importStatus === 'partial'
-                      ? 'bg-yellow-100 dark:bg-yellow-900'
-                      : 'bg-green-100 dark:bg-green-900'
-                }`}
+                className={cn(
+                  'rounded-full p-3',
+                  importStatus === 'failed' && 'bg-red-100 dark:bg-red-900',
+                  importStatus === 'partial' &&
+                    'bg-yellow-100 dark:bg-yellow-900',
+                  importStatus === 'success' && 'bg-green-100 dark:bg-green-900'
+                )}
               >
                 {importStatus === 'failed' ? (
                   <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-300" />
@@ -338,75 +312,17 @@ export function ImportInvoicesModal({
         ) : (
           // File Upload Form
           <div className="space-y-4 py-4">
-            {/* Drop Zone */}
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`rounded-lg border-2 border-dashed p-8 transition-colors ${
-                dragActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-              }`}
-            >
-              <div className="flex flex-col items-center justify-center gap-3">
-                <div className="bg-muted rounded-lg p-3">
-                  <Upload className="text-muted-foreground h-6 w-6" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">
-                    {t.dragDropText || 'Drag and drop your file here'}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {t.dragDropSubText || 'or click to browse'}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isImporting}
-                >
-                  {t.browseButton || 'Browse Files'}
-                </Button>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xls,.xlsx"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={isImporting}
-              />
-            </div>
-
-            {/* Selected File Display */}
-            {selectedFile && (
-              <Card className="bg-muted/30">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
-                    <FileIcon className="text-muted-foreground h-5 w-5" />
-                    <div>
-                      <p className="text-sm font-medium">{selectedFile.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(selectedFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(undefined)}
-                    disabled={isImporting}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <FileUpload
+              accept=".csv,.xls,.xlsx"
+              maxSize={10}
+              selectedFile={selectedFile}
+              onFileSelect={handleFileSelect}
+              onFileClear={handleFileClear}
+              disabled={isImporting}
+              isUploading={isImporting}
+              error={fileError}
+              dictionary={dictionary}
+            />
 
             {/* File Format Info */}
             <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30">

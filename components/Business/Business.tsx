@@ -310,7 +310,7 @@ export function Business({
                   void refetchStripeStatus();
                 }}
               >
-                {t.retry || 'Retry'}
+                {t.retry}
               </Button>
             </div>
           ) : (
@@ -391,7 +391,7 @@ export function Business({
                   void refetchClients();
                 }}
               >
-                {t.retry || 'Retry'}
+                {t.retry}
               </Button>
             </div>
           ) : clients.length === 0 ? (

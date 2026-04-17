@@ -59,7 +59,7 @@ const getActionVariant = (action: AuditAction): 'default' | 'secondary' =>
 const getIntlLocale = (lang: Locale): string => {
   if (lang === 'ar') return 'ar-SA';
   if (lang === 'fr') return 'fr-FR';
-  return 'en-US';
+  return 'en-GB';
 };
 
 const formatAuditDate = (log: AuditLog, lang: Locale): string => {
@@ -233,52 +233,54 @@ export default function Logs({
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t.columns.action}</TableHead>
-                    <TableHead>{t.columns.user}</TableHead>
-                    <TableHead>{t.columns.role}</TableHead>
-                    <TableHead>{t.columns.target}</TableHead>
-                    <TableHead>{t.columns.ip}</TableHead>
-                    <TableHead className={dateColumnClass}>
-                      {t.columns.date}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        <Badge variant={getActionVariant(log.action)}>
-                          {getActionLabel(log.action, dictionary)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{log.userEmail}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {log.userId}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{log.userRole}</TableCell>
-                      <TableCell>
-                        {log.target ?? dictionary.common.na}
-                      </TableCell>
-                      <TableCell>
-                        {log.ipAddress ?? dictionary.common.na}
-                      </TableCell>
-                      <TableCell
-                        className={dateColumnClass}
-                        dir={isArabic ? 'rtl' : 'ltr'}
-                      >
-                        {formatAuditDate(log, lang)}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t.columns.action}</TableHead>
+                      <TableHead>{t.columns.user}</TableHead>
+                      <TableHead>{t.columns.role}</TableHead>
+                      <TableHead>{t.columns.target}</TableHead>
+                      <TableHead>{t.columns.ip}</TableHead>
+                      <TableHead className={dateColumnClass}>
+                        {t.columns.date}
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell>
+                          <Badge variant={getActionVariant(log.action)}>
+                            {getActionLabel(log.action, dictionary)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{log.userEmail}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {log.userId}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{log.userRole}</TableCell>
+                        <TableCell>
+                          {log.target ?? dictionary.common.na}
+                        </TableCell>
+                        <TableCell>
+                          {log.ipAddress ?? dictionary.common.na}
+                        </TableCell>
+                        <TableCell
+                          className={dateColumnClass}
+                          dir={isArabic ? 'rtl' : 'ltr'}
+                        >
+                          {formatAuditDate(log, lang)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
               <div className="mt-4 flex items-center justify-between gap-2">
                 <Button

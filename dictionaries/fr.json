@@ -20,7 +20,6 @@
         "qrAlt": "QR code 2FA",
         "manualKey": "Clé de configuration manuelle",
         "enterCode": "Entrez le code à 6 chiffres",
-        "codePlaceholder": "123456",
         "enableButton": "Activer le 2FA",
         "verifying": "Vérification...",
         "setupSuccess": "Configuration du 2FA démarrée",
@@ -75,19 +74,12 @@
       "resettingButton": "Réinitialisation...",
       "successMessage": "Mot de passe réinitialisé avec succès",
       "errorMessage": "Échec de la réinitialisation du mot de passe",
-      "invalidTokenTitle": "Lien invalide ou expiré",
-      "invalidTokenDescription": "Ce lien de réinitialisation de mot de passe n'est plus valide.",
-      "invalidTokenMessage": "Le jeton de réinitialisation a peut-être expiré ou a déjà été utilisé. Veuillez demander un nouveau lien de réinitialisation de mot de passe.",
-      "requestNewLink": "Demander un nouveau lien de réinitialisation",
       "tokenDetected": "Jeton de réinitialisation détecté depuis le lien email.",
       "backToLogin": "Retour à la connexion"
     },
     "sidebar": {
       "businessesLabel": "Entreprises",
-      "loading": "Chargement...",
-      "noBusinessesFound": "Aucune entreprise trouvée",
-      "businessInactive": "Inactive",
-      "viewYourBusinesses": "Voir vos entreprises"
+      "loading": "Chargement..."
     },
     "home": {
       "navigation": {
@@ -153,11 +145,11 @@
         "viewAllSolutions": "Voir toutes les solutions",
         "startups": {
           "title": "Startups",
-          "description": "Parfait pour les nouvelles entreprises cherchant à établir des fondations financières solides",
+          "description": "Parfait pour les nouvelles entreprises cherchant à établir des bases financières solides",
           "features": [
-            "Configuration et intégration faciles",
+            "Configuration facile",
             "Rapports prêts pour les investisseurs",
-            "Suivi du taux de burn"
+            "Suivi du burn rate"
           ]
         },
         "smallBusiness": {
@@ -173,7 +165,7 @@
           "title": "Entreprise",
           "description": "Fonctionnalités avancées pour les grandes organisations avec des exigences complexes",
           "features": [
-            "Workflows personnalisés",
+            "Flux de travail personnalisés",
             "Conformité avancée",
             "Support dédié"
           ]
@@ -303,6 +295,7 @@
       "createBusinessButton": "Créer une nouvelle entreprise",
       "refresh": "Actualiser",
       "totalInvoices": "Total des factures",
+      "totalPaidInvoices": "Factures payées",
       "totalPaid": "Total payé",
       "totalPending": "Total en attente",
       "invoiceList": "Liste des factures",
@@ -317,6 +310,7 @@
       "searchLabel": "Recherche",
       "filterLabel": "Filtrer par statut",
       "filterAll": "Tous",
+      "filterDraft": "Brouillon",
       "filterIssued": "Émis",
       "filterPaid": "Payé",
       "filterOverdue": "En retard",
@@ -324,6 +318,9 @@
       "topPayingClientsFilter": "🏆 Meilleurs clients payeurs",
       "rank": "Rang",
       "unknownClient": "Client inconnu",
+      "unknown": "Inconnu",
+      "yesLabel": "Oui",
+      "multiCurrency": "devises diverses",
       "invoiceNumber": "N° de facture",
       "recipient": "Destinataire",
       "amount": "Montant",
@@ -413,6 +410,7 @@
       "importedLabel": "Importées",
       "failedLabel": "Échouées",
       "importSuccessMessage": "Les factures ont été importées avec succès",
+      "importSuccessWithCount": "{count, plural, =0 {Aucune facture importée} =1 {1 facture importée avec succès} other {{count} factures importées avec succès}}",
       "importErrorMessage": "Erreur lors de l'importation des factures",
       "importWarningMessage": "Importation terminée avec {count} avertissement(s). Veuillez vérifier les détails ci-dessous.",
       "importFailureMessage": "Échec de l'importation: {count} facture(s) n'a pas pu être importée.",
@@ -442,6 +440,20 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "Fermer",
       "invalidFileType": "Veuillez télécharger un fichier CSV ou Excel",
+      "fileUpload": {
+        "bytes": "Octets",
+        "kb": "Ko",
+        "mb": "Mo",
+        "gb": "Go",
+        "maxSizeError": "Le fichier dépasse la taille maximale de {maxSize} Mo",
+        "fileTypeError": "Type de fichier non accepté. Veuillez télécharger : {accept}",
+        "uploading": "Téléchargement... {progress}%",
+        "readyToImport": "Prêt à importer",
+        "dropHere": "Déposez votre fichier ici",
+        "dragDrop": "Glissez et déposez votre fichier",
+        "orClickToBrowse": "ou cliquez pour parcourir votre ordinateur",
+        "maxFileSize": "Taille maximale du fichier : {maxSize}Mo"
+      },
       "invoiceDetailsTitle": "Détails de la facture",
       "invoiceNumberLabel": "Numéro de facture",
       "statusLabel": "Statut",
@@ -473,6 +485,7 @@
         "noConfirm": "Non, fermer",
         "successTitle": "Paiement reçu !",
         "successDescription": "Votre paiement a été traité avec succès.",
+        "successful": "Paiement réussi !",
         "totalPaid": "Total payé",
         "processing": "Traitement en cours...",
         "requiredFieldsError": "Veuillez corriger les champs obligatoires",
@@ -488,11 +501,20 @@
         "demoCardExpired": "Carte expirée (Test Stripe)",
         "useThisCard": "Utiliser cette carte",
         "validation": {
-          "nameRequired": "Nom du titulaire requis",
+          "nameRequired": "Nom du titulaire de la carte requis",
           "numberInvalid": "Numéro de carte invalide (16 chiffres)",
           "expiryInvalid": "Date d'expiration invalide (MM/AA)",
           "cvcInvalid": "CVC invalide",
           "countryRequired": "Pays requis"
+        },
+        "selectCountryPlaceholder": "Sélectionner un pays",
+        "countryGroups": {
+          "northAfrica": "Afrique du Nord",
+          "europe": "Europe",
+          "northAmerica": "Amérique du Nord",
+          "middleEast": "Moyen-Orient",
+          "asia": "Asie",
+          "other": "Autre"
         },
         "verificationFailed": "La vérification du paiement a échoué. Veuillez vérifier votre statut plus tard.",
         "errorVerifying": "Erreur lors de la vérification du paiement",
@@ -500,9 +522,10 @@
       },
       "statusTransition": {
         "confirmTitle": "Êtes-vous sûr ?",
-        "confirmDescription": "Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de {amount} {currency}.",
+        "confirmDescription": "Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez reçu des fonds d'un montant de {amount} {currency}.",
         "cancel": "Annuler",
-        "confirm": "Confirmer le paiement"
+        "confirm": "Confirmer le paiement",
+        "errorMessage": "Échec de la mise à jour du statut de la facture. Veuillez réessayer."
       }
     },
     "businessApplication": {
@@ -664,7 +687,8 @@
         "soldLastPeriod": "Vendu ({days}j)",
         "dailyRate": "Taux quotidien",
         "recommendationLabel": "Recommandation",
-        "reorderLabel": "Commander",
+        "reorderLabel": "Réapprovisionner",
+        "reorderWithQuantity": "Réapprovisionner {quantity}",
         "noStockInsights": "Aucun aperçu de stock disponible pour le moment.",
         "stockInsightsError": "Échec du chargement des aperçus de stock.",
         "historicalData": "Historique (Réel)",
@@ -724,6 +748,7 @@
         "disclaimer": "Accountia AI peut faire des erreurs.",
         "welcomeMessage": "Bonjour ! Posez-moi vos questions sur la comptabilité de votre entreprise.",
         "sendMessage": "Envoyer le message",
+        "connectionFailed": "Échec de la connexion",
         "loading": "Chargement de la réponse...",
         "emptyResponse": "Je n'ai pas pu générer de réponse pour le moment. Veuillez réessayer.",
         "errorFailed": "Impossible d'envoyer le message",
@@ -834,8 +859,9 @@
         "healthyProducts": "Produits sains",
         "noUrgentReorder": "Pas de réapprovisionnement urgent",
         "riskExposure": "Exposition au risque",
-        "unitsToReorder": "+ {count} unités à commander",
-        "stockoutTimeline": "Calendrier de rupture de stock",
+        "unitsToReorder": "+ {count} unités à réapprovisionner",
+        "reorderWithQuantity": "Réapprovisionner {quantity}",
+        "stockoutTimeline": "Chronologie de rupture de stock",
         "horizon": "horizon {days}j",
         "noStockoutTrend": "Pas de tendance de rupture",
         "days": "{days} jours",
@@ -923,6 +949,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "Logo Accountia"
+  },
+  "a11y": {
+    "mainNav": "Navigation principale",
+    "toggleMenu": "Basculer le menu",
+    "mobileNav": "Navigation mobile"
   },
   "admin": {
     "title": "Tableau de bord administrateur",
@@ -1052,7 +1083,6 @@
     "stats": {
       "totalUsers": "Total des utilisateurs",
       "totalAdmins": "Administrateurs",
-      "totalNormalUsers": "Utilisateurs normaux",
       "lastUpdated": "Synchroniser les utilisateurs",
       "placeholder": "—",
       "syncButton": "Synchroniser",
@@ -1060,20 +1090,12 @@
       "upToDate": "À jour"
     },
     "usersTitle": "Utilisateurs",
-    "monthlyRevenue": "Revenus totaux",
-    "monthlyExpenses": "Dépenses totales",
-    "netProfit": "Bénéfice net",
-    "netLoss": "Perte nette",
-    "loadingStatistics": "Chargement des statistiques...",
-    "errorLoadingStatistics": "Erreur lors du chargement des statistiques",
     "searchPlaceholder": "Rechercher des utilisateurs...",
     "dateFilterLabel": "Filtrer par date d'inscription:",
     "dateFilterPlaceholder": "Sélectionner une plage de dates",
     "loadError": "Échec du chargement des utilisateurs",
     "deleteError": "Échec de la suppression de l'utilisateur",
     "noResults": "Aucun résultat trouvé.",
-    "adminBadge": "Admin",
-    "userBadge": "Utilisateur",
     "roleColumn": "Rôle",
     "changeRoleSuccess": "Rôle mis à jour avec succès",
     "changeRoleError": "Échec de la mise à jour du rôle",
@@ -1084,7 +1106,6 @@
       "BUSINESS_ADMIN": "Admin commercial",
       "CLIENT": "Client"
     },
-    "manageButton": "Gérer",
     "deleteDialog": {
       "title": "Supprimer l'utilisateur",
       "description": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
@@ -1096,11 +1117,8 @@
     "email": "Email",
     "firstName": "Prénom",
     "lastName": "Nom de famille",
-    "isAdmin": "Admin",
     "dateJoined": "Date d'inscription",
     "actions": "Actions",
-    "confirmDeleteTitle": "Confirmer la suppression",
-    "confirmDeleteDescription": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
     "noUsers": "Aucun utilisateur trouvé.",
     "banUser": "Bannir",
     "unbanUser": "Débannir",
@@ -1108,7 +1126,6 @@
     "banError": "Échec du bannissement",
     "unbanSuccess": "Utilisateur débanni avec succès",
     "unbanError": "Échec du débannissement",
-    "bannedLabel": "Banni",
     "banDialog": {
       "title": "Bannir l'utilisateur",
       "description": "Êtes-vous sûr de vouloir bannir {username} ? Il ne pourra plus se connecter.",
