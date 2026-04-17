@@ -41,9 +41,7 @@ export class ChatSocketClient {
 
     // Clean up existing socket before creating new one
     if (this.socket) {
-      this.socket.removeAllListeners();
-      this.socket.disconnect();
-      this.socket = undefined;
+      this.disconnect();
     }
 
     const tokenData = await getToken();
@@ -81,6 +79,9 @@ export class ChatSocketClient {
         resolve();
       };
 
+      // Intentionally typed as ChatConnectErrorEvent for simplicity;
+      // socket.io-client Error has more fields (description, context, type)
+      // but message is sufficient for user-facing error display
       const onConnectError = (error: ChatConnectErrorEvent) => {
         clearTimeout(timeoutId);
         this.socket?.off('connected', onConnected);
@@ -151,6 +152,14 @@ export class ChatSocketClient {
       if (!this.socket?.connected) {
         reject(new Error('Socket not connected'));
         return;
+      }
+
+      // Reject any existing pending message with the same ID
+      const existing = this.pendingMessages.get(data.messageId);
+      if (existing) {
+        clearTimeout(existing.timeoutId);
+        existing.reject('Message replaced by new request');
+        this.pendingMessages.delete(data.messageId);
       }
 
       const timeoutId = setTimeout(() => {

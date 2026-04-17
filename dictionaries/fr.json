@@ -309,6 +309,7 @@
       "searchLabel": "Recherche",
       "filterLabel": "Filtrer par statut",
       "filterAll": "Tous",
+      "filterDraft": "Brouillon",
       "filterIssued": "Émis",
       "filterPaid": "Payé",
       "filterOverdue": "En retard",
@@ -438,6 +439,20 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "Fermer",
       "invalidFileType": "Veuillez télécharger un fichier CSV ou Excel",
+      "fileUpload": {
+        "bytes": "Octets",
+        "kb": "Ko",
+        "mb": "Mo",
+        "gb": "Go",
+        "maxSizeError": "Le fichier dépasse la taille maximale de {maxSize} Mo",
+        "fileTypeError": "Type de fichier non accepté. Veuillez télécharger : {accept}",
+        "uploading": "Téléchargement... {progress}%",
+        "readyToImport": "Prêt à importer",
+        "dropHere": "Déposez votre fichier ici",
+        "dragDrop": "Glissez et déposez votre fichier",
+        "orClickToBrowse": "ou cliquez pour parcourir votre ordinateur",
+        "maxFileSize": "Taille maximale du fichier : {maxSize}Mo"
+      },
       "invoiceDetailsTitle": "Détails de la facture",
       "invoiceNumberLabel": "Numéro de facture",
       "statusLabel": "Statut",
@@ -491,6 +506,7 @@
           "cvcInvalid": "CVC invalide",
           "countryRequired": "Pays requis"
         },
+        "selectCountryPlaceholder": "Sélectionner un pays",
         "countryGroups": {
           "northAfrica": "Afrique du Nord",
           "europe": "Europe",

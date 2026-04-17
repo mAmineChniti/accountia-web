@@ -3,7 +3,7 @@
 import { type ReactNode, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
-import { FileUpload } from '@/components/reusable/file-upload';
+import FileUpload from '@/components/reusable/file-upload';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
@@ -210,6 +210,7 @@ export function ImportProductsDialog({
               disabled={mutation.isPending}
               isUploading={mutation.isPending}
               error={fileError}
+              dictionary={dictionary}
             />
 
             <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30">

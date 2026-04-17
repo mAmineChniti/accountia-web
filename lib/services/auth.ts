@@ -48,21 +48,11 @@ import {
   API_CONFIG,
 } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
+import type { UserPayload } from '@/types/services';
 
 let refreshInFlightPromise: Promise<RefreshTokenResponse> | undefined;
 
-interface UserFromResponse {
-  id: string;
-  username: string;
-  email: string;
-  firstName?: string | undefined;
-  lastName?: string | undefined;
-  phoneNumber?: string | undefined;
-  birthdate?: string | undefined;
-  role?: string;
-}
-
-async function syncUserCookie(user: UserFromResponse): Promise<void> {
+async function syncUserCookie(user: UserPayload): Promise<void> {
   const currentUser = await getUser();
   await setUser({
     userId: user.id,
@@ -72,7 +62,7 @@ async function syncUserCookie(user: UserFromResponse): Promise<void> {
     lastName: user.lastName,
     phoneNumber: user.phoneNumber,
     birthdate: user.birthdate,
-    role: user.role ?? 'CLIENT',
+    role: user.role || 'CLIENT',
     loginTime: currentUser?.loginTime ?? new Date().toISOString(),
   });
 }

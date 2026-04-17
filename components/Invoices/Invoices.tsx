@@ -64,6 +64,7 @@ import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import { InvoicesService } from '@/lib/requests';
+import { getStatusLabel } from '@/lib/status-labels';
 import { toast } from 'sonner';
 import type {
   ReceivedInvoiceListResponse,
@@ -100,25 +101,6 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
     'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100',
   VOIDED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
   ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
-};
-
-const getStatusLabel = (
-  status: InvoiceStatus,
-  dictionary: Dictionary
-): string => {
-  const d = dictionary.pages.invoices;
-  const statusMap: Record<InvoiceStatus, string> = {
-    DRAFT: d.statusDraft,
-    ISSUED: d.statusIssued,
-    VIEWED: d.statusViewed,
-    PAID: d.statusPaid,
-    PARTIAL: d.statusPartial,
-    OVERDUE: d.statusOverdue,
-    DISPUTED: d.statusDisputed,
-    VOIDED: d.statusVoided,
-    ARCHIVED: d.statusArchived,
-  };
-  return statusMap[status] || status;
 };
 
 const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
@@ -450,7 +432,7 @@ export default function Invoices({
               <CardDescription>
                 {isLoading
                   ? '...'
-                  : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'}`}
+                  : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular : t.invoicePlural}`}
               </CardDescription>
             </div>
 
@@ -1025,7 +1007,9 @@ export default function Invoices({
                       mockPaymentErrors.country && 'border-red-500'
                     )}
                   >
-                    <SelectValue placeholder="Select a country" />
+                    <SelectValue
+                      placeholder={t.payment.selectCountryPlaceholder}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>

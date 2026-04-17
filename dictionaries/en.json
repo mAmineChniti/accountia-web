@@ -309,6 +309,7 @@
       "searchLabel": "Search",
       "filterLabel": "Filter by Status",
       "filterAll": "All",
+      "filterDraft": "Draft",
       "filterIssued": "Issued",
       "filterPaid": "Paid",
       "filterOverdue": "Overdue",
@@ -438,6 +439,20 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "Close",
       "invalidFileType": "Please upload a CSV or Excel file",
+      "fileUpload": {
+        "bytes": "Bytes",
+        "kb": "KB",
+        "mb": "MB",
+        "gb": "GB",
+        "maxSizeError": "File exceeds maximum size of {maxSize} MB",
+        "fileTypeError": "File type not accepted. Please upload: {accept}",
+        "uploading": "Uploading... {progress}%",
+        "readyToImport": "Ready to import",
+        "dropHere": "Drop your file here",
+        "dragDrop": "Drag & drop your file",
+        "orClickToBrowse": "or click to browse from your computer",
+        "maxFileSize": "Maximum file size: {maxSize}MB"
+      },
       "invoiceDetailsTitle": "Invoice Details",
       "invoiceNumberLabel": "Invoice Number",
       "statusLabel": "Status",
@@ -491,6 +506,7 @@
           "cvcInvalid": "Invalid CVC",
           "countryRequired": "Country is required"
         },
+        "selectCountryPlaceholder": "Select a country",
         "countryGroups": {
           "northAfrica": "North Africa",
           "europe": "Europe",

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
-import { FileUpload } from '@/components/reusable/file-upload';
+import FileUpload from '@/components/reusable/file-upload';
 import {
   Dialog,
   DialogContent,
@@ -319,6 +319,7 @@ export function ImportInvoicesModal({
               disabled={isImporting}
               isUploading={isImporting}
               error={fileError}
+              dictionary={dictionary}
             />
 
             {/* File Format Info */}

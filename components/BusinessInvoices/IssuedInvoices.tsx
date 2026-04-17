@@ -25,6 +25,7 @@ import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
+import { getStatusLabel } from '@/lib/status-labels';
 import {
   Card,
   CardContent,
@@ -259,9 +260,7 @@ export function IssuedInvoices({
     },
     onError: (error: unknown) => {
       import('sonner').then(({ toast }) => {
-        toast.error(
-          error instanceof Error ? error.message : 'Transformation failed'
-        );
+        toast.error(error instanceof Error ? error.message : t.fetchError);
       });
     },
   });
@@ -594,7 +593,7 @@ export function IssuedInvoices({
             {(['DRAFT', 'ISSUED', 'PAID', 'OVERDUE'] as const).map((status) => {
               const statusLabel =
                 status === 'DRAFT'
-                  ? 'Draft'
+                  ? t.filterDraft
                   : status === 'ISSUED'
                     ? t.filterIssued
                     : status === 'PAID'
@@ -734,7 +733,7 @@ export function IssuedInvoices({
                           <span className="mr-1">
                             {STATUS_ICONS[invoice.status]}
                           </span>
-                          {invoice.status}
+                          {getStatusLabel(invoice.status, dictionary)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -923,7 +922,7 @@ export function IssuedInvoices({
                                 <TableCell className="font-medium">
                                   {item.productName ||
                                     item.description ||
-                                    'Unknown'}
+                                    t.unknown}
                                 </TableCell>
                                 <TableCell className="text-right">
                                   {item.quantity}
@@ -972,7 +971,7 @@ export function IssuedInvoices({
                 <p className="text-muted-foreground text-sm">
                   {invoiceError instanceof Error
                     ? invoiceError.message
-                    : 'Unknown error occurred'}
+                    : t.unknown}
                 </p>
               </div>
             ) : (
@@ -1008,25 +1007,16 @@ export function IssuedInvoices({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {t.statusTransition?.confirmTitle ?? 'Êtes-vous sûr ?'}
-            </DialogTitle>
+            <DialogTitle>{t.statusTransition.confirmTitle}</DialogTitle>
             <DialogDescription>
-              {t.statusTransition?.confirmDescription
-                ? t.statusTransition.confirmDescription
-                    .replace(
-                      '{amount}',
-                      invoiceDetails?.totalAmount?.toLocaleString(lang, {
-                        minimumFractionDigits: 2,
-                      }) ?? ''
-                    )
-                    .replace('{currency}', invoiceDetails?.currency ?? '')
-                : `Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de ${invoiceDetails?.totalAmount?.toLocaleString(
-                    lang,
-                    {
-                      minimumFractionDigits: 2,
-                    }
-                  )} ${invoiceDetails?.currency}.`}
+              {t.statusTransition.confirmDescription
+                .replace(
+                  '{amount}',
+                  invoiceDetails?.totalAmount?.toLocaleString(lang, {
+                    minimumFractionDigits: 2,
+                  }) ?? ''
+                )
+                .replace('{currency}', invoiceDetails?.currency ?? '')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1034,7 +1024,7 @@ export function IssuedInvoices({
               variant="outline"
               onClick={() => setPendingStatusChange(undefined)}
             >
-              {t.statusTransition?.cancel ?? 'Annuler'}
+              {t.statusTransition.cancel}
             </Button>
             <Button
               onClick={() => {
@@ -1044,7 +1034,7 @@ export function IssuedInvoices({
                 setPendingStatusChange(undefined);
               }}
             >
-              {t.statusTransition?.confirm ?? 'Confirmer le paiement'}
+              {t.statusTransition.confirm}
             </Button>
           </DialogFooter>
         </DialogContent>

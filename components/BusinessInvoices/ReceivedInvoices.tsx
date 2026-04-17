@@ -18,6 +18,7 @@ import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
+import { getStatusLabel } from '@/lib/status-labels';
 import {
   Card,
   CardContent,
@@ -164,7 +165,7 @@ export function ReceivedInvoices({
 
       for (const item of invoiceDetails.lineItems) {
         tableRows.push([
-          item.description || item.productName || 'Item',
+          item.description || item.productName || t.unknown,
           item.quantity,
           `${(item.unitPrice || 0).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
           `${item.amount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
@@ -490,7 +491,7 @@ export function ReceivedInvoices({
                           <span className="mr-1">
                             {STATUS_ICONS[invoice.invoiceStatus]}
                           </span>
-                          {invoice.invoiceStatus}
+                          {getStatusLabel(invoice.invoiceStatus, dictionary)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
