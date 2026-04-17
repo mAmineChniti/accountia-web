@@ -57,7 +57,7 @@ export default function Navbar({
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-        <nav aria-label="Main navigation" className="contents">
+        <div className="contents">
           <Link href={`/${lang}`} className="flex items-center space-x-3">
             <div className="relative h-10 w-10 shrink-0">
               <Image
@@ -81,7 +81,7 @@ export default function Navbar({
                 variant="ghost"
                 size="icon"
                 className="md:hidden"
-                aria-label="Toggle menu"
+                aria-label={dictionary.a11y.toggleMenu}
                 aria-expanded={mobileMenuOpen}
               >
                 <Menu className="h-5 w-5" />
@@ -93,9 +93,10 @@ export default function Navbar({
                   {dictionary.brand.name}
                 </SheetTitle>
               </SheetHeader>
-              <nav
+              <div
                 className="mt-6 flex flex-col gap-4"
-                aria-label="Mobile navigation"
+                role="navigation"
+                aria-label={dictionary.a11y.mobileNav}
               >
                 <Link
                   href={`/${lang}#features`}
@@ -105,25 +106,32 @@ export default function Navbar({
                   {dictionary.pages.home.navigation.features}
                 </Link>
                 <div className="space-y-2">
-                  <p className="text-muted-foreground px-3 text-xs font-semibold tracking-wider uppercase">
-                    {dictionary.pages.home.features.aiInsights.title}
-                  </p>
                   <Link
-                    href={`/${lang}#features`}
+                    href={`/${lang}#features-ai-insights`}
                     className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {dictionary.pages.home.features.aiInsights.description}
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {dictionary.pages.home.features.aiInsights.title}
+                    </p>
+                    <p className="mt-1">
+                      {dictionary.pages.home.features.aiInsights.description}
+                    </p>
                   </Link>
                   <Link
-                    href={`/${lang}#features`}
+                    href={`/${lang}#features-realtime-analytics`}
                     className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {
-                      dictionary.pages.home.features.realtimeAnalytics
-                        .description
-                    }
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      {dictionary.pages.home.features.realtimeAnalytics.title}
+                    </p>
+                    <p className="mt-1">
+                      {
+                        dictionary.pages.home.features.realtimeAnalytics
+                          .description
+                      }
+                    </p>
                   </Link>
                 </div>
                 <Separator />
@@ -136,14 +144,14 @@ export default function Navbar({
                 </Link>
                 <div className="space-y-2">
                   <Link
-                    href={`/${lang}#solutions`}
+                    href={`/${lang}#solutions-startups`}
                     className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {dictionary.pages.home.solutions.startups.title}
                   </Link>
                   <Link
-                    href={`/${lang}#solutions`}
+                    href={`/${lang}#solutions-small-business`}
                     className="text-muted-foreground hover:text-foreground block px-3 py-1 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -165,12 +173,15 @@ export default function Navbar({
                 >
                   {dictionary.pages.home.navigation.pricing}
                 </Link>
-              </nav>
+              </div>
             </SheetContent>
           </Sheet>
 
           {/* Desktop Navigation */}
-          <NavigationMenu className="hidden md:block">
+          <NavigationMenu
+            className="hidden md:block"
+            aria-label={dictionary.a11y.mainNav}
+          >
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger>
@@ -355,7 +366,7 @@ export default function Navbar({
               </TooltipContent>
             </Tooltip>
           </div>
-        </nav>
+        </div>
       </div>
     </header>
   );

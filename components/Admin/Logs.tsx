@@ -59,7 +59,7 @@ const getActionVariant = (action: AuditAction): 'default' | 'secondary' =>
 const getIntlLocale = (lang: Locale): string => {
   if (lang === 'ar') return 'ar-SA';
   if (lang === 'fr') return 'fr-FR';
-  return 'en-US';
+  return 'en-GB';
 };
 
 const formatAuditDate = (log: AuditLog, lang: Locale): string => {

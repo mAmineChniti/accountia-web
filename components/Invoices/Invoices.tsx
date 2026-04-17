@@ -163,7 +163,7 @@ export default function Invoices({
     cardNumber: '',
     expiry: '',
     cvc: '',
-    country: 'Tunisie',
+    country: 'Tunisia',
   });
   const [mockPaymentErrors, setMockPaymentErrors] = useState({
     cardholderName: '',
@@ -244,7 +244,7 @@ export default function Invoices({
           cardNumber: '',
           expiry: '',
           cvc: '',
-          country: 'Tunisie',
+          country: 'Tunisia',
         });
         setMockPaymentErrors({
           cardholderName: '',
@@ -1029,7 +1029,9 @@ export default function Invoices({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>North Africa</SelectLabel>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAfrica}
+                      </SelectLabel>
                       <SelectItem value="Tunisia">Tunisia</SelectItem>
                       <SelectItem value="Algeria">Algeria</SelectItem>
                       <SelectItem value="Morocco">Morocco</SelectItem>
@@ -1037,7 +1039,9 @@ export default function Invoices({
                       <SelectItem value="Egypt">Egypt</SelectItem>
                     </SelectGroup>
                     <SelectGroup>
-                      <SelectLabel>Europe</SelectLabel>
+                      <SelectLabel>
+                        {t.payment.countryGroups.europe}
+                      </SelectLabel>
                       <SelectItem value="France">France</SelectItem>
                       <SelectItem value="Germany">Germany</SelectItem>
                       <SelectItem value="United Kingdom">
@@ -1051,7 +1055,9 @@ export default function Invoices({
                       <SelectItem value="Portugal">Portugal</SelectItem>
                     </SelectGroup>
                     <SelectGroup>
-                      <SelectLabel>North America</SelectLabel>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAmerica}
+                      </SelectLabel>
                       <SelectItem value="United States">
                         United States
                       </SelectItem>
@@ -1059,7 +1065,9 @@ export default function Invoices({
                       <SelectItem value="Mexico">Mexico</SelectItem>
                     </SelectGroup>
                     <SelectGroup>
-                      <SelectLabel>Middle East</SelectLabel>
+                      <SelectLabel>
+                        {t.payment.countryGroups.middleEast}
+                      </SelectLabel>
                       <SelectItem value="United Arab Emirates">
                         United Arab Emirates
                       </SelectItem>
@@ -1072,7 +1080,7 @@ export default function Invoices({
                       <SelectItem value="Lebanon">Lebanon</SelectItem>
                     </SelectGroup>
                     <SelectGroup>
-                      <SelectLabel>Asia</SelectLabel>
+                      <SelectLabel>{t.payment.countryGroups.asia}</SelectLabel>
                       <SelectItem value="China">China</SelectItem>
                       <SelectItem value="Japan">Japan</SelectItem>
                       <SelectItem value="India">India</SelectItem>
@@ -1081,7 +1089,7 @@ export default function Invoices({
                       <SelectItem value="Turkey">Turkey</SelectItem>
                     </SelectGroup>
                     <SelectGroup>
-                      <SelectLabel>Other</SelectLabel>
+                      <SelectLabel>{t.payment.countryGroups.other}</SelectLabel>
                       <SelectItem value="Australia">Australia</SelectItem>
                       <SelectItem value="Brazil">Brazil</SelectItem>
                       <SelectItem value="South Africa">South Africa</SelectItem>

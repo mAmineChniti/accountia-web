@@ -465,7 +465,7 @@ export default function BusinessManagement({
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-none">
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-2">
           <div>
             <CardTitle className="flex items-center gap-2">

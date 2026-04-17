@@ -316,6 +316,9 @@
       "topPayingClientsFilter": "🏆 Meilleurs clients payeurs",
       "rank": "Rang",
       "unknownClient": "Client inconnu",
+      "unknown": "Inconnu",
+      "yesLabel": "Oui",
+      "multiCurrency": "devises diverses",
       "invoiceNumber": "N° de facture",
       "recipient": "Destinataire",
       "amount": "Montant",
@@ -482,11 +485,19 @@
         "demoCardExpired": "Carte expirée (Test Stripe)",
         "useThisCard": "Utiliser cette carte",
         "validation": {
-          "nameRequired": "Nom du titulaire requis",
+          "nameRequired": "Nom du titulaire de la carte requis",
           "numberInvalid": "Numéro de carte invalide (16 chiffres)",
           "expiryInvalid": "Date d'expiration invalide (MM/AA)",
           "cvcInvalid": "CVC invalide",
           "countryRequired": "Pays requis"
+        },
+        "countryGroups": {
+          "northAfrica": "Afrique du Nord",
+          "europe": "Europe",
+          "northAmerica": "Amérique du Nord",
+          "middleEast": "Moyen-Orient",
+          "asia": "Asie",
+          "other": "Autre"
         },
         "verificationFailed": "La vérification du paiement a échoué. Veuillez vérifier votre statut plus tard.",
         "errorVerifying": "Erreur lors de la vérification du paiement",
@@ -918,6 +929,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "Logo Accountia"
+  },
+  "a11y": {
+    "mainNav": "Navigation principale",
+    "toggleMenu": "Basculer le menu",
+    "mobileNav": "Navigation mobile"
   },
   "admin": {
     "title": "Tableau de bord administrateur",

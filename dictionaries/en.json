@@ -316,6 +316,9 @@
       "topPayingClientsFilter": "🏆 Top Paying Clients",
       "rank": "Rank",
       "unknownClient": "Unknown Client",
+      "unknown": "Unknown",
+      "yesLabel": "Yes",
+      "multiCurrency": "various currencies",
       "invoiceNumber": "Invoice #",
       "recipient": "Recipient",
       "amount": "Amount",
@@ -487,6 +490,14 @@
           "expiryInvalid": "Invalid expiry (MM/YY)",
           "cvcInvalid": "Invalid CVC",
           "countryRequired": "Country is required"
+        },
+        "countryGroups": {
+          "northAfrica": "North Africa",
+          "europe": "Europe",
+          "northAmerica": "North America",
+          "middleEast": "Middle East",
+          "asia": "Asia",
+          "other": "Other"
         },
         "verificationFailed": "Payment verification failed. Please check your status later.",
         "errorVerifying": "Error verifying payment",
@@ -918,6 +929,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "Accountia Logo"
+  },
+  "a11y": {
+    "mainNav": "Main navigation",
+    "toggleMenu": "Toggle menu",
+    "mobileNav": "Mobile navigation"
   },
   "admin": {
     "title": "Admin Dashboard",

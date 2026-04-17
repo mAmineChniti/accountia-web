@@ -17,6 +17,7 @@ import { InvoicesService } from '@/lib/requests';
 import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
+import { formatDate } from '@/lib/date-utils';
 import {
   Card,
   CardContent,
@@ -79,7 +80,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 export function ReceivedInvoices({
   lang,
   dictionary,
-  businessId: businessId,
+  businessId,
 }: {
   lang: Locale;
   dictionary: Dictionary;
@@ -146,7 +147,7 @@ export function ReceivedInvoices({
     doc.setTextColor(100);
     doc.text(`${t.statusLabel}: ${invoiceDetails.status}`, 14, 38);
     doc.text(
-      `${t.issuedDateLabel}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      `${t.issuedDateLabel}: ${formatDate(invoiceDetails.issuedDate, lang)}`,
       14,
       44
     );
@@ -364,11 +365,11 @@ export function ReceivedInvoices({
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>Invoice List</CardTitle>
+            <CardTitle>{t.invoiceList}</CardTitle>
             <CardDescription>
               {isLoading
                 ? '...'
-                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'}`}
+                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular : t.invoicePlural}`}
             </CardDescription>
           </div>
 
@@ -493,7 +494,7 @@ export function ReceivedInvoices({
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {new Date(invoice.issuedDate).toLocaleDateString(lang)}
+                        {formatDate(invoice.issuedDate, lang)}
                       </TableCell>
                       <TableCell>
                         {invoice.recipientViewed ? (
@@ -501,10 +502,8 @@ export function ReceivedInvoices({
                             <Eye className="h-4 w-4 text-green-600" />
                             <span className="text-muted-foreground text-sm">
                               {invoice.recipientViewedAt
-                                ? new Date(
-                                    invoice.recipientViewedAt
-                                  ).toLocaleDateString(lang)
-                                : 'Yes'}
+                                ? formatDate(invoice.recipientViewedAt, lang)
+                                : t.yesLabel}
                             </span>
                           </div>
                         ) : (
@@ -540,7 +539,7 @@ export function ReceivedInvoices({
           <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isLoadingDetails ? 'Loading...' : t.invoiceDetailsTitle}
+                {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
               </DialogTitle>
               <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
                 {invoiceDetails?.invoiceNumber || (
@@ -607,10 +606,7 @@ export function ReceivedInvoices({
                       {t.columnIssuedDate}
                     </p>
                     <p className="font-medium">
-                      {new Date(invoiceDetails.issuedDate).toLocaleDateString(
-                        lang,
-                        { year: 'numeric', month: 'short', day: 'numeric' }
-                      )}
+                      {formatDate(invoiceDetails.issuedDate, lang)}
                     </p>
                   </div>
                 </div>
@@ -656,7 +652,7 @@ export function ReceivedInvoices({
                                 <TableCell className="font-medium">
                                   {item.productName ||
                                     item.description ||
-                                    'Unknown'}
+                                    t.unknown}
                                 </TableCell>
                                 <TableCell className="text-right">
                                   {item.quantity}

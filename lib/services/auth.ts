@@ -51,6 +51,32 @@ import { handleServiceError } from '@/lib/services/service-error';
 
 let refreshInFlightPromise: Promise<RefreshTokenResponse> | undefined;
 
+interface UserFromResponse {
+  id: string;
+  username: string;
+  email: string;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  phoneNumber?: string | undefined;
+  birthdate?: string | undefined;
+  role?: string;
+}
+
+async function syncUserCookie(user: UserFromResponse): Promise<void> {
+  const currentUser = await getUser();
+  await setUser({
+    userId: user.id,
+    username: user.username,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phoneNumber: user.phoneNumber,
+    birthdate: user.birthdate,
+    role: user.role ?? 'CLIENT',
+    loginTime: currentUser?.loginTime ?? new Date().toISOString(),
+  });
+}
+
 export const AuthService = {
   getGoogleAuthUrl(options: {
     lang: string;
@@ -331,18 +357,7 @@ export const AuthService = {
 
       // Update user cookie with new user data, preserving existing loginTime
       if (result.user) {
-        const currentUser = await getUser();
-        await setUser({
-          userId: result.user.id,
-          username: result.user.username,
-          email: result.user.email,
-          firstName: result.user.firstName,
-          lastName: result.user.lastName,
-          phoneNumber: result.user.phoneNumber,
-          birthdate: result.user.birthdate,
-          role: result.user.role ?? 'CLIENT',
-          loginTime: currentUser?.loginTime ?? new Date().toISOString(),
-        });
+        await syncUserCookie(result.user);
       }
 
       return result;
@@ -362,18 +377,7 @@ export const AuthService = {
 
       // Update user cookie with new user data, preserving existing loginTime
       if (result.user) {
-        const currentUser = await getUser();
-        await setUser({
-          userId: result.user.id,
-          username: result.user.username,
-          email: result.user.email,
-          firstName: result.user.firstName,
-          lastName: result.user.lastName,
-          phoneNumber: result.user.phoneNumber,
-          birthdate: result.user.birthdate,
-          role: result.user.role ?? 'CLIENT',
-          loginTime: currentUser?.loginTime ?? new Date().toISOString(),
-        });
+        await syncUserCookie(result.user);
       }
 
       return result;

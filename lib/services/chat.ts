@@ -32,11 +32,19 @@ export class ChatSocketClient {
     {
       resolve: (value: string) => void;
       reject: (reason: string) => void;
+      timeoutId: ReturnType<typeof setTimeout>;
     }
   > = new Map();
 
   async connect(callbacks: ChatCallbacks = {}): Promise<void> {
     this.callbacks = callbacks;
+
+    // Clean up existing socket before creating new one
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = undefined;
+    }
 
     const tokenData = await getToken();
     const token = tokenData?.token;
@@ -61,17 +69,26 @@ export class ChatSocketClient {
         return;
       }
 
-      this.socket.once('connected', () => {
-        resolve();
-      });
-
-      this.socket.once('connect_error', (error: ChatConnectErrorEvent) => {
-        reject(new Error(error.message || 'Connection failed'));
-      });
-
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        this.socket?.off('connected', onConnected);
+        this.socket?.off('connect_error', onConnectError);
         reject(new Error('Connection timeout'));
       }, 10_000);
+
+      const onConnected = () => {
+        clearTimeout(timeoutId);
+        this.socket?.off('connect_error', onConnectError);
+        resolve();
+      };
+
+      const onConnectError = (error: ChatConnectErrorEvent) => {
+        clearTimeout(timeoutId);
+        this.socket?.off('connected', onConnected);
+        reject(new Error(error.message || 'Connection failed'));
+      };
+
+      this.socket.once('connected', onConnected);
+      this.socket.once('connect_error', onConnectError);
     });
   }
 
@@ -97,6 +114,7 @@ export class ChatSocketClient {
     this.socket.on('message_complete', (data: ChatMessageCompleteEvent) => {
       const pending = this.pendingMessages.get(data.messageId);
       if (pending) {
+        clearTimeout(pending.timeoutId);
         pending.resolve(data.response);
         this.pendingMessages.delete(data.messageId);
       }
@@ -106,6 +124,7 @@ export class ChatSocketClient {
     this.socket.on('message_error', (data: ChatMessageErrorEvent) => {
       const pending = this.pendingMessages.get(data.messageId);
       if (pending) {
+        clearTimeout(pending.timeoutId);
         pending.reject(data.message);
         this.pendingMessages.delete(data.messageId);
       }
@@ -119,6 +138,7 @@ export class ChatSocketClient {
     this.socket.on('disconnect', (reason: string) => {
       // Reject all pending messages due to socket disconnect
       for (const [, pending] of this.pendingMessages) {
+        clearTimeout(pending.timeoutId);
         pending.reject(`Socket disconnected: ${reason}`);
       }
       this.pendingMessages.clear();
@@ -133,15 +153,15 @@ export class ChatSocketClient {
         return;
       }
 
-      this.pendingMessages.set(data.messageId, { resolve, reject });
-      this.socket.emit('chat_message', data);
-
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         if (this.pendingMessages.has(data.messageId)) {
           this.pendingMessages.delete(data.messageId);
           reject(new Error('Message timeout'));
         }
       }, 60_000);
+
+      this.pendingMessages.set(data.messageId, { resolve, reject, timeoutId });
+      this.socket.emit('chat_message', data);
     });
   }
 
@@ -151,6 +171,7 @@ export class ChatSocketClient {
 
   disconnect(): void {
     for (const [, pending] of this.pendingMessages) {
+      clearTimeout(pending.timeoutId);
       pending.reject('Connection closed');
     }
     this.pendingMessages.clear();

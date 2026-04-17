@@ -113,9 +113,6 @@
   --sidebar-border: oklch(0.9355 0.0324 80.9937);
   --sidebar-ring: oklch(0.465 0.147 24.9381);
   --destructive-foreground: oklch(1 0 0);
-  --font-sans: Poppins, sans-serif;
-  --font-serif: Libre Baskerville, serif;
-  --font-mono: IBM Plex Mono, monospace;
   --shadow-color: hsl(0 63% 18%);
   --shadow-opacity: 0.12;
   --shadow-blur: 16px;
@@ -179,9 +176,6 @@
   --sidebar-ring: oklch(0.5054 0.1905 27.5181);
   --destructive-foreground: oklch(1 0 0);
   --radius: 0.375rem;
-  --font-sans: Poppins, sans-serif;
-  --font-serif: Libre Baskerville, serif;
-  --font-mono: IBM Plex Mono, monospace;
   --shadow-color: hsl(0 63% 18%);
   --shadow-opacity: 0.12;
   --shadow-blur: 16px;

@@ -308,6 +308,9 @@
       "topPayingClientsFilter": "🏆 أفضل العملاء دفعاً",
       "rank": "الترتيب",
       "unknownClient": "عميل غير معروف",
+      "unknown": "غير معروف",
+      "yesLabel": "نعم",
+      "multiCurrency": "عملات متنوعة",
       "invoiceNumber": "رقم الفاتورة",
       "recipient": "المستقبل",
       "amount": "المبلغ",
@@ -474,11 +477,19 @@
         "demoCardExpired": "بطاقة منتهية الصلاحية (تجربة Stripe)",
         "useThisCard": "استخدم هذه البطاقة",
         "validation": {
-          "nameRequired": "اسم صاحب البطاقة مطلوب",
+          "nameRequired": "اسم حامل البطاقة مطلوب",
           "numberInvalid": "رقم البطاقة غير صالح (16 رقمًا)",
           "expiryInvalid": "تاريخ الصلاحية غير صالح (MM/YY)",
           "cvcInvalid": "رمز CVC غير صالح",
           "countryRequired": "الدولة مطلوبة"
+        },
+        "countryGroups": {
+          "northAfrica": "شمال أفريقيا",
+          "europe": "أوروبا",
+          "northAmerica": "أمريكا الشمالية",
+          "middleEast": "الشرق الأوسط",
+          "asia": "آسيا",
+          "other": "أخرى"
         },
         "verificationFailed": "فشل التحقق من الدفع. يرجى التحقق من حالتك لاحقًا.",
         "errorVerifying": "خطأ في التحقق من الدفع",
@@ -910,6 +921,11 @@
   "brand": {
     "name": "Accountia",
     "logoAlt": "شعار Accountia"
+  },
+  "a11y": {
+    "mainNav": "التنقل الرئيسي",
+    "toggleMenu": "تبديل القائمة",
+    "mobileNav": "التنقل المتنقل"
   },
   "admin": {
     "title": "لوحة تحكم المدير",

@@ -31,10 +31,14 @@ interface FileUploadProps {
 }
 
 function formatFileSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 Bytes';
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.max(
+    0,
+    Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
+  );
   return (
     Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   );
@@ -86,6 +90,35 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       if (maxSize && file.size > maxSize * 1024 * 1024) {
         return `File exceeds maximum size of ${maxSize} MB`;
       }
+
+      // Validate accept prop
+      if (accept) {
+        const acceptedTypes = accept
+          .split(',')
+          .map((t) => t.trim().toLowerCase());
+        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        const fileType = file.type.toLowerCase();
+
+        const isAccepted = acceptedTypes.some((type) => {
+          // Check MIME type wildcard (e.g., "image/*")
+          if (type.endsWith('/*')) {
+            const category = type.slice(0, -1);
+            return fileType.startsWith(category);
+          }
+          // Check exact MIME type
+          if (type.includes('/')) {
+            return fileType === type;
+          }
+          // Check extension (e.g., ".csv", ".xlsx")
+          const ext = type.startsWith('.') ? type.slice(1) : type;
+          return fileExtension === ext;
+        });
+
+        if (!isAccepted) {
+          return `File type not accepted. Please upload: ${accept}`;
+        }
+      }
+
       return undefined;
     };
 
@@ -131,58 +164,73 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     if (selectedFile) {
       return (
-        <Card className={cn('bg-muted/30 border-2 border-dashed', className)}>
-          <CardContent className="py-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-background rounded-xl p-3 shadow-sm">
-                {getFileIcon(selectedFile.name)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{selectedFile.name}</p>
-                <p className="text-muted-foreground text-sm">
-                  {formatFileSize(selectedFile.size)}
-                </p>
-                {isUploading && (
-                  <div className="mt-2">
-                    <Progress value={uploadProgress} className="h-2" />
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Uploading... {uploadProgress}%
-                    </p>
-                  </div>
-                )}
+        <div ref={ref} className={className}>
+          <Card className="bg-muted/30 border-2 border-dashed">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-background rounded-xl p-3 shadow-sm">
+                  {getFileIcon(selectedFile.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{selectedFile.name}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
+                  {isUploading && (
+                    <div className="mt-2">
+                      <Progress value={uploadProgress} className="h-2" />
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Uploading... {uploadProgress}%
+                      </p>
+                    </div>
+                  )}
+                  {!isUploading && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-green-600">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span>Ready to import</span>
+                    </div>
+                  )}
+                </div>
                 {!isUploading && (
-                  <div className="mt-1 flex items-center gap-1 text-xs text-green-600">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>Ready to import</span>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClear}
+                    disabled={disabled}
+                    className="shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
-              {!isUploading && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleClear}
-                  disabled={disabled}
-                  className="shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       );
     }
 
     return (
       <div className={cn('space-y-2', className)} ref={ref}>
         <div
+          role="button"
+          tabIndex={disabled || isUploading ? -1 : 0}
+          aria-disabled={disabled || isUploading}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => !disabled && !isUploading && inputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (
+              (e.key === 'Enter' || e.key === ' ') &&
+              !disabled &&
+              !isUploading
+            ) {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
           className={cn(
             'group relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-all duration-200',
             dragActive
