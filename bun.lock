@@ -6,7 +6,7 @@
       "name": "accountia-web",
       "dependencies": {
         "@base-ui/react": "^1.4.0",
-        "@formatjs/intl-localematcher": "^0.8.1",
+        "@formatjs/intl-localematcher": "^0.8.3",
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-direction": "^1.1.1",
@@ -164,13 +164,13 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
-    "@formatjs/fast-memoize": ["@formatjs/fast-memoize@3.1.1", "", {}, "sha512-CbNbf+tlJn1baRnPkNePnBqTLxGliG6DDgNa/UtV66abwIjwsliPMOt0172tzxABYzSuxZBZfcp//qI8AvBWPg=="],
+    "@formatjs/fast-memoize": ["@formatjs/fast-memoize@3.1.2", "", {}, "sha512-vPnriihkfK0lzoQGaXq+qXH23VsYyansRTkTgo2aTG0k1NjLFyZimFVdfj4C9JkSE5dm7CEngcQ5TTc1yAyBfQ=="],
 
     "@formatjs/icu-messageformat-parser": ["@formatjs/icu-messageformat-parser@3.5.4", "", { "dependencies": { "@formatjs/icu-skeleton-parser": "2.1.4" } }, "sha512-JVY39ROgLt+pIYngo6piyj4OVfZmXs/2FkC4wLS+ql1Eig/sGJKB7YwDO/5bkJFkfwaFAeIpgEiJc8hiYxNalw=="],
 
     "@formatjs/icu-skeleton-parser": ["@formatjs/icu-skeleton-parser@2.1.4", "", {}, "sha512-8bSFZbrlvGX11ywMZxtgkPBt5Q8/etyts7j7j+GWpOVK1g43zwMIH3LZxk43HAtEP7L/jtZ+OZaMiFTOiBj9CA=="],
 
-    "@formatjs/intl-localematcher": ["@formatjs/intl-localematcher@0.8.2", "", { "dependencies": { "@formatjs/fast-memoize": "3.1.1" } }, "sha512-q05KMYGJLyqFNFtIb8NhWLF5X3aK/k0wYt7dnRFuy6aLQL+vUwQ1cg5cO4qawEiINybeCPXAWlprY2mSBjSXAQ=="],
+    "@formatjs/intl-localematcher": ["@formatjs/intl-localematcher@0.8.3", "", { "dependencies": { "@formatjs/fast-memoize": "3.1.2" } }, "sha512-pHUjWb9NuhnMs8+PxQdzBtZRFJHlGhrURGAbm6Ltwl82BFajeuiIR3jblSa7ia3r62rXe/0YtVpUG3xWr5bFCA=="],
 
     "@hookform/resolvers": ["@hookform/resolvers@5.2.2", "", { "dependencies": { "@standard-schema/utils": "^0.3.0" }, "peerDependencies": { "react-hook-form": "^7.55.0" } }, "sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA=="],
 
@@ -1441,8 +1441,6 @@
     "eslint-plugin-unicorn/globals": ["globals@17.4.0", "", {}, "sha512-hjrNztw/VajQwOLsMNT1cbJiH2muO3OROCHnbehc8eY5JyD2gqz4AcMHPqgaOR59DjgUjYAYLeH699g/eWi2jw=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
-
-    "intl-messageformat/@formatjs/fast-memoize": ["@formatjs/fast-memoize@3.1.2", "", {}, "sha512-vPnriihkfK0lzoQGaXq+qXH23VsYyansRTkTgo2aTG0k1NjLFyZimFVdfj4C9JkSE5dm7CEngcQ5TTc1yAyBfQ=="],
 
     "jsonc-eslint-parser/eslint-visitor-keys": ["eslint-visitor-keys@5.0.1", "", {}, "sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA=="],
 
