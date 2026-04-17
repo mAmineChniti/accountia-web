@@ -145,7 +145,12 @@
         "viewAllSolutions": "View all solutions",
         "startups": {
           "title": "Startups",
-          "description": "Perfect for new businesses looking to establish solid financial foundations"
+          "description": "Perfect for new businesses looking to establish solid financial foundations",
+          "features": [
+            "Easy setup and onboarding",
+            "Investor-ready reports",
+            "Burn rate tracking"
+          ]
         },
         "smallBusiness": {
           "title": "Small Business",
@@ -158,7 +163,12 @@
         },
         "enterprise": {
           "title": "Enterprise",
-          "description": "Advanced features for large organizations with complex requirements"
+          "description": "Advanced features for large organizations with complex requirements",
+          "features": [
+            "Custom workflows",
+            "Advanced compliance",
+            "Dedicated support"
+          ]
         }
       },
       "cta": {
@@ -1062,6 +1072,7 @@
     },
     "deleteDialog": {
       "title": "Delete user",
+      "description": "Are you sure you want to delete user {username}? This action cannot be undone.",
       "confirm": "Delete",
       "deleting": "Deleting..."
     },
