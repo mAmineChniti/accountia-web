@@ -242,7 +242,6 @@ export function Chatbot({
       {/* Floating Chat Button */}
       <Button
         onClick={() => setIsOpen((prev) => !prev)}
-        disabled={!businessId}
         className={cn(
           'fixed right-6 bottom-6 z-40 h-16 w-16 rounded-full p-0! shadow-lg transition-all duration-300',
           isOpen

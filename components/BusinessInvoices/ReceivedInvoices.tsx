@@ -588,7 +588,7 @@ export function ReceivedInvoices({
                       <span className="mr-1">
                         {STATUS_ICONS[invoiceDetails.status]}
                       </span>
-                      {invoiceDetails.status}
+                      {getStatusLabel(invoiceDetails.status, dictionary)}
                     </Badge>
                   </div>
                   <div className="space-y-1">

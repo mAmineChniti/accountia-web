@@ -44,53 +44,76 @@ export class ChatSocketClient {
       this.disconnect();
     }
 
-    const tokenData = await getToken();
-    const token = tokenData?.token;
+    // Get base URL, convert to ws and strip /api suffix for socket endpoint
+    const baseUrl = env.NEXT_PUBLIC_BACKEND?.replace(/^http/, 'ws').replace(
+      /\/api$/,
+      ''
+    );
 
-    if (!token) {
-      throw new Error('Authentication token not found');
-    }
+    // Wrap connection logic to ensure token fetch is covered by timeout
+    const connectWithTimeout = async (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        let cleared = false;
+        const timeoutId = setTimeout(() => {
+          cleared = true;
+          this.socket?.off('connected', onConnected);
+          this.socket?.off('connect_error', onConnectError);
+          reject(new Error('Connection timeout'));
+        }, 10_000);
 
-    const baseUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789/api';
-    const wsUrl = baseUrl.replace(/^http/, 'ws').replace(/\/api$/, '');
+        const cleanup = () => {
+          if (!cleared) {
+            cleared = true;
+            clearTimeout(timeoutId);
+          }
+        };
 
-    this.socket = io(`${wsUrl}/chat`, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-    });
+        const onConnected = () => {
+          cleanup();
+          this.socket?.off('connect_error', onConnectError);
+          resolve();
+        };
 
-    this.setupEventListeners();
+        const onConnectError = (error: ChatConnectErrorEvent) => {
+          cleanup();
+          this.socket?.off('connected', onConnected);
+          reject(new Error(error.message || 'Connection failed'));
+        };
 
-    return new Promise((resolve, reject) => {
-      if (!this.socket) {
-        reject(new Error('Socket initialization failed'));
-        return;
-      }
+        // Fetch token and connect
+        getToken()
+          .then((tokenData) => {
+            const token = tokenData?.token;
+            if (!token) {
+              cleanup();
+              reject(new Error('Authentication token not found'));
+              return;
+            }
 
-      const timeoutId = setTimeout(() => {
-        this.socket?.off('connected', onConnected);
-        this.socket?.off('connect_error', onConnectError);
-        reject(new Error('Connection timeout'));
-      }, 10_000);
+            this.socket = io(`${baseUrl}/chat`, {
+              auth: { token },
+              transports: ['websocket', 'polling'],
+            });
 
-      const onConnected = () => {
-        clearTimeout(timeoutId);
-        this.socket?.off('connect_error', onConnectError);
-        resolve();
-      };
+            this.setupEventListeners();
 
-      // Intentionally typed as ChatConnectErrorEvent for simplicity;
-      // socket.io-client Error has more fields (description, context, type)
-      // but message is sufficient for user-facing error display
-      const onConnectError = (error: ChatConnectErrorEvent) => {
-        clearTimeout(timeoutId);
-        this.socket?.off('connected', onConnected);
-        reject(new Error(error.message || 'Connection failed'));
-      };
+            if (!this.socket) {
+              cleanup();
+              reject(new Error('Socket initialization failed'));
+              return;
+            }
 
-      this.socket.once('connected', onConnected);
-      this.socket.once('connect_error', onConnectError);
-    });
+            this.socket.once('connected', onConnected);
+            this.socket.once('connect_error', onConnectError);
+          })
+          .catch(() => {
+            cleanup();
+            reject(new Error('Authentication token not found'));
+          });
+      });
+    };
+
+    return connectWithTimeout();
   }
 
   private setupEventListeners(): void {

@@ -113,9 +113,13 @@ export function ImportInvoicesModal({
       // Success: show success toast with failed count if applicable
       const successMessage =
         data.failedCount > 0
-          ? `Successfully imported ${data.successCount} invoices (${data.failedCount} failed)`
-          : t.importSuccessMessage ||
-            `Successfully imported ${data.successCount} invoices`;
+          ? t.importPartialSuccess
+              .replace('{count}', String(data.successCount))
+              .replace('{failed}', String(data.failedCount))
+          : t.importSuccessWithCount.replace(
+              '{count}',
+              String(data.successCount)
+            );
       toast.success(successMessage);
     },
     onError: (error: unknown) => {
@@ -135,7 +139,6 @@ export function ImportInvoicesModal({
     } else {
       setSelectedFile(undefined);
       setFileError(t.invalidFileType || 'Please upload a CSV or Excel file');
-      toast.error(t.invalidFileType || 'Please upload a CSV or Excel file');
     }
   };
 
@@ -167,8 +170,6 @@ export function ImportInvoicesModal({
     }
   };
 
-  if (!isOpen) return;
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-2xl">
@@ -176,15 +177,15 @@ export function ImportInvoicesModal({
           <DialogTitle>
             {result
               ? importStatus === 'failed'
-                ? 'Import Failed'
-                : 'Import Complete'
+                ? t.importFailed
+                : t.importCompleteTitle
               : (t.importInvoicesTitle ?? 'Import Invoices')}
           </DialogTitle>
           <DialogDescription>
             {result
               ? importStatus === 'failed'
-                ? 'No invoices were imported. Review the failed rows and try again.'
-                : 'Your invoices have been imported successfully'
+                ? t.importFailedDescription
+                : t.importSuccessDescription
               : t.importInvoicesDescription ||
                 'Upload a CSV or Excel file to import invoices'}
           </DialogDescription>

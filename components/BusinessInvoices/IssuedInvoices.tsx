@@ -336,7 +336,11 @@ export function IssuedInvoices({
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t.statusLabel}: ${invoiceDetails.status}`, 14, 38);
+    doc.text(
+      `${t.statusLabel}: ${getStatusLabel(invoiceDetails.status, dictionary)}`,
+      14,
+      38
+    );
     doc.text(
       `${t.issuedDateLabel}: ${formatDate(invoiceDetails.issuedDate, lang)}`,
       14,
@@ -355,7 +359,7 @@ export function IssuedInvoices({
 
       for (const item of invoiceDetails.lineItems) {
         tableRows.push([
-          item.description || item.productName || 'Item',
+          item.description || item.productName || t.unknown,
           item.quantity,
           `${item.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
           `${(item.quantity * item.unitPrice).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
@@ -851,7 +855,7 @@ export function IssuedInvoices({
                               <SelectItem key={status} value={status}>
                                 <div className="flex items-center gap-2">
                                   <span>{STATUS_ICONS[status]}</span>
-                                  {status}
+                                  {getStatusLabel(status, dictionary)}
                                 </div>
                               </SelectItem>
                             ))}
@@ -1000,7 +1004,7 @@ export function IssuedInvoices({
 
       {/* Confirmation Dialog for PAID Status */}
       <Dialog
-        open={pendingStatusChange !== undefined}
+        open={pendingStatusChange !== undefined && !!invoiceDetails}
         onOpenChange={(open) => {
           if (!open) setPendingStatusChange(undefined);
         }}
@@ -1009,14 +1013,16 @@ export function IssuedInvoices({
           <DialogHeader>
             <DialogTitle>{t.statusTransition.confirmTitle}</DialogTitle>
             <DialogDescription>
-              {t.statusTransition.confirmDescription
-                .replace(
-                  '{amount}',
-                  invoiceDetails?.totalAmount?.toLocaleString(lang, {
-                    minimumFractionDigits: 2,
-                  }) ?? ''
-                )
-                .replace('{currency}', invoiceDetails?.currency ?? '')}
+              {invoiceDetails
+                ? t.statusTransition.confirmDescription
+                    .replace(
+                      '{amount}',
+                      invoiceDetails.totalAmount.toLocaleString(lang, {
+                        minimumFractionDigits: 2,
+                      })
+                    )
+                    .replace('{currency}', invoiceDetails.currency)
+                : ''}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

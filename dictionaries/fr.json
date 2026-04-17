@@ -409,7 +409,7 @@
       "importedLabel": "Importées",
       "failedLabel": "Échouées",
       "importSuccessMessage": "Les factures ont été importées avec succès",
-      "importSuccessWithCount": "{count} factures importées avec succès",
+      "importSuccessWithCount": "{count, plural, =0 {Aucune facture importée} =1 {1 facture importée avec succès} other {{count} factures importées avec succès}}",
       "importErrorMessage": "Erreur lors de l'importation des factures",
       "importWarningMessage": "Importation terminée avec {count} avertissement(s). Veuillez vérifier les détails ci-dessous.",
       "importFailureMessage": "Échec de l'importation: {count} facture(s) n'a pas pu être importée.",
