@@ -295,6 +295,7 @@
       "createBusinessButton": "Créer une nouvelle entreprise",
       "refresh": "Actualiser",
       "totalInvoices": "Total des factures",
+      "totalPaidInvoices": "Factures payées",
       "totalPaid": "Total payé",
       "totalPending": "Total en attente",
       "invoiceList": "Liste des factures",
@@ -521,9 +522,10 @@
       },
       "statusTransition": {
         "confirmTitle": "Êtes-vous sûr ?",
-        "confirmDescription": "Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez bien reçu les fonds pour un total de {amount} {currency}.",
+        "confirmDescription": "Êtes-vous sûr de vouloir marquer cette facture comme payée ? Cette action est irréversible et indique que vous avez reçu des fonds d'un montant de {amount} {currency}.",
         "cancel": "Annuler",
-        "confirm": "Confirmer le paiement"
+        "confirm": "Confirmer le paiement",
+        "errorMessage": "Échec de la mise à jour du statut de la facture. Veuillez réessayer."
       }
     },
     "businessApplication": {
@@ -685,7 +687,8 @@
         "soldLastPeriod": "Vendu ({days}j)",
         "dailyRate": "Taux quotidien",
         "recommendationLabel": "Recommandation",
-        "reorderLabel": "Commander",
+        "reorderLabel": "Réapprovisionner",
+        "reorderWithQuantity": "Réapprovisionner {quantity}",
         "noStockInsights": "Aucun aperçu de stock disponible pour le moment.",
         "stockInsightsError": "Échec du chargement des aperçus de stock.",
         "historicalData": "Historique (Réel)",
@@ -856,8 +859,9 @@
         "healthyProducts": "Produits sains",
         "noUrgentReorder": "Pas de réapprovisionnement urgent",
         "riskExposure": "Exposition au risque",
-        "unitsToReorder": "+ {count} unités à commander",
-        "stockoutTimeline": "Calendrier de rupture de stock",
+        "unitsToReorder": "+ {count} unités à réapprovisionner",
+        "reorderWithQuantity": "Réapprovisionner {quantity}",
+        "stockoutTimeline": "Chronologie de rupture de stock",
         "horizon": "horizon {days}j",
         "noStockoutTrend": "Pas de tendance de rupture",
         "days": "{days} jours",

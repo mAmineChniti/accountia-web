@@ -295,6 +295,7 @@
       "createBusinessButton": "Create a New Business",
       "refresh": "Refresh",
       "totalInvoices": "Total Invoices",
+      "totalPaidInvoices": "Paid Invoices",
       "totalPaid": "Total Paid",
       "totalPending": "Total Pending",
       "invoiceList": "Invoice List",
@@ -523,7 +524,8 @@
         "confirmTitle": "Are you sure?",
         "confirmDescription": "Are you sure you want to mark this invoice as paid? This action is irreversible and indicates that you have received funds for an amount of {amount} {currency}.",
         "cancel": "Cancel",
-        "confirm": "Confirm Payment"
+        "confirm": "Confirm Payment",
+        "errorMessage": "Failed to update invoice status. Please try again."
       }
     },
     "businessApplication": {
@@ -686,6 +688,7 @@
         "dailyRate": "Daily rate",
         "recommendationLabel": "Recommendation",
         "reorderLabel": "Reorder",
+        "reorderWithQuantity": "Reorder {quantity}",
         "noStockInsights": "No stock insights available yet.",
         "stockInsightsError": "Failed to load stock insights.",
         "historicalData": "Historical (Actual)",
@@ -857,6 +860,7 @@
         "noUrgentReorder": "No urgent reorder",
         "riskExposure": "Risk exposure",
         "unitsToReorder": "+ {count} units to reorder",
+        "reorderWithQuantity": "Reorder {quantity}",
         "stockoutTimeline": "Stockout timeline",
         "horizon": "horizon {days}d",
         "noStockoutTrend": "No stockout trend",

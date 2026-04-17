@@ -571,6 +571,15 @@ export default function Invoices({
                                 : 'hover:bg-muted/50 font-medium')
                           )}
                           onClick={() => setSelectedInvoice(invoice)}
+                          tabIndex={0}
+                          role="button"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedInvoice(invoice);
+                            }
+                          }}
+                          aria-label={`${t.invoiceDetailsTitle} ${invoice.invoiceNumber}`}
                         >
                           <TableCell>
                             <span className="font-medium">
@@ -921,10 +930,14 @@ export default function Invoices({
 
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label className="text-sm font-semibold">
+                <Label
+                  htmlFor="cardholderName"
+                  className="text-sm font-semibold"
+                >
                   {t.payment.cardholderName}
                 </Label>
                 <Input
+                  id="cardholderName"
                   value={mockPaymentForm.cardholderName}
                   onChange={(e) =>
                     setMockPaymentForm((prev) => ({
@@ -945,12 +958,13 @@ export default function Invoices({
               </div>
 
               <div className="grid gap-2">
-                <Label className="text-sm font-semibold">
+                <Label htmlFor="cardNumber" className="text-sm font-semibold">
                   {t.payment.cardInfo}
                 </Label>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
                   <div className="sm:col-span-2">
                     <Input
+                      id="cardNumber"
                       value={mockPaymentForm.cardNumber}
                       readOnly
                       placeholder="4242 4242 4242 4242"

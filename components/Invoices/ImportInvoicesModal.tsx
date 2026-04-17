@@ -19,6 +19,7 @@ import { type Dictionary } from '@/get-dictionary';
 import { InvoicesService } from '@/lib/requests';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { cn } from '@/lib/utils';
+import { formatICU } from '@/lib/icu-formatter';
 import type { BulkImportInvoicesResponseDto } from '@/types/services';
 
 interface ImportInvoicesModalProps {
@@ -113,13 +114,13 @@ export function ImportInvoicesModal({
       // Success: show success toast with failed count if applicable
       const successMessage =
         data.failedCount > 0
-          ? t.importPartialSuccess
-              .replace('{count}', String(data.successCount))
-              .replace('{failed}', String(data.failedCount))
-          : t.importSuccessWithCount.replace(
-              '{count}',
-              String(data.successCount)
-            );
+          ? formatICU(t.importPartialSuccess, {
+              count: data.successCount,
+              failed: data.failedCount,
+            })
+          : formatICU(t.importSuccessWithCount, {
+              count: data.successCount,
+            });
       toast.success(successMessage);
     },
     onError: (error: unknown) => {

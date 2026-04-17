@@ -260,7 +260,11 @@ export function IssuedInvoices({
     },
     onError: (error: unknown) => {
       import('sonner').then(({ toast }) => {
-        toast.error(error instanceof Error ? error.message : t.fetchError);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : t.statusTransition?.errorMessage || t.fetchError
+        );
       });
     },
   });
@@ -359,7 +363,7 @@ export function IssuedInvoices({
 
       for (const item of invoiceDetails.lineItems) {
         tableRows.push([
-          item.description || item.productName || t.unknown,
+          item.productName || item.description || t.unknown,
           item.quantity,
           `${item.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
           `${(item.quantity * item.unitPrice).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
@@ -661,7 +665,7 @@ export function IssuedInvoices({
                     <TableHead>{t.recipientEmailLabel}</TableHead>
                     <TableHead className="text-right">{t.totalPaid}</TableHead>
                     <TableHead className="text-right">
-                      {t.totalInvoices}
+                      {t.totalPaidInvoices || t.totalInvoices}
                     </TableHead>
                   </TableRow>
                 </TableHeader>

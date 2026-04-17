@@ -287,8 +287,9 @@
       "createBusinessButton": "إنشاء نشاط تجاري جديد",
       "refresh": "تحديث",
       "totalInvoices": "إجمالي الفواتير",
-      "totalPaid": "المدفوع",
-      "totalPending": "قيد الانتظار",
+      "totalPaidInvoices": "الفواتير المدفوعة",
+      "totalPaid": "إجمالي المدفوع",
+      "totalPending": "إجمالي المعلق",
       "invoiceList": "قائمة الفواتير",
       "noInvoices": "لا توجد فواتير حتى الآن",
       "noInvoicesHint": "ستظهر الفواتير المرسلة إليك هنا",
@@ -513,9 +514,10 @@
       },
       "statusTransition": {
         "confirmTitle": "هل أنت متأكد؟",
-        "confirmDescription": "هل أنت متأكد من أنك تريد وضع علامة على هذه الفاتورة كمدفوعة؟ هذا الإجراء غير قابل للتراجع ويشير إلى أنك قد استلمت أموالاً بمبلغ إجمالي قدره {amount} {currency}.",
+        "confirmDescription": "هل أنت متأكد من رغبتك في وضع علامة على هذه الفاتورة كمدفوعة؟ هذا الإجراء غير قابل للتراجع ويشير إلى أنك قد استلمت أموالاً بمبلغ إجمالي قدره {amount} {currency}.",
         "cancel": "إلغاء",
-        "confirm": "تأكيد الدفع"
+        "confirm": "تأكيد الدفع",
+        "errorMessage": "فشل تحديث حالة الفاتورة. يرجى المحاولة مرة أخرى."
       }
     },
     "businessApplication": {
@@ -677,7 +679,8 @@
         "soldLastPeriod": "تم بيعها ({days} يوم)",
         "dailyRate": "المعدل اليومي",
         "recommendationLabel": "التوصية",
-        "reorderLabel": "إعادة طلب",
+        "reorderLabel": "إعادة الطلب",
+        "reorderWithQuantity": "إعادة الطلب {quantity}",
         "noStockInsights": "لا توجد رؤى مخزون متاحة بعد.",
         "stockInsightsError": "فشل تحميل رؤى المخزون.",
         "historicalData": "بيانات تاريخية (فعلية)",
@@ -849,6 +852,7 @@
         "noUrgentReorder": "لا يوجد إعادة طلب عاجل",
         "riskExposure": "التعرض للمخاطر",
         "unitsToReorder": "+ {count} وحدة لإعادة طلبها",
+        "reorderWithQuantity": "إعادة الطلب {quantity}",
         "stockoutTimeline": "الجدول الزمني لنفاد المخزون",
         "horizon": "الأفق {days} يومًا",
         "noStockoutTrend": "لا يوجد اتجاه لنفاد المخزون",

@@ -146,7 +146,11 @@ export function ReceivedInvoices({
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t.statusLabel}: ${invoiceDetails.status}`, 14, 38);
+    doc.text(
+      `${t.statusLabel}: ${getStatusLabel(invoiceDetails.status, dictionary)}`,
+      14,
+      38
+    );
     doc.text(
       `${t.issuedDateLabel}: ${formatDate(invoiceDetails.issuedDate, lang)}`,
       14,

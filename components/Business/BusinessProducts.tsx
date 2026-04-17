@@ -19,6 +19,7 @@ import autoTable from 'jspdf-autotable';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
+import { formatICU } from '@/lib/icu-formatter';
 import { Chatbot } from '@/components/Business/Chatbot';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -824,7 +825,11 @@ export function BusinessProducts({
                                 {item.riskLevel}
                               </span>
                               <span className="text-muted-foreground text-xs">
-                                Reorder {item.recommendedReorderQuantity}
+                                {formatICU(
+                                  t.stockInsights.reorderWithQuantity ||
+                                    'Reorder {quantity}',
+                                  { quantity: item.recommendedReorderQuantity }
+                                )}
                               </span>
                             </div>
                           </div>

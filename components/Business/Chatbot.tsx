@@ -98,12 +98,25 @@ export function Chatbot({
               });
             }
           },
-          onComplete: (_data: ChatMessageCompleteEvent) => {
+          onComplete: (data: ChatMessageCompleteEvent) => {
+            if (data.messageId !== activeMessageIdRef.current) return;
+            const finalResponse = data.response || streamingContentRef.current;
+            setMessages((prev) => {
+              const last = prev.at(-1);
+              if (last?.role === 'assistant') {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: finalResponse },
+                ];
+              }
+              return prev;
+            });
             setIsStreaming(false);
             activeMessageIdRef.current = undefined;
             streamingContentRef.current = '';
           },
           onError: (data: ChatMessageErrorEvent) => {
+            if (data.messageId !== activeMessageIdRef.current) return;
             setIsStreaming(false);
             setError(data.message);
             activeMessageIdRef.current = undefined;
@@ -111,7 +124,7 @@ export function Chatbot({
             // Remove the streaming assistant message on error
             setMessages((prev) => {
               const last = prev.at(-1);
-              if (last?.role === 'assistant' && last.content === '') {
+              if (last?.role === 'assistant') {
                 return prev.slice(0, -1);
               }
               return prev;
@@ -190,8 +203,12 @@ export function Chatbot({
   }, [isOpen]);
 
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isStreaming || !clientRef.current?.isConnected)
+    if (!inputValue.trim() || isStreaming) return;
+
+    if (!clientRef.current?.isConnected) {
+      setError(t.connectionFailed);
       return;
+    }
 
     const userMsg: ChatMessage = { role: 'user', content: inputValue.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -225,7 +242,7 @@ export function Chatbot({
       // Remove the streaming placeholder
       setMessages((prev) => prev.slice(0, -1));
     }
-  }, [inputValue, messages, businessId, isStreaming]);
+  }, [inputValue, messages, businessId, isStreaming, t.connectionFailed]);
 
   const handleKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -252,14 +269,10 @@ export function Chatbot({
           'fixed right-6 bottom-6 z-40 h-16 w-16 rounded-full p-0! shadow-lg transition-all duration-300',
           isOpen
             ? 'pointer-events-none scale-0 opacity-0'
-            : 'scale-100 opacity-100 hover:scale-110 hover:shadow-xl',
-          !businessId && 'cursor-not-allowed opacity-50'
+            : 'scale-100 opacity-100 hover:scale-110 hover:shadow-xl'
         )}
         aria-label={t.openButton}
         aria-expanded={isOpen}
-        title={
-          businessId ? undefined : 'Chat unavailable - business not loaded'
-        }
       >
         <Bot className="size-8 shrink-0" width={48} height={48} aria-hidden />
       </Button>
@@ -422,7 +435,7 @@ export function Chatbot({
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isStreaming}
+                disabled={!inputValue.trim() || isStreaming || !isConnected}
                 size="icon"
                 className="shrink-0"
                 aria-label={t.sendMessage}

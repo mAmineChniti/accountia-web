@@ -83,6 +83,11 @@ export class ChatSocketClient {
         // Fetch token and connect
         getToken()
           .then((tokenData) => {
+            // Check if already settled (timeout fired or error occurred)
+            if (cleared) {
+              return;
+            }
+
             const token = tokenData?.token;
             if (!token) {
               cleanup();
@@ -94,6 +99,13 @@ export class ChatSocketClient {
               auth: { token },
               transports: ['websocket', 'polling'],
             });
+
+            // Check again after socket creation in case timeout fired during creation
+            if (cleared) {
+              this.socket?.disconnect();
+              this.socket = undefined;
+              return;
+            }
 
             this.setupEventListeners();
 
@@ -107,8 +119,10 @@ export class ChatSocketClient {
             this.socket.once('connect_error', onConnectError);
           })
           .catch(() => {
-            cleanup();
-            reject(new Error('Authentication token not found'));
+            if (!cleared) {
+              cleanup();
+              reject(new Error('Authentication token not found'));
+            }
           });
       });
     };
