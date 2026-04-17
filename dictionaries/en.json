@@ -20,7 +20,6 @@
         "qrAlt": "2FA QR code",
         "manualKey": "Manual setup key",
         "enterCode": "Enter the 6-digit code",
-        "codePlaceholder": "123456",
         "enableButton": "Enable 2FA",
         "verifying": "Verifying...",
         "setupSuccess": "2FA setup started",
@@ -75,19 +74,12 @@
       "resettingButton": "Resetting...",
       "successMessage": "Password reset successfully",
       "errorMessage": "Failed to reset password",
-      "invalidTokenTitle": "Invalid or Expired Link",
-      "invalidTokenDescription": "This password reset link is no longer valid.",
-      "invalidTokenMessage": "The reset token may have expired or was already used. Please request a new password reset link.",
-      "requestNewLink": "Request a new reset link",
       "tokenDetected": "Reset token detected from email link.",
       "backToLogin": "Back to Login"
     },
     "sidebar": {
       "businessesLabel": "Businesses",
-      "loading": "Loading...",
-      "noBusinessesFound": "No businesses found",
-      "businessInactive": "Inactive",
-      "viewYourBusinesses": "View your businesses"
+      "loading": "Loading..."
     },
     "home": {
       "navigation": {
@@ -153,12 +145,7 @@
         "viewAllSolutions": "View all solutions",
         "startups": {
           "title": "Startups",
-          "description": "Perfect for new businesses looking to establish solid financial foundations",
-          "features": [
-            "Easy setup and onboarding",
-            "Investor-ready reports",
-            "Burn rate tracking"
-          ]
+          "description": "Perfect for new businesses looking to establish solid financial foundations"
         },
         "smallBusiness": {
           "title": "Small Business",
@@ -171,12 +158,7 @@
         },
         "enterprise": {
           "title": "Enterprise",
-          "description": "Advanced features for large organizations with complex requirements",
-          "features": [
-            "Custom workflows",
-            "Advanced compliance",
-            "Dedicated support"
-          ]
+          "description": "Advanced features for large organizations with complex requirements"
         }
       },
       "cta": {
@@ -413,6 +395,7 @@
       "importedLabel": "Imported",
       "failedLabel": "Failed",
       "importSuccessMessage": "Successfully imported invoices",
+      "importSuccessWithCount": "Successfully imported {count} invoices",
       "importErrorMessage": "Failed to import invoices",
       "importWarningMessage": "Import completed with {count} warning(s). Review details below.",
       "importFailureMessage": "Import failed: {count} invoice(s) could not be imported.",
@@ -473,6 +456,7 @@
         "noConfirm": "No, Close",
         "successTitle": "Payment Received!",
         "successDescription": "Your payment has been processed successfully.",
+        "successful": "Payment successful!",
         "totalPaid": "Total Paid",
         "processing": "Processing...",
         "requiredFieldsError": "Please correct the required fields",
@@ -729,6 +713,7 @@
         "errorFailed": "Failed to send message",
         "errorRetrying": "Retrying...",
         "errorTryAgain": "Please try again.",
+        "connectionFailed": "Connection failed",
         "ariaLabel": "Chat with Accountia AI",
         "aiResponse": "AI response",
         "userMessage": "Your message"
@@ -1052,7 +1037,6 @@
     "stats": {
       "totalUsers": "Total users",
       "totalAdmins": "Admins",
-      "totalNormalUsers": "Normal Users",
       "lastUpdated": "Sync Users",
       "placeholder": "—",
       "syncButton": "Sync",
@@ -1060,20 +1044,12 @@
       "upToDate": "Up to date"
     },
     "usersTitle": "Users",
-    "monthlyRevenue": "Total Revenues",
-    "monthlyExpenses": "Total Expenses",
-    "netProfit": "Net Profit",
-    "netLoss": "Net Loss",
-    "loadingStatistics": "Loading statistics...",
-    "errorLoadingStatistics": "Error loading statistics",
     "searchPlaceholder": "Search users...",
     "dateFilterLabel": "Filter by registration date:",
     "dateFilterPlaceholder": "Select date range",
     "loadError": "Failed to load users",
     "deleteError": "Failed to delete user",
     "noResults": "No results found.",
-    "adminBadge": "Admin",
-    "userBadge": "User",
     "roleColumn": "Role",
     "changeRoleSuccess": "Role updated successfully",
     "changeRoleError": "Failed to update role",
@@ -1084,10 +1060,8 @@
       "BUSINESS_ADMIN": "Business Admin",
       "CLIENT": "Client"
     },
-    "manageButton": "Manage",
     "deleteDialog": {
       "title": "Delete user",
-      "description": "Are you sure you want to delete user {username}? This action cannot be undone.",
       "confirm": "Delete",
       "deleting": "Deleting..."
     },
@@ -1096,11 +1070,8 @@
     "email": "Email",
     "firstName": "First Name",
     "lastName": "Last Name",
-    "isAdmin": "Admin",
     "dateJoined": "Date Joined",
     "actions": "Actions",
-    "confirmDeleteTitle": "Confirm Deletion",
-    "confirmDeleteDescription": "Are you sure you want to delete user {username}? This action cannot be undone.",
     "noUsers": "No users found.",
     "banUser": "Ban",
     "unbanUser": "Unban",
@@ -1108,7 +1079,6 @@
     "banError": "Failed to ban user",
     "unbanSuccess": "User unbanned successfully",
     "unbanError": "Failed to unban user",
-    "bannedLabel": "Banned",
     "banDialog": {
       "title": "Ban user",
       "description": "Are you sure you want to ban {username}? They will not be able to log in.",

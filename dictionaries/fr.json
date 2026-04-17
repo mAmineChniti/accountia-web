@@ -20,7 +20,6 @@
         "qrAlt": "QR code 2FA",
         "manualKey": "Clé de configuration manuelle",
         "enterCode": "Entrez le code à 6 chiffres",
-        "codePlaceholder": "123456",
         "enableButton": "Activer le 2FA",
         "verifying": "Vérification...",
         "setupSuccess": "Configuration du 2FA démarrée",
@@ -75,19 +74,12 @@
       "resettingButton": "Réinitialisation...",
       "successMessage": "Mot de passe réinitialisé avec succès",
       "errorMessage": "Échec de la réinitialisation du mot de passe",
-      "invalidTokenTitle": "Lien invalide ou expiré",
-      "invalidTokenDescription": "Ce lien de réinitialisation de mot de passe n'est plus valide.",
-      "invalidTokenMessage": "Le jeton de réinitialisation a peut-être expiré ou a déjà été utilisé. Veuillez demander un nouveau lien de réinitialisation de mot de passe.",
-      "requestNewLink": "Demander un nouveau lien de réinitialisation",
       "tokenDetected": "Jeton de réinitialisation détecté depuis le lien email.",
       "backToLogin": "Retour à la connexion"
     },
     "sidebar": {
       "businessesLabel": "Entreprises",
-      "loading": "Chargement...",
-      "noBusinessesFound": "Aucune entreprise trouvée",
-      "businessInactive": "Inactive",
-      "viewYourBusinesses": "Voir vos entreprises"
+      "loading": "Chargement..."
     },
     "home": {
       "navigation": {
@@ -153,12 +145,7 @@
         "viewAllSolutions": "Voir toutes les solutions",
         "startups": {
           "title": "Startups",
-          "description": "Parfait pour les nouvelles entreprises cherchant à établir des fondations financières solides",
-          "features": [
-            "Configuration et intégration faciles",
-            "Rapports prêts pour les investisseurs",
-            "Suivi du taux de burn"
-          ]
+          "description": "Parfait pour les nouvelles entreprises cherchant à établir des bases financières solides"
         },
         "smallBusiness": {
           "title": "Petites Entreprises",
@@ -171,12 +158,7 @@
         },
         "enterprise": {
           "title": "Entreprise",
-          "description": "Fonctionnalités avancées pour les grandes organisations avec des exigences complexes",
-          "features": [
-            "Workflows personnalisés",
-            "Conformité avancée",
-            "Support dédié"
-          ]
+          "description": "Fonctionnalités avancées pour les grandes organisations avec des exigences complexes"
         }
       },
       "cta": {
@@ -413,6 +395,7 @@
       "importedLabel": "Importées",
       "failedLabel": "Échouées",
       "importSuccessMessage": "Les factures ont été importées avec succès",
+      "importSuccessWithCount": "{count} factures importées avec succès",
       "importErrorMessage": "Erreur lors de l'importation des factures",
       "importWarningMessage": "Importation terminée avec {count} avertissement(s). Veuillez vérifier les détails ci-dessous.",
       "importFailureMessage": "Échec de l'importation: {count} facture(s) n'a pas pu être importée.",
@@ -473,6 +456,7 @@
         "noConfirm": "Non, fermer",
         "successTitle": "Paiement reçu !",
         "successDescription": "Votre paiement a été traité avec succès.",
+        "successful": "Paiement réussi !",
         "totalPaid": "Total payé",
         "processing": "Traitement en cours...",
         "requiredFieldsError": "Veuillez corriger les champs obligatoires",
@@ -724,6 +708,7 @@
         "disclaimer": "Accountia AI peut faire des erreurs.",
         "welcomeMessage": "Bonjour ! Posez-moi vos questions sur la comptabilité de votre entreprise.",
         "sendMessage": "Envoyer le message",
+        "connectionFailed": "Échec de la connexion",
         "loading": "Chargement de la réponse...",
         "emptyResponse": "Je n'ai pas pu générer de réponse pour le moment. Veuillez réessayer.",
         "errorFailed": "Impossible d'envoyer le message",
@@ -1052,7 +1037,6 @@
     "stats": {
       "totalUsers": "Total des utilisateurs",
       "totalAdmins": "Administrateurs",
-      "totalNormalUsers": "Utilisateurs normaux",
       "lastUpdated": "Synchroniser les utilisateurs",
       "placeholder": "—",
       "syncButton": "Synchroniser",
@@ -1060,20 +1044,12 @@
       "upToDate": "À jour"
     },
     "usersTitle": "Utilisateurs",
-    "monthlyRevenue": "Revenus totaux",
-    "monthlyExpenses": "Dépenses totales",
-    "netProfit": "Bénéfice net",
-    "netLoss": "Perte nette",
-    "loadingStatistics": "Chargement des statistiques...",
-    "errorLoadingStatistics": "Erreur lors du chargement des statistiques",
     "searchPlaceholder": "Rechercher des utilisateurs...",
     "dateFilterLabel": "Filtrer par date d'inscription:",
     "dateFilterPlaceholder": "Sélectionner une plage de dates",
     "loadError": "Échec du chargement des utilisateurs",
     "deleteError": "Échec de la suppression de l'utilisateur",
     "noResults": "Aucun résultat trouvé.",
-    "adminBadge": "Admin",
-    "userBadge": "Utilisateur",
     "roleColumn": "Rôle",
     "changeRoleSuccess": "Rôle mis à jour avec succès",
     "changeRoleError": "Échec de la mise à jour du rôle",
@@ -1084,10 +1060,8 @@
       "BUSINESS_ADMIN": "Admin commercial",
       "CLIENT": "Client"
     },
-    "manageButton": "Gérer",
     "deleteDialog": {
       "title": "Supprimer l'utilisateur",
-      "description": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
       "confirm": "Supprimer",
       "deleting": "Suppression..."
     },
@@ -1096,11 +1070,8 @@
     "email": "Email",
     "firstName": "Prénom",
     "lastName": "Nom de famille",
-    "isAdmin": "Admin",
     "dateJoined": "Date d'inscription",
     "actions": "Actions",
-    "confirmDeleteTitle": "Confirmer la suppression",
-    "confirmDeleteDescription": "Êtes-vous sûr de vouloir supprimer l'utilisateur {username} ? Cette action est irréversible.",
     "noUsers": "Aucun utilisateur trouvé.",
     "banUser": "Bannir",
     "unbanUser": "Débannir",
@@ -1108,7 +1079,6 @@
     "banError": "Échec du bannissement",
     "unbanSuccess": "Utilisateur débanni avec succès",
     "unbanError": "Échec du débannissement",
-    "bannedLabel": "Banni",
     "banDialog": {
       "title": "Bannir l'utilisateur",
       "description": "Êtes-vous sûr de vouloir bannir {username} ? Il ne pourra plus se connecter.",

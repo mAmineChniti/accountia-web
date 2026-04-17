@@ -86,7 +86,7 @@ export function EditProductDialog({
     mutationFn: (data: UpdateProductInput) =>
       ProductsService.updateProduct(product.id, businessId, data),
     onSuccess: () => {
-      toast.success(t.updateSuccess || 'Product updated successfully');
+      toast.success(t.updateSuccess);
       // Invalidate all product queries for this business to refresh the list
       queryClient.invalidateQueries({
         queryKey: ['business-products', businessId || product.businessId],
@@ -103,7 +103,7 @@ export function EditProductDialog({
     },
     onError: (error: unknown) => {
       const err = error as Error;
-      toast.error(err.message || t.updateError || 'Failed to update product');
+      toast.error(err.message || t.updateError);
     },
   });
 
@@ -121,16 +121,14 @@ export function EditProductDialog({
             className="w-full justify-start gap-2 px-2"
           >
             <Edit className="h-4 w-4" />
-            {t.editProduct || 'Edit Product'}
+            {t.editProduct}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t.editProduct || 'Edit Product'}</DialogTitle>
-          <DialogDescription>
-            {t.editDescription || 'Update product details below'}
-          </DialogDescription>
+          <DialogTitle>{t.editProduct}</DialogTitle>
+          <DialogDescription>{t.editDescription}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -257,9 +255,7 @@ export function EditProductDialog({
                 {mutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {mutation.isPending
-                  ? t.updating || 'Updating...'
-                  : t.saveChanges || 'Save Changes'}
+                {mutation.isPending ? t.updating : t.saveChanges}
               </Button>
             </DialogFooter>
           </form>

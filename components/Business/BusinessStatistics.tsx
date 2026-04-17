@@ -22,7 +22,8 @@ import {
 } from 'recharts';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
-import { BusinessService } from '@/lib/requests';
+import { BusinessService, ProductsService } from '@/lib/requests';
+import { Chatbot } from '@/components/Business/Chatbot';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Card,
@@ -41,8 +42,8 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
-import { AccountantInsight } from '@/components/Business/AccountantInsight';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 export default function BusinessStatistics({
   businessId,
@@ -71,6 +72,17 @@ export default function BusinessStatistics({
     queryFn: () => BusinessService.getBusinessStatistics(businessId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  const {
+    data: stockInsights,
+    isLoading: stockInsightsLoading,
+    isError: stockInsightsError,
+  } = useQuery({
+    queryKey: ['product-stock-insights', businessId],
+    queryFn: () => ProductsService.getStockInsights(businessId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Prepare chart data as ONE continuous dataset
@@ -534,13 +546,15 @@ export default function BusinessStatistics({
               <CardContent>
                 <div className="flex flex-col items-center justify-center py-6">
                   <div
-                    className={`rounded-full p-6 ${
-                      salesAnalytics.salesTrend === 'growth'
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                        : salesAnalytics.salesTrend === 'decline'
-                          ? 'bg-red-100 dark:bg-red-900/30'
-                          : 'bg-amber-100 dark:bg-amber-900/30'
-                    }`}
+                    className={cn(
+                      'rounded-full p-6',
+                      salesAnalytics.salesTrend === 'growth' &&
+                        'bg-emerald-100 dark:bg-emerald-900/30',
+                      salesAnalytics.salesTrend === 'decline' &&
+                        'bg-red-100 dark:bg-red-900/30',
+                      salesAnalytics.salesTrend === 'stagnation' &&
+                        'bg-amber-100 dark:bg-amber-900/30'
+                    )}
                   >
                     {salesAnalytics.salesTrend === 'growth' ? (
                       <TrendingUp className="h-12 w-12 text-emerald-600" />
@@ -551,13 +565,14 @@ export default function BusinessStatistics({
                     )}
                   </div>
                   <p
-                    className={`mt-4 text-2xl font-bold ${
-                      salesAnalytics.salesTrend === 'growth'
-                        ? 'text-emerald-600'
-                        : salesAnalytics.salesTrend === 'decline'
-                          ? 'text-red-600'
-                          : 'text-amber-600'
-                    }`}
+                    className={cn(
+                      'mt-4 text-2xl font-bold',
+                      salesAnalytics.salesTrend === 'growth' &&
+                        'text-emerald-600',
+                      salesAnalytics.salesTrend === 'decline' && 'text-red-600',
+                      salesAnalytics.salesTrend === 'stagnation' &&
+                        'text-amber-600'
+                    )}
                   >
                     {salesAnalytics.salesTrend === 'growth'
                       ? text.growth
@@ -884,7 +899,7 @@ export default function BusinessStatistics({
                 </div>
 
                 {productStatistics.lowStockProducts > 0 ? (
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:bg-red-900/20">
+                  <div className="rounded-lg border border-red-200 bg-red-50/50 p-3 dark:bg-red-900/10">
                     <p className="flex items-center gap-2 text-sm font-medium text-red-600">
                       <AlertCircle className="h-4 w-4" />
                       {productStatistics.lowStockProducts} {text.lowStockAlert}
@@ -1087,7 +1102,118 @@ export default function BusinessStatistics({
               </Card>
             )}
 
-            <AccountantInsight statistics={statistics} lang={lang} />
+            <Card className="bg-card/90 border-0 shadow-sm xl:col-span-12">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {text.stockInsightsTitle}
+                </CardTitle>
+                <CardDescription>
+                  {text.stockInsightsDescription}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stockInsightsLoading ? (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : stockInsightsError ? (
+                  <p className="text-destructive text-sm">
+                    {text.stockInsightsError}
+                  </p>
+                ) : !stockInsights || stockInsights.items.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    {text.noStockInsights}
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.highRiskProducts}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.highRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.mediumRiskProducts}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.mediumRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.lowRiskProducts}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.lowRiskCount}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-muted-foreground text-xs">
+                          {text.recommendedReorderUnits}
+                        </p>
+                        <p className="text-xl font-semibold">
+                          {stockInsights.summary.totalRecommendedUnits}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {stockInsights.items.slice(0, 6).map((item) => (
+                        <div
+                          key={item.productId}
+                          className="flex flex-col gap-3 rounded-lg border p-3 md:flex-row md:items-center md:justify-between"
+                        >
+                          <div>
+                            <p className="font-medium">{item.productName}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {text.stockLabel}: {item.currentQuantity} |{' '}
+                              {text.soldLastPeriod.replace(
+                                '{days}',
+                                stockInsights.lookbackDays.toString()
+                              )}
+                              : {item.soldLastPeriod} | {text.dailyRate}:{' '}
+                              {item.dailySalesRate}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {item.reason}
+                            </p>
+                            <p className="text-xs font-medium">
+                              {text.recommendationLabel}: {item.recommendation}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                'rounded-full px-2 py-1 text-xs font-medium',
+                                item.riskLevel === 'HIGH' &&
+                                  'bg-red-500/15 text-red-700 dark:text-red-300',
+                                item.riskLevel === 'MEDIUM' &&
+                                  'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                                item.riskLevel === 'LOW' &&
+                                  'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              )}
+                            >
+                              {item.riskLevel}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              {text.reorderLabel}:{' '}
+                              {item.recommendedReorderQuantity}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </>
@@ -1101,6 +1227,9 @@ export default function BusinessStatistics({
         <p className="text-muted-foreground">{t.statisticsDescription}</p>
       </div>
       {content}
+
+      {/* AI Chat Assistant - Business Mode */}
+      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }

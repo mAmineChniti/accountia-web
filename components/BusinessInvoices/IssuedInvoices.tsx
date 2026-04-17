@@ -21,6 +21,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { BusinessService, InvoicesService } from '@/lib/requests';
+import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import {
@@ -328,16 +329,16 @@ export function IssuedInvoices({
     doc.setFontSize(16);
     doc.setTextColor(50);
     doc.text(
-      `${t.invoiceDetailsTitle || 'Invoice'} #${invoiceDetails.invoiceNumber}`,
+      `${t.invoiceDetailsTitle} #${invoiceDetails.invoiceNumber}`,
       14,
       30
     );
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t.statusLabel || 'Status'}: ${invoiceDetails.status}`, 14, 38);
+    doc.text(`${t.statusLabel}: ${invoiceDetails.status}`, 14, 38);
     doc.text(
-      `${t.issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      `${t.issuedDateLabel}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
       14,
       44
     );
@@ -345,10 +346,10 @@ export function IssuedInvoices({
     // Line items
     if (invoiceDetails.lineItems && invoiceDetails.lineItems.length > 0) {
       const tableColumn = [
-        t.itemLabel || 'Item',
-        t.quantityLabel || 'Qty',
-        t.priceLabel || 'Price',
-        t.totalLabel || 'Total',
+        t.itemLabel,
+        t.quantityLabel,
+        t.priceLabel,
+        t.totalLabel,
       ];
       const tableRows: Array<string | number>[] = [];
 
@@ -380,7 +381,7 @@ export function IssuedInvoices({
     // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
     doc.text(
-      `${t.amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+      `${t.amountLabel}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
       14,
       finalY + 15
     );
@@ -536,11 +537,11 @@ export function IssuedInvoices({
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>{t.issuedInvoicesList || 'Invoice List'}</CardTitle>
+            <CardTitle>{t.issuedInvoicesList}</CardTitle>
             <CardDescription>
               {isLoading
                 ? '...'
-                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular || 'invoice' : t.invoicePlural || 'invoices'}`}
+                : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? t.invoiceSingular : t.invoicePlural}`}
             </CardDescription>
           </div>
 
@@ -709,8 +710,7 @@ export function IssuedInvoices({
                     <TableCell className="text-muted-foreground">
                       {invoice.recipient.displayName ||
                         invoice.recipient.email ||
-                        t.externalRecipient ||
-                        'External Recipient'}
+                        t.externalRecipient}
                     </TableCell>
                     <TableCell className="font-medium">
                       {invoice.totalAmount.toLocaleString(lang, {
@@ -940,7 +940,7 @@ export function IssuedInvoices({
                       <div className="flex justify-end pt-4">
                         <div className="flex items-center justify-between gap-12">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-                            {t.amountLabel || 'Total'}
+                            {t.amountLabel}
                           </span>
                           <span className="text-primary text-2xl font-bold">
                             {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -979,11 +979,11 @@ export function IssuedInvoices({
               disabled={isLoadingDetails || !invoiceDetails}
             >
               <Download className="h-4 w-4" />
-              {t.exportPDF || 'Export PDF'}
+              {t.exportPDF}
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="default">
-                {t.closeButtonLabel || 'Close'}
+                {t.closeButtonLabel}
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -1040,6 +1040,9 @@ export function IssuedInvoices({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chat Assistant - Business Mode */}
+      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }

@@ -45,7 +45,7 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AuthService, ApiError } from '@/lib/requests';
 import { RegisterSchema, type RegisterInput } from '@/types/services';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   formatDateLong,
@@ -90,6 +90,8 @@ export default function Register({
     useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<RegisterFormInput>({
     resolver: zodResolver(
@@ -438,17 +440,38 @@ export default function Register({
                         {dictionary.pages.register.passwordLabel}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder={
-                            dictionary.pages.register.passwordPlaceholder
-                          }
-                          aria-describedby="password-error"
-                          aria-invalid={!!form.formState.errors.password}
-                          autoComplete="new-password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder={
+                              dictionary.pages.register.passwordPlaceholder
+                            }
+                            aria-describedby="password-error"
+                            aria-invalid={!!form.formState.errors.password}
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1 right-1 h-8 w-8"
+                            onClick={() => setShowPassword((v) => !v)}
+                            aria-label={
+                              showPassword
+                                ? dictionary.common.hidePassword
+                                : dictionary.common.showPassword
+                            }
+                            aria-pressed={showPassword}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage
                         id="password-error"
@@ -468,17 +491,41 @@ export default function Register({
                         {dictionary.pages.register.confirmPasswordLabel}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          placeholder={
-                            dictionary.pages.register.confirmPasswordPlaceholder
-                          }
-                          aria-describedby="confirmPassword-error"
-                          aria-invalid={!!form.formState.errors.confirmPassword}
-                          autoComplete="new-password"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            placeholder={
+                              dictionary.pages.register
+                                .confirmPasswordPlaceholder
+                            }
+                            aria-describedby="confirmPassword-error"
+                            aria-invalid={
+                              !!form.formState.errors.confirmPassword
+                            }
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1 right-1 h-8 w-8"
+                            onClick={() => setShowConfirmPassword((v) => !v)}
+                            aria-label={
+                              showConfirmPassword
+                                ? dictionary.common.hidePassword
+                                : dictionary.common.showPassword
+                            }
+                            aria-pressed={showConfirmPassword}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage
                         id="confirmPassword-error"

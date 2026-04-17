@@ -20,7 +20,6 @@
         "qrAlt": "رمز QR للمصادقة الثنائية",
         "manualKey": "مفتاح الإعداد اليدوي",
         "enterCode": "أدخل الرمز المكون من 6 أرقام",
-        "codePlaceholder": "123456",
         "enableButton": "تفعيل المصادقة الثنائية",
         "verifying": "جارٍ التحقق...",
         "setupSuccess": "بدأ إعداد المصادقة الثنائية",
@@ -75,19 +74,12 @@
       "resettingButton": "جاري إعادة التعيين...",
       "successMessage": "تم إعادة تعيين كلمة المرور بنجاح",
       "errorMessage": "فشل في إعادة تعيين كلمة المرور",
-      "invalidTokenTitle": "رابط غير صالح أو منتهي الصلاحية",
-      "invalidTokenDescription": "هذا الرابط لإعادة تعيين كلمة المرور لم يعد صالحًا.",
-      "invalidTokenMessage": "قد يكون رمز إعادة التعيين قد انتهت صلاحيته أو تم استخدامه بالفعل. يرجى طلب رابط جديد لإعادة تعيين كلمة المرور.",
-      "requestNewLink": "طلب رابط إعادة تعيين جديد",
       "tokenDetected": "تم اكتشاف رمز إعادة التعيين من رابط البريد الإلكتروني.",
       "backToLogin": "العودة إلى تسجيل الدخول"
     },
     "sidebar": {
       "businessesLabel": "الأنشطة التجارية",
-      "loading": "جاري التحميل...",
-      "noBusinessesFound": "لم يتم العثور على أنشطة تجارية",
-      "businessInactive": "غير نشط",
-      "viewYourBusinesses": "عرض أنشطتك التجارية"
+      "loading": "جاري التحميل..."
     },
     "home": {
       "navigation": {
@@ -153,12 +145,7 @@
         "viewAllSolutions": "عرض جميع الحلول",
         "startups": {
           "title": "الشركات الناشئة",
-          "description": "مثالي للشركات الجديدة التي تسعى لإنشاء أسس مالية قوية",
-          "features": [
-            "إعداد وتكوين سهل",
-            "تقارير جاهزة للمستثمرين",
-            "تتبع معدل الحرق"
-          ]
+          "description": "مثالي للشركات الجديدة التي تتطلع إلى تأسيس قواعد مالية متينة"
         },
         "smallBusiness": {
           "title": "الشركات الصغيرة",
@@ -166,9 +153,8 @@
           "features": ["دعم متعدد العملات", "تكامل الرواتب", "إدارة المخزون"]
         },
         "enterprise": {
-          "title": "المؤسسات الكبيرة",
-          "description": "ميزات متقدمة للمؤسسات الكبيرة بمتطلبات معقدة",
-          "features": ["سير عمل مخصص", "امتثال متقدم", "دعم مخصص"]
+          "title": "الشركات الكبيرة",
+          "description": "ميزات متقدمة للمؤسسات الكبيرة ذات المتطلبات المعقدة"
         }
       },
       "cta": {
@@ -405,6 +391,7 @@
       "importedLabel": "مستوردة",
       "failedLabel": "فشلت",
       "importSuccessMessage": "تم استيراد الفواتير بنجاح",
+      "importSuccessWithCount": "تم استيراد {count} فواتير بنجاح",
       "importErrorMessage": "فشل استيراد الفواتير",
       "importWarningMessage": "اكتمل الاستيراد مع {count} تحذير(ات). راجع التفاصيل أدناه.",
       "importFailureMessage": "فشل الاستيراد: لم يتمكن من استيراد {count} فاتورة(ات).",
@@ -465,6 +452,7 @@
         "noConfirm": "لا، إغلاق",
         "successTitle": "تم استلام الدفع!",
         "successDescription": "تمت معالجة دفعتك بنجاح.",
+        "successful": "تم الدفع بنجاح!",
         "totalPaid": "إجمالي المدفوع",
         "processing": "جاري المعالجة...",
         "requiredFieldsError": "يرجى تصحيح الحقول المطلوبة",
@@ -716,6 +704,7 @@
         "disclaimer": "قد يرتكب Accountia AI أخطاء.",
         "welcomeMessage": "مرحبا! اسأل أي أسئلة حول المحاسبة في عملك.",
         "sendMessage": "إرسال الرسالة",
+        "connectionFailed": "فشل الاتصال",
         "loading": "جاري تحميل الرد...",
         "emptyResponse": "لم أستطع إنشاء رد الآن. يرجى المحاولة مرة أخرى.",
         "errorFailed": "فشل في إرسال الرسالة",
@@ -1044,7 +1033,6 @@
     "stats": {
       "totalUsers": "إجمالي المستخدمين",
       "totalAdmins": "المسؤولون",
-      "totalNormalUsers": "المستخدمون العاديون",
       "lastUpdated": "مزامنة المستخدمين",
       "placeholder": "—",
       "syncButton": "مزامنة",
@@ -1052,20 +1040,12 @@
       "upToDate": "محدّث"
     },
     "usersTitle": "المستخدمون",
-    "monthlyRevenue": "إجمالي الإيرادات",
-    "monthlyExpenses": "إجمالي المصروفات",
-    "netProfit": "صافي الربح",
-    "netLoss": "صافي الخسارة",
-    "loadingStatistics": "جاري تحميل الإحصائيات...",
-    "errorLoadingStatistics": "خطأ في تحميل الإحصائيات",
     "searchPlaceholder": "ابحث عن مستخدمين...",
     "dateFilterLabel": "تصفية حسب تاريخ التسجيل:",
     "dateFilterPlaceholder": "اختر نطاق التاريخ",
     "loadError": "فشل تحميل المستخدمين",
     "deleteError": "فشل حذف المستخدم",
     "noResults": "لم يتم العثور على نتائج.",
-    "adminBadge": "مسؤول",
-    "userBadge": "مستخدم",
     "roleColumn": "الدور",
     "changeRoleSuccess": "تم تحديث الدور بنجاح",
     "changeRoleError": "فشل تحديث الدور",
@@ -1076,10 +1056,8 @@
       "BUSINESS_ADMIN": "مسؤول الأعمال",
       "CLIENT": "عميل"
     },
-    "manageButton": "إدارة",
     "deleteDialog": {
       "title": "حذف المستخدم",
-      "description": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
       "confirm": "حذف",
       "deleting": "جارٍ الحذف..."
     },
@@ -1088,11 +1066,8 @@
     "email": "البريد الإلكتروني",
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
-    "isAdmin": "مسؤول",
     "dateJoined": "تاريخ الانضمام",
     "actions": "إجراءات",
-    "confirmDeleteTitle": "تأكيد الحذف",
-    "confirmDeleteDescription": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟ لا يمكن التراجع عن هذا الإجراء.",
     "noUsers": "لم يتم العثور على مستخدمين.",
     "banUser": "حظر",
     "unbanUser": "رفع الحظر",
@@ -1100,7 +1075,6 @@
     "banError": "فشل حظر المستخدم",
     "unbanSuccess": "تم رفع حظر المستخدم بنجاح",
     "unbanError": "فشل رفع حظر المستخدم",
-    "bannedLabel": "محظور",
     "banDialog": {
       "title": "حظر المستخدم",
       "description": "هل أنت متأكد أنك تريد حظر {username}؟ لن يتمكن من تسجيل الدخول.",

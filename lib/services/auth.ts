@@ -1,4 +1,4 @@
-import { getTokenAllowExpired, setTokens } from '@/actions/cookies';
+import { getTokenAllowExpired, setTokens, setUser } from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -323,6 +323,22 @@ export const AuthService = {
           json: data,
         })
         .json<UpdateUserResponse>();
+
+      // Update user cookie with new user data
+      if (result.user) {
+        await setUser({
+          userId: result.user.id,
+          username: result.user.username,
+          email: result.user.email,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          phoneNumber: result.user.phoneNumber,
+          birthdate: result.user.birthdate,
+          role: result.user.role ?? 'CLIENT',
+          loginTime: new Date().toISOString(),
+        });
+      }
+
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -337,6 +353,22 @@ export const AuthService = {
           json: data,
         })
         .json<UpdateUserResponse>();
+
+      // Update user cookie with new user data
+      if (result.user) {
+        await setUser({
+          userId: result.user.id,
+          username: result.user.username,
+          email: result.user.email,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          phoneNumber: result.user.phoneNumber,
+          birthdate: result.user.birthdate,
+          role: result.user.role ?? 'CLIENT',
+          loginTime: new Date().toISOString(),
+        });
+      }
+
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

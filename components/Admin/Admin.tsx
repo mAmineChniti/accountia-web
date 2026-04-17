@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Trash2,
   X,
@@ -494,9 +495,10 @@ export default function Admin({
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto gap-1 font-normal"
                       onClick={() => toggleSort('username')}
                     >
                       {dictionary.admin.username}
@@ -509,12 +511,13 @@ export default function Admin({
                       ) : (
                         <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
                       )}
-                    </button>
+                    </Button>
                   </TableHead>
                   <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto gap-1 font-normal"
                       onClick={() => toggleSort('email')}
                     >
                       {dictionary.admin.email}
@@ -527,15 +530,16 @@ export default function Admin({
                       ) : (
                         <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
                       )}
-                    </button>
+                    </Button>
                   </TableHead>
                   <TableHead>{dictionary.admin.firstName}</TableHead>
                   <TableHead>{dictionary.admin.lastName}</TableHead>
                   <TableHead>{dictionary.admin.roleColumn}</TableHead>
                   <TableHead>
-                    <button
-                      type="button"
-                      className="flex cursor-pointer items-center gap-1 select-none"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto gap-1 font-normal"
                       onClick={() => toggleSort('dateJoined')}
                     >
                       {dictionary.admin.dateJoined}
@@ -548,7 +552,7 @@ export default function Admin({
                       ) : (
                         <ChevronsUpDown className="text-muted-foreground h-3.5 w-3.5" />
                       )}
-                    </button>
+                    </Button>
                   </TableHead>
                   <TableHead className="text-right">
                     {dictionary.admin.actions}
@@ -731,9 +735,9 @@ export default function Admin({
           </DialogHeader>
           {banAction === 'ban' && (
             <div className="space-y-3">
-              <label htmlFor="ban-reason" className="text-sm font-medium">
+              <Label htmlFor="ban-reason" className="text-sm font-medium">
                 {dictionary.admin.banDialog.reason}
-              </label>
+              </Label>
               <Input
                 id="ban-reason"
                 placeholder={dictionary.admin.banDialog.reason}

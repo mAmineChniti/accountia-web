@@ -14,6 +14,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { InvoicesService } from '@/lib/requests';
+import { Chatbot } from '@/components/Business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import {
@@ -78,7 +79,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 export function ReceivedInvoices({
   lang,
   dictionary,
-  businessId: _businessId,
+  businessId: businessId,
 }: {
   lang: Locale;
   dictionary: Dictionary;
@@ -97,10 +98,10 @@ export function ReceivedInvoices({
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['invoices-received-business', _businessId],
+    queryKey: ['invoices-received-business', businessId],
     queryFn: () =>
       InvoicesService.getReceivedInvoicesByBusiness({
-        businessId: _businessId,
+        businessId: businessId,
       }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -109,12 +110,12 @@ export function ReceivedInvoices({
   // Fetch invoice details when a specific invoice is selected
   const { data: invoiceDetails, isLoading: isLoadingDetails } =
     useQuery<InvoiceResponse>({
-      queryKey: ['invoice-received-details', selectedInvoiceId, _businessId],
+      queryKey: ['invoice-received-details', selectedInvoiceId, businessId],
       queryFn: () =>
         selectedInvoiceId
           ? InvoicesService.getReceivedInvoiceDetails(
               selectedInvoiceId,
-              _businessId
+              businessId
             )
           : Promise.reject(new Error('No invoice selected')),
       enabled: !!selectedInvoiceId && isDetailsOpen,
@@ -136,16 +137,16 @@ export function ReceivedInvoices({
     doc.setFontSize(16);
     doc.setTextColor(50);
     doc.text(
-      `${t.invoiceDetailsTitle || 'Receipt'} #${invoiceDetails.invoiceNumber}`,
+      `${t.invoiceDetailsTitle} #${invoiceDetails.invoiceNumber}`,
       14,
       30
     );
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${t.statusLabel || 'Status'}: ${invoiceDetails.status}`, 14, 38);
+    doc.text(`${t.statusLabel}: ${invoiceDetails.status}`, 14, 38);
     doc.text(
-      `${t.issuedDateLabel || 'Issued Date'}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
+      `${t.issuedDateLabel}: ${new Date(invoiceDetails.issuedDate).toLocaleDateString(lang)}`,
       14,
       44
     );
@@ -153,10 +154,10 @@ export function ReceivedInvoices({
     // Line items
     if (invoiceDetails.lineItems && invoiceDetails.lineItems.length > 0) {
       const tableColumn = [
-        t.itemLabel || 'Item',
-        t.quantityLabel || 'Qty',
-        t.priceLabel || 'Price',
-        t.totalLabel || 'Total',
+        t.itemLabel,
+        t.quantityLabel,
+        t.priceLabel,
+        t.totalLabel,
       ];
       const tableRows: Array<string | number>[] = [];
 
@@ -188,7 +189,7 @@ export function ReceivedInvoices({
     // @ts-expect-error - required by library
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
     doc.text(
-      `${t.amountLabel || 'Total Amount'}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+      `${t.amountLabel}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
       14,
       finalY + 15
     );
@@ -535,9 +536,7 @@ export function ReceivedInvoices({
           <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isLoadingDetails
-                  ? 'Loading...'
-                  : t.invoiceDetailsTitle || 'Invoice Details'}
+                {isLoadingDetails ? 'Loading...' : t.invoiceDetailsTitle}
               </DialogTitle>
               <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
                 {invoiceDetails?.invoiceNumber || (
@@ -569,7 +568,7 @@ export function ReceivedInvoices({
                 <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {t.invoiceNumberLabel || 'Invoice Number'}
+                      {t.invoiceNumberLabel}
                     </p>
                     <p className="font-mono font-medium">
                       {invoiceDetails.invoiceNumber}
@@ -577,7 +576,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {t.statusLabel || 'Status'}
+                      {t.statusLabel}
                     </p>
                     <Badge
                       className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
@@ -590,7 +589,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {t.amountLabel || 'Amount'}
+                      {t.amountLabel}
                     </p>
                     <p className="text-primary text-lg font-bold">
                       {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -601,7 +600,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {t.columnIssuedDate || 'Issued Date'}
+                      {t.columnIssuedDate}
                     </p>
                     <p className="font-medium">
                       {new Date(invoiceDetails.issuedDate).toLocaleDateString(
@@ -616,7 +615,7 @@ export function ReceivedInvoices({
                 {invoiceDetails.description && (
                   <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
                     <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-                      {t.descriptionLabel || 'Description'}
+                      {t.descriptionLabel}
                     </p>
                     <p className="text-sm leading-relaxed">
                       {invoiceDetails.description}
@@ -629,21 +628,21 @@ export function ReceivedInvoices({
                   invoiceDetails.lineItems.length > 0 && (
                     <div className="space-y-4">
                       <h4 className="text-lg font-semibold tracking-tight">
-                        {t.lineItemsLabel || 'Line Items'}
+                        {t.lineItemsLabel}
                       </h4>
                       <div className="border-border/50 overflow-hidden rounded-xl border shadow-xs">
                         <Table>
                           <TableHeader className="bg-muted/50">
                             <TableRow>
-                              <TableHead>{t.itemLabel || 'Item'}</TableHead>
+                              <TableHead>{t.itemLabel}</TableHead>
                               <TableHead className="text-right">
-                                {t.quantityLabel || 'Qty'}
+                                {t.quantityLabel}
                               </TableHead>
                               <TableHead className="text-right">
-                                {t.priceLabel || 'Price'}
+                                {t.priceLabel}
                               </TableHead>
                               <TableHead className="text-right">
-                                {t.totalLabel || 'Total'}
+                                {t.totalLabel}
                               </TableHead>
                             </TableRow>
                           </TableHeader>
@@ -677,7 +676,7 @@ export function ReceivedInvoices({
                       <div className="flex justify-end pt-4">
                         <div className="bg-primary/5 border-primary/10 flex items-center justify-between gap-12 rounded-xl border px-6 py-4">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-                            {t.amountLabel || 'Total'}
+                            {t.amountLabel}
                           </span>
                           <span className="text-primary text-2xl font-bold">
                             {invoiceDetails.totalAmount.toLocaleString(lang, {
@@ -693,9 +692,7 @@ export function ReceivedInvoices({
                   )}
               </div>
             ) : (
-              <p className="text-muted-foreground">
-                {t.fetchError || 'Failed to load invoice details'}
-              </p>
+              <p className="text-muted-foreground">{t.fetchError}</p>
             )}
           </div>
 
@@ -709,7 +706,7 @@ export function ReceivedInvoices({
                 disabled={isLoadingDetails || !invoiceDetails}
               >
                 <Download className="h-4 w-4" />
-                {t.exportPDF || 'Export PDF'}
+                {t.exportPDF}
               </Button>
               <DialogClose asChild>
                 <Button
@@ -717,13 +714,16 @@ export function ReceivedInvoices({
                   variant="default"
                   className="shadow-md transition-shadow hover:shadow-lg"
                 >
-                  {t.closeButtonLabel || 'Close'}
+                  {t.closeButtonLabel}
                 </Button>
               </DialogClose>
             </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chat Assistant - Business Mode */}
+      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }

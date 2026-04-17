@@ -140,17 +140,13 @@ export default function BusinessInvites({
     mutationFn: (inviteId: string) =>
       BusinessService.revokeInvite({ businessId, inviteId }),
     onSuccess: () => {
-      toast.success(t.revokeSuccess || 'Invite revoked successfully');
+      toast.success(t.revokeSuccess);
       queryClient.invalidateQueries({
         queryKey: ['business-invites', businessId],
       });
     },
     onError: (error: unknown) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t.revokeError || 'Failed to revoke invite'
-      );
+      toast.error(error instanceof Error ? error.message : t.revokeError);
     },
   });
 
@@ -379,9 +375,7 @@ export default function BusinessInvites({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                aria-label={
-                                  t.moreActionsLabel || 'More actions'
-                                }
+                                aria-label={t.moreActionsLabel}
                                 disabled={
                                   resendMutation.isPending ||
                                   revokeMutation.isPending
@@ -407,7 +401,7 @@ export default function BusinessInvites({
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Ban className="mr-2 h-4 w-4" />
-                                {t.revokeButton || 'Revoke'}
+                                {t.revokeButton}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

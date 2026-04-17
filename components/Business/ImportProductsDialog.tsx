@@ -1,15 +1,9 @@
 'use client';
 
-import { type ChangeEvent, type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Upload,
-  Loader2,
-  FileIcon,
-  X,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
+import { FileUpload } from '@/components/reusable/file-upload';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
@@ -55,7 +49,6 @@ export function ImportProductsDialog({
 }: ImportProductsDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
-  const [dragActive, setDragActive] = useState(false);
   const [importResult, setImportResult] = useState<
     | {
         imported: number;
@@ -64,7 +57,7 @@ export function ImportProductsDialog({
       }
     | undefined
   >();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState<string | undefined>();
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessProducts;
 
@@ -74,7 +67,7 @@ export function ImportProductsDialog({
       // Reset file and import state when dialog closes
       setSelectedFile(undefined);
       setImportResult(undefined);
-      setDragActive(false);
+      setFileError(undefined);
     }
     setOpen(newOpen);
   };
@@ -100,60 +93,30 @@ export function ImportProductsDialog({
     },
     onError: (error: unknown) => {
       const err = error as Error;
-      toast.error(err.message || t.importError || 'Failed to import products');
+      toast.error(err.message || t.importError);
     },
   });
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    // Always reset input value so re-selecting same file triggers onChange
-    event.target.value = '';
-    if (!file) {
-      return;
-    }
-
+  const handleFileSelect = (file: File) => {
     if (isValidFile(file)) {
       setSelectedFile(file);
       setImportResult(undefined);
+      setFileError(undefined);
     } else {
       setSelectedFile(undefined);
-      toast.error(t.importInvalidType || 'Please upload a CSV or Excel file');
-      setImportResult(undefined);
+      setFileError(t.importInvalidType);
+      toast.error(t.importInvalidType);
     }
   };
 
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    const file = e.dataTransfer.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    if (isValidFile(file)) {
-      setSelectedFile(file);
-      setImportResult(undefined);
-    } else {
-      setSelectedFile(undefined);
-      toast.error(t.importInvalidType || 'Please upload a CSV or Excel file');
-    }
+  const handleFileClear = () => {
+    setSelectedFile(undefined);
+    setFileError(undefined);
   };
 
   const handleImport = () => {
     if (!selectedFile) {
-      toast.error(t.importSelectFile || 'Please select a file to import');
+      toast.error(t.importSelectFile);
       return;
     }
 
@@ -166,23 +129,19 @@ export function ImportProductsDialog({
         {trigger || (
           <Button className="gap-2">
             <Upload className="h-4 w-4" />
-            {t.importProducts || 'Import Products'}
+            {t.importProducts}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>
-            {importResult
-              ? t.importCompleteTitle || 'Import Complete'
-              : t.importProducts || 'Import Products'}
+            {importResult ? t.importCompleteTitle : t.importProducts}
           </DialogTitle>
           <DialogDescription>
             {importResult
-              ? t.importCompleteDescription ||
-                'Your products have been imported. Review the summary below.'
-              : t.importProductsDescription ||
-                'Upload a CSV or Excel file with columns: name, description, unitPrice, cost, quantity.'}
+              ? t.importCompleteDescription
+              : t.importProductsDescription}
           </DialogDescription>
         </DialogHeader>
 
@@ -195,9 +154,7 @@ export function ImportProductsDialog({
             </div>
 
             <div className="space-y-2 text-center">
-              <p className="text-lg font-semibold">
-                {t.importResult || 'Import result'}
-              </p>
+              <p className="text-lg font-semibold">{t.importResult}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Card className="bg-green-50 dark:bg-green-950/30">
                   <CardContent className="pt-6">
@@ -206,7 +163,7 @@ export function ImportProductsDialog({
                         {importResult.imported}
                       </div>
                       <div className="text-sm text-green-700 dark:text-green-300">
-                        {t.importedCount || 'Imported'}
+                        {t.importedCount}
                       </div>
                     </div>
                   </CardContent>
@@ -219,7 +176,7 @@ export function ImportProductsDialog({
                         {importResult.failed}
                       </div>
                       <div className="text-sm text-red-700 dark:text-red-300">
-                        {t.failedCount || 'Failed'}
+                        {t.failedCount}
                       </div>
                     </div>
                   </CardContent>
@@ -231,7 +188,7 @@ export function ImportProductsDialog({
               <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
                 <CardContent className="pt-4">
                   <p className="mb-2 text-sm font-semibold text-red-700 dark:text-red-300">
-                    {t.importErrors || 'Errors'}
+                    {t.importErrors}
                   </p>
                   <ul className="list-disc space-y-1 pl-5 text-xs text-red-700 dark:text-red-300">
                     {importResult.errors.map((error, index) => (
@@ -244,96 +201,31 @@ export function ImportProductsDialog({
           </div>
         ) : (
           <div className="space-y-4 py-2">
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => {
-                if (mutation.isPending) return;
-                fileInputRef.current?.click();
-              }}
-              className={`rounded-lg border-2 border-dashed p-8 transition-colors ${
-                dragActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-              }`}
-            >
-              <div className="flex flex-col items-center justify-center gap-3">
-                <div className="bg-muted rounded-lg p-3">
-                  <Upload className="text-muted-foreground h-6 w-6" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium">
-                    {t.importDragDrop || 'Drag and drop your file here'}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {t.importDragDropSub || 'or click to browse'}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={mutation.isPending}
-                >
-                  {t.importBrowse || 'Browse Files'}
-                </Button>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xls,.xlsx"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={mutation.isPending}
-              />
-            </div>
-
-            {selectedFile && (
-              <Card className="bg-muted/30">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
-                    <FileIcon className="text-muted-foreground h-5 w-5" />
-                    <div>
-                      <p className="text-sm font-medium">{selectedFile.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {(selectedFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(undefined)}
-                    disabled={mutation.isPending}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <FileUpload
+              accept=".csv,.xls,.xlsx"
+              maxSize={10}
+              selectedFile={selectedFile}
+              onFileSelect={handleFileSelect}
+              onFileClear={handleFileClear}
+              disabled={mutation.isPending}
+              isUploading={mutation.isPending}
+              error={fileError}
+            />
 
             <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30">
               <CardContent className="pt-5">
                 <div className="flex gap-3">
                   <AlertCircle className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <div className="text-sm text-blue-800 dark:text-blue-300">
-                    <p className="mb-2 font-medium">
-                      {t.importFormatTitle || 'Supported formats'}
-                    </p>
+                    <p className="mb-2 font-medium">{t.importFormatTitle}</p>
                     <ul className="space-y-1 text-xs">
                       <li>• CSV (.csv)</li>
                       <li>• Excel (.xls, .xlsx)</li>
                     </ul>
                     <p className="mt-2 text-xs font-semibold">
-                      {t.importRequiredColumnsTitle || 'Required columns'}
+                      {t.importRequiredColumnsTitle}
                     </p>
-                    <p className="text-xs">
-                      {t.importRequiredColumnsList ||
-                        'name, description, unitPrice, cost, quantity'}
-                    </p>
+                    <p className="text-xs">{t.importRequiredColumnsList}</p>
                   </div>
                 </div>
               </CardContent>
@@ -347,7 +239,7 @@ export function ImportProductsDialog({
             onClick={() => handleOpenChange(false)}
             disabled={mutation.isPending}
           >
-            {importResult ? t.closeLabel || 'Close' : dictionary.common.cancel}
+            {importResult ? t.closeLabel : dictionary.common.cancel}
           </Button>
           {!importResult && (
             <Button
@@ -357,12 +249,12 @@ export function ImportProductsDialog({
               {mutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t.importing || 'Importing...'}
+                  {t.importing}
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  {t.import || 'Import'}
+                  {t.import}
                 </>
               )}
             </Button>

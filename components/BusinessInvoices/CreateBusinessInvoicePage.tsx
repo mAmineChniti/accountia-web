@@ -105,7 +105,7 @@ export function CreateBusinessInvoicePage({
     mutationFn: (data: CreateInvoiceInput) =>
       InvoicesService.createInvoice(data),
     onSuccess: () => {
-      toast.success(t.successMessage || 'Invoice created successfully');
+      toast.success(t.successMessage);
       // Invalidate invoice queries to refetch updated list
       queryClient.invalidateQueries({ queryKey: ['invoices-issued'] });
       router.push(`/${lang}/business/${businessId}/invoices`);
@@ -248,7 +248,7 @@ export function CreateBusinessInvoicePage({
   };
 
   const onError = () => {
-    toast.error(t.fetchError || 'Please check the form for errors');
+    toast.error(t.fetchError);
   };
 
   return (
@@ -266,12 +266,11 @@ export function CreateBusinessInvoicePage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-3xl font-bold tracking-tight">
-              {t.createInvoiceButton || 'Create Invoice'}
+              {t.createInvoiceButton}
             </h1>
           </div>
           <p className="text-muted-foreground ml-11">
-            {t.createInvoiceDescription ||
-              'Fill in the details below to create a new invoice'}
+            {t.createInvoiceDescription}
           </p>
         </div>
       </div>
@@ -286,7 +285,7 @@ export function CreateBusinessInvoicePage({
           disabled={isCreating}
         >
           <Upload className="mr-2 h-4 w-4" />
-          {t.importInvoices || 'Import from File'}
+          {t.importInvoices}
         </Button>
       </div>
 
@@ -298,9 +297,7 @@ export function CreateBusinessInvoicePage({
           {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                {t.basicInformation || 'Basic Information'}
-              </CardTitle>
+              <CardTitle className="text-lg">{t.basicInformation}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -336,7 +333,6 @@ export function CreateBusinessInvoicePage({
                               )
                             }
                             disabled={(date) => date > new Date('2100-01-01')}
-                            autoFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -390,7 +386,7 @@ export function CreateBusinessInvoicePage({
                   name="currency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.currencyLabel || 'Currency'}</FormLabel>
+                      <FormLabel>{t.currencyLabel}</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -420,8 +416,7 @@ export function CreateBusinessInvoicePage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t.descriptionLabel || 'Description'} (
-                      {t.optional || 'Optional'})
+                      {t.descriptionLabel} ({t.optional})
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -441,8 +436,7 @@ export function CreateBusinessInvoicePage({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {t.paymentTermsLabel || 'Payment Terms'} (
-                      {t.optional || 'Optional'})
+                      {t.paymentTermsLabel} ({t.optional})
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -461,7 +455,7 @@ export function CreateBusinessInvoicePage({
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">
-                {t.recipientInformation || 'Recipient Information'}
+                {t.recipientInformation}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -470,9 +464,7 @@ export function CreateBusinessInvoicePage({
                 name="recipient.type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {t.recipientTypeLabel || 'Recipient Type'}
-                    </FormLabel>
+                    <FormLabel>{t.recipientTypeLabel}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
@@ -495,17 +487,17 @@ export function CreateBusinessInvoicePage({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value={INVOICE_RECIPIENT_TYPES.EXTERNAL}>
-                          {t.externalContactLabel || 'External Contact'}
+                          {t.externalContactLabel}
                         </SelectItem>
                         <SelectItem
                           value={INVOICE_RECIPIENT_TYPES.PLATFORM_BUSINESS}
                         >
-                          {t.platformBusinessLabel || 'Platform Business'}
+                          {t.platformBusinessLabel}
                         </SelectItem>
                         <SelectItem
                           value={INVOICE_RECIPIENT_TYPES.PLATFORM_INDIVIDUAL}
                         >
-                          {t.platformIndividualLabel || 'Platform Individual'}
+                          {t.platformIndividualLabel}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -521,9 +513,7 @@ export function CreateBusinessInvoicePage({
                   name="recipient.platformId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t.selectBusinessLabel || 'Select Business'} *
-                      </FormLabel>
+                      <FormLabel>{t.selectBusinessLabel} *</FormLabel>
                       <Combobox
                         value={field.value}
                         onValueChange={(value = '') => {
@@ -536,10 +526,7 @@ export function CreateBusinessInvoicePage({
                         }}
                       >
                         <ComboboxInput
-                          placeholder={
-                            t.searchBusinessPlaceholder ||
-                            'Search by name or email...'
-                          }
+                          placeholder={t.searchBusinessPlaceholder}
                           value={businessDisplayValue}
                           onChange={(e) =>
                             setBusinessDisplayValue(e.target.value)
@@ -588,9 +575,7 @@ export function CreateBusinessInvoicePage({
                   name="recipient.platformId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t.selectIndividualLabel || 'Select Individual'} *
-                      </FormLabel>
+                      <FormLabel>{t.selectIndividualLabel} *</FormLabel>
                       <Combobox
                         value={field.value}
                         onValueChange={(value = '') => {
@@ -603,10 +588,7 @@ export function CreateBusinessInvoicePage({
                         }}
                       >
                         <ComboboxInput
-                          placeholder={
-                            t.searchIndividualPlaceholder ||
-                            'Search by name or email...'
-                          }
+                          placeholder={t.searchIndividualPlaceholder}
                           value={clientDisplayValue}
                           onChange={(e) =>
                             setClientDisplayValue(e.target.value)
@@ -652,9 +634,7 @@ export function CreateBusinessInvoicePage({
                     name="recipient.email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t.recipientEmailLabel || 'Email'} *
-                        </FormLabel>
+                        <FormLabel>{t.recipientEmailLabel} *</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -662,10 +642,6 @@ export function CreateBusinessInvoicePage({
                             {...field}
                           />
                         </FormControl>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          {t.externalEmailHint ||
-                            'Invoice will be sent to this email address'}
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -676,9 +652,7 @@ export function CreateBusinessInvoicePage({
                     name="recipient.displayName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t.recipientNameLabel || 'Name'} *
-                        </FormLabel>
+                        <FormLabel>{t.recipientNameLabel} *</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="John Doe or Company Name"
@@ -698,9 +672,7 @@ export function CreateBusinessInvoicePage({
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">
-                  {t.lineItemsLabel || 'Line Items'}
-                </CardTitle>
+                <CardTitle className="text-lg">{t.lineItemsLabel}</CardTitle>
                 <Button
                   type="button"
                   variant="outline"
@@ -709,7 +681,7 @@ export function CreateBusinessInvoicePage({
                   disabled={isCreating}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  {t.addLineItemButton || 'Add Item'}
+                  {t.addLineItemButton}
                 </Button>
               </div>
             </CardHeader>
@@ -733,9 +705,7 @@ export function CreateBusinessInvoicePage({
                               name={`lineItems.${index}.productId`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>
-                                    {t.productLabel || 'Product'}
-                                  </FormLabel>
+                                  <FormLabel>{t.productLabel}</FormLabel>
                                   <Select
                                     value={field.value}
                                     onValueChange={(value) =>
@@ -771,9 +741,7 @@ export function CreateBusinessInvoicePage({
                               name={`lineItems.${index}.quantity`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>
-                                    {t.quantityLabel || 'Qty'}
-                                  </FormLabel>
+                                  <FormLabel>{t.quantityLabel}</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
@@ -800,9 +768,7 @@ export function CreateBusinessInvoicePage({
                               name={`lineItems.${index}.unitPrice`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>
-                                    {t.unitPriceLabel || 'Price'}
-                                  </FormLabel>
+                                  <FormLabel>{t.unitPriceLabel}</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
@@ -825,8 +791,7 @@ export function CreateBusinessInvoicePage({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>
-                                {t.descriptionLabel || 'Description'} (
-                                {t.optional || 'Optional'})
+                                {t.descriptionLabel} ({t.optional})
                               </FormLabel>
                               <FormControl>
                                 <Textarea
@@ -851,7 +816,7 @@ export function CreateBusinessInvoicePage({
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {t.removeLabel || 'Remove'}
+                            {t.removeLabel}
                           </Button>
                         </div>
 
@@ -881,7 +846,7 @@ export function CreateBusinessInvoicePage({
           <Card className="border-primary/20 bg-primary/5 border-2">
             <CardContent className="pt-6">
               <div className="flex items-baseline justify-between text-xl font-bold">
-                <span>{t.totalLabel || 'Total'}</span>
+                <span>{t.totalLabel}</span>
                 <span>
                   {total.toLocaleString(lang, {
                     minimumFractionDigits: 2,
@@ -902,7 +867,7 @@ export function CreateBusinessInvoicePage({
               disabled={isCreating}
               className="flex-1"
             >
-              {t.cancelLabel || 'Cancel'}
+              {t.cancelLabel}
             </Button>
             <Button
               type="submit"
@@ -912,12 +877,12 @@ export function CreateBusinessInvoicePage({
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t.creatingLabel || 'Creating...'}
+                  {t.creatingLabel}
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  {t.createLabel || 'Create'}
+                  {t.createLabel}
                 </>
               )}
             </Button>

@@ -10,7 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
   Form,
@@ -53,6 +54,7 @@ export default function Login({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [showPassword, setShowPassword] = useState(false);
   const [initialOAuthTempToken] = useState<string | undefined>(() => {
     if (typeof globalThis === 'undefined') return;
     const params = new URLSearchParams(globalThis.location?.search);
@@ -236,16 +238,15 @@ export default function Login({
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm leading-none font-medium">
+                  <Label className="text-sm font-medium">
                     {dictionary.pages.login.twoFactorLabel}
-                  </label>
+                  </Label>
                   <div className="flex justify-center">
                     <InputOTP
                       maxLength={6}
                       value={otpCode}
                       onChange={(v) => setOtpCode(v)}
                       disabled={twoFAMutation.isPending}
-                      autoFocus
                     >
                       <InputOTPGroup>
                         {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -320,17 +321,38 @@ export default function Login({
                           {dictionary.pages.login.passwordLabel}
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            id="password"
-                            type="password"
-                            autoComplete="current-password"
-                            placeholder={
-                              dictionary.pages.login.passwordPlaceholder
-                            }
-                            aria-describedby="password-error"
-                            aria-invalid={!!form.formState.errors.password}
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              type={showPassword ? 'text' : 'password'}
+                              autoComplete="current-password"
+                              placeholder={
+                                dictionary.pages.login.passwordPlaceholder
+                              }
+                              aria-describedby="password-error"
+                              aria-invalid={!!form.formState.errors.password}
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-1 right-1 h-8 w-8"
+                              onClick={() => setShowPassword((v) => !v)}
+                              aria-label={
+                                showPassword
+                                  ? dictionary.common.hidePassword
+                                  : dictionary.common.showPassword
+                              }
+                              aria-pressed={showPassword}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage id="password-error" />
                       </FormItem>

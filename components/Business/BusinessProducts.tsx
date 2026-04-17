@@ -19,6 +19,7 @@ import autoTable from 'jspdf-autotable';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
+import { Chatbot } from '@/components/Business/Chatbot';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 import {
   type Product,
@@ -132,7 +134,7 @@ export function BusinessProducts({
         businessId || productToDelete!.businessId
       ),
     onSuccess: () => {
-      toast.success(t.deleteSuccess || 'Product deleted successfully');
+      toast.success(t.deleteSuccess);
       queryClient.invalidateQueries({
         queryKey: [
           'business-products',
@@ -146,7 +148,7 @@ export function BusinessProducts({
     },
     onError: (error: unknown) => {
       const err = error as Error;
-      toast.error(err.message || t.deleteError || 'Failed to delete product');
+      toast.error(err.message || t.deleteError);
     },
   });
 
@@ -257,11 +259,11 @@ export function BusinessProducts({
 
     const doc = new jsPDF();
     const tableColumn = [
-      t.productNameLabel || 'Name',
-      t.descriptionLabel || 'Description',
-      t.unitPriceLabel || 'Price',
-      t.costPriceLabel || 'Cost',
-      t.initialQuantityLabel || 'Qty',
+      t.productNameLabel,
+      t.descriptionLabel,
+      t.unitPriceLabel,
+      t.costPriceLabel,
+      t.initialQuantityLabel,
     ];
     const tableRows: Array<string | number>[] = [];
 
@@ -350,9 +352,7 @@ export function BusinessProducts({
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="text-muted-foreground">
-            {businessId
-              ? t.description
-              : t.adminSubtitle || 'Manage products across all businesses'}
+            {businessId ? t.description : t.adminSubtitle}
           </p>
         </div>
         {businessId && (
@@ -426,13 +426,11 @@ export function BusinessProducts({
           <Card className="dark:bg-card/90 mt-6 border-0 bg-white/90 shadow-sm">
             <CardHeader className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold">
-                  {t.title || 'Products'}
-                </h2>
+                <h2 className="text-lg font-semibold">{t.title}</h2>
                 <p className="text-muted-foreground text-sm">
                   {isLoading
                     ? '...'
-                    : `${productsData?.total ?? filteredProducts.length} ${t.productsList || 'products'}`}
+                    : `${productsData?.total ?? filteredProducts.length} ${t.productsList}`}
                 </p>
               </div>
             </CardHeader>
@@ -547,11 +545,12 @@ export function BusinessProducts({
                           </TableCell>
                           <TableCell className="text-right">
                             <span
-                              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                              className={cn(
+                                'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors',
                                 product.quantity > 10
                                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                              }`}
+                              )}
                             >
                               {product.quantity}
                             </span>
@@ -579,7 +578,7 @@ export function BusinessProducts({
                                   onClick={() => setProductToDelete(product)}
                                 >
                                   <Trash2 className="h-4 w-4" />{' '}
-                                  {t.deleteProduct || 'Delete'}
+                                  {t.deleteProduct}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -767,13 +766,13 @@ export function BusinessProducts({
                               </div>
                               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                                 <div
-                                  className={`h-2 rounded-full ${
-                                    item.riskLevel === 'HIGH'
-                                      ? 'bg-red-500'
-                                      : item.riskLevel === 'MEDIUM'
-                                        ? 'bg-amber-500'
-                                        : 'bg-emerald-500'
-                                  }`}
+                                  className={cn(
+                                    'h-2 rounded-full',
+                                    item.riskLevel === 'HIGH' && 'bg-red-500',
+                                    item.riskLevel === 'MEDIUM' &&
+                                      'bg-yellow-500',
+                                    item.riskLevel === 'LOW' && 'bg-green-500'
+                                  )}
                                   style={{ width: `${progress}%` }}
                                 />
                               </div>
@@ -812,13 +811,15 @@ export function BusinessProducts({
                             </div>
                             <div className="flex flex-col items-end gap-1">
                               <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  item.riskLevel === 'HIGH'
-                                    ? 'bg-red-500/15 text-red-700 dark:text-red-300'
-                                    : item.riskLevel === 'MEDIUM'
-                                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                      : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                }`}
+                                className={cn(
+                                  'rounded-full px-2 py-0.5 text-xs font-medium',
+                                  item.riskLevel === 'HIGH' &&
+                                    'bg-red-500/15 text-red-700 dark:text-red-300',
+                                  item.riskLevel === 'MEDIUM' &&
+                                    'bg-yellow-500/15 text-yellow-700 dark:text-yellow-300',
+                                  item.riskLevel === 'LOW' &&
+                                    'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                )}
                               >
                                 {item.riskLevel}
                               </span>
@@ -874,12 +875,15 @@ export function BusinessProducts({
               {deleteMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                t.confirmDelete || 'Delete Product'
+                t.confirmDelete
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Chat Assistant - Business Mode */}
+      <Chatbot businessId={businessId} dictionary={dictionary} />
     </div>
   );
 }
