@@ -1229,7 +1229,12 @@ export default function BusinessStatistics({
       {content}
 
       {/* AI Chat Assistant - Business Mode */}
-      <Chatbot businessId={businessId} dictionary={dictionary} />
+      <Chatbot
+        businessId={businessId}
+        context="statistics"
+        dictionary={dictionary}
+        key={`${businessId}-statistics`}
+      />
     </div>
   );
 }

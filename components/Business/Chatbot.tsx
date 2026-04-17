@@ -44,9 +44,11 @@ const CHAT_STORAGE_KEY = 'accountia_chat_history';
 
 export function Chatbot({
   businessId,
+  context,
   dictionary,
 }: {
   businessId?: string;
+  context?: string;
   dictionary: Dictionary;
 }) {
   const t = dictionary.pages.business.chatbot;
@@ -138,7 +140,9 @@ export function Chatbot({
   useEffect(() => {
     setHistoryLoaded(false);
     const storageKey = businessId
-      ? `${CHAT_STORAGE_KEY}_${businessId}`
+      ? context
+        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
+        : `${CHAT_STORAGE_KEY}_${businessId}`
       : `${CHAT_STORAGE_KEY}_individual`;
     const savedMessages = localStorage.getItem(storageKey);
 
@@ -156,20 +160,22 @@ export function Chatbot({
     } finally {
       setHistoryLoaded(true);
     }
-  }, [businessId]);
+  }, [businessId, context]);
 
   // Save chat history to localStorage
   useEffect(() => {
     if (!historyLoaded) return;
     const storageKey = businessId
-      ? `${CHAT_STORAGE_KEY}_${businessId}`
+      ? context
+        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
+        : `${CHAT_STORAGE_KEY}_${businessId}`
       : `${CHAT_STORAGE_KEY}_individual`;
     if (messages.length > 0) {
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } else {
       localStorage.removeItem(storageKey);
     }
-  }, [messages, businessId, historyLoaded]);
+  }, [messages, businessId, context, historyLoaded]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

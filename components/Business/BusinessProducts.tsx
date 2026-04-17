@@ -883,7 +883,12 @@ export function BusinessProducts({
       </Dialog>
 
       {/* AI Chat Assistant - Business Mode */}
-      <Chatbot businessId={businessId} dictionary={dictionary} />
+      <Chatbot
+        businessId={businessId}
+        context="products"
+        dictionary={dictionary}
+        key={`${businessId}-products`}
+      />
     </div>
   );
 }

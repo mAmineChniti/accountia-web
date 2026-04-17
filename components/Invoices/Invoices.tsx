@@ -1232,7 +1232,7 @@ export default function Invoices({
       </Dialog>
 
       {/* AI Chat Assistant - Individual Mode */}
-      <Chatbot dictionary={dictionary} />
+      <Chatbot dictionary={dictionary} key="individual" />
     </div>
   );
 }

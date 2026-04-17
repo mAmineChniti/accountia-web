@@ -724,7 +724,12 @@ export function ReceivedInvoices({
       </Dialog>
 
       {/* AI Chat Assistant - Business Mode */}
-      <Chatbot businessId={businessId} dictionary={dictionary} />
+      <Chatbot
+        businessId={businessId}
+        context="received"
+        dictionary={dictionary}
+        key={`${businessId}-received`}
+      />
     </div>
   );
 }
