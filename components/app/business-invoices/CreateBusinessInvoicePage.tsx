@@ -66,7 +66,7 @@ import {
 } from '@/components/ui/combobox';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import type { ProductListResponse } from '@/types/services';
-import { ImportInvoicesModal } from '../Invoices/ImportInvoicesModal';
+import { ImportInvoicesModal } from '../invoices/ImportInvoicesModal';
 
 interface CreateBusinessInvoicePageProps {
   businessId: string;

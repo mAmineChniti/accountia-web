@@ -91,3 +91,12 @@ export interface StockInsightsResponse extends BaseResponse {
     }>;
   };
 }
+
+// Bulk Delete Products Response
+export interface BulkDeleteProductsResponse {
+  success: boolean;
+  data: {
+    deleted: number;
+    notFound: string[];
+  };
+}

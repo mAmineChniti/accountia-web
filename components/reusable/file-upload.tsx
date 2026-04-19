@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatICU } from '@/lib/icu-formatter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -106,7 +107,7 @@ function FileUpload(
 
   const validateFile = (file: File): string | undefined => {
     if (maxSize && file.size > maxSize * 1024 * 1024) {
-      return t.maxSizeError.replace('{maxSize}', String(maxSize));
+      return formatICU(t.maxSizeError, { maxSize });
     }
 
     // Validate accept prop
@@ -133,7 +134,7 @@ function FileUpload(
       });
 
       if (!isAccepted) {
-        return t.fileTypeError.replace('{accept}', accept);
+        return formatICU(t.fileTypeError, { accept });
       }
     }
 
@@ -198,10 +199,7 @@ function FileUpload(
                   <div className="mt-2">
                     <Progress value={uploadProgress} className="h-2" />
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {t.uploading.replace(
-                        '{progress}',
-                        String(uploadProgress)
-                      )}
+                      {formatICU(t.uploading, { progress: uploadProgress })}
                     </p>
                   </div>
                 )}
@@ -322,7 +320,7 @@ function FileUpload(
 
           {/* Max size hint */}
           <p className="text-muted-foreground text-xs">
-            {t.maxFileSize.replace('{maxSize}', String(maxSize))}
+            {formatICU(t.maxFileSize, { maxSize })}
           </p>
         </div>
 

@@ -73,7 +73,7 @@ import type {
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { env } from '@/env';
-import { Chatbot } from '@/components/Business/Chatbot';
+import { Chatbot } from '@/components/app/business/Chatbot';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 

@@ -20,7 +20,7 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
 import { formatICU } from '@/lib/icu-formatter';
-import { Chatbot } from '@/components/Business/Chatbot';
+import { Chatbot } from '@/components/app/business/Chatbot';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
@@ -60,6 +61,7 @@ import {
 } from '@/components/ui/dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { BulkDeleteProductsInput } from '@/types/services';
 
 // Sanitize CSV values to prevent formula injection and escape quotes
 const sanitizeCsvValue = (value: string | number): string => {
@@ -88,7 +90,23 @@ export function BusinessProducts({
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [productToDelete, setProductToDelete] = useState<Product | undefined>();
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const pageSize = 10;
+
+  // Handler functions that clear selections when changing page/search
+  const handleSearchChange = (value: string) => {
+    setSelectedProductIds(new Set());
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setSelectedProductIds(new Set());
+    setCurrentPage(page);
+  };
 
   const {
     data: productsData,
@@ -153,6 +171,42 @@ export function BusinessProducts({
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (data: BulkDeleteProductsInput) =>
+      ProductsService.bulkDeleteProducts(businessId, data),
+    onSuccess: (result) => {
+      toast.success(
+        formatICU(t.productsDeleted, { count: result.data.deleted })
+      );
+      queryClient.invalidateQueries({
+        queryKey: ['business-products', businessId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['product-stock-insights', businessId],
+      });
+      setSelectedProductIds(new Set());
+      setIsBulkDeleteDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(
+        err.message || t.bulkDeleteError || 'Failed to delete products'
+      );
+    },
+  });
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProductIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
   const products = useMemo(
     () => (productsData as ProductListResponse)?.products ?? [],
     [productsData]
@@ -171,6 +225,21 @@ export function BusinessProducts({
         p.description.toLowerCase().includes(query)
     );
   }, [products, searchQuery]);
+
+  const toggleAllProducts = () => {
+    if (
+      selectedProductIds.size === filteredProducts.length &&
+      filteredProducts.length > 0
+    ) {
+      setSelectedProductIds(new Set());
+    } else {
+      setSelectedProductIds(new Set(filteredProducts.map((p) => p.id)));
+    }
+  };
+
+  const isAllSelected =
+    filteredProducts.length > 0 &&
+    selectedProductIds.size === filteredProducts.length;
 
   const prioritizedInsights = useMemo(() => {
     if (!stockInsights?.items) {
@@ -381,10 +450,7 @@ export function BusinessProducts({
                 placeholder={t.searchPlaceholder}
                 className="pl-9"
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -434,6 +500,23 @@ export function BusinessProducts({
                     : `${productsData?.total ?? filteredProducts.length} ${t.productsList}`}
                 </p>
               </div>
+              {/* Bulk Delete Toolbar */}
+              {businessId && selectedProductIds.size > 0 && (
+                <div className="bg-muted/50 flex items-center justify-between gap-4 rounded-lg border px-4 py-2">
+                  <span className="text-sm font-medium">
+                    {formatICU(t.selected, { count: selectedProductIds.size })}
+                  </span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsBulkDeleteDialogOpen(true)}
+                    disabled={bulkDeleteMutation.isPending}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t.deleteSelected}
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -502,6 +585,13 @@ export function BusinessProducts({
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/50 border-b hover:bg-transparent">
+                        <TableHead className="w-[40px] font-semibold">
+                          <Checkbox
+                            checked={isAllSelected}
+                            onCheckedChange={toggleAllProducts}
+                            aria-label={t.selectAll}
+                          />
+                        </TableHead>
                         <TableHead className="text-foreground font-semibold">
                           {t.columnName}
                         </TableHead>
@@ -526,6 +616,15 @@ export function BusinessProducts({
                           key={product.id}
                           className="group hover:bg-primary/5 border-border/30 border-b transition-colors"
                         >
+                          <TableCell className="w-[40px]">
+                            <Checkbox
+                              checked={selectedProductIds.has(product.id)}
+                              onCheckedChange={() =>
+                                toggleProductSelection(product.id)
+                              }
+                              aria-label={`${t.selectProduct} ${product.name}`}
+                            />
+                          </TableCell>
                           <TableCell className="text-foreground font-semibold">
                             {product.name}
                           </TableCell>
@@ -596,7 +695,7 @@ export function BusinessProducts({
                         variant="outline"
                         size="sm"
                         disabled={currentPage === 1}
-                        onClick={() => setCurrentPage((p) => p - 1)}
+                        onClick={() => handlePageChange(currentPage - 1)}
                       >
                         {t.previous}
                       </Button>
@@ -609,7 +708,7 @@ export function BusinessProducts({
                         variant="outline"
                         size="sm"
                         disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage((p) => p + 1)}
+                        onClick={() => handlePageChange(currentPage + 1)}
                       >
                         {t.next}
                       </Button>
@@ -844,6 +943,57 @@ export function BusinessProducts({
         </TabsContent>
       </Tabs>
 
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsBulkDeleteDialogOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              {t.bulkDeleteConfirmTitle}
+            </DialogTitle>
+            <DialogDescription className="py-4">
+              {formatICU(t.bulkDeleteConfirmDescription, {
+                count: selectedProductIds.size,
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsBulkDeleteDialogOpen(false)}
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {dictionary.common.cancel}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                bulkDeleteMutation.mutate({
+                  ids: [...selectedProductIds],
+                })
+              }
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {bulkDeleteMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {selectedProductIds.size > 1
+                ? t.confirmDeleteMultiple
+                : t.confirmDelete}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={productToDelete !== undefined}
@@ -856,10 +1006,9 @@ export function BusinessProducts({
               {t.deleteConfirmTitle}
             </DialogTitle>
             <DialogDescription className="py-4">
-              {t.deleteConfirmDescriptionWithName.replace(
-                '{name}',
-                productToDelete?.name || ''
-              )}
+              {formatICU(t.deleteConfirmDescriptionWithName, {
+                name: productToDelete?.name || '',
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

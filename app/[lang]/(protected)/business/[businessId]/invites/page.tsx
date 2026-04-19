@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import BusinessInvites from '@/components/Business/BusinessInvites';
+import BusinessInvites from '@/components/app/business-invites/BusinessInvites';
 
 export default async function BusinessInvitesPage({
   params,

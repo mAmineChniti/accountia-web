@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import ResetPasswordPage from '@/components/ResetPassword/ResetPassword';
+import ResetPasswordPage from '@/components/app/auth/ResetPassword';
 
 export default async function ResetPassword({
   params,

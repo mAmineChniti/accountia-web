@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessProducts } from '@/components/Business/BusinessProducts';
+import { BusinessProducts } from '@/components/app/business-products/BusinessProducts';
 
 export default async function BusinessProductsPage({
   params,
