@@ -7,6 +7,7 @@ import FileUpload from '@/components/reusable/file-upload';
 import { toast } from 'sonner';
 import { type Dictionary } from '@/get-dictionary';
 import { ProductsService } from '@/lib/requests';
+import { formatICU } from '@/lib/icu-formatter';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ export function ImportProductsDialog({
       });
       toast.success(
         t.importSuccess
-          ? t.importSuccess.replace('{count}', String(result.imported))
+          ? formatICU(t.importSuccess, { count: result.imported })
           : `${result.imported} product${result.imported === 1 ? '' : 's'} imported successfully`
       );
     },

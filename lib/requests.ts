@@ -125,6 +125,7 @@ export const API_CONFIG = {
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
     STOCK_INSIGHTS: 'products/stock-insights',
+    BULK_DELETE: 'products/bulk-delete',
   },
   INVOICES: {
     // Issuer Endpoints
@@ -159,6 +160,16 @@ export const API_CONFIG = {
   },
   HEALTH: {
     CHECK: 'health',
+  },
+  ACCOUNTANT: {
+    CREATE_JOB: 'accountant/jobs',
+    LIST_JOBS: 'accountant/jobs',
+    GET_JOB: 'accountant/jobs/{taskId}',
+    GET_JOB_RESULTS: 'accountant/jobs/{taskId}/results',
+    GET_HISTORY: 'accountant/history',
+    GET_WORK: 'accountant/work',
+    GET_TAXES: 'accountant/taxes',
+    HEALTH: 'accountant/health',
   },
 } as const;
 
@@ -208,3 +219,4 @@ export { InvoicesService } from '@/lib/services/invoices';
 export { ChatService } from '@/lib/services/chat';
 export { NotificationsService } from '@/lib/services/notifications';
 export { AuditService } from '@/lib/services/audit';
+export { AccountantService } from '@/lib/services/accountant';

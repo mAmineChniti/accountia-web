@@ -1,6 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import {
+  keepPreviousData,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   FileText,
   AlertCircle,
@@ -13,8 +20,8 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { InvoicesService } from '@/lib/requests';
-import { Chatbot } from '@/components/Business/Chatbot';
+import { BusinessService, InvoicesService } from '@/lib/requests';
+import { Chatbot } from '@/components/app/business/Chatbot';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
@@ -30,6 +37,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -47,10 +61,13 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { useQuery } from '@tanstack/react-query';
-import type { InvoiceStatus, InvoiceResponse } from '@/types/services';
+import type {
+  InvoiceStatus,
+  InvoiceResponse,
+  ClientPodiumItem,
+} from '@/types/services';
 
-type FilterStatus = 'ALL' | InvoiceStatus;
+type FilterStatus = 'ALL' | InvoiceStatus | 'PODIUM';
 
 const STATUS_ICONS: Record<InvoiceStatus, React.ReactNode> = {
   DRAFT: <Clock className="h-4 w-4" />,
@@ -78,7 +95,19 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
 };
 
-export function ReceivedInvoices({
+const ALLOWED_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
+  DRAFT: ['ISSUED', 'VOIDED'],
+  ISSUED: ['VIEWED', 'PAID', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  VIEWED: ['PAID', 'PARTIAL', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  PAID: ['ARCHIVED'],
+  PARTIAL: ['PAID', 'OVERDUE', 'DISPUTED', 'VOIDED'],
+  OVERDUE: ['PAID', 'PARTIAL', 'DISPUTED', 'VOIDED'],
+  DISPUTED: ['PAID', 'VOIDED'],
+  VOIDED: ['ARCHIVED'],
+  ARCHIVED: [],
+};
+
+export function IssuedInvoices({
   lang,
   dictionary,
   businessId,
@@ -88,42 +117,207 @@ export function ReceivedInvoices({
   businessId: string;
 }) {
   const t = dictionary.pages.invoices;
+  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<
     string | undefined
   >();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<
+    InvoiceStatus | undefined
+  >();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagesByNumber, setPagesByNumber] = useState<
+    Record<number, InvoiceResponse[]>
+  >({});
+  const previousBusinessIdRef = useRef<string>(businessId);
 
   const {
     data: invoicesResponse,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['invoices-received-business', businessId],
+    queryKey: ['invoices-issued', businessId, currentPage],
     queryFn: () =>
-      InvoicesService.getReceivedInvoicesByBusiness({
-        businessId: businessId,
+      InvoicesService.listIssuedInvoices({
+        businessId,
+        page: currentPage,
+        limit: 10,
       }),
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  // Fetch invoice details when a specific invoice is selected
-  const { data: invoiceDetails, isLoading: isLoadingDetails } =
-    useQuery<InvoiceResponse>({
-      queryKey: ['invoice-received-details', selectedInvoiceId, businessId],
-      queryFn: () =>
-        selectedInvoiceId
-          ? InvoicesService.getReceivedInvoiceDetails(
-              selectedInvoiceId,
-              businessId
-            )
-          : Promise.reject(new Error('No invoice selected')),
-      enabled: !!selectedInvoiceId && isDetailsOpen,
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      gcTime: 60 * 60 * 1000, // 1 hour
+  const { data: clientPodiumResponse, isLoading: isLoadingPodium } = useQuery({
+    queryKey: ['business-client-podium', businessId],
+    queryFn: () => BusinessService.getClientPodium(businessId),
+    enabled: filterStatus === 'PODIUM',
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Store invoices by page so refetches replace the corresponding page slice.
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!invoicesResponse?.invoices || !invoicesResponse.page) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      setPagesByNumber((previousPages) => ({
+        ...previousPages,
+        [invoicesResponse.page]: invoicesResponse.invoices,
+      }));
     });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [invoicesResponse]);
+
+  // Fetch invoice details when a specific invoice is selected
+  const {
+    data: invoiceDetails,
+    isLoading: isLoadingDetails,
+    error: invoiceError,
+  } = useQuery<InvoiceResponse>({
+    queryKey: ['invoice-issued-details', selectedInvoiceId, businessId],
+    queryFn: () => {
+      if (!selectedInvoiceId) {
+        return Promise.reject(new Error('No invoice selected'));
+      }
+      return InvoicesService.getIssuedInvoice(selectedInvoiceId, businessId);
+    },
+    enabled: !!selectedInvoiceId && isDetailsOpen,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    retry: 1, // Retry once on failure
+  });
+
+  // Reset pagination only when businessId actually changes (not on first mount)
+  useEffect(() => {
+    let isMounted = true;
+
+    if (previousBusinessIdRef.current === businessId) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    previousBusinessIdRef.current = businessId;
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      setCurrentPage(1);
+      setPagesByNumber({});
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [businessId]);
+
+  // Mutation for transitioning invoice status
+  const { mutate: transitionStatus, isPending: isTransitioning } = useMutation({
+    mutationFn: (newStatus: InvoiceStatus) => {
+      const payload: {
+        newStatus: InvoiceStatus;
+        amountPaid?: number;
+      } = {
+        newStatus,
+      };
+
+      if (
+        newStatus === 'PAID' &&
+        invoiceDetails &&
+        Number.isFinite(invoiceDetails.totalAmount)
+      ) {
+        payload.amountPaid = invoiceDetails.totalAmount;
+      }
+
+      return InvoicesService.transitionInvoice(
+        selectedInvoiceId!,
+        businessId,
+        payload
+      );
+    },
+    onSuccess: (data) => {
+      // Update invoice details in cache
+      queryClient.setQueryData(
+        ['invoice-issued-details', selectedInvoiceId, businessId],
+        data
+      );
+      // Also invalidate the invoices list to refresh it
+      queryClient.invalidateQueries({
+        queryKey: ['invoices-issued', businessId],
+      });
+    },
+    onError: (error: unknown) => {
+      import('sonner').then(({ toast }) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : t.statusTransition?.errorMessage || t.fetchError
+        );
+      });
+    },
+  });
+
+  const invoices = useMemo(
+    () =>
+      Object.keys(pagesByNumber)
+        .map(Number)
+        .toSorted((a, b) => a - b)
+        .flatMap((page) => pagesByNumber[page] ?? []),
+    [pagesByNumber]
+  );
+  const totalPages = invoicesResponse?.totalPages ?? 0;
+
+  const filteredInvoices = useMemo(() => {
+    let results = invoices;
+
+    if (filterStatus !== 'ALL' && filterStatus !== 'PODIUM') {
+      results = results.filter((inv) => inv.status === filterStatus);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      results = results.filter((inv) => {
+        const searchFields = [
+          inv.invoiceNumber,
+          inv.recipient.displayName || inv.recipient.email || '',
+          inv.totalAmount.toString(),
+        ].map((f) => (f ? f.toLowerCase() : ''));
+        return searchFields.some((field) => field.includes(query));
+      });
+    }
+
+    return results;
+  }, [invoices, filterStatus, searchQuery]);
+
+  const podiumClients = useMemo(() => {
+    const podium = clientPodiumResponse?.podium ?? [];
+    if (!searchQuery.trim()) {
+      return podium;
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    return podium.filter((client) => {
+      const searchFields = [
+        client.clientName,
+        client.clientEmail,
+        client.totalPaidInvoices.toString(),
+        client.totalPaidAmount.toString(),
+      ].map((f) => f.toLowerCase());
+      return searchFields.some((field) => field.includes(query));
+    });
+  }, [clientPodiumResponse?.podium, searchQuery]);
 
   // Export Invoice to PDF
   const exportToPDF = () => {
@@ -169,10 +363,10 @@ export function ReceivedInvoices({
 
       for (const item of invoiceDetails.lineItems) {
         tableRows.push([
-          item.description || item.productName || t.unknown,
+          item.productName || item.description || t.unknown,
           item.quantity,
-          `${(item.unitPrice || 0).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
-          `${item.amount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+          `${item.unitPrice.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
+          `${(item.quantity * item.unitPrice).toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
         ]);
       }
 
@@ -192,7 +386,7 @@ export function ReceivedInvoices({
 
     doc.setFontSize(12);
     doc.setTextColor(0);
-    // @ts-expect-error - required by library
+    // @ts-expect-error - jspdf-autotable adds lastAutoTable to doc
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 55;
     doc.text(
       `${t.amountLabel}: ${invoiceDetails.totalAmount.toLocaleString(lang, { minimumFractionDigits: 2 })} ${invoiceDetails.currency}`,
@@ -200,35 +394,8 @@ export function ReceivedInvoices({
       finalY + 15
     );
 
-    doc.save(`Receipt_${invoiceDetails.invoiceNumber}.pdf`);
+    doc.save(`Invoice_${invoiceDetails.invoiceNumber}.pdf`);
   };
-
-  const invoices = useMemo(
-    () => invoicesResponse?.receipts ?? [],
-    [invoicesResponse?.receipts]
-  );
-
-  const filteredInvoices = useMemo(() => {
-    let results = invoices;
-
-    if (filterStatus !== 'ALL') {
-      results = results.filter((inv) => inv.invoiceStatus === filterStatus);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      results = results.filter((inv) => {
-        const searchFields = [
-          inv.invoiceNumber,
-          inv.issuerBusinessName,
-          inv.totalAmount.toString(),
-        ].map((f) => (f ? f.toLowerCase() : ''));
-        return searchFields.some((field) => field.includes(query));
-      });
-    }
-
-    return results;
-  }, [invoices, filterStatus, searchQuery]);
 
   const stats = useMemo(() => {
     const paid: Record<string, number> = {};
@@ -237,14 +404,14 @@ export function ReceivedInvoices({
     for (const inv of invoices) {
       const currency = inv.currency || 'USD';
 
-      if (inv.invoiceStatus === 'PAID' || inv.invoiceStatus === 'ARCHIVED') {
+      if (inv.status === 'PAID' || inv.status === 'ARCHIVED') {
         paid[currency] = (paid[currency] || 0) + inv.totalAmount;
       }
       if (
-        inv.invoiceStatus === 'ISSUED' ||
-        inv.invoiceStatus === 'VIEWED' ||
-        inv.invoiceStatus === 'PARTIAL' ||
-        inv.invoiceStatus === 'OVERDUE'
+        inv.status === 'ISSUED' ||
+        inv.status === 'VIEWED' ||
+        inv.status === 'PARTIAL' ||
+        inv.status === 'OVERDUE'
       ) {
         pending[currency] = (pending[currency] || 0) + inv.totalAmount;
       }
@@ -257,7 +424,7 @@ export function ReceivedInvoices({
     };
   }, [invoices]);
 
-  if (isLoading) {
+  if (isFetching && !invoicesResponse) {
     return (
       <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
         {/* Header Skeleton */}
@@ -292,11 +459,19 @@ export function ReceivedInvoices({
   return (
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t.receivedInvoices}
-        </h1>
-        <p className="text-muted-foreground">{t.receivedInvoicesDescription}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t.issuedInvoices}
+          </h1>
+          <p className="text-muted-foreground">{t.issuedInvoicesDescription}</p>
+        </div>
+        <Button size="lg" className="gap-2" asChild>
+          <Link href={`/${lang}/business/${businessId}/invoices/create`}>
+            <FileText className="h-5 w-5" />
+            {t.createInvoiceButton}
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -305,7 +480,7 @@ export function ReceivedInvoices({
           <CardHeader className="pb-2">
             <CardDescription>{t.totalInvoices}</CardDescription>
             <CardTitle className="text-3xl">
-              {isLoading ? '—' : stats.total}
+              {isLoading ? '—' : (invoicesResponse?.total ?? stats.total)}
             </CardTitle>
           </CardHeader>
           <CardContent />
@@ -370,7 +545,7 @@ export function ReceivedInvoices({
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>{t.invoiceList}</CardTitle>
+            <CardTitle>{t.issuedInvoicesList}</CardTitle>
             <CardDescription>
               {isLoading
                 ? '...'
@@ -410,35 +585,50 @@ export function ReceivedInvoices({
             >
               {t.filterAll}
             </Button>
-            {(['ISSUED', 'PAID', 'OVERDUE', 'PARTIAL'] as const).map(
-              (status) => {
-                const statusLabel =
-                  status === 'ISSUED'
+            <Button
+              size="sm"
+              variant={filterStatus === 'PODIUM' ? 'default' : 'outline'}
+              onClick={() => setFilterStatus('PODIUM')}
+              disabled={isFetching}
+              className={
+                filterStatus === 'PODIUM'
+                  ? 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700'
+                  : ''
+              }
+            >
+              {t.topPayingClientsFilter}
+            </Button>
+            {(['DRAFT', 'ISSUED', 'PAID', 'OVERDUE'] as const).map((status) => {
+              const statusLabel =
+                status === 'DRAFT'
+                  ? t.filterDraft
+                  : status === 'ISSUED'
                     ? t.filterIssued
                     : status === 'PAID'
                       ? t.filterPaid
-                      : status === 'OVERDUE'
-                        ? t.filterOverdue
-                        : t.filterPartial;
+                      : t.filterOverdue;
 
-                return (
-                  <Button
-                    key={status}
-                    size="sm"
-                    variant={filterStatus === status ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus(status)}
-                    disabled={isFetching}
-                  >
-                    {statusLabel}
-                  </Button>
-                );
-              }
-            )}
+              return (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={filterStatus === status ? 'default' : 'outline'}
+                  onClick={() => setFilterStatus(status)}
+                  disabled={isFetching}
+                >
+                  {statusLabel}
+                </Button>
+              );
+            })}
           </div>
         </CardHeader>
 
         <CardContent>
-          {filteredInvoices.length === 0 ? (
+          {(
+            filterStatus === 'PODIUM'
+              ? !isLoadingPodium && podiumClients.length === 0
+              : filteredInvoices.length === 0
+          ) ? (
             <div className="flex flex-col items-center gap-2 py-12 text-center">
               {searchQuery ? (
                 <>
@@ -452,14 +642,69 @@ export function ReceivedInvoices({
                   <Briefcase className="text-muted-foreground h-12 w-12" />
                   <div>
                     <p className="text-foreground font-medium">
-                      {t.noInvoices}
+                      {filterStatus === 'PODIUM'
+                        ? t.noTopPayingClients
+                        : t.noInvoices}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      {t.noReceivedInvoicesHint}
+                      {filterStatus === 'PODIUM'
+                        ? t.noTopPayingClientsHint
+                        : t.noIssuedInvoicesHint}
                     </p>
                   </div>
                 </>
               )}
+            </div>
+          ) : filterStatus === 'PODIUM' ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.rank}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
+                    <TableHead>{t.recipientEmailLabel}</TableHead>
+                    <TableHead className="text-right">{t.totalPaid}</TableHead>
+                    <TableHead className="text-right">
+                      {t.totalPaidInvoices || t.totalInvoices}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(podiumClients as ClientPodiumItem[]).map(
+                    (client, index) => {
+                      const rankBadge = client.medal || `${index + 1}.`;
+
+                      return (
+                        <TableRow
+                          key={client.clientId}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="font-medium">
+                            {rankBadge}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {client.clientName || t.unknownClient}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {client.clientEmail || '—'}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {client.totalPaidAmount.toLocaleString(lang, {
+                              minimumFractionDigits: 2,
+                            })}
+                            <span className="text-muted-foreground ml-1 text-xs">
+                              ({t.multiCurrency})
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {client.totalPaidInvoices}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+                  )}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -467,22 +712,23 @@ export function ReceivedInvoices({
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t.invoiceNumber}</TableHead>
-                    <TableHead>{t.from}</TableHead>
+                    <TableHead>{t.recipient}</TableHead>
                     <TableHead>{t.amount}</TableHead>
                     <TableHead>{t.status}</TableHead>
                     <TableHead>{t.issuedDate}</TableHead>
-                    <TableHead>{t.viewed}</TableHead>
                     <TableHead className="text-right">{t.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredInvoices.map((invoice) => (
+                  {filteredInvoices.map((invoice, _index) => (
                     <TableRow key={invoice.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">
                         {invoice.invoiceNumber}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {invoice.issuerBusinessName}
+                        {invoice.recipient.displayName ||
+                          invoice.recipient.email ||
+                          t.externalRecipient}
                       </TableCell>
                       <TableCell className="font-medium">
                         {invoice.totalAmount.toLocaleString(lang, {
@@ -491,31 +737,15 @@ export function ReceivedInvoices({
                         {invoice.currency}
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_COLORS[invoice.invoiceStatus]}>
+                        <Badge className={STATUS_COLORS[invoice.status]}>
                           <span className="mr-1">
-                            {STATUS_ICONS[invoice.invoiceStatus]}
+                            {STATUS_ICONS[invoice.status]}
                           </span>
-                          {getStatusLabel(invoice.invoiceStatus, dictionary)}
+                          {getStatusLabel(invoice.status, dictionary)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDate(invoice.issuedDate, lang)}
-                      </TableCell>
-                      <TableCell>
-                        {invoice.recipientViewed ? (
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4 text-green-600" />
-                            <span className="text-muted-foreground text-sm">
-                              {invoice.recipientViewedAt
-                                ? formatDate(invoice.recipientViewedAt, lang)
-                                : t.yesLabel}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            —
-                          </span>
-                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -535,26 +765,43 @@ export function ReceivedInvoices({
               </Table>
             </div>
           )}
+
+          {/* Load More Button */}
+          {filterStatus !== 'PODIUM' && currentPage < totalPages && (
+            <div className="flex justify-center border-t pt-4">
+              <Button
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={isFetching}
+                variant="outline"
+              >
+                {isFetching ? t.loadingMoreInvoices : t.loadMoreInvoices}
+              </Button>
+            </div>
+          )}
+
+          {filterStatus === 'PODIUM' && isLoadingPodium && (
+            <div className="text-muted-foreground flex justify-center border-t pt-4 text-sm">
+              {t.loadingTopPayingClients}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Invoice Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto border-0 p-0 shadow-2xl sm:rounded-2xl dark:bg-slate-950">
-          <div className="bg-primary/5 border-primary/10 border-b px-6 py-6">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
-              </DialogTitle>
-              <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
-                {invoiceDetails?.invoiceNumber || (
-                  <Skeleton className="h-4 w-32" />
-                )}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
+            </DialogTitle>
+            {invoiceDetails?.invoiceNumber && (
+              <DialogDescription>
+                {invoiceDetails.invoiceNumber}
               </DialogDescription>
-            </DialogHeader>
-          </div>
+            )}
+          </DialogHeader>
 
-          <div className="px-6 py-4">
+          <div>
             {isLoadingDetails ? (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -573,7 +820,7 @@ export function ReceivedInvoices({
             ) : invoiceDetails ? (
               <div className="space-y-8">
                 {/* Basic Info */}
-                <div className="bg-muted/30 grid grid-cols-2 gap-6 rounded-xl p-6 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                       {t.invoiceNumberLabel}
@@ -586,14 +833,40 @@ export function ReceivedInvoices({
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                       {t.statusLabel}
                     </p>
-                    <Badge
-                      className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
-                    >
-                      <span className="mr-1">
-                        {STATUS_ICONS[invoiceDetails.status]}
-                      </span>
-                      {getStatusLabel(invoiceDetails.status, dictionary)}
-                    </Badge>
+                    {(() => {
+                      const availableStatuses = [
+                        invoiceDetails.status,
+                        ...ALLOWED_STATUS_TRANSITIONS[invoiceDetails.status],
+                      ];
+
+                      return (
+                        <Select
+                          value={invoiceDetails.status}
+                          onValueChange={(newStatus) => {
+                            if (newStatus === 'PAID') {
+                              setPendingStatusChange('PAID');
+                            } else {
+                              transitionStatus(newStatus as InvoiceStatus);
+                            }
+                          }}
+                          disabled={isTransitioning}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableStatuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                <div className="flex items-center gap-2">
+                                  <span>{STATUS_ICONS[status]}</span>
+                                  {getStatusLabel(status, dictionary)}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      );
+                    })()}
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -608,7 +881,7 @@ export function ReceivedInvoices({
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      {t.columnIssuedDate}
+                      {t.issuedDateLabel}
                     </p>
                     <p className="font-medium">
                       {formatDate(invoiceDetails.issuedDate, lang)}
@@ -618,7 +891,7 @@ export function ReceivedInvoices({
 
                 {/* Description */}
                 {invoiceDetails.description && (
-                  <div className="border-border/50 bg-card rounded-xl border p-5 shadow-xs">
+                  <div>
                     <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
                       {t.descriptionLabel}
                     </p>
@@ -635,7 +908,7 @@ export function ReceivedInvoices({
                       <h4 className="text-lg font-semibold tracking-tight">
                         {t.lineItemsLabel}
                       </h4>
-                      <div className="border-border/50 overflow-hidden rounded-xl border shadow-xs">
+                      <div>
                         <Table>
                           <TableHeader className="bg-muted/50">
                             <TableRow>
@@ -663,12 +936,14 @@ export function ReceivedInvoices({
                                   {item.quantity}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                  {(item.unitPrice || 0).toLocaleString(lang, {
+                                  {item.unitPrice.toLocaleString(lang, {
                                     minimumFractionDigits: 2,
                                   })}
                                 </TableCell>
                                 <TableCell className="text-right font-semibold">
-                                  {item.amount.toLocaleString(lang, {
+                                  {(
+                                    item.quantity * item.unitPrice
+                                  ).toLocaleString(lang, {
                                     minimumFractionDigits: 2,
                                   })}
                                 </TableCell>
@@ -679,7 +954,7 @@ export function ReceivedInvoices({
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <div className="bg-primary/5 border-primary/10 flex items-center justify-between gap-12 rounded-xl border px-6 py-4">
+                        <div className="flex items-center justify-between gap-12">
                           <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
                             {t.amountLabel}
                           </span>
@@ -696,43 +971,91 @@ export function ReceivedInvoices({
                     </div>
                   )}
               </div>
+            ) : invoiceError ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground font-semibold">
+                  {t.failedToLoadDetails}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {invoiceError instanceof Error
+                    ? invoiceError.message
+                    : t.unknown}
+                </p>
+              </div>
             ) : (
-              <p className="text-muted-foreground">{t.fetchError}</p>
+              <p className="text-muted-foreground">{t.failedToLoadDetails}</p>
             )}
           </div>
 
-          <div className="bg-muted/20 border-t px-6 py-4">
-            <DialogFooter className="w-full sm:justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={exportToPDF}
-                className="hover:bg-muted gap-2 bg-white dark:bg-transparent"
-                disabled={isLoadingDetails || !invoiceDetails}
-              >
-                <Download className="h-4 w-4" />
-                {t.exportPDF}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={exportToPDF}
+              disabled={isLoadingDetails || !invoiceDetails}
+            >
+              <Download className="h-4 w-4" />
+              {t.exportPDF}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="default">
+                {t.closeButtonLabel}
               </Button>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="default"
-                  className="shadow-md transition-shadow hover:shadow-lg"
-                >
-                  {t.closeButtonLabel}
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </div>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for PAID Status */}
+      <Dialog
+        open={pendingStatusChange !== undefined && !!invoiceDetails}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.statusTransition.confirmTitle}</DialogTitle>
+            <DialogDescription>
+              {invoiceDetails
+                ? t.statusTransition.confirmDescription
+                    .replace(
+                      '{amount}',
+                      invoiceDetails.totalAmount.toLocaleString(lang, {
+                        minimumFractionDigits: 2,
+                      })
+                    )
+                    .replace('{currency}', invoiceDetails.currency)
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingStatusChange(undefined)}
+            >
+              {t.statusTransition.cancel}
+            </Button>
+            <Button
+              onClick={() => {
+                if (pendingStatusChange) {
+                  transitionStatus(pendingStatusChange);
+                }
+                setPendingStatusChange(undefined);
+              }}
+            >
+              {t.statusTransition.confirm}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* AI Chat Assistant - Business Mode */}
       <Chatbot
         businessId={businessId}
-        context="received"
+        context="issued"
         dictionary={dictionary}
-        key={`${businessId}-received`}
+        key={`${businessId}-issued`}
       />
     </div>
   );

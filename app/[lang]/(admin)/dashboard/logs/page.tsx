@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Logs from '@/components/Admin/Logs';
+import Logs from '@/components/app/dashboard/Logs';
 
 export default async function LogsPage({
   params,

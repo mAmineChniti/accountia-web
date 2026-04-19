@@ -1,4 +1,8 @@
-import type { CreateProductInput, UpdateProductInput } from '@/types/services';
+import type {
+  CreateProductInput,
+  UpdateProductInput,
+  BulkDeleteProductsInput,
+} from '@/types/services';
 import type {
   ProductListResponse,
   CreateProductResponse,
@@ -6,6 +10,7 @@ import type {
   UpdateProductResponse,
   ProductImportResponse,
   StockInsightsResponse,
+  BulkDeleteProductsResponse,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
@@ -184,6 +189,32 @@ export const ProductsService = {
       const result = await client
         .get(API_CONFIG.PRODUCTS.STOCK_INSIGHTS, { searchParams })
         .json<StockInsightsResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async bulkDeleteProducts(
+    businessId: string,
+    data: BulkDeleteProductsInput
+  ): Promise<BulkDeleteProductsResponse> {
+    if (
+      !businessId ||
+      typeof businessId !== 'string' ||
+      businessId.trim() === ''
+    ) {
+      throw new Error('Invalid businessId: must be a non-empty string');
+    }
+    const client = createAuthenticatedClient();
+    try {
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.PRODUCTS.BULK_DELETE, {
+          json: data,
+          searchParams,
+        })
+        .json<BulkDeleteProductsResponse>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

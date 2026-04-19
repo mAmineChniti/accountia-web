@@ -14,3 +14,5 @@ export * from './businessResponses';
 export * from './auditResponses';
 export * from './healthResponses';
 export * from './sharedTypes';
+export * from './accountantSchemas';
+export * from './accountantResponses';

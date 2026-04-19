@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Profile from '@/components/Profile/Profile';
+import Profile from '@/components/app/profile/Profile';
 
 export default async function ProfilePage({
   params,

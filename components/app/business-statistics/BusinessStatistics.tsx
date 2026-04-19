@@ -23,7 +23,8 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService, ProductsService } from '@/lib/requests';
-import { Chatbot } from '@/components/Business/Chatbot';
+import { formatICU } from '@/lib/icu-formatter';
+import { Chatbot } from '@/components/app/business/Chatbot';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Card,
@@ -1173,10 +1174,9 @@ export default function BusinessStatistics({
                             <p className="font-medium">{item.productName}</p>
                             <p className="text-muted-foreground text-xs">
                               {text.stockLabel}: {item.currentQuantity} |{' '}
-                              {text.soldLastPeriod.replace(
-                                '{days}',
-                                stockInsights.lookbackDays.toString()
-                              )}
+                              {formatICU(text.soldLastPeriod, {
+                                days: stockInsights.lookbackDays,
+                              })}
                               : {item.soldLastPeriod} | {text.dailyRate}:{' '}
                               {item.dailySalesRate}
                             </p>

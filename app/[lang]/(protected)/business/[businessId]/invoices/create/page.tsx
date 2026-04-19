@@ -1,4 +1,4 @@
-import { CreateBusinessInvoicePage } from '@/components/BusinessInvoices/CreateBusinessInvoicePage';
+import { CreateBusinessInvoicePage } from '@/components/app/business-invoices/CreateBusinessInvoicePage';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 
