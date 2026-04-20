@@ -16,7 +16,17 @@ export default async function VendorsPage({
 
   const myBusiness = businessesData.businesses.find((b) => b.id === businessId);
   const role = myBusiness?.role ?? 'member';
-  const canManage = role === 'owner' || role === 'OWNER' || role === 'admin' || role === 'ADMIN';
+  const canManage =
+    role === 'owner' ||
+    role === 'OWNER' ||
+    role === 'admin' ||
+    role === 'ADMIN';
 
-  return <BusinessVendors businessId={businessId} dictionary={dictionary} canManage={canManage} />;
+  return (
+    <BusinessVendors
+      businessId={businessId}
+      dictionary={dictionary}
+      canManage={canManage}
+    />
+  );
 }

@@ -2,11 +2,27 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Link2, Copy, Check, Loader2, ExternalLink, ShieldCheck } from 'lucide-react';
+import {
+  Link2,
+  Copy,
+  Check,
+  Loader2,
+  ExternalLink,
+  ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ClientPortalAdminService, type GeneratePortalTokenResponse } from '@/lib/requests';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  ClientPortalAdminService,
+  type GeneratePortalTokenResponse,
+} from '@/lib/requests';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,11 +37,13 @@ export function BusinessClientPortal({
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [expiryDays, setExpiryDays] = useState('30');
-  const [result, setResult] = useState<GeneratePortalTokenResponse | undefined>(undefined);
+  const [result, setResult] = useState<
+    GeneratePortalTokenResponse | undefined
+  >();
   const [copied, setCopied] = useState(false);
 
   const fullPortalUrl = result
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/en/portal/${result.token}`
+    ? `${globalThis.window === undefined ? '' : globalThis.location.origin}/en/portal/${result.token}`
     : '';
 
   const generateMutation = useMutation({
@@ -34,13 +52,14 @@ export function BusinessClientPortal({
         businessId,
         clientEmail: email.trim(),
         clientName: name.trim() || undefined,
-        expiryDays: parseInt(expiryDays) || 30,
+        expiryDays: Number.parseInt(expiryDays) || 30,
       }),
     onSuccess: (data) => {
       setResult(data);
       toast.success('Portal link generated successfully');
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to generate link'),
+    onError: (err: Error) =>
+      toast.error(err.message || 'Failed to generate link'),
   });
 
   function handleCopy() {
@@ -65,7 +84,8 @@ export function BusinessClientPortal({
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">Client Portal</h1>
         <p className="text-muted-foreground">
-          Generate secure, time-limited links that let your clients view their invoices without logging in.
+          Generate secure, time-limited links that let your clients view their
+          invoices without logging in.
         </p>
       </div>
 
@@ -74,11 +94,12 @@ export function BusinessClientPortal({
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Link2 className="h-5 w-5 text-primary" />
+              <Link2 className="text-primary h-5 w-5" />
               Generate Portal Link
             </CardTitle>
             <CardDescription>
-              The client will see all invoices your business has issued to their email address.
+              The client will see all invoices your business has issued to their
+              email address.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -160,9 +181,16 @@ export function BusinessClientPortal({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
-                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{fullPortalUrl}</span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleCopy}>
+                <div className="bg-muted/40 flex items-center gap-2 rounded-lg border px-3 py-2">
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs">
+                    {fullPortalUrl}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    onClick={handleCopy}
+                  >
                     {copied ? (
                       <Check className="h-3.5 w-3.5 text-green-600" />
                     ) : (
@@ -180,8 +208,9 @@ export function BusinessClientPortal({
                   Open portal (preview as client)
                 </Button>
                 <p className="text-muted-foreground text-xs">
-                  Share this link with <strong>{email}</strong>. They can open it in any browser — no login required.
-                  Generating a new link for the same email invalidates the previous one.
+                  Share this link with <strong>{email}</strong>. They can open
+                  it in any browser — no login required. Generating a new link
+                  for the same email invalidates the previous one.
                 </p>
               </CardContent>
             </Card>
@@ -201,7 +230,8 @@ export function BusinessClientPortal({
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">2.</span>
-                    Click <strong>Generate Link</strong> — a secure token is created (or refreshed if one already exists for that email).
+                    Click <strong>Generate Link</strong> — a secure token is
+                    created (or refreshed if one already exists for that email).
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">3.</span>
@@ -209,11 +239,14 @@ export function BusinessClientPortal({
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">4.</span>
-                    The client opens the link in any browser — they see all invoices you&apos;ve issued to their email, can view details, and download PDFs.
+                    The client opens the link in any browser — they see all
+                    invoices you&apos;ve issued to their email, can view
+                    details, and download PDFs.
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">5.</span>
-                    The link auto-expires after the chosen number of days. Generate a new one anytime.
+                    The link auto-expires after the chosen number of days.
+                    Generate a new one anytime.
                   </li>
                 </ol>
               </CardContent>

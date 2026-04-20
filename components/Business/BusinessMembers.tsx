@@ -83,9 +83,12 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
       toast.success(data.message ?? 'Invitation sent successfully');
       reset();
       setIsInviteOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['business-clients', businessId] });
+      queryClient.invalidateQueries({
+        queryKey: ['business-clients', businessId],
+      });
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to send invitation'),
+    onError: (err: Error) =>
+      toast.error(err.message || 'Failed to send invitation'),
   });
 
   const members: ClientData[] = data?.clients ?? [];
@@ -96,7 +99,9 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
           <span>Failed to load members</span>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -107,7 +112,9 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Team Members</h1>
-          <p className="text-muted-foreground">Manage who has access to this business</p>
+          <p className="text-muted-foreground">
+            Manage who has access to this business
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsInviteOpen(true)}>
           <UserPlus className="h-4 w-4" />
@@ -115,11 +122,13 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
         </Button>
       </div>
 
-      <Card className="border-0 bg-white/90 shadow-sm dark:bg-card/90">
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4" />
-            {isLoading ? 'Loading…' : `${members.length} member${members.length !== 1 ? 's' : ''}`}
+            {isLoading
+              ? 'Loading…'
+              : `${members.length} member${members.length === 1 ? '' : 's'}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -136,7 +145,11 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
               <p className="text-muted-foreground text-sm">
                 Invite team members to collaborate on this business
               </p>
-              <Button variant="outline" className="gap-2 mt-2" onClick={() => setIsInviteOpen(true)}>
+              <Button
+                variant="outline"
+                className="mt-2 gap-2"
+                onClick={() => setIsInviteOpen(true)}
+              >
                 <UserPlus className="h-4 w-4" /> Send First Invite
               </Button>
             </div>
@@ -152,7 +165,10 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
               </TableHeader>
               <TableBody>
                 {members.map((member) => (
-                  <TableRow key={member.id} className="border-border/30 hover:bg-primary/5">
+                  <TableRow
+                    key={member.id}
+                    className="border-border/30 hover:bg-primary/5"
+                  >
                     <TableCell className="font-medium">
                       {member.firstName} {member.lastName}
                     </TableCell>
@@ -193,7 +209,9 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
                 {...register('invitedEmail')}
               />
               {errors.invitedEmail && (
-                <p className="text-destructive text-sm">{errors.invitedEmail.message}</p>
+                <p className="text-destructive text-sm">
+                  {errors.invitedEmail.message}
+                </p>
               )}
             </div>
 
@@ -201,7 +219,9 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
               <Label>Role</Label>
               <Select
                 defaultValue="MEMBER"
-                onValueChange={(v) => setValue('businessRole', v as 'ADMIN' | 'MEMBER')}
+                onValueChange={(v) =>
+                  setValue('businessRole', v as 'ADMIN' | 'MEMBER')
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -211,7 +231,8 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
                     <div className="flex flex-col">
                       <span className="font-medium">Admin</span>
                       <span className="text-muted-foreground text-xs">
-                        Can manage invoices, expenses, vendors — cannot approve POs
+                        Can manage invoices, expenses, vendors — cannot approve
+                        POs
                       </span>
                     </div>
                   </SelectItem>
@@ -219,14 +240,17 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
                     <div className="flex flex-col">
                       <span className="font-medium">Member</span>
                       <span className="text-muted-foreground text-xs">
-                        Can create expenses and POs — cannot approve or manage settings
+                        Can create expenses and POs — cannot approve or manage
+                        settings
                       </span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
               {errors.businessRole && (
-                <p className="text-destructive text-sm">{errors.businessRole.message}</p>
+                <p className="text-destructive text-sm">
+                  {errors.businessRole.message}
+                </p>
               )}
             </div>
 
@@ -237,10 +261,18 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancel</Button>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
               </DialogClose>
-              <Button type="submit" disabled={inviteMutation.isPending} className="gap-2">
-                {inviteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                disabled={inviteMutation.isPending}
+                className="gap-2"
+              >
+                {inviteMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
                 Send Invite
               </Button>
             </DialogFooter>
