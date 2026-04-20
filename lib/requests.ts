@@ -196,6 +196,11 @@ export const API_CONFIG = {
     RECEIVE: 'purchase-orders/{id}/receive',
     DELETE: 'purchase-orders/{id}',
   },
+  COLLECTIONS: {
+    DASHBOARD: 'collections/dashboard',
+    RISK_SCORES: 'collections/risk-scores',
+    GENERATE_REMINDER: 'collections/invoices/{id}/generate-reminder',
+  },
   CLIENT_PORTAL: {
     GENERATE_TOKEN: 'client-portal/generate-token',
     VERIFY: 'client-portal/verify/{token}',

@@ -23,3 +23,4 @@ export * from './purchaseOrdersResponses';
 export * from './reportsResponses';
 export * from './commentsResponses';
 export * from './recurringInvoicesResponses';
+export * from './collectionsResponses';
