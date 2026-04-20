@@ -108,6 +108,14 @@ export function localizeErrorMessage(
   const message = extractErrorMessage(error);
   if (!message) return fallback;
 
+  const lowerMessage = message.toLowerCase();
+  if (
+    lowerMessage.includes('invalid currency') ||
+    lowerMessage.includes('unsupported invoice currency')
+  ) {
+    return dictionary.errorMessages.invalidCurrency ?? fallback;
+  }
+
   const messageKey = ERROR_MESSAGE_TO_KEY[message as ErrorMessageKey];
   if (messageKey) {
     return dictionary.errorMessages[messageKey] ?? fallback;

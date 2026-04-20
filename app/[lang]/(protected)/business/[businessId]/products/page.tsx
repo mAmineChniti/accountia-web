@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessProducts } from '@/components/Business/BusinessProducts';
+import { BusinessProducts } from '@/components/app/business-products/BusinessProducts';
 
 export default async function BusinessProductsPage({
   params,
@@ -9,5 +9,11 @@ export default async function BusinessProductsPage({
 }) {
   const { lang, businessId } = await params;
   const dictionary = await getDictionary(lang);
-  return <BusinessProducts businessId={businessId} dictionary={dictionary} />;
+  return (
+    <BusinessProducts
+      businessId={businessId}
+      lang={lang}
+      dictionary={dictionary}
+    />
+  );
 }

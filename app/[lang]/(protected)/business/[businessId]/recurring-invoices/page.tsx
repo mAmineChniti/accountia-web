@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { RecurringInvoices } from '@/components/RecurringInvoices/RecurringInvoices';
+import { RecurringInvoices } from '@/components/app/recurring-invoices/RecurringInvoices';
 
 export default async function RecurringInvoicesPage({
   params,

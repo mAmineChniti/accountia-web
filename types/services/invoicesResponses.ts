@@ -132,3 +132,9 @@ export interface InvoiceReceiptListResponseDto {
 export interface ImportTemplateResponseDto {
   [key: string]: unknown;
 }
+
+export interface InvoiceCheckoutSessionResponse {
+  clientSecret: string;
+  sessionId: string;
+  checkoutUrl: string;
+}

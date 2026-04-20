@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Admin from '@/components/Admin/Admin';
+import Admin from '@/components/app/dashboard/Admin';
 
 export default async function AdminPage({
   params,

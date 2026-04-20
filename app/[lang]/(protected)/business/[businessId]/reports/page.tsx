@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { VatReport } from '@/components/Reports/VatReport';
+import { VatReport } from '@/components/app/reports/VatReport';
 
 export default async function ReportsPage({
   params,

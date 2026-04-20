@@ -20,6 +20,8 @@ import {
   RefreshCw,
   Users,
   Globe,
+  UserPlus,
+  Calculator,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
@@ -252,6 +254,7 @@ export default function UserSidebar({
                 <SidebarMenu className="gap-2">
                   {businesses.map((business) => {
                     const businessHref = `/${lang}/business/${business.id}`;
+                    const invitesHref = `/${lang}/business/${business.id}/invites`;
                     const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
                     const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
                     const statisticsHref = `/${lang}/business/${business.id}/statistics`;
@@ -263,8 +266,11 @@ export default function UserSidebar({
                     const recurringInvoicesHref = `/${lang}/business/${business.id}/recurring-invoices`;
                     const membersHref = `/${lang}/business/${business.id}/members`;
                     const clientPortalHref = `/${lang}/business/${business.id}/client-portal`;
+                    const accountantHref = `/${lang}/business/${business.id}/accountant`;
+                    const productsHref = `/${lang}/business/${business.id}/products`;
                     const isBusinessActive =
                       pathname === businessHref ||
+                      pathname === invitesHref ||
                       pathname === issuedInvoicesHref ||
                       pathname === receivedInvoicesHref ||
                       pathname === statisticsHref ||
@@ -275,7 +281,9 @@ export default function UserSidebar({
                       pathname === purchaseOrdersHref ||
                       pathname === recurringInvoicesHref ||
                       pathname === membersHref ||
-                      pathname === clientPortalHref;
+                      pathname === clientPortalHref ||
+                      pathname === accountantHref ||
+                      pathname === productsHref;
                     const isExpanded = expandedBusinesses.has(business.id);
 
                     return (
@@ -337,17 +345,41 @@ export default function UserSidebar({
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton
                                 asChild
-                                isActive={
-                                  pathname ===
-                                  `/${lang}/business/${business.id}/products`
-                                }
+                                isActive={pathname === invitesHref}
                               >
-                                <Link
-                                  href={`/${lang}/business/${business.id}/products`}
-                                >
+                                <Link href={invitesHref}>
+                                  <UserPlus className="h-4 w-4" />
+                                  <span>
+                                    {
+                                      dictionary.pages.business.invites
+                                        .sectionTitle
+                                    }
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === productsHref}
+                              >
+                                <Link href={productsHref}>
                                   <Package className="h-4 w-4" />
                                   <span>
                                     {dictionary.pages.business.viewProducts}
+                                  </span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === accountantHref}
+                              >
+                                <Link href={accountantHref}>
+                                  <Calculator className="h-4 w-4" />
+                                  <span>
+                                    {dictionary.pages.businessAccountant.title}
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>

@@ -7,3 +7,4 @@ export { ChatService } from './chat';
 export { NotificationsService } from './notifications';
 export { AuditService } from './audit';
 export { CollectionsService } from './collections';
+export { AccountantService } from './accountant';

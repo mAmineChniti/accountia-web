@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessPurchaseOrders } from '@/components/PurchaseOrders/BusinessPurchaseOrders';
+import { BusinessPurchaseOrders } from '@/components/app/business-purchase-orders/BusinessPurchaseOrders';
 import { BusinessService } from '@/lib/services/business';
 
 export default async function PurchaseOrdersPage({

@@ -1,4 +1,9 @@
-import { getTokenAllowExpired, setTokens } from '@/actions/cookies';
+import {
+  getTokenAllowExpired,
+  setTokens,
+  setUser,
+  getUser,
+} from '@/actions/cookies';
 import type {
   RegisterInput,
   LoginInput,
@@ -43,8 +48,24 @@ import {
   API_CONFIG,
 } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
+import type { UserPayload } from '@/types/services';
 
 let refreshInFlightPromise: Promise<RefreshTokenResponse> | undefined;
+
+async function syncUserCookie(user: UserPayload): Promise<void> {
+  const currentUser = await getUser();
+  await setUser({
+    userId: user.id,
+    username: user.username,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phoneNumber: user.phoneNumber,
+    birthdate: user.birthdate,
+    role: user.role || 'CLIENT',
+    loginTime: currentUser?.loginTime ?? new Date().toISOString(),
+  });
+}
 
 export const AuthService = {
   getGoogleAuthUrl(options: {
@@ -323,6 +344,12 @@ export const AuthService = {
           json: data,
         })
         .json<UpdateUserResponse>();
+
+      // Update user cookie with new user data, preserving existing loginTime
+      if (result.user) {
+        await syncUserCookie(result.user);
+      }
+
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -337,6 +364,12 @@ export const AuthService = {
           json: data,
         })
         .json<UpdateUserResponse>();
+
+      // Update user cookie with new user data, preserving existing loginTime
+      if (result.user) {
+        await syncUserCookie(result.user);
+      }
+
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

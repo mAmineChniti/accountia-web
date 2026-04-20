@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Register from '@/components/Register/Register';
+import Register from '@/components/app/auth/Register';
 
 export default async function RegisterPage({
   params,

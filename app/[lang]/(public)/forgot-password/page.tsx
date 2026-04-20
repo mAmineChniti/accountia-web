@@ -1,8 +1,8 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { Suspense } from 'react';
-import ForgotPasswordPage from '@/components/ForgotPassword/ForgotPassword';
-import ForgotPasswordSkeleton from '@/components/ForgotPassword/ForgotPasswordSkeleton';
+import ForgotPasswordPage from '@/components/app/auth/ForgotPassword';
+import ForgotPasswordSkeleton from '@/components/app/auth/ForgotPasswordSkeleton';
 
 export default async function ForgotPassword({
   params,

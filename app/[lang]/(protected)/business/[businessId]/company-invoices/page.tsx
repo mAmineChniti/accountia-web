@@ -1,4 +1,4 @@
-import { ReceivedInvoices } from '@/components/BusinessInvoices/ReceivedInvoices';
+import { ReceivedInvoices } from '@/components/app/business-invoices/ReceivedInvoices';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 

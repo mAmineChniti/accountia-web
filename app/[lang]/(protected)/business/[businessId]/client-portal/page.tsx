@@ -1,5 +1,5 @@
 import { type Locale } from '@/i18n-config';
-import { BusinessClientPortal } from '@/components/ClientPortal/BusinessClientPortal';
+import { BusinessClientPortal } from '@/components/app/business-client-portal/BusinessClientPortal';
 import { BusinessService } from '@/lib/services/business';
 
 export default async function ClientPortalPage({

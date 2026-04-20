@@ -1,4 +1,4 @@
-import { IssuedInvoices } from '@/components/BusinessInvoices/IssuedInvoices';
+import { IssuedInvoices } from '@/components/app/business-invoices/IssuedInvoices';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { requireAuth } from '@/actions/session';

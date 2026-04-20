@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 const localeNames: Record<Locale, string> = {
   en: 'English',
@@ -70,7 +71,7 @@ export default function LocaleSwitcher() {
           return (
             <DropdownMenuItem
               key={locale}
-              className={isActive ? 'bg-accent text-accent-foreground' : ''}
+              className={cn(isActive && 'bg-accent text-accent-foreground')}
               onClick={() =>
                 handleLocaleClick(locale, redirectedPathname(locale))
               }

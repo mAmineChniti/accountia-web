@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessAnalytics } from '@/components/Analytics/BusinessAnalytics';
+import { BusinessAnalytics } from '@/components/app/business-analytics/BusinessAnalytics';
 
 export default async function AnalyticsPage({
   params,

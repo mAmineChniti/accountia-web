@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Invoices from '@/components/Invoices/Invoices';
+import Invoices from '@/components/app/invoices/Invoices';
 
 export default async function InvoicesPage({
   params,

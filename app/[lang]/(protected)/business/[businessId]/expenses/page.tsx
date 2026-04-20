@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessExpenses } from '@/components/Expenses/BusinessExpenses';
+import { BusinessExpenses } from '@/components/app/business-expenses/BusinessExpenses';
 
 export default async function ExpensesPage({
   params,

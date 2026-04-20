@@ -24,3 +24,5 @@ export * from './reportsResponses';
 export * from './commentsResponses';
 export * from './recurringInvoicesResponses';
 export * from './collectionsResponses';
+export * from './accountantSchemas';
+export * from './accountantResponses';

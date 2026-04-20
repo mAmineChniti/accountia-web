@@ -1,4 +1,4 @@
-import BusinessStatistics from '@/components/Business/BusinessStatistics';
+import BusinessStatistics from '@/components/app/business-statistics/BusinessStatistics';
 import { type Locale } from '@/i18n-config';
 import { getDictionary } from '@/get-dictionary';
 

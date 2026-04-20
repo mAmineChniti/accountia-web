@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import OAuthCallback from '@/components/OAuthCallback/OAuthCallback';
+import OAuthCallback from '@/components/app/auth/OAuthCallback';
 
 export default async function OAuthCallbackPage({
   params,

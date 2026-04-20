@@ -97,19 +97,25 @@ export const API_CONFIG = {
     REVIEW_APPLICATION: 'business/applications/{id}/review',
     MY_BUSINESSES: 'business/my-businesses',
     ALL_BUSINESSES: 'business/all',
-    GET_BUSINESS: 'business/{id}',
-    UPDATE_BUSINESS: 'business/{id}',
-    DELETE_BUSINESS: 'business/{id}',
-    ASSIGN_USER: 'business/{id}/users',
-    UNASSIGN_USER: 'business/{id}/users/{userId}',
-    TENANT_METADATA: 'business/{id}/tenant/metadata',
-    GET_CLIENTS: 'business/{id}/clients',
+    GET_BUSINESS: 'business/details',
+    UPDATE_BUSINESS: 'business/update',
+    DELETE_BUSINESS: 'business/delete',
+    ASSIGN_USER: 'business/users',
+    UNASSIGN_USER: 'business/users/{userId}',
+    TENANT_METADATA: 'business/tenant/metadata',
+    GET_CLIENTS: 'business/clients',
     CHANGE_CLIENT_ROLE: 'business/{id}/clients/{clientId}/role',
-    DELETE_CLIENT: 'business/{id}/clients/{clientId}',
+    DELETE_CLIENT: 'business/clients/{clientId}',
     GET_STATISTICS: 'business/statistics',
     GET_CLIENT_PODIUM: 'business/client-podium',
-    INVITE_USER: 'business/{id}/invites',
-    RESEND_INVITE: 'business/{id}/invites/resend',
+    GET_OTHER_BUSINESSES: 'business/other',
+    INVITE_USER: 'business/invites',
+    RESEND_INVITE: 'business/invites/resend',
+    GET_PENDING_INVITES: 'business/invites/pending',
+    REVOKE_INVITE: 'business/invites/{inviteId}',
+    STRIPE_ONBOARDING_LINK: 'business/stripe/onboarding-link',
+    STRIPE_STATUS: 'business/stripe/status',
+    GET_TEAM: 'business/team',
   },
   PRODUCTS: {
     CREATE: 'products',
@@ -118,6 +124,8 @@ export const API_CONFIG = {
     UPDATE: 'products/{id}',
     DELETE: 'products/{id}',
     IMPORT: 'products/import',
+    STOCK_INSIGHTS: 'products/stock-insights',
+    BULK_DELETE: 'products/bulk-delete',
   },
   INVOICES: {
     // Issuer Endpoints
@@ -134,6 +142,10 @@ export const API_CONFIG = {
     GET_RECEIVED_DETAILS: 'invoices/received/{receiptId}/details',
     GET_RECEIVED_INDIVIDUAL_DETAILS:
       'invoices/received/individual/{receiptId}/details',
+    CREATE_INDIVIDUAL_CHECKOUT:
+      'invoices/received/individual/{receiptId}/payments/checkout',
+    CREATE_INDIVIDUAL_MOCK_PAYMENT:
+      'invoices/received/individual/{receiptId}/payments/mock',
   },
   CHAT: {
     SEND_MESSAGE: 'chat/message',
@@ -207,6 +219,16 @@ export const API_CONFIG = {
     INVOICES: 'client-portal/{token}/invoices',
     INVOICE_DETAIL: 'client-portal/{token}/invoices/{invoiceId}',
   },
+  ACCOUNTANT: {
+    CREATE_JOB: 'accountant/jobs',
+    LIST_JOBS: 'accountant/jobs',
+    GET_JOB: 'accountant/jobs/{taskId}',
+    GET_JOB_RESULTS: 'accountant/jobs/{taskId}/results',
+    GET_HISTORY: 'accountant/history',
+    GET_WORK: 'accountant/work',
+    GET_TAXES: 'accountant/taxes',
+    HEALTH: 'accountant/health',
+  },
 } as const;
 
 export const createAuthenticatedClient = () => {
@@ -264,3 +286,4 @@ export { CommentsService } from '@/lib/services/comments';
 export { RecurringInvoicesService } from '@/lib/services/recurring-invoices';
 export { ClientPortalAdminService } from '@/lib/services/client-portal-admin';
 export type { GeneratePortalTokenResponse } from '@/lib/services/client-portal-admin';
+export { AccountantService } from '@/lib/services/accountant';

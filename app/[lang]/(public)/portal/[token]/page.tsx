@@ -1,5 +1,5 @@
 import { type Locale } from '@/i18n-config';
-import { ClientPortal } from '@/components/ClientPortal/ClientPortal';
+import { ClientPortal } from '@/components/app/client-portal/ClientPortal';
 
 export default async function PortalPage({
   params,

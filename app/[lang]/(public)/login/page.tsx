@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import Login from '@/components/Login/Login';
+import Login from '@/components/app/auth/Login';
 
 export default async function LoginPage({
   params,

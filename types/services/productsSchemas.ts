@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const CreateProductSchema = z
   .object({
-    businessId: z.string().min(1, 'Business ID is required'),
     name: z.string().min(1, 'Product name is required'),
     description: z.string().min(1, 'Product description is required'),
     unitPrice: z.number().min(0, 'Unit price must be non-negative'),
@@ -24,7 +23,6 @@ export const CreateProductSchema = z
 
 export const UpdateProductSchema = z
   .object({
-    businessId: z.string().min(1, 'Business ID is required'),
     name: z.string().min(1).optional(),
     description: z.string().min(1, 'Description must not be empty').optional(),
     unitPrice: z.number().min(0).optional(),

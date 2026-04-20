@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { formatICU } from '@/lib/icu-formatter';
 import { type Dictionary } from '@/get-dictionary';
 
 // Get notification icon based on type
@@ -69,11 +71,11 @@ export function Notifications({
 
     if (seconds < 60) return t.justNow;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return t.minutesAgo.replace('{count}', String(minutes));
+    if (minutes < 60) return formatICU(t.minutesAgo, { count: minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return t.hoursAgo.replace('{count}', String(hours));
+    if (hours < 24) return formatICU(t.hoursAgo, { count: hours });
     const days = Math.floor(hours / 24);
-    if (days < 7) return t.daysAgo.replace('{count}', String(days));
+    if (days < 7) return formatICU(t.daysAgo, { count: days });
     return date.toLocaleDateString(lang);
   };
 
@@ -149,11 +151,10 @@ export function Notifications({
                         }
                       }}
                       disabled={isMarkingAsRead}
-                      className={`hover:bg-accent w-full px-4 py-3 text-left transition-colors ${
-                        notification.isRead
-                          ? ''
-                          : 'bg-blue-50 dark:bg-blue-950/20'
-                      }`}
+                      className={cn(
+                        'hover:bg-accent w-full px-4 py-3 text-left transition-colors',
+                        !notification.isRead && 'bg-blue-50 dark:bg-blue-950/20'
+                      )}
                     >
                       <div className="flex items-start gap-3">
                         {/* Icon */}
@@ -164,11 +165,12 @@ export function Notifications({
                         {/* Content */}
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-sm ${
+                            className={cn(
+                              'text-sm',
                               notification.isRead
                                 ? 'text-muted-foreground'
                                 : 'text-foreground font-medium'
-                            }`}
+                            )}
                           >
                             {notification.message}
                           </p>

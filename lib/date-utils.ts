@@ -19,7 +19,7 @@ export function formatDate(
   };
 
   return dateObj.toLocaleDateString(
-    lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-US',
+    lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-GB',
     options
   );
 }

@@ -1,6 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
-import { BusinessVendors } from '@/components/Vendors/BusinessVendors';
+import { BusinessVendors } from '@/components/app/business-vendors/BusinessVendors';
 import { BusinessService } from '@/lib/services/business';
 
 export default async function VendorsPage({
