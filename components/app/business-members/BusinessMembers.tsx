@@ -75,10 +75,7 @@ export function BusinessMembers({ businessId }: { businessId: string }) {
 
   const inviteMutation = useMutation({
     mutationFn: (values: InviteInput) =>
-      BusinessService.inviteBusinessUser(businessId, {
-        ...values,
-        businessId,
-      }),
+      BusinessService.inviteBusinessUser(businessId, values),
     onSuccess: (data) => {
       toast.success(data.message ?? 'Invitation sent successfully');
       reset();

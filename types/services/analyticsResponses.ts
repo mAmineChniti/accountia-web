@@ -1,6 +1,6 @@
 import { type BaseResponse } from './sharedTypes';
 
-export interface FinancialSummary {
+export interface AnalyticsFinancialSummary {
   totalRevenue: number;
   totalOutstanding: number;
   totalOverdue: number;
@@ -43,7 +43,7 @@ export interface CashFlowForecast {
 }
 
 export interface AnalyticsDashboardResponse extends BaseResponse {
-  summary: FinancialSummary;
+  summary: AnalyticsFinancialSummary;
   revenueTimeline: RevenueDataPoint[];
   arAging: AgingBucket[];
   topClients: TopClient[];
