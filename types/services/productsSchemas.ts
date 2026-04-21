@@ -45,3 +45,8 @@ export const UpdateProductSchema = z
 
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 export type UpdateProductInput = z.infer<typeof UpdateProductSchema>;
+
+// Input for bulk delete products API
+export type BulkDeleteProductsInput = {
+  ids: string[];
+};

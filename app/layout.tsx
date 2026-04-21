@@ -6,6 +6,7 @@ import { Providers } from '@/components/reusable/providers';
 import { TokenExpiration } from '@/components/reusable/token-expiration';
 import { FocusRouteHandler } from '@/components/reusable/focus-route-handler';
 import { headers } from 'next/headers';
+import { cn } from '@/lib/utils';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -49,7 +50,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoSansArabic.variable} h-full antialiased ${isArabic ? 'font-arabic' : 'font-sans'}`}
+        className={cn(
+          geistSans.variable,
+          geistMono.variable,
+          notoSansArabic.variable,
+          'h-full antialiased',
+          isArabic ? 'font-arabic' : 'font-sans'
+        )}
       >
         <Providers>
           <FocusRouteHandler />

@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
 import type { InvoiceStatus, InvoiceResponse } from '@/types/services';
+import { cn } from '@/lib/utils';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -587,7 +588,10 @@ export function ReceivedInvoices({
                       {t.statusLabel}
                     </p>
                     <Badge
-                      className={`${STATUS_COLORS[invoiceDetails.status]} shadow-xs`}
+                      className={cn(
+                        STATUS_COLORS[invoiceDetails.status],
+                        'shadow-xs'
+                      )}
                     >
                       <span className="mr-1">
                         {STATUS_ICONS[invoiceDetails.status]}

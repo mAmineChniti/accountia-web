@@ -16,10 +16,16 @@ export default async function AdminLayout({
   const locale = lang as Locale;
   const session = await requireAdmin(`/${lang}/login`);
   const dictionary = await getDictionary(locale);
+  const isRTL = locale === 'ar';
 
   return (
     <SidebarProvider>
-      <UserSidebar lang={locale} dictionary={dictionary} user={session.user} />
+      <UserSidebar
+        lang={locale}
+        dictionary={dictionary}
+        user={session.user}
+        side={isRTL ? 'right' : 'left'}
+      />
       <SidebarInset>
         <main className="flex-1">{children}</main>
       </SidebarInset>

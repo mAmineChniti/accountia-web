@@ -17,6 +17,7 @@ export function useFocusRoute() {
       const h1 = document.querySelector('h1') as HTMLElement | null;
       if (h1) {
         h1.tabIndex = -1;
+        h1.classList.add('outline-none');
         h1.focus();
         return;
       }
@@ -26,12 +27,14 @@ export function useFocusRoute() {
       ) as HTMLElement | null;
       if (main) {
         main.tabIndex = -1;
+        main.classList.add('outline-none');
         main.focus();
         return;
       }
 
       // Fallback: focus body
       document.body.tabIndex = -1;
+      document.body.classList.add('outline-none');
       document.body.focus();
     }, 100);
 
