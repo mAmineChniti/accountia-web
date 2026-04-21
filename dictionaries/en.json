@@ -768,7 +768,8 @@
         "connectionFailed": "Connection failed",
         "ariaLabel": "Chat with Accountia AI",
         "aiResponse": "AI response",
-        "userMessage": "Your message"
+        "userMessage": "Your message",
+        "connecting": "Connecting..."
       }
     },
     "notifications": {

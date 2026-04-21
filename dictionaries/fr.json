@@ -768,7 +768,8 @@
         "errorTryAgain": "Veuillez réessayer.",
         "ariaLabel": "Discuter avec Accountia AI",
         "aiResponse": "Réponse de l'IA",
-        "userMessage": "Votre message"
+        "userMessage": "Votre message",
+        "connecting": "Connexion en cours..."
       }
     },
     "notifications": {

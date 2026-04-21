@@ -1288,7 +1288,8 @@ export default function Invoices({
                 stripe={stripePromise}
                 options={{
                   clientSecret: paymentClientSecret,
-                  onComplete: () => {
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                  onComplete: async () => {
                     const sessionId = activeSessionId;
                     const receiptId = activeReceiptId;
 
@@ -1297,26 +1298,27 @@ export default function Invoices({
                     setActiveReceiptId(undefined);
                     setPaymentInvoiceLabel('');
 
-                    // Appeler le endpoint de finalisation pour forcer la mise à jour sans attendre le webhook
-                    if (sessionId && receiptId) {
-                      publicClient
-                        .post(
+                    try {
+                      // Appeler le endpoint de finalisation pour forcer la mise à jour sans attendre le webhook
+                      if (sessionId && receiptId) {
+                        await publicClient.post(
                           `invoices/payments/confirm?session_id=${sessionId}&receipt_id=${receiptId}`
-                        )
-                        .catch((error_) => {
-                          console.error('Manual finalization failed', error_);
-                        });
-                    }
-
-                    queryClient
-                      .invalidateQueries({
-                        queryKey: ['received-invoices'],
-                      })
-                      .then(() => {
-                        toast.success(
-                          dictionary.pages.invoices.payment.successful
                         );
+                      }
+
+                      await queryClient.invalidateQueries({
+                        queryKey: ['received-invoices'],
                       });
+
+                      toast.success(
+                        dictionary.pages.invoices.payment.successful
+                      );
+                    } catch (error_) {
+                      console.error('Manual finalization failed', error_);
+                      toast.error(
+                        dictionary.pages.invoices.payment.errorVerifying
+                      );
+                    }
                   },
                 }}
               >

@@ -367,9 +367,7 @@ export function Chatbot({
                 <Sparkles size={20} className="text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-bold tracking-tight">
-                  Accountia AI
-                </h3>
+                <h3 className="text-sm font-bold tracking-tight">{t.title}</h3>
                 <div className="mt-0.5 flex items-center gap-1.5">
                   <span
                     className={cn(
@@ -380,7 +378,7 @@ export function Chatbot({
                     )}
                   />
                   <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-                    {isConnected ? t.online : 'Connecting...'}
+                    {isConnected ? t.online : t.connecting}
                   </span>
                 </div>
               </div>
@@ -392,6 +390,7 @@ export function Chatbot({
                 size="icon"
                 className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors"
                 title={t.clearChat}
+                aria-label={t.clearChat}
               >
                 <RotateCcw size={16} />
               </Button>
@@ -523,11 +522,11 @@ export function Chatbot({
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={
-                    isConnected ? t.messagePlaceholder : 'Connecting...'
+                    isConnected ? t.messagePlaceholder : t.connecting
                   }
                   disabled={isStreaming || !isConnected}
                   className="focus-visible:ring-primary h-11 rounded-xl pr-12 text-sm shadow-xs transition-shadow"
-                  aria-label="Message input"
+                  aria-label={t.messagePlaceholder}
                 />
                 <Button
                   onClick={handleSendMessage}

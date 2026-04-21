@@ -748,7 +748,8 @@
         "errorTryAgain": "يرجى المحاولة مرة أخرى.",
         "ariaLabel": "الدردشة مع Accountia AI",
         "aiResponse": "رد من الذكاء الاصطناعي",
-        "userMessage": "رسالتك"
+        "userMessage": "رسالتك",
+        "connecting": "جارٍ الاتصال..."
       }
     },
     "notifications": {

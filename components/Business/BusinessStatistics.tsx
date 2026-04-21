@@ -70,7 +70,7 @@ export default function BusinessStatistics({
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: ['business-statistics', businessId],
+    queryKey: ['business-statistics', businessId, userId],
     queryFn: () => BusinessService.getBusinessStatistics(businessId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -81,7 +81,7 @@ export default function BusinessStatistics({
     isLoading: stockInsightsLoading,
     isError: stockInsightsError,
   } = useQuery({
-    queryKey: ['product-stock-insights', businessId],
+    queryKey: ['product-stock-insights', businessId, userId],
     queryFn: () => ProductsService.getStockInsights(businessId),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
