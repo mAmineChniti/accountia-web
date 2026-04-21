@@ -305,6 +305,18 @@
       "paidAtLabel": "Payé le",
       "statusOverdue": "En retard",
       "retry": "Réessayer",
+      "stripe": {
+        "title": "Stripe Connect",
+        "description": "Connectez votre compte Stripe pour recevoir les paiements de factures directement.",
+        "verifyError": "Impossible de vérifier le statut Stripe.",
+        "connected": "Connecté",
+        "notConnected": "Non connecté",
+        "connectHint": "Connectez Stripe pour commencer à recevoir des paiements.",
+        "preparingLink": "Préparation du lien...",
+        "updateSetup": "Mettre à jour la configuration Stripe",
+        "connectStripe": "Connecter Stripe",
+        "account": "Compte"
+      },
       "fetchError": "Échec du chargement des factures. Veuillez réessayer.",
       "searchPlaceholder": "Rechercher des factures...",
       "searchLabel": "Recherche",

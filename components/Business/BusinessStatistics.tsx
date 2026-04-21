@@ -49,10 +49,12 @@ export default function BusinessStatistics({
   businessId,
   dictionary,
   lang,
+  userId,
 }: {
   businessId: string;
   dictionary: Dictionary;
   lang: Locale;
+  userId?: string;
 }) {
   const t = dictionary.pages.business;
   const text = t.statisticsUi;
@@ -1231,9 +1233,10 @@ export default function BusinessStatistics({
       {/* AI Chat Assistant - Business Mode */}
       <Chatbot
         businessId={businessId}
+        userId={userId}
         context="statistics"
         dictionary={dictionary}
-        key={`${businessId}-statistics`}
+        key={`${businessId}-${userId || 'anon'}-statistics`}
       />
     </div>
   );

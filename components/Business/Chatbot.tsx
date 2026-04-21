@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   useCallback,
 } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   Bot,
   MessageSquare,
@@ -14,6 +15,8 @@ import {
   Send,
   AlertCircle,
   Sparkles,
+  User,
+  RotateCcw,
 } from 'lucide-react';
 import FocusLock from 'react-focus-lock';
 import { cn } from '@/lib/utils';
@@ -37,17 +40,81 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const CHAT_STORAGE_KEY = 'accountia_chat_history';
 
+/**
+ * Simple component to render content with basic markdown-like formatting
+ */
+function FormattedContent({ content }: { content: string }) {
+  const lines = content.split('\n');
+
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, i) => {
+        // Headers (## Header)
+        if (line.startsWith('## ')) {
+          return (
+            <h3 key={i} className="text-foreground mt-3 mb-1 text-sm font-bold">
+              {line.replace('## ', '')}
+            </h3>
+          );
+        }
+
+        // Bullet points (* Item)
+        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+          const text = line.trim().replace(/^[ *-]\s+/, '');
+          return (
+            <div key={i} className="flex gap-2 pl-1">
+              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-60" />
+              <span>{renderTextWithBold(text)}</span>
+            </div>
+          );
+        }
+
+        // Empty line
+        if (!line.trim()) {
+          return <div key={i} className="h-1.5" />;
+        }
+
+        // Regular line
+        return (
+          <p key={i} className="leading-relaxed">
+            {renderTextWithBold(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Helper to handle **bold** text
+ */
+function renderTextWithBold(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={i} className="text-foreground font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 export function Chatbot({
   businessId,
+  userId,
   context,
   dictionary,
 }: {
   businessId?: string;
+  userId?: string;
   context?: string;
   dictionary: Dictionary;
 }) {
@@ -64,6 +131,7 @@ export function Chatbot({
   const clientRef = useRef<ChatSocketClient | undefined>(undefined);
   const streamingContentRef = useRef<string>('');
   const activeMessageIdRef = useRef<string | undefined>(undefined);
+  const pathname = usePathname();
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -154,9 +222,9 @@ export function Chatbot({
     setHistoryLoaded(false);
     const storageKey = businessId
       ? context
-        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
-        : `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
+        ? `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${context}`
+        : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${pathname}` // Use pathname for better isolation
+      : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_individual_${pathname}`;
     const savedMessages = localStorage.getItem(storageKey);
 
     if (!savedMessages) {
@@ -173,22 +241,22 @@ export function Chatbot({
     } finally {
       setHistoryLoaded(true);
     }
-  }, [businessId, context]);
+  }, [businessId, context, pathname, userId]);
 
   // Save chat history to localStorage
   useEffect(() => {
     if (!historyLoaded) return;
     const storageKey = businessId
       ? context
-        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
-        : `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
+        ? `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${context}`
+        : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${pathname}`
+      : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_individual_${pathname}`;
     if (messages.length > 0) {
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } else {
       localStorage.removeItem(storageKey);
     }
-  }, [messages, businessId, context, historyLoaded]);
+  }, [messages, businessId, context, historyLoaded, pathname, userId]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -255,10 +323,12 @@ export function Chatbot({
     setMessages([]);
     setError(undefined);
     const storageKey = businessId
-      ? `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
+      ? context
+        ? `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${context}`
+        : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_${businessId}_${pathname}`
+      : `${CHAT_STORAGE_KEY}_${userId || 'anon'}_individual_${pathname}`;
     localStorage.removeItem(storageKey);
-  }, [businessId]);
+  }, [businessId, context, pathname, userId]);
 
   return (
     <>
@@ -291,48 +361,50 @@ export function Chatbot({
           aria-hidden={!isOpen}
         >
           {/* Header */}
-          <CardHeader className="bg-primary text-primary-foreground flex flex-row items-center justify-between gap-4 border-b border-none! px-4! py-4">
+          <CardHeader className="bg-primary/5 dark:bg-primary/10 flex flex-row items-center justify-between gap-4 border-b px-4! py-3!">
             <div className="flex items-center gap-3">
-              <div className="bg-primary-foreground/20 rounded-lg p-2 backdrop-blur-sm">
-                <Bot
-                  size={28}
-                  className="text-primary-foreground"
-                  aria-hidden
-                />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-800 shadow-lg ring-4 ring-red-800/10">
+                <Sparkles size={20} className="text-primary-foreground" />
               </div>
               <div>
-                <h3 className="leading-tight font-semibold tracking-tight">
-                  {t.title}
+                <h3 className="text-sm font-bold tracking-tight">
+                  Accountia AI
                 </h3>
-                <div className="mt-0.5 flex items-center gap-1">
-                  <Sparkles
-                    size={10}
-                    className="fill-primary-foreground/80"
-                    aria-hidden
-                  />
-                  <Badge
-                    variant="secondary"
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span
                     className={cn(
-                      'text-xs',
+                      'h-1.5 w-1.5 rounded-full',
                       isConnected
-                        ? 'bg-emerald-500/20 text-emerald-100 hover:bg-emerald-500/30'
-                        : 'bg-amber-500/20 text-amber-100 hover:bg-amber-500/30'
+                        ? 'animate-pulse bg-emerald-500'
+                        : 'bg-amber-500'
                     )}
-                  >
+                  />
+                  <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
                     {isConnected ? t.online : 'Connecting...'}
-                  </Badge>
+                  </span>
                 </div>
               </div>
             </div>
-            <Button
-              onClick={() => setIsOpen(false)}
-              variant="ghost"
-              size="icon"
-              className="text-primary-foreground hover:bg-primary-foreground/20"
-              aria-label={t.closeButton}
-            >
-              <X size={20} aria-hidden />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={clearChat}
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors"
+                title={t.clearChat}
+              >
+                <RotateCcw size={16} />
+              </Button>
+              <Button
+                onClick={() => setIsOpen(false)}
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground h-8 w-8"
+                aria-label={t.closeButton}
+              >
+                <X size={18} />
+              </Button>
+            </div>
           </CardHeader>
 
           {/* Messages Area */}
@@ -362,23 +434,44 @@ export function Chatbot({
                     <div
                       key={index}
                       className={cn(
-                        'flex transition-all duration-500',
-                        msg.role === 'user' ? 'justify-end' : 'justify-start'
+                        'flex gap-3 transition-all duration-500',
+                        msg.role === 'user'
+                          ? 'flex-row-reverse justify-start'
+                          : 'flex-row justify-start'
                       )}
                     >
+                      <Avatar className="border-muted/50 mt-1 h-8 w-8 shrink-0 border shadow-sm">
+                        <AvatarImage
+                          src={
+                            msg.role === 'user' ? undefined : undefined // Can add bot avatar here
+                          }
+                        />
+                        <AvatarFallback
+                          className={cn(
+                            'text-[10px] font-bold',
+                            msg.role === 'user'
+                              ? 'bg-red-800 text-white'
+                              : 'bg-red-800 text-white'
+                          )}
+                        >
+                          {msg.role === 'user' ? (
+                            <User size={14} />
+                          ) : (
+                            <Bot size={14} />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+
                       <div
                         className={cn(
-                          'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                          'relative max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm transition-all',
                           msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground rounded-br-none'
-                            : 'bg-muted text-muted-foreground rounded-bl-none border'
+                            ? 'rounded-tr-none bg-red-800 text-white'
+                            : 'bg-muted/30 text-muted-foreground border-muted/30 rounded-tl-none border backdrop-blur-sm dark:bg-slate-900/40'
                         )}
                         role="article"
-                        aria-label={`${
-                          msg.role === 'user' ? t.userMessage : t.aiResponse
-                        }: ${msg.content.slice(0, 50)}...`}
                       >
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <FormattedContent content={msg.content} />
                       </div>
                     </div>
                   ))
@@ -420,49 +513,40 @@ export function Chatbot({
           </CardContent>
 
           {/* Input Area */}
-          <CardFooter className="flex-col gap-3 border-t py-3">
+          <CardFooter className="bg-muted/5 flex-col gap-3 border-t px-4 py-3">
             <div className="relative flex w-full items-center gap-2">
-              <Input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t.messagePlaceholder}
-                disabled={isStreaming}
-                aria-label="Message input"
-                className="text-sm"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isStreaming || !isConnected}
-                size="icon"
-                className="shrink-0"
-                aria-label={t.sendMessage}
-              >
-                {isStreaming ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                ) : (
-                  <Send size={16} aria-hidden />
-                )}
-              </Button>
-            </div>
-            <div className="flex w-full items-center justify-between">
-              <p className="text-muted-foreground text-xs tracking-wide">
-                {t.disclaimer}
-              </p>
-              {messages.length > 0 && (
+              <div className="relative flex-1">
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={
+                    isConnected ? t.messagePlaceholder : 'Connecting...'
+                  }
+                  disabled={isStreaming || !isConnected}
+                  className="focus-visible:ring-primary h-11 rounded-xl pr-12 text-sm shadow-xs transition-shadow"
+                  aria-label="Message input"
+                />
                 <Button
-                  onClick={clearChat}
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 text-xs"
-                  aria-label={t.clearChat}
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isStreaming || !isConnected}
+                  size="icon"
+                  className="absolute top-1 right-1 h-9 w-9 rounded-lg bg-red-800 shadow-sm transition-transform hover:scale-105 hover:bg-red-900 active:scale-95"
+                  aria-label={t.sendMessage}
                 >
-                  {t.clearChat}
+                  {isStreaming ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Send size={16} />
+                  )}
                 </Button>
-              )}
+              </div>
             </div>
+            <p className="text-muted-foreground text-center text-[10px] opacity-70">
+              {t.disclaimer}
+            </p>
           </CardFooter>
         </Card>
       </FocusLock>

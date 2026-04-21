@@ -90,6 +90,8 @@ export const API_CONFIG = {
     GOOGLE: 'auth/google',
     GOOGLE_EXCHANGE: 'auth/google/exchange',
     GOOGLE_CALLBACK: 'auth/google/callback',
+    STRIPE_ONBOARDING_LINK: 'auth/stripe/onboarding',
+    STRIPE_STATUS: 'auth/stripe/status',
   },
   BUSINESS: {
     APPLY: 'business/apply',

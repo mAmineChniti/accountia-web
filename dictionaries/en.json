@@ -305,6 +305,18 @@
       "paidAtLabel": "Paid on",
       "statusOverdue": "Overdue",
       "retry": "Try again",
+      "stripe": {
+        "title": "Stripe Connect",
+        "description": "Connect your Stripe account to receive invoice payments directly.",
+        "verifyError": "Unable to verify Stripe status.",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "connectHint": "Connect Stripe to start receiving payments.",
+        "preparingLink": "Preparing link...",
+        "updateSetup": "Update Stripe setup",
+        "connectStripe": "Connect Stripe",
+        "account": "Account"
+      },
       "fetchError": "Failed to load invoices. Please try again.",
       "searchPlaceholder": "Search invoices. . .",
       "searchLabel": "Search",

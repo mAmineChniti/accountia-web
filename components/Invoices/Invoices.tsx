@@ -20,6 +20,9 @@ import {
   RotateCcw,
   X,
   CreditCard,
+  CircleCheck,
+  CircleAlert,
+  Link as LinkIcon,
 } from 'lucide-react';
 import {
   Card,
@@ -63,13 +66,15 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
-import { InvoicesService } from '@/lib/requests';
+import { InvoicesService, AuthService, publicClient } from '@/lib/requests';
 import { getStatusLabel } from '@/lib/status-labels';
 import { toast } from 'sonner';
 import type {
   ReceivedInvoiceListResponse,
   InvoiceStatus,
   InvoiceReceiptResponseDto,
+  UserStripeOnboardingLinkDto,
+  UserStripeConnectStatusDto,
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { env } from '@/env';
@@ -121,9 +126,11 @@ const mockInvoicePaymentsEnabled =
 export default function Invoices({
   dictionary,
   lang,
+  userId,
 }: {
   dictionary: Dictionary;
   lang: Locale;
+  userId?: string;
 }) {
   const t = dictionary.pages.invoices; // Dictionary type re-evaluation
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,6 +140,8 @@ export default function Invoices({
     InvoiceReceiptResponseDto | undefined
   >();
   const [paymentClientSecret, setPaymentClientSecret] = useState<string>();
+  const [activeSessionId, setActiveSessionId] = useState<string>();
+  const [activeReceiptId, setActiveReceiptId] = useState<string>();
   const [paymentInvoiceLabel, setPaymentInvoiceLabel] = useState<string>('');
   const [mockPaymentInvoice, setMockPaymentInvoice] = useState<
     InvoiceReceiptResponseDto | undefined
@@ -174,6 +183,42 @@ export default function Invoices({
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
 
+  const {
+    data: stripeStatus,
+    isLoading: isLoadingStripeStatus,
+    isError: isStripeStatusError,
+    refetch: refetchStripeStatus,
+  } = useQuery<UserStripeConnectStatusDto>({
+    queryKey: ['user-stripe-status', userId],
+    queryFn: () => AuthService.getStripeConnectStatus(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
+  const connectStripeMutation = useMutation<UserStripeOnboardingLinkDto, Error>(
+    {
+      mutationFn: () => AuthService.getStripeOnboardingLink(),
+      onSuccess: (data) => {
+        if (data.onboardingUrl) {
+          toast.success(data.message || 'Stripe onboarding link generated');
+          globalThis.location.assign(data.onboardingUrl);
+        } else {
+          toast.error('Failed to generate onboarding link');
+        }
+      },
+      onError: (mutationError) => {
+        const message =
+          mutationError.message || 'Unable to create Stripe onboarding link';
+        toast.error(message);
+      },
+      onSettled: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ['user-stripe-status', userId],
+        });
+      },
+    }
+  );
+
   // Handle successful verification
   // useEffect de vérification supprimé car plus nécessaire
 
@@ -190,11 +235,14 @@ export default function Invoices({
       // Appel du backend pour obtenir la session Stripe
       return InvoicesService.createIndividualCheckoutSession(invoice.id);
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       // Stripe Embedded Checkout gère l'affichage du succès/échec
+      const receiptId = data.receiptId || variables.id;
       setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
       setPaymentClientSecret(data.clientSecret ?? '');
+      setActiveSessionId(data.sessionId ?? '');
+      setActiveReceiptId(receiptId);
       // Invalider la requête pour rafraîchir la liste
       await queryClient.invalidateQueries({ queryKey: ['received-invoices'] });
     },
@@ -381,6 +429,86 @@ export default function Invoices({
           </Button>
         </div>
       </div>
+
+      {/* Stripe Connect (Exact Business Style) */}
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            {t.stripe?.title || 'Stripe Connect'}
+          </CardTitle>
+          <CardDescription>
+            {t.stripe?.description ||
+              'Connect your Stripe account to receive invoice payments directly.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoadingStripeStatus ? (
+            <Skeleton className="h-16 w-full" />
+          ) : isStripeStatusError ? (
+            <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-3 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <CircleAlert className="h-4 w-4" />
+                {t.stripe?.verifyError || 'Unable to verify Stripe status.'}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  void refetchStripeStatus();
+                }}
+              >
+                {t.retry}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {stripeStatus?.isConnected ? (
+                      <>
+                        <CircleCheck className="h-4 w-4 text-emerald-600" />
+                        {t.stripe?.connected || 'Connected'}
+                      </>
+                    ) : (
+                      <>
+                        <CircleAlert className="h-4 w-4 text-amber-600" />
+                        {t.stripe?.notConnected || 'Not connected'}
+                      </>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    {stripeStatus?.message ||
+                      t.stripe?.connectHint ||
+                      'Connect Stripe to start receiving payments.'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => connectStripeMutation.mutate()}
+                  disabled={connectStripeMutation.isPending}
+                  className="min-w-44"
+                >
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  {connectStripeMutation.isPending
+                    ? t.stripe?.preparingLink || 'Preparing link...'
+                    : stripeStatus?.isConnected
+                      ? t.stripe?.updateSetup || 'Update Stripe setup'
+                      : t.stripe?.connectStripe || 'Connect Stripe'}
+                </Button>
+              </div>
+
+              {stripeStatus?.stripeConnectId ? (
+                <p className="text-muted-foreground text-xs">
+                  {t.stripe?.account || 'Account'}:{' '}
+                  {stripeStatus.stripeConnectId}
+                </p>
+              ) : undefined}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1161,14 +1289,33 @@ export default function Invoices({
                 options={{
                   clientSecret: paymentClientSecret,
                   onComplete: () => {
+                    const sessionId = activeSessionId;
+                    const receiptId = activeReceiptId;
+
                     setPaymentClientSecret(undefined);
+                    setActiveSessionId(undefined);
+                    setActiveReceiptId(undefined);
                     setPaymentInvoiceLabel('');
-                    void queryClient
+
+                    // Appeler le endpoint de finalisation pour forcer la mise à jour sans attendre le webhook
+                    if (sessionId && receiptId) {
+                      publicClient
+                        .post(
+                          `invoices/payments/confirm?session_id=${sessionId}&receipt_id=${receiptId}`
+                        )
+                        .catch((error_) => {
+                          console.error('Manual finalization failed', error_);
+                        });
+                    }
+
+                    queryClient
                       .invalidateQueries({
                         queryKey: ['received-invoices'],
                       })
                       .then(() => {
-                        toast.success(t.payment.successful);
+                        toast.success(
+                          dictionary.pages.invoices.payment.successful
+                        );
                       });
                   },
                 }}
@@ -1246,7 +1393,12 @@ export default function Invoices({
       </Dialog>
 
       {/* AI Chat Assistant - Individual Mode */}
-      <Chatbot dictionary={dictionary} key="individual" />
+      <Chatbot
+        dictionary={dictionary}
+        userId={userId}
+        context="received"
+        key={`individual-${userId || 'anon'}`}
+      />
     </div>
   );
 }

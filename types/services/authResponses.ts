@@ -135,3 +135,12 @@ export type UsersListResponseDto = UsersListResponse;
 export type RoleResponseDto = ChangeRoleResponse;
 export type BanResponseDto = BanUserResponse;
 export type MessageResponseDto = BaseResponse;
+
+export interface UserStripeOnboardingLinkDto extends BaseResponse {
+  onboardingUrl: string;
+}
+
+export interface UserStripeConnectStatusDto extends BaseResponse {
+  isConnected: boolean;
+  stripeConnectId?: string;
+}
