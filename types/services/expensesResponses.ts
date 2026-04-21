@@ -1,5 +1,16 @@
 import { type BaseResponse } from './sharedTypes';
 
+export interface ExtractedReceiptData {
+  title: string;
+  amount: number;
+  currency: string;
+  expenseDate: string;
+  vendor: string;
+  category: string;
+  description: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
 export interface Expense {
   id: string;
   businessId: string;

@@ -15,13 +15,18 @@ import {
   TrendingUp,
   Clock,
   DollarSign,
+  ScanLine,
+  Sparkles,
+  Upload,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
+import { useRef } from 'react';
 import { type Dictionary } from '@/get-dictionary';
 import { ExpensesService } from '@/lib/requests';
+import type { ExtractedReceiptData } from '@/types/services';
 import { CreateExpenseSchema, type CreateExpenseInput } from '@/types/services';
 import type {
   Expense,
@@ -106,6 +111,36 @@ export function BusinessExpenses({
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [createOpen, setCreateOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanResult, setScanResult] = useState<ExtractedReceiptData | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const scanMutation = useMutation({
+    mutationFn: (file: File) => ExpensesService.extractReceipt(file, businessId),
+    onSuccess: (data) => {
+      setScanResult(data);
+      form.reset({
+        businessId,
+        title: data.title,
+        amount: data.amount,
+        category: data.category as CreateExpenseInput['category'],
+        expenseDate: data.expenseDate,
+        currency: data.currency,
+        vendor: data.vendor,
+        description: data.description,
+      });
+      setScanOpen(false);
+      setCreateOpen(true);
+      toast.success(
+        data.confidence === 'high'
+          ? 'Receipt scanned — please review the extracted data'
+          : 'Receipt partially extracted — please verify the fields',
+        { duration: 4000 }
+      );
+    },
+    onError: (err: Error) => toast.error(err.message || 'Failed to scan receipt'),
+  });
+
   const [rejectDialog, setRejectDialog] = useState<{
     open: boolean;
     expenseId: string | undefined;
@@ -267,12 +302,93 @@ export function BusinessExpenses({
             Track and manage business expenses with approval workflows
           </p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <PlusCircle className="h-4 w-4" /> New Expense
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          {/* Scan Receipt Dialog */}
+          <Dialog open={scanOpen} onOpenChange={setScanOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <ScanLine className="h-4 w-4" />
+                Scan Receipt
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  AI Receipt Scanner
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <p className="text-muted-foreground text-sm">
+                  Upload a photo or PDF of your receipt. AI will extract all
+                  fields and pre-fill the expense form.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) scanMutation.mutate(file);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={scanMutation.isPending}
+                  className="border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/50 flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {scanMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
+                      <span className="text-sm font-medium">
+                        AI is reading your receipt…
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        This takes a few seconds
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-muted-foreground h-10 w-10" />
+                      <span className="text-sm font-medium">
+                        Click to upload receipt
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        PNG, JPG, WEBP or PDF · max 10 MB
+                      </span>
+                    </>
+                  )}
+                </button>
+                {scanResult && (
+                  <div className="bg-muted/50 rounded-lg p-3 text-xs">
+                    <span className="font-medium">Last scan:</span>{' '}
+                    {scanResult.vendor || 'Unknown vendor'} ·{' '}
+                    {scanResult.amount} {scanResult.currency} ·{' '}
+                    <span
+                      className={
+                        scanResult.confidence === 'high'
+                          ? 'text-green-600'
+                          : scanResult.confidence === 'medium'
+                            ? 'text-yellow-600'
+                            : 'text-red-600'
+                      }
+                    >
+                      {scanResult.confidence} confidence
+                    </span>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <PlusCircle className="h-4 w-4" /> New Expense
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Create Expense</DialogTitle>
@@ -407,6 +523,7 @@ export function BusinessExpenses({
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Summary Cards */}

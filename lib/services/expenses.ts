@@ -1,5 +1,5 @@
 import type { CreateExpenseInput, UpdateExpenseInput, ReviewExpenseInput } from '@/types/services';
-import type { ExpenseListResponse, ExpenseResponse, ExpenseSummaryResponse } from '@/types/services';
+import type { ExpenseListResponse, ExpenseResponse, ExpenseSummaryResponse, ExtractedReceiptData } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
 
@@ -99,6 +99,20 @@ export const ExpensesService = {
     const client = createAuthenticatedClient();
     try {
       await client.delete(API_CONFIG.EXPENSES.DELETE.replace('{id}', id), { searchParams: { businessId } });
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async extractReceipt(file: File, businessId: string): Promise<ExtractedReceiptData> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('businessId', businessId);
+      return await client
+        .post('expenses/extract-receipt', { body: formData })
+        .json<ExtractedReceiptData>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
