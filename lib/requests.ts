@@ -136,6 +136,8 @@ export const API_CONFIG = {
     TRANSITION: 'invoices/issued/{id}/transition',
     IMPORT: 'invoices/import',
     IMPORT_TEMPLATE: 'invoices/import/template',
+    IMPORT_PDF: 'invoices/import/pdf',
+    GET_IMPORT_JOB: 'invoices/import/jobs/{id}',
     // Recipient Endpoints
     LIST_RECEIVED_BUSINESS: 'invoices/received/business',
     LIST_RECEIVED_INDIVIDUAL: 'invoices/received/individual',

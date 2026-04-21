@@ -440,6 +440,12 @@
       "optionalColumnsLine3": "description, paymentTerms, currency",
       "closeLabel": "Fermer",
       "invalidFileType": "Veuillez télécharger un fichier CSV ou Excel",
+      "importPdfTitle": "Importer une facture PDF (IA)",
+      "importPdfDescription": "Téléchargez une facture PDF. L'IA extraira les détails automatiquement.",
+      "processingPdf": "Analyse de votre facture PDF par l'IA...",
+      "pdfImportSuccess": "Facture extraite et créée avec succès.",
+      "pdfImportPendingReview": "Facture créée mais nécessite une révision (faible confiance).",
+      "pdfImportFailed": "Échec de l'analyse du PDF. Veuillez vous assurer qu'il s'agit d'une facture valide.",
       "fileUpload": {
         "bytes": "Octets",
         "kb": "Ko",
