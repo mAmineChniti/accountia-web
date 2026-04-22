@@ -1,7 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState, useEffect } from 'react';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  skipToken,
+} from '@tanstack/react-query';
 import {
   CheckCircle2,
   Clock,
@@ -17,10 +22,19 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AccountantService } from '@/lib/services';
+import { cn } from '@/lib/utils';
 import { formatDate, dateToISOString } from '@/lib/date-utils';
 import { JobResultsView } from './JobResultsView';
 import { TaxSummaryView } from './TaxSummaryView';
 import { Calendar } from '@/components/ui/calendar';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
@@ -58,7 +72,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
-type AccountingJobStatus = 'pending' | 'processing' | 'completed' | 'failed';
+import type {
+  AccountingJobStatus,
+  CreateAccountingJobInput,
+} from '@/types/services';
 
 interface BusinessAccountantProps {
   businessId: string;
@@ -71,6 +88,7 @@ const statusIcons: Record<AccountingJobStatus, typeof Clock> = {
   processing: Loader2,
   completed: CheckCircle2,
   failed: XCircle,
+  cancelled: XCircle,
 };
 
 export default function BusinessAccountant({
@@ -87,43 +105,51 @@ export default function BusinessAccountant({
     from: new Date(new Date().getFullYear(), 0, 1),
     to: new Date(),
   });
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(id);
+  }, []);
 
   const {
     data: jobsData,
     isLoading: jobsLoading,
     error: jobsError,
+    refetch: refetchJobs,
   } = useQuery({
     queryKey: ['accountant-jobs', businessId],
     queryFn: () => AccountantService.listJobs(businessId),
     enabled: !!businessId,
     staleTime: 30 * 1000,
+    retry: 1,
   });
 
   const { data: jobResults, isLoading: jobResultsLoading } = useQuery({
     queryKey: ['accountant-job-results', businessId, selectedJobId],
     queryFn: selectedJobId
       ? () => AccountantService.getJobResults(businessId, selectedJobId)
-      : undefined,
-    enabled: !!selectedJobId,
+      : skipToken,
   });
 
   const { data: taxData, isLoading: taxLoading } = useQuery({
-    queryKey: ['accountant-taxes', businessId],
-    queryFn: () => AccountantService.getTaxes(businessId),
+    queryKey: ['accountant-taxes', businessId, selectedYear],
+    queryFn: () => AccountantService.getTaxes(businessId, selectedYear),
+    enabled: !!businessId && !!selectedYear,
+  });
+
+  const { data: healthData } = useQuery({
+    queryKey: ['accountant-health', businessId],
+    queryFn: () => AccountantService.health(businessId),
+    retry: 1,
     enabled: !!businessId,
   });
 
-  const { data: healthData, isLoading: healthLoading } = useQuery({
-    queryKey: ['accountant-health'],
-    queryFn: () => AccountantService.health(),
-  });
-
   const createJobMutation = useMutation({
-    mutationFn: (data: { period_start: string; period_end: string }) =>
-      AccountantService.createJob(businessId, {
-        period_start: data.period_start,
-        period_end: data.period_end,
-      }),
+    mutationFn: (data: CreateAccountingJobInput) =>
+      AccountantService.createJob(data),
     onSuccess: () => {
       toast.success(t.jobCreated);
       setIsCreateDialogOpen(false);
@@ -134,6 +160,25 @@ export default function BusinessAccountant({
     onError: (error: unknown) => {
       const err = error as Error;
       toast.error(err.message || t.jobCreateError);
+    },
+  });
+
+  const cancelJobMutation = useMutation({
+    mutationFn: ({ taskId }: { taskId: string }) =>
+      AccountantService.cancelJob(businessId, taskId),
+    onSuccess: (data) => {
+      // API returns a wrapped CancelJobWrapper; unwrap message
+      const message =
+        (data as { data?: { message?: string } })?.data?.message ||
+        t.jobCancelled;
+      toast.success(message);
+      queryClient.invalidateQueries({
+        queryKey: ['accountant-jobs', businessId],
+      });
+    },
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || t.cancelJobError);
     },
   });
 
@@ -148,41 +193,43 @@ export default function BusinessAccountant({
   const handleCreateJob = () => {
     if (!dateRange?.from || !dateRange?.to) return;
     createJobMutation.mutate({
-      period_start: dateToISOString(dateRange.from),
-      period_end: dateToISOString(dateRange.to),
+      // Send camelCase as required by CreateAccountingJobInput
+      businessId,
+      periodStart: dateToISOString(dateRange.from),
+      periodEnd: dateToISOString(dateRange.to),
     });
   };
 
-  const jobs = useMemo(() => jobsData?.data || [], [jobsData]);
-  const taxSummary = useMemo(() => taxData?.data, [taxData]);
-  const selectedJobResults = useMemo(() => jobResults?.data, [jobResults]);
-  const isServiceAvailable = healthData?.status === 'available';
+  const jobs = useMemo(() => {
+    const jobList = jobsData?.data || [];
+    return jobList;
+  }, [jobsData]);
+
+  const taxSummary = useMemo(() => taxData?.data ?? undefined, [taxData]);
+  // getJobResults now returns a wrapped response; unwrap here for consumers
+  const selectedJobResults = useMemo(
+    () => jobResults?.data ?? undefined,
+    [jobResults]
+  );
+  const isServiceAvailable =
+    healthData?.success && healthData?.status === 'available';
 
   const renderStatusBadge = (status: AccountingJobStatus) => {
-    const Icon = statusIcons[status];
+    const Icon = statusIcons[status] || Clock; // Fallback to Clock for unknown statuses
     return (
       <Badge
-        variant={status === 'completed' ? 'default' : 'secondary'}
-        className="gap-1"
+        className={cn(
+          'gap-1',
+          status === 'completed' ? 'bg-emerald-600 text-white' : 'bg-secondary'
+        )}
       >
         <Icon
-          className={`h-3 w-3 ${status === 'processing' ? 'animate-spin' : ''}`}
+          className={cn('h-3 w-3', status === 'processing' && 'animate-spin')}
         />
-        {t.status[status]}
+        {t.status[status] || status}
       </Badge>
     );
   };
-
-  if (jobsError) {
-    return (
-      <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{t.loadError}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
@@ -190,12 +237,14 @@ export default function BusinessAccountant({
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
           <p className="text-muted-foreground">{t.description}</p>
-          {healthLoading ? (
-            <Skeleton className="h-5 w-32" />
-          ) : (
+          {mounted && (
             <Badge
-              variant={isServiceAvailable ? 'default' : 'destructive'}
-              className="gap-1"
+              className={cn(
+                'gap-1',
+                isServiceAvailable
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-red-600 text-white'
+              )}
             >
               {isServiceAvailable ? (
                 <>
@@ -328,12 +377,13 @@ export default function BusinessAccountant({
                         >
                           <div className="space-y-1">
                             <p className="font-medium">
-                              {formatDate(job.period_start, lang)} -{' '}
+                              {formatDate(job.period_start, lang)}
+                              {' - '}
                               {formatDate(job.period_end, lang)}
                             </p>
                             <p className="text-muted-foreground text-sm">
-                              {job.journal_entries_count} {t.journalEntries} ·{' '}
-                              {job.reports_generated} {t.reports}
+                              {formatDate(job.period_start, lang)} ·{' '}
+                              {job.status}
                             </p>
                           </div>
                           <ChevronRight className="text-muted-foreground h-5 w-5" />
@@ -353,7 +403,24 @@ export default function BusinessAccountant({
               <CardDescription>{t.jobsDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              {jobsLoading ? (
+              {jobsError ? (
+                <div className="space-y-4">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {t.loadError}
+                      {jobsError instanceof Error && (
+                        <span className="mt-1 block text-xs opacity-80">
+                          {jobsError.message}
+                        </span>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                  <Button onClick={() => refetchJobs()} variant="outline">
+                    {t.retry}
+                  </Button>
+                </div>
+              ) : jobsLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
@@ -385,34 +452,55 @@ export default function BusinessAccountant({
                               {formatDate(job.period_start, lang)} -{' '}
                               {formatDate(job.period_end, lang)}
                             </p>
+                            <p className="text-muted-foreground text-xs">
+                              {formatDate(job.period_start, lang)}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>{renderStatusBadge(job.status)}</TableCell>
                         <TableCell>
                           <div className="w-full max-w-[100px]">
                             <Progress
-                              value={job.progress_percent}
+                              value={job.progress_percent ?? 0}
                               className="h-2"
                             />
                             <span className="text-muted-foreground text-xs">
-                              {job.progress_percent}%
+                              {job.progress_percent ?? 0}%
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>{job.journal_entries_count}</TableCell>
+                        <TableCell>-</TableCell>
                         <TableCell className="text-right">
-                          {job.status === 'completed' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedJobId(job.task_id);
-                                setActiveTab('overview');
-                              }}
-                            >
-                              {t.viewResults}
-                            </Button>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {job.status === 'pending' ||
+                            job.status === 'processing' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={cancelJobMutation.isPending}
+                                onClick={() =>
+                                  cancelJobMutation.mutate({
+                                    taskId: job.task_id,
+                                  })
+                                }
+                              >
+                                {cancelJobMutation.isPending
+                                  ? t.cancelling
+                                  : t.cancel}
+                              </Button>
+                            ) : job.status === 'completed' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedJobId(job.task_id);
+                                  setActiveTab('overview');
+                                }}
+                              >
+                                {t.viewResults}
+                              </Button>
+                            ) : undefined}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -424,13 +512,37 @@ export default function BusinessAccountant({
         </TabsContent>
 
         <TabsContent value="taxes">
-          <TaxSummaryView
-            taxData={taxSummary}
-            t={t}
-            lang={lang}
-            isLoading={taxLoading}
-            formatCurrency={formatCurrency}
-          />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Label>{t.selectYear}</Label>
+              <Select
+                value={String(selectedYear)}
+                onValueChange={(v) => setSelectedYear(Number(v))}
+              >
+                <SelectTrigger size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 6 }).map((_, idx) => {
+                    const y = new Date().getFullYear() - idx;
+                    return (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <TaxSummaryView
+              taxData={taxSummary}
+              t={t}
+              lang={lang}
+              isLoading={taxLoading}
+              formatCurrency={formatCurrency}
+            />
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -469,16 +581,172 @@ export default function BusinessAccountant({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    defaultMonth={dateRange?.from}
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    numberOfMonths={2}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date('1900-01-01')
-                    }
-                  />
+                  <div className="p-3">
+                    <div className="mb-2 flex gap-2">
+                      <div className="flex items-center gap-2">
+                        <Label className="whitespace-nowrap">
+                          {t.createJobDialog.periodLabel} — {t.from || 'From'}
+                        </Label>
+                        <Select
+                          value={String(
+                            dateRange?.from
+                              ? dateRange.from.getMonth()
+                              : new Date().getMonth()
+                          )}
+                          onValueChange={(v) => {
+                            const month = Number(v);
+                            const year = dateRange?.from
+                              ? dateRange.from.getFullYear()
+                              : new Date().getFullYear();
+                            const newFrom = new Date(year, month, 1);
+                            setDateRange((prev) => ({
+                              from: newFrom,
+                              to:
+                                prev?.to && prev.to >= newFrom
+                                  ? prev.to
+                                  : new Date(year, month + 1, 0),
+                            }));
+                          }}
+                        >
+                          <SelectTrigger size="sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }).map((_, i) => (
+                              <SelectItem key={i} value={String(i)}>
+                                {new Intl.DateTimeFormat(lang, {
+                                  month: 'short',
+                                }).format(new Date(2000, i, 1))}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={String(
+                            dateRange?.from
+                              ? dateRange.from.getFullYear()
+                              : new Date().getFullYear()
+                          )}
+                          onValueChange={(v) => {
+                            const year = Number(v);
+                            const month = dateRange?.from
+                              ? dateRange.from.getMonth()
+                              : new Date().getMonth();
+                            const newFrom = new Date(year, month, 1);
+                            setDateRange((prev) => ({
+                              from: newFrom,
+                              to:
+                                prev?.to && prev.to >= newFrom
+                                  ? prev.to
+                                  : new Date(year, month + 1, 0),
+                            }));
+                          }}
+                        >
+                          <SelectTrigger size="sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 11 }).map((_, idx) => {
+                              const y = new Date().getFullYear() - idx;
+                              return (
+                                <SelectItem key={y} value={String(y)}>
+                                  {y}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Label className="whitespace-nowrap">
+                          {t.to || 'To'}
+                        </Label>
+                        <Select
+                          value={String(
+                            dateRange?.to
+                              ? dateRange.to.getMonth()
+                              : new Date().getMonth()
+                          )}
+                          onValueChange={(v) => {
+                            const month = Number(v);
+                            const year = dateRange?.to
+                              ? dateRange.to.getFullYear()
+                              : new Date().getFullYear();
+                            const newTo = new Date(year, month + 1, 0);
+                            setDateRange((prev) => ({
+                              from:
+                                prev?.from && prev.from <= newTo
+                                  ? prev.from
+                                  : new Date(year, month, 1),
+                              to: newTo,
+                            }));
+                          }}
+                        >
+                          <SelectTrigger size="sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }).map((_, i) => (
+                              <SelectItem key={i} value={String(i)}>
+                                {new Intl.DateTimeFormat(lang, {
+                                  month: 'short',
+                                }).format(new Date(2000, i, 1))}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={String(
+                            dateRange?.to
+                              ? dateRange.to.getFullYear()
+                              : new Date().getFullYear()
+                          )}
+                          onValueChange={(v) => {
+                            const year = Number(v);
+                            const month = dateRange?.to
+                              ? dateRange.to.getMonth()
+                              : new Date().getMonth();
+                            const newTo = new Date(year, month + 1, 0);
+                            setDateRange((prev) => ({
+                              from:
+                                prev?.from && prev.from <= newTo
+                                  ? prev.from
+                                  : new Date(year, month, 1),
+                              to: newTo,
+                            }));
+                          }}
+                        >
+                          <SelectTrigger size="sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 11 }).map((_, idx) => {
+                              const y = new Date().getFullYear() - idx;
+                              return (
+                                <SelectItem key={y} value={String(y)}>
+                                  {y}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Calendar
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date('1900-01-01')
+                      }
+                    />
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>

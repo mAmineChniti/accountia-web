@@ -1,29 +1,44 @@
 import type {
   CreateAccountingJobInput,
-  CreateAccountingJobResponse,
+  CreateAccountingJobWrapper,
   ListAccountingJobsResponse,
-  GetAccountingJobStatusResponse,
-  GetAccountingJobResultsResponse,
-  AccountingHistoryResponse,
-  AccountingWorkLogResponse,
-  TaxSummaryResponse,
+  AccountingJobStatus,
+  AccountingJobDetailsWrapper,
+  GetAccountingJobResultsWrapper,
+  AccountingHistoryWrapper,
+  AccountingWorkLogWrapper,
+  TaxSummaryWrapper,
   AccountantHealthResponse,
+  CancelJobWrapper,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
 
 export const AccountantService = {
+  // Helper to unwrap API responses that are wrapped as { success: true, data: T }
+  _unwrap<T>(res: unknown): T {
+    if (
+      res &&
+      typeof res === 'object' &&
+      'success' in (res as Record<string, unknown>) &&
+      'data' in (res as Record<string, unknown>)
+    ) {
+      const obj = res as Record<string, unknown>;
+      return obj.data as T;
+    }
+    return res as T;
+  },
   async createJob(
-    businessId: string,
     data: CreateAccountingJobInput
-  ): Promise<CreateAccountingJobResponse> {
+  ): Promise<CreateAccountingJobWrapper> {
     const client = createAuthenticatedClient();
     try {
+      // businessId is now part of CreateAccountingJobInput per new API docs
       const result = await client
         .post(API_CONFIG.ACCOUNTANT.CREATE_JOB, {
-          json: { ...data, businessId },
+          json: data,
         })
-        .json<CreateAccountingJobResponse>();
+        .json<CreateAccountingJobWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -32,11 +47,12 @@ export const AccountantService = {
 
   async listJobs(
     businessId: string,
-    status?: 'pending' | 'processing' | 'completed' | 'failed',
+    status?: AccountingJobStatus,
     limit?: number
   ): Promise<ListAccountingJobsResponse> {
     const client = createAuthenticatedClient();
     try {
+      // Controller expects camelCase businessId
       const searchParams: Record<string, string | number> = { businessId };
       if (status) {
         searchParams.status = status;
@@ -56,7 +72,7 @@ export const AccountantService = {
   async getJobStatus(
     businessId: string,
     taskId: string
-  ): Promise<GetAccountingJobStatusResponse> {
+  ): Promise<AccountingJobDetailsWrapper> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
@@ -67,7 +83,7 @@ export const AccountantService = {
           ),
           { searchParams: { businessId } }
         )
-        .json<GetAccountingJobStatusResponse>();
+        .json<AccountingJobDetailsWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -77,7 +93,7 @@ export const AccountantService = {
   async getJobResults(
     businessId: string,
     taskId: string
-  ): Promise<GetAccountingJobResultsResponse> {
+  ): Promise<GetAccountingJobResultsWrapper> {
     const client = createAuthenticatedClient();
     try {
       const result = await client
@@ -88,7 +104,7 @@ export const AccountantService = {
           ),
           { searchParams: { businessId } }
         )
-        .json<GetAccountingJobResultsResponse>();
+        .json<GetAccountingJobResultsWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -98,16 +114,18 @@ export const AccountantService = {
   async getHistory(
     businessId: string,
     limit?: number
-  ): Promise<AccountingHistoryResponse> {
+  ): Promise<AccountingHistoryWrapper> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string | number> = { businessId };
-      if (limit !== undefined) {
-        searchParams.limit = limit;
-      }
+      const url = API_CONFIG.ACCOUNTANT.GET_HISTORY.replace(
+        '{businessId}',
+        encodeURIComponent(businessId)
+      );
+      const searchParams: Record<string, string | number> = {};
+      if (limit !== undefined) searchParams.limit = limit;
       const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_HISTORY, { searchParams })
-        .json<AccountingHistoryResponse>();
+        .get(url, { searchParams })
+        .json<AccountingHistoryWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -118,57 +136,88 @@ export const AccountantService = {
     businessId: string,
     startDate?: string,
     endDate?: string,
-    status?: 'pending' | 'processing' | 'completed' | 'failed'
-  ): Promise<AccountingWorkLogResponse> {
+    status?: AccountingJobStatus
+  ): Promise<AccountingWorkLogWrapper> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string> = { businessId };
-      if (startDate) {
-        searchParams.start_date = startDate;
-      }
-      if (endDate) {
-        searchParams.end_date = endDate;
-      }
-      if (status) {
-        searchParams.status = status;
-      }
+      const url = API_CONFIG.ACCOUNTANT.GET_WORK.replace(
+        '{businessId}',
+        encodeURIComponent(businessId)
+      );
+      const searchParams: Record<string, string> = {};
+      if (startDate) searchParams.start_date = startDate;
+      if (endDate) searchParams.end_date = endDate;
+      if (status) searchParams.status = status;
       const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_WORK, { searchParams })
-        .json<AccountingWorkLogResponse>();
+        .get(url, { searchParams })
+        .json<AccountingWorkLogWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async getTaxes(
+  async getTaxes(businessId: string, year: number): Promise<TaxSummaryWrapper> {
+    const client = createAuthenticatedClient();
+    try {
+      const url = API_CONFIG.ACCOUNTANT.GET_TAXES;
+      const searchParams: Record<string, string | number> = {
+        businessId,
+        year,
+      };
+      const result = await client
+        .get(url, { searchParams })
+        .json<TaxSummaryWrapper>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async cancelJob(
     businessId: string,
-    year?: number
-  ): Promise<TaxSummaryResponse> {
+    taskId: string
+  ): Promise<CancelJobWrapper> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string | number> = { businessId };
-      if (year !== undefined) {
-        searchParams.year = year;
-      }
       const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_TAXES, { searchParams })
-        .json<TaxSummaryResponse>();
+        .delete(
+          API_CONFIG.ACCOUNTANT.GET_JOB.replace(
+            '{taskId}',
+            encodeURIComponent(taskId)
+          ),
+          { searchParams: { businessId } }
+        )
+        .json<CancelJobWrapper>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async health(): Promise<AccountantHealthResponse> {
+  async health(businessId?: string): Promise<AccountantHealthResponse> {
     const client = createAuthenticatedClient();
     try {
-      const result = await client
-        .get(API_CONFIG.ACCOUNTANT.HEALTH)
-        .json<AccountantHealthResponse>();
+      // Some backends require businessId on all /accountant/* routes
+      const searchParams: Record<string, string> = {};
+      if (businessId) {
+        searchParams.businessId = businessId;
+      }
+      const url = API_CONFIG.ACCOUNTANT.HEALTH;
+
+      const response = await client.get(url, {
+        searchParams:
+          Object.keys(searchParams).length > 0 ? searchParams : undefined,
+      });
+      const result = await response.json<AccountantHealthResponse>();
       return result;
-    } catch (error: unknown) {
-      return handleServiceError(error);
+    } catch {
+      // Return unavailable on any error per API docs
+      return {
+        success: false,
+        service: 'ai-accountant',
+        status: 'unavailable',
+      };
     }
   },
 };

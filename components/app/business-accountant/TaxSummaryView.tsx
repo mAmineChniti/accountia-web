@@ -20,10 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { TaxSummaryResponse } from '@/types/services';
+import type { TaxSummaryResponse, TaxSummaryWrapper } from '@/types/services';
 
 interface TaxSummaryViewProps {
-  taxData: TaxSummaryResponse['data'] | undefined;
+  // Accept either the wrapped API response or the unwrapped TaxSummaryResponse
+  taxData: TaxSummaryResponse | TaxSummaryWrapper | undefined;
   t: Dictionary['pages']['businessAccountant'];
   lang: Locale;
   isLoading: boolean;
@@ -59,54 +60,57 @@ export function TaxSummaryView({
       </Card>
     );
   }
+
+  const normalized: TaxSummaryResponse =
+    taxData && 'data' in taxData && (taxData as TaxSummaryWrapper).data
+      ? (taxData as TaxSummaryWrapper).data
+      : (taxData as TaxSummaryResponse);
+
+  const currency = normalized.currency || 'TND';
+  const summary = normalized.summary || {};
+  const vatBreakdown = normalized.vat_breakdown || {};
+  const monthlyDetails = normalized.monthly_details || [];
+  const taxCalendar = normalized.tax_calendar || [];
+
   return (
     <div className="space-y-4">
+      {/* Tax Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t.annualVat}</CardDescription>
-            <CardTitle className="text-xl">
-              {formatCurrency(
-                taxData.summary.annual_vat_total,
-                taxData.currency
-              )}
+            <CardTitle className="text-2xl">
+              {formatCurrency(summary.annual_vat_total ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t.corporateTax}</CardDescription>
-            <CardTitle className="text-xl">
-              {formatCurrency(
-                taxData.summary.annual_corporate_tax,
-                taxData.currency
-              )}
+            <CardTitle className="text-2xl">
+              {formatCurrency(summary.annual_corporate_tax ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t.withholdingTax}</CardDescription>
-            <CardTitle className="text-xl">
-              {formatCurrency(
-                taxData.summary.annual_withholding_tax,
-                taxData.currency
-              )}
+            <CardTitle className="text-2xl">
+              {formatCurrency(summary.annual_withholding_tax ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t.totalLiability}</CardDescription>
-            <CardTitle className="text-xl">
-              {formatCurrency(
-                taxData.summary.total_tax_liability,
-                taxData.currency
-              )}
+            <CardTitle className="text-2xl">
+              {formatCurrency(summary.total_tax_liability ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>
       </div>
+
+      {/* VAT Breakdown */}
       <Card>
         <CardHeader>
           <CardTitle>{t.vatBreakdown}</CardTitle>
@@ -119,8 +123,8 @@ export function TaxSummaryView({
               </p>
               <p className="text-lg font-semibold">
                 {formatCurrency(
-                  taxData.vat_breakdown.standard_rate_19_percent,
-                  taxData.currency
+                  vatBreakdown.standard_rate_19_percent ?? 0,
+                  currency
                 )}
               </p>
             </div>
@@ -128,8 +132,8 @@ export function TaxSummaryView({
               <p className="text-muted-foreground text-sm">{t.reducedRate13}</p>
               <p className="text-lg font-semibold">
                 {formatCurrency(
-                  taxData.vat_breakdown.reduced_rate_13_percent,
-                  taxData.currency
+                  vatBreakdown.reduced_rate_13_percent ?? 0,
+                  currency
                 )}
               </p>
             </div>
@@ -137,60 +141,99 @@ export function TaxSummaryView({
               <p className="text-muted-foreground text-sm">{t.reducedRate7}</p>
               <p className="text-lg font-semibold">
                 {formatCurrency(
-                  taxData.vat_breakdown.reduced_rate_7_percent,
-                  taxData.currency
+                  vatBreakdown.reduced_rate_7_percent ?? 0,
+                  currency
                 )}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.monthlyDetails}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t.monthColumn}</TableHead>
-                <TableHead className="text-right">{t.vatColumn}</TableHead>
-                <TableHead className="text-right">
-                  {t.corporateTaxShort}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t.withholdingTaxShort}
-                </TableHead>
-                <TableHead className="text-right">{t.totalColumn}</TableHead>
-                <TableHead>{t.dueColumn}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {taxData.monthly_details.map((month) => (
-                <TableRow key={month.month}>
-                  <TableCell>{month.period}</TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(month.vat_total, taxData.currency)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(month.corporate_tax_due, taxData.currency)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(month.withholding_tax, taxData.currency)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(
-                      month.total_tax_liability,
-                      taxData.currency
-                    )}
-                  </TableCell>
-                  <TableCell>{formatDate(month.due_date, lang)}</TableCell>
+
+      {/* Tax Calendar */}
+      {taxCalendar.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.taxCalendar}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t.periodColumn}</TableHead>
+                  <TableHead>{t.descriptionColumn}</TableHead>
+                  <TableHead>{t.dueColumn}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {taxCalendar.map((item, idx) => {
+                  const periodDisplay = item?.period ?? '';
+                  const descriptionDisplay = item?.description ?? '';
+                  const dueDisplay = item?.due_date
+                    ? formatDate(item.due_date, lang)
+                    : '';
+                  return (
+                    <TableRow key={idx}>
+                      <TableCell>{periodDisplay}</TableCell>
+                      <TableCell>{descriptionDisplay}</TableCell>
+                      <TableCell>{dueDisplay}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Monthly Details */}
+      {monthlyDetails.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.monthlyDetails}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t.monthColumn}</TableHead>
+                  <TableHead className="text-right">{t.vatColumn}</TableHead>
+                  <TableHead className="text-right">
+                    {t.corporateTaxShort}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t.withholdingTaxShort}
+                  </TableHead>
+                  <TableHead className="text-right">{t.totalColumn}</TableHead>
+                  <TableHead>{t.dueColumn}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {monthlyDetails.map((month, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{month?.period ?? ''}</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(month.vat_total ?? 0, currency)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(month.corporate_tax_due ?? 0, currency)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(month.withholding_tax ?? 0, currency)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(month.total_tax_liability ?? 0, currency)}
+                    </TableCell>
+                    <TableCell>
+                      {month?.due_date ? formatDate(month.due_date, lang) : ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

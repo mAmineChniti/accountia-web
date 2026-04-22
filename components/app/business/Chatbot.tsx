@@ -42,6 +42,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const CHAT_STORAGE_KEY = 'accountia_chat_history';
 
+const getChatStorageKey = (biz?: string, user?: string, ctx?: string) => {
+  if (biz) {
+    if (user)
+      return ctx
+        ? `${CHAT_STORAGE_KEY}_${biz}_${user}_${ctx}`
+        : `${CHAT_STORAGE_KEY}_${biz}_${user}`;
+    return ctx
+      ? `${CHAT_STORAGE_KEY}_${biz}_${ctx}`
+      : `${CHAT_STORAGE_KEY}_${biz}`;
+  }
+  return user
+    ? `${CHAT_STORAGE_KEY}_individual_${user}`
+    : `${CHAT_STORAGE_KEY}_individual`;
+};
+
 export function Chatbot({
   businessId,
   context,
@@ -60,7 +75,10 @@ export function Chatbot({
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
+  // Track which storage key we've loaded for this session to avoid
+  // persisting before initial load completes.
+  const loadedKeyRef = useRef<string | null>(null);
+  const [userId, setUserId] = useState<string | undefined>();
   const clientRef = useRef<ChatSocketClient | undefined>(undefined);
   const streamingContentRef = useRef<string>('');
   const activeMessageIdRef = useRef<string | undefined>(undefined);
@@ -75,9 +93,11 @@ export function Chatbot({
         clientRef.current = client;
 
         await client.connect({
-          onConnected: (_data: ChatConnectedEvent) => {
+          onConnected: (data: ChatConnectedEvent) => {
             setIsConnected(true);
             setError(undefined);
+            // capture connected user id so we can scope stored history
+            if (data?.userId) setUserId(data.userId);
           },
           onConnectError: (data: ChatConnectErrorEvent) => {
             setIsConnected(false);
@@ -151,44 +171,81 @@ export function Chatbot({
 
   // Load chat history from localStorage
   useEffect(() => {
-    setHistoryLoaded(false);
-    const storageKey = businessId
-      ? context
-        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
-        : `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
-    const savedMessages = localStorage.getItem(storageKey);
-
-    if (!savedMessages) {
-      setMessages([]);
-      setHistoryLoaded(true);
-      return;
+    // Build keys to attempt reading from. Prefer user-scoped key when available,
+    // fall back to legacy business-only/individual keys for older stored data.
+    const keysToTry: string[] = [];
+    if (businessId) {
+      if (userId) {
+        keysToTry.push(
+          context
+            ? `${CHAT_STORAGE_KEY}_${businessId}_${userId}_${context}`
+            : `${CHAT_STORAGE_KEY}_${businessId}_${userId}`
+        );
+      }
+      keysToTry.push(
+        context
+          ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
+          : `${CHAT_STORAGE_KEY}_${businessId}`
+      );
+    } else {
+      if (userId) {
+        keysToTry.push(`${CHAT_STORAGE_KEY}_individual_${userId}`);
+      }
+      keysToTry.push(`${CHAT_STORAGE_KEY}_individual`);
     }
 
-    try {
-      setMessages(JSON.parse(savedMessages));
-    } catch (error_) {
-      console.error('Failed to parse saved messages:', error_);
-      setMessages([]);
-    } finally {
-      setHistoryLoaded(true);
+    let loaded: ChatMessage[] | undefined;
+    for (const k of keysToTry) {
+      const saved = localStorage.getItem(k);
+      if (!saved) continue;
+      try {
+        loaded = JSON.parse(saved) as ChatMessage[];
+        break;
+      } catch (error_) {
+        // try next key
+        console.error('Failed to parse saved messages for key', k, error_);
+        continue;
+      }
     }
-  }, [businessId, context]);
+
+    // Decide which key we'll persist to going forward (prefer user-scoped)
+    const preferredKey = businessId
+      ? userId
+        ? context
+          ? `${CHAT_STORAGE_KEY}_${businessId}_${userId}_${context}`
+          : `${CHAT_STORAGE_KEY}_${businessId}_${userId}`
+        : context
+          ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
+          : `${CHAT_STORAGE_KEY}_${businessId}`
+      : userId
+        ? `${CHAT_STORAGE_KEY}_individual_${userId}`
+        : `${CHAT_STORAGE_KEY}_individual`;
+
+    // Initialize messages from external storage when businessId/context/userId changes.
+    // Defer the setState to avoid synchronous updates within the effect.
+    const toLoad = loaded ?? [];
+    setTimeout(() => {
+      setMessages(toLoad);
+      // Only mark the loaded key after messages have been applied so the save
+      // effect doesn't trigger with a stale key.
+      loadedKeyRef.current = preferredKey;
+    }, 0);
+  }, [businessId, context, userId]);
 
   // Save chat history to localStorage
   useEffect(() => {
-    if (!historyLoaded) return;
-    const storageKey = businessId
-      ? context
-        ? `${CHAT_STORAGE_KEY}_${businessId}_${context}`
-        : `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
+    // Only persist after we've determined the storage key for this session.
+    // This prevents writing to storage before initial load completes.
+    // Compute the preferred storage key (same logic as load effect).
+    const storageKey = getChatStorageKey(businessId, userId, context);
+    if (loadedKeyRef.current !== storageKey) return;
+    // Persist under user-scoped key when available, otherwise under legacy key.
     if (messages.length > 0) {
       localStorage.setItem(storageKey, JSON.stringify(messages));
     } else {
       localStorage.removeItem(storageKey);
     }
-  }, [messages, businessId, context, historyLoaded]);
+  }, [messages, businessId, context, userId]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -254,11 +311,9 @@ export function Chatbot({
   const clearChat = useCallback(() => {
     setMessages([]);
     setError(undefined);
-    const storageKey = businessId
-      ? `${CHAT_STORAGE_KEY}_${businessId}`
-      : `${CHAT_STORAGE_KEY}_individual`;
+    const storageKey = getChatStorageKey(businessId, userId, context);
     localStorage.removeItem(storageKey);
-  }, [businessId]);
+  }, [businessId, userId, context]);
 
   return (
     <>
