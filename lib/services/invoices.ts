@@ -12,6 +12,7 @@ import type {
   InvoiceCheckoutSessionResponse,
   ImportTemplateResponseDto,
   BulkImportInvoicesResponseDto,
+  InvoiceImportJobResponseDto,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 
@@ -291,6 +292,81 @@ export const InvoicesService = {
         .json<BulkImportInvoicesResponseDto>();
       return result;
     } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  // 12. Import Invoice from PDF (AI)
+  async importInvoicePdf(
+    file: File,
+    businessId: string
+  ): Promise<{ jobId: string }> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.INVOICES.IMPORT_PDF, { body: formData, searchParams })
+        .json<{ jobId: string }>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  // 13. Get PDF Import Job Status
+  async getImportJobStatus(
+    jobId: string,
+    businessId: string
+  ): Promise<InvoiceImportJobResponseDto> {
+    const client = createAuthenticatedClient();
+    const searchParams: Record<string, string> = { businessId };
+    const endpoint = API_CONFIG.INVOICES.GET_IMPORT_JOB.replace(
+      '{id}',
+      encodeURIComponent(jobId)
+    );
+
+    try {
+      const result = await client
+        .get(endpoint, { searchParams })
+        .json<InvoiceImportJobResponseDto>();
+      return result;
+    } catch (error: unknown) {
+      // Enhanced diagnostic logging for debugging polling issues
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4789/api';
+      const fullUrl = `${baseUrl}/${endpoint}?businessId=${businessId}`;
+
+      // Safely access response for diagnostic logging
+      const response =
+        error && typeof error === 'object' && 'response' in error
+          ? (error.response as
+              | {
+                  status?: number;
+                  statusText?: string;
+                  json: () => Promise<unknown>;
+                }
+              | undefined)
+          : undefined;
+
+      console.error(`[InvoicesService] Polling Failure Diagnostics:`, {
+        url: fullUrl,
+        status: response?.status,
+        statusText: response?.statusText,
+      });
+
+      if (response) {
+        try {
+          const body = await response.json();
+          console.error(`[InvoicesService] Error Response Body:`, body);
+        } catch {
+          console.error(
+            `[InvoicesService] Error Response could not be parsed as JSON`
+          );
+        }
+      }
+
       return handleServiceError(error);
     }
   },

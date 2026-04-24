@@ -7,7 +7,8 @@ export type InvoiceStatus =
   | 'OVERDUE'
   | 'DISPUTED'
   | 'VOIDED'
-  | 'ARCHIVED';
+  | 'ARCHIVED'
+  | 'PENDING_REVIEW';
 
 export type InvoiceRecipientType =
   | 'PLATFORM_BUSINESS'
@@ -137,4 +138,24 @@ export interface InvoiceCheckoutSessionResponse {
   clientSecret: string;
   sessionId: string;
   checkoutUrl: string;
+}
+
+export type ImportJobStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface InvoiceImportJobResponseDto {
+  id: string;
+  businessId: string;
+  userId: string;
+  status: ImportJobStatus;
+  pdfFilePath?: string;
+  originalFilename: string;
+  invoiceId?: string;
+  error?: string;
+  metadata?: {
+    confidenceScore?: number;
+    extractionMethod?: 'text' | 'ocr';
+    [key: string]: unknown;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
