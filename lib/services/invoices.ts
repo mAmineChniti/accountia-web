@@ -12,6 +12,7 @@ import type {
   InvoiceCheckoutSessionResponse,
   ImportTemplateResponseDto,
   BulkImportInvoicesResponseDto,
+  InvoicePaymentConfirmResponse,
 } from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 
@@ -257,6 +258,27 @@ export const InvoicesService = {
       const result = await client
         .post(endpoint, { json: payload })
         .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  // 8. Confirm Payment (Payment-related method grouped with checkout/mock)
+  async confirmPayment(params: {
+    sessionId: string;
+    receiptId: string;
+  }): Promise<InvoicePaymentConfirmResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .post(API_CONFIG.INVOICES.CONFIRM_PAYMENT, {
+          searchParams: {
+            session_id: params.sessionId,
+            receipt_id: params.receiptId,
+          },
+        })
+        .json<InvoicePaymentConfirmResponse>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

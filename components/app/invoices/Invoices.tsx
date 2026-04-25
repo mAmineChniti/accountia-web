@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadStripe } from '@stripe/stripe-js';
@@ -20,6 +21,8 @@ import {
   RotateCcw,
   X,
   CreditCard,
+  Link2,
+  ExternalLink,
 } from 'lucide-react';
 import {
   Card,
@@ -63,13 +66,14 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
-import { InvoicesService } from '@/lib/requests';
+import { InvoicesService, AuthService } from '@/lib/requests';
 import { getStatusLabel } from '@/lib/status-labels';
 import { toast } from 'sonner';
 import type {
   ReceivedInvoiceListResponse,
   InvoiceStatus,
   InvoiceReceiptResponseDto,
+  UserStripeConnectStatusResponse,
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
 import { env } from '@/env';
@@ -173,6 +177,56 @@ export default function Invoices({
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 45 * 60 * 1000, // 45 minutes
   });
+
+  // Stripe Connect status for individual users
+  const {
+    data: stripeStatus,
+    isLoading: isStripeStatusLoading,
+    isError: isStripeStatusError,
+  } = useQuery<UserStripeConnectStatusResponse>({
+    queryKey: ['user-stripe-status'],
+    queryFn: () => AuthService.getStripeConnectStatus(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const router = useRouter();
+
+  const { mutate: getStripeOnboardingLink, isPending: isGeneratingLink } =
+    useMutation({
+      mutationFn: () => AuthService.getStripeOnboardingLink(),
+      onSuccess: (data) => {
+        if (data.onboardingUrl) {
+          // Navigate to Stripe onboarding in same tab (better UX, no popup blockers)
+          router.push(data.onboardingUrl);
+        } else {
+          toast.error(t.stripeConnect.onboardingUrlMissing);
+        }
+        // Invalidate stripe status query after navigating
+        void queryClient.invalidateQueries({
+          queryKey: ['user-stripe-status'],
+        });
+      },
+      onError: (error: unknown) => {
+        toast.error(
+          localizeErrorMessage(error, dictionary, t.stripeConnect.statusError)
+        );
+      },
+    });
+
+  // Handle visibility change with cleanup
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void queryClient.invalidateQueries({
+          queryKey: ['user-stripe-status'],
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [queryClient]);
 
   // Handle successful verification
   // useEffect de vérification supprimé car plus nécessaire
@@ -422,6 +476,93 @@ export default function Invoices({
           <CardContent />
         </Card>
       </div>
+
+      {/* Stripe Connect Card */}
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Link2 className="h-5 w-5" />
+                {t.stripeConnect.title}
+              </CardTitle>
+              <CardDescription>{t.stripeConnect.description}</CardDescription>
+            </div>
+            <div className="flex items-center gap-3">
+              {isStripeStatusLoading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : isStripeStatusError ? (
+                <Badge
+                  variant="secondary"
+                  className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                >
+                  <AlertCircle className="mr-1 h-3 w-3" />
+                  {t.stripeConnect.error}
+                </Badge>
+              ) : stripeStatus?.isConnected ? (
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                >
+                  <CheckCircle className="mr-1 h-3 w-3" />
+                  {t.stripeConnect.connected}
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
+                >
+                  {t.stripeConnect.notConnected}
+                </Badge>
+              )}
+              {!isStripeStatusLoading &&
+                !isStripeStatusError &&
+                !stripeStatus?.isConnected && (
+                  <Button
+                    size="sm"
+                    onClick={() => getStripeOnboardingLink()}
+                    disabled={isGeneratingLink}
+                  >
+                    {isGeneratingLink ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t.stripeConnect.preparingLink}
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        {t.stripeConnect.connectButton}
+                      </>
+                    )}
+                  </Button>
+                )}
+              {!isStripeStatusLoading &&
+                stripeStatus?.isConnected &&
+                stripeStatus?.stripeConnectId && (
+                  <span className="text-muted-foreground hidden font-mono text-xs sm:inline">
+                    ****
+                    {stripeStatus.stripeConnectId.length >= 4
+                      ? stripeStatus.stripeConnectId.slice(-4)
+                      : stripeStatus.stripeConnectId}
+                  </span>
+                )}
+            </div>
+          </div>
+          {!isStripeStatusLoading &&
+            (isStripeStatusError ? (
+              <p className="text-muted-foreground mt-2 text-sm">
+                {t.stripeConnect.statusError}
+              </p>
+            ) : (
+              !stripeStatus?.isConnected && (
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {t.stripeConnect.connectHint}
+                </p>
+              )
+            ))}
+        </CardHeader>
+        <CardContent />
+      </Card>
 
       {/* Main Table Card — blurred while awaiting payment confirmation */}
       <div className="relative">

@@ -526,6 +526,18 @@
         "cancel": "Cancel",
         "confirm": "Confirm Payment",
         "errorMessage": "Failed to update invoice status. Please try again."
+      },
+      "stripeConnect": {
+        "title": "Stripe Connect",
+        "description": "Connect your Stripe account to receive payments for invoices you issue.",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "connectHint": "Connect your Stripe account to start receiving payments.",
+        "connectButton": "Connect Stripe Account",
+        "preparingLink": "Preparing link...",
+        "statusError": "Unable to verify Stripe status.",
+        "error": "Error",
+        "onboardingUrlMissing": "No onboarding URL received. Please try again."
       }
     },
     "businessApplication": {
@@ -743,6 +755,8 @@
         "openButton": "Open chat",
         "closeButton": "Close chat",
         "online": "Online",
+        "connecting": "Connecting...",
+        "failed": "Offline",
         "messagePlaceholder": "Write your message...",
         "clearChat": "Clear",
         "disclaimer": "Accountia AI may make mistakes.",
@@ -798,8 +812,6 @@
       "overviewTitle": "Overview",
       "overviewDescription": "Select a completed job to view results",
       "noCompletedJobs": "No completed jobs yet",
-      "journalEntries": "journal entries",
-      "reports": "reports",
       "jobsTitle": "Accounting Jobs",
       "jobsDescription": "View and manage your accounting jobs",
       "noJobs": "No jobs yet. Create your first accounting job to get started.",
@@ -865,7 +877,15 @@
       "date": "Date",
       "account": "Account",
       "debit": "Debit",
-      "credit": "Credit"
+      "credit": "Credit",
+      "calculating": "Calculating...",
+      "calculateTaxes": "Calculate Taxes",
+      "taxesCalculated": "Taxes calculated successfully",
+      "calculateTaxesError": "Failed to calculate taxes",
+      "accountsReceivable": "Accounts Receivable",
+      "accountsPayable": "Accounts Payable",
+      "cashPosition": "Cash Position",
+      "reports": "Reports"
     },
     "businessProducts": {
       "title": "Products",

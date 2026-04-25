@@ -90,6 +90,8 @@ export const API_CONFIG = {
     GOOGLE: 'auth/google',
     GOOGLE_EXCHANGE: 'auth/google/exchange',
     GOOGLE_CALLBACK: 'auth/google/callback',
+    STRIPE_ONBOARDING: 'auth/stripe/onboarding',
+    STRIPE_STATUS: 'auth/stripe/status',
   },
   BUSINESS: {
     APPLY: 'business/apply',
@@ -146,6 +148,7 @@ export const API_CONFIG = {
       'invoices/received/individual/{receiptId}/payments/checkout',
     CREATE_INDIVIDUAL_MOCK_PAYMENT:
       'invoices/received/individual/{receiptId}/payments/mock',
+    CONFIRM_PAYMENT: 'invoices/payments/confirm',
   },
   CHAT: {
     SEND_MESSAGE: 'chat/message',
@@ -165,10 +168,12 @@ export const API_CONFIG = {
     CREATE_JOB: 'accountant/jobs',
     LIST_JOBS: 'accountant/jobs',
     GET_JOB: 'accountant/jobs/{taskId}',
+    CANCEL_JOB: 'accountant/jobs/{taskId}',
     GET_JOB_RESULTS: 'accountant/jobs/{taskId}/results',
-    GET_HISTORY: 'accountant/business/{businessId}/history',
-    GET_WORK: 'accountant/business/{businessId}/work',
+    GET_HISTORY: 'accountant/history',
+    GET_WORK: 'accountant/work',
     GET_TAXES: 'accountant/taxes',
+    CALCULATE_TAXES: 'accountant/taxes/calculate',
     HEALTH: 'accountant/health',
   },
 } as const;

@@ -526,6 +526,18 @@
         "cancel": "Annuler",
         "confirm": "Confirmer le paiement",
         "errorMessage": "Échec de la mise à jour du statut de la facture. Veuillez réessayer."
+      },
+      "stripeConnect": {
+        "title": "Stripe Connect",
+        "description": "Connectez votre compte Stripe pour recevoir les paiements des factures que vous émettez.",
+        "connected": "Connecté",
+        "notConnected": "Non connecté",
+        "connectHint": "Connectez votre compte Stripe pour commencer à recevoir des paiements.",
+        "connectButton": "Connecter un compte Stripe",
+        "preparingLink": "Préparation du lien...",
+        "statusError": "Impossible de vérifier le statut Stripe.",
+        "error": "Erreur",
+        "onboardingUrlMissing": "Aucun lien d'onboarding reçu. Veuillez réessayer."
       }
     },
     "businessApplication": {
@@ -743,6 +755,8 @@
         "openButton": "Ouvrir le chat",
         "closeButton": "Fermer le chat",
         "online": "En ligne",
+        "connecting": "Connexion...",
+        "failed": "Hors ligne",
         "messagePlaceholder": "Écrivez votre message...",
         "clearChat": "Effacer",
         "disclaimer": "Accountia AI peut faire des erreurs.",
@@ -798,8 +812,6 @@
       "overviewTitle": "Vue d'ensemble",
       "overviewDescription": "Sélectionnez une tâche terminée pour voir les résultats",
       "noCompletedJobs": "Aucune tâche terminée pour le moment",
-      "journalEntries": "écritures comptables",
-      "reports": "rapports",
       "jobsTitle": "Tâches comptables",
       "jobsDescription": "Consultez et gérez vos tâches comptables",
       "noJobs": "Aucune tâche pour le moment. Créez votre première tâche comptable pour commencer.",
@@ -865,7 +877,15 @@
       "date": "Date",
       "account": "Compte",
       "debit": "Débit",
-      "credit": "Crédit"
+      "credit": "Crédit",
+      "calculating": "Calcul en cours...",
+      "calculateTaxes": "Calculer les taxes",
+      "taxesCalculated": "Taxes calculées avec succès",
+      "calculateTaxesError": "Échec du calcul des taxes",
+      "accountsReceivable": "Créances clients",
+      "accountsPayable": "Dettes fournisseurs",
+      "cashPosition": "Position de trésorerie",
+      "reports": "Rapports"
     },
     "businessProducts": {
       "title": "Produits",

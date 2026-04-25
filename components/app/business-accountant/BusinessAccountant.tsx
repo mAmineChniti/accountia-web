@@ -18,6 +18,7 @@ import {
   XCircle,
   PlayCircle,
   Calendar as CalendarIcon,
+  Ban,
 } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
@@ -73,7 +74,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
 import type {
-  AccountingJobStatus,
+  AccountantJobStatus,
   CreateAccountingJobInput,
 } from '@/types/services';
 
@@ -83,12 +84,12 @@ interface BusinessAccountantProps {
   dictionary: Dictionary;
 }
 
-const statusIcons: Record<AccountingJobStatus, typeof Clock> = {
+const statusIcons: Record<AccountantJobStatus, typeof Clock> = {
   pending: Clock,
   processing: Loader2,
   completed: CheckCircle2,
   failed: XCircle,
-  cancelled: XCircle,
+  cancelled: Ban,
 };
 
 export default function BusinessAccountant({
@@ -121,7 +122,7 @@ export default function BusinessAccountant({
     refetch: refetchJobs,
   } = useQuery({
     queryKey: ['accountant-jobs', businessId],
-    queryFn: () => AccountantService.listJobs(businessId),
+    queryFn: () => AccountantService.listJobs({ businessId }),
     enabled: !!businessId,
     staleTime: 30 * 1000,
     retry: 1,
@@ -129,22 +130,27 @@ export default function BusinessAccountant({
 
   const { data: jobResults, isLoading: jobResultsLoading } = useQuery({
     queryKey: ['accountant-job-results', businessId, selectedJobId],
-    queryFn: selectedJobId
-      ? () => AccountantService.getJobResults(businessId, selectedJobId)
-      : skipToken,
+    queryFn:
+      selectedJobId && businessId
+        ? () =>
+            AccountantService.getJobResults(
+              { taskId: selectedJobId },
+              { businessId }
+            )
+        : skipToken,
   });
 
   const { data: taxData, isLoading: taxLoading } = useQuery({
     queryKey: ['accountant-taxes', businessId, selectedYear],
-    queryFn: () => AccountantService.getTaxes(businessId, selectedYear),
+    queryFn: () =>
+      AccountantService.getTaxes({ businessId, year: selectedYear }),
     enabled: !!businessId && !!selectedYear,
   });
 
   const { data: healthData } = useQuery({
-    queryKey: ['accountant-health', businessId],
-    queryFn: () => AccountantService.health(businessId),
+    queryKey: ['accountant-health'],
+    queryFn: () => AccountantService.health(),
     retry: 1,
-    enabled: !!businessId,
   });
 
   const createJobMutation = useMutation({
@@ -165,12 +171,9 @@ export default function BusinessAccountant({
 
   const cancelJobMutation = useMutation({
     mutationFn: ({ taskId }: { taskId: string }) =>
-      AccountantService.cancelJob(businessId, taskId),
+      AccountantService.cancelJob({ taskId }, { businessId }),
     onSuccess: (data) => {
-      // API returns a wrapped CancelJobWrapper; unwrap message
-      const message =
-        (data as { data?: { message?: string } })?.data?.message ||
-        t.jobCancelled;
+      const message = data?.result?.message || t.jobCancelled;
       toast.success(message);
       queryClient.invalidateQueries({
         queryKey: ['accountant-jobs', businessId],
@@ -179,6 +182,22 @@ export default function BusinessAccountant({
     onError: (error: unknown) => {
       const err = error as Error;
       toast.error(err.message || t.cancelJobError);
+    },
+  });
+
+  const calculateTaxesMutation = useMutation({
+    mutationFn: () =>
+      AccountantService.calculateTaxes({ businessId, year: selectedYear }),
+    onSuccess: (data) => {
+      const message = data.result.message ?? t.taxesCalculated;
+      toast.success(message);
+      queryClient.invalidateQueries({
+        queryKey: ['accountant-taxes', businessId, selectedYear],
+      });
+    },
+    onError: (error: unknown) => {
+      const err = error as Error;
+      toast.error(err.message || t.calculateTaxesError);
     },
   });
 
@@ -201,20 +220,15 @@ export default function BusinessAccountant({
   };
 
   const jobs = useMemo(() => {
-    const jobList = jobsData?.data || [];
-    return jobList;
+    return jobsData?.jobs ?? [];
   }, [jobsData]);
 
-  const taxSummary = useMemo(() => taxData?.data ?? undefined, [taxData]);
-  // getJobResults now returns a wrapped response; unwrap here for consumers
-  const selectedJobResults = useMemo(
-    () => jobResults?.data ?? undefined,
-    [jobResults]
-  );
+  const taxSummary = useMemo(() => taxData?.taxes, [taxData]);
+  const selectedJobResults = useMemo(() => jobResults?.results, [jobResults]);
   const isServiceAvailable =
     healthData?.success && healthData?.status === 'available';
 
-  const renderStatusBadge = (status: AccountingJobStatus) => {
+  const renderStatusBadge = (status: AccountantJobStatus) => {
     const Icon = statusIcons[status] || Clock; // Fallback to Clock for unknown statuses
     return (
       <Badge
@@ -368,22 +382,21 @@ export default function BusinessAccountant({
                       .map((job) => (
                         <Button
                           variant="ghost"
-                          key={job.task_id}
+                          key={job.taskId}
                           className="hover:bg-muted flex h-auto w-full cursor-pointer items-center justify-between rounded-lg border p-4 text-left transition-colors"
                           onClick={() => {
-                            setSelectedJobId(job.task_id);
+                            setSelectedJobId(job.taskId);
                             setActiveTab('overview');
                           }}
                         >
                           <div className="space-y-1">
                             <p className="font-medium">
-                              {formatDate(job.period_start, lang)}
+                              {formatDate(job.periodStart, lang)}
                               {' - '}
-                              {formatDate(job.period_end, lang)}
+                              {formatDate(job.periodEnd, lang)}
                             </p>
                             <p className="text-muted-foreground text-sm">
-                              {formatDate(job.period_start, lang)} ·{' '}
-                              {job.status}
+                              {t.status[job.status]}
                             </p>
                           </div>
                           <ChevronRight className="text-muted-foreground h-5 w-5" />
@@ -431,81 +444,85 @@ export default function BusinessAccountant({
                   <p>{t.noJobs}</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t.periodColumn}</TableHead>
-                      <TableHead>{t.statusColumn}</TableHead>
-                      <TableHead>{t.progressColumn}</TableHead>
-                      <TableHead>{t.entriesColumn}</TableHead>
-                      <TableHead className="text-right">
-                        {t.actionsColumn}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {jobs.map((job) => (
-                      <TableRow key={job.task_id}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <p className="font-medium">
-                              {formatDate(job.period_start, lang)} -{' '}
-                              {formatDate(job.period_end, lang)}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {formatDate(job.period_start, lang)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{renderStatusBadge(job.status)}</TableCell>
-                        <TableCell>
-                          <div className="w-full max-w-[100px]">
-                            <Progress
-                              value={job.progress_percent ?? 0}
-                              className="h-2"
-                            />
-                            <span className="text-muted-foreground text-xs">
-                              {job.progress_percent ?? 0}%
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {job.status === 'pending' ||
-                            job.status === 'processing' ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={cancelJobMutation.isPending}
-                                onClick={() =>
-                                  cancelJobMutation.mutate({
-                                    taskId: job.task_id,
-                                  })
-                                }
-                              >
-                                {cancelJobMutation.isPending
-                                  ? t.cancelling
-                                  : t.cancel}
-                              </Button>
-                            ) : job.status === 'completed' ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedJobId(job.task_id);
-                                  setActiveTab('overview');
-                                }}
-                              >
-                                {t.viewResults}
-                              </Button>
-                            ) : undefined}
-                          </div>
-                        </TableCell>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t.periodColumn}</TableHead>
+                        <TableHead>{t.statusColumn}</TableHead>
+                        <TableHead>{t.progressColumn}</TableHead>
+                        <TableHead>{t.entriesColumn}</TableHead>
+                        <TableHead className="text-right">
+                          {t.actionsColumn}
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {jobs.map((job) => (
+                        <TableRow key={job.taskId}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium">
+                                {formatDate(job.periodStart, lang)} -{' '}
+                                {formatDate(job.periodEnd, lang)}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                {job.startedAt
+                                  ? formatDate(job.startedAt, lang)
+                                  : '-'}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{renderStatusBadge(job.status)}</TableCell>
+                          <TableCell>
+                            <div className="w-full max-w-[100px]">
+                              <Progress
+                                value={job.progressPercent ?? 0}
+                                className="h-2"
+                              />
+                              <span className="text-muted-foreground text-xs">
+                                {job.progressPercent ?? 0}%
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{job.journalEntriesCount}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {job.status === 'pending' ||
+                              job.status === 'processing' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={cancelJobMutation.isPending}
+                                  onClick={() =>
+                                    cancelJobMutation.mutate({
+                                      taskId: job.taskId,
+                                    })
+                                  }
+                                >
+                                  {cancelJobMutation.isPending
+                                    ? t.cancelling
+                                    : t.cancel}
+                                </Button>
+                              ) : job.status === 'completed' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedJobId(job.taskId);
+                                    setActiveTab('overview');
+                                  }}
+                                >
+                                  {t.viewResults}
+                                </Button>
+                              ) : undefined}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -540,7 +557,9 @@ export default function BusinessAccountant({
               t={t}
               lang={lang}
               isLoading={taxLoading}
+              isCalculating={calculateTaxesMutation.isPending}
               formatCurrency={formatCurrency}
+              onCalculateTaxes={() => calculateTaxesMutation.mutate()}
             />
           </div>
         </TabsContent>

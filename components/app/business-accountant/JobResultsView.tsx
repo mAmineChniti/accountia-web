@@ -3,9 +3,13 @@
 import {
   Calculator,
   CheckCircle2,
+  CreditCard,
   DollarSign,
+  FileText,
+  Receipt,
   TrendingDown,
   TrendingUp,
+  Wallet,
 } from 'lucide-react';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
@@ -27,18 +31,10 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import type {
-  GetAccountingJobResultsResponse,
-  GetAccountingJobResultsWrapper,
-} from '@/types/services';
+import type { GetJobResultsResponseDto } from '@/types/services';
 
 interface JobResultsViewProps {
-  // Accept either the wrapped API response (`{ success, data }`) or the
-  // unwrapped `GetAccountingJobResultsResponse` and normalize below.
-  results:
-    | GetAccountingJobResultsResponse
-    | GetAccountingJobResultsWrapper
-    | undefined;
+  results: GetJobResultsResponseDto['results'] | undefined;
   t: Dictionary['pages']['businessAccountant'];
   lang: Locale;
   formatCurrency: (amount: number, currency?: string) => string;
@@ -65,44 +61,45 @@ export function JobResultsView({
       </Card>
     );
 
-  const normalized: GetAccountingJobResultsResponse =
-    results &&
-    'data' in results &&
-    (results as GetAccountingJobResultsWrapper).data
-      ? (results as GetAccountingJobResultsWrapper).data
-      : (results as GetAccountingJobResultsResponse);
-
   const {
-    task_id,
-    total_revenue,
-    total_expenses,
-    net_profit,
-    ai_insights,
+    taskId,
+    periodStart,
+    periodEnd,
+    totalRevenue,
+    totalExpenses,
+    netProfit,
+    grossProfit,
+    accountsReceivable,
+    accountsPayable,
+    cashPosition,
+    taxCalculations,
+    aiInsights,
     recommendations,
-  } = normalized;
-
-  const {
-    gross_profit,
-    tax_calculations,
-    anomalies_detected,
+    anomaliesDetected,
     reports,
-    journal_entries_preview,
-    total_journal_entries,
-    completed_at,
-  } = normalized;
+    journalEntriesPreview,
+    totalJournalEntries,
+  } = results;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">{t.jobResultsTitle}</h2>
-          <p className="text-muted-foreground font-mono text-sm">{task_id}</p>
+          <p className="text-muted-foreground font-mono text-sm">{taskId}</p>
+          {(periodStart || periodEnd) && (
+            <p className="text-muted-foreground text-sm">
+              {periodStart && formatDate(periodStart, lang)}
+              {periodStart && periodEnd && ' - '}
+              {periodEnd && formatDate(periodEnd, lang)}
+            </p>
+          )}
         </div>
         <Button variant="outline" size="sm" onClick={onClose}>
           {t.close}
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1">
@@ -110,7 +107,7 @@ export function JobResultsView({
               {t.totalRevenue}
             </CardDescription>
             <CardTitle className="text-2xl">
-              {formatCurrency(total_revenue ?? 0)}
+              {formatCurrency(totalRevenue ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -121,7 +118,7 @@ export function JobResultsView({
               {t.grossProfit}
             </CardDescription>
             <CardTitle className="text-2xl">
-              {formatCurrency(gross_profit ?? 0)}
+              {formatCurrency(grossProfit ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -132,7 +129,7 @@ export function JobResultsView({
               {t.totalExpenses}
             </CardDescription>
             <CardTitle className="text-2xl">
-              {formatCurrency(total_expenses ?? 0)}
+              {formatCurrency(totalExpenses ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -145,45 +142,73 @@ export function JobResultsView({
             <CardTitle
               className={cn(
                 'text-2xl',
-                (net_profit ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                (netProfit ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
               )}
             >
-              {formatCurrency(net_profit ?? 0)}
+              {formatCurrency(netProfit ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
       </div>
-      {/* Additional summaries */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardDescription>{t.totalJournalEntries}</CardDescription>
+          <CardTitle className="text-2xl">
+            {String(totalJournalEntries ?? 0)}
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      {(accountsReceivable !== undefined ||
+        accountsPayable !== undefined ||
+        cashPosition !== undefined) && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {accountsReceivable !== undefined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription className="flex items-center gap-1">
+                  <Receipt className="h-4 w-4 text-orange-500" />
+                  {t.accountsReceivable}
+                </CardDescription>
+                <CardTitle className="text-2xl">
+                  {formatCurrency(accountsReceivable)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          )}
+          {accountsPayable !== undefined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription className="flex items-center gap-1">
+                  <CreditCard className="h-4 w-4 text-purple-500" />
+                  {t.accountsPayable}
+                </CardDescription>
+                <CardTitle className="text-2xl">
+                  {formatCurrency(accountsPayable)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          )}
+          {cashPosition !== undefined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription className="flex items-center gap-1">
+                  <Wallet className="h-4 w-4 text-emerald-500" />
+                  {t.cashPosition}
+                </CardDescription>
+                <CardTitle className="text-2xl">
+                  {formatCurrency(cashPosition)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {aiInsights && (
         <Card>
-          <CardHeader>
-            <CardDescription>{t.totalJournalEntries}</CardDescription>
-            <CardTitle className="text-2xl">
-              {String(total_journal_entries ?? 0)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>{t.statusLabel}</CardDescription>
-            <CardTitle className="text-2xl">
-              {t.status[normalized.status as keyof typeof t.status] ??
-                normalized.status}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>{t.completedAt}</CardDescription>
-            <CardTitle className="text-2xl">
-              {completed_at ? formatDate(completed_at, lang) : '-'}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-      {ai_insights && (
-        <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
               {t.aiInsights}
@@ -191,65 +216,77 @@ export function JobResultsView({
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground whitespace-pre-wrap">
-              {ai_insights}
+              {aiInsights}
             </p>
           </CardContent>
         </Card>
       )}
 
-      {tax_calculations && tax_calculations.length > 0 && (
+      {taxCalculations && taxCalculations.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t.taxCalculations}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.taxType}</TableHead>
-                  <TableHead>{t.jurisdiction}</TableHead>
-                  <TableHead className="text-right">{t.taxable}</TableHead>
-                  <TableHead className="text-right">{t.rate}</TableHead>
-                  <TableHead className="text-right">{t.amount}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tax_calculations.map((tc, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{tc.tax_type}</TableCell>
-                    <TableCell>{tc.jurisdiction}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(tc.taxable_amount ?? 0)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {(tc.tax_rate * 100).toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(tc.tax_amount ?? 0)}
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.taxType}</TableHead>
+                    <TableHead>{t.jurisdiction}</TableHead>
+                    <TableHead className="text-right">{t.taxable}</TableHead>
+                    <TableHead className="text-right">{t.rate}</TableHead>
+                    <TableHead className="text-right">{t.amount}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {taxCalculations.map((tc, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{tc.taxType}</TableCell>
+                      <TableCell>{tc.jurisdiction}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(tc.taxableAmount ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {((tc.taxRate ?? 0) * 100).toFixed(2)}%
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(tc.taxAmount ?? 0)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {anomalies_detected && anomalies_detected.length > 0 && (
+      {anomaliesDetected && anomaliesDetected.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{t.anomalies}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
-              {anomalies_detected.map((an, idx) => (
-                <li key={idx} className="flex flex-col">
-                  <span className="font-medium">
-                    {an.type} — {an.severity}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {an.description}
-                  </span>
+            <ul className="space-y-3">
+              {anomaliesDetected.map((anomaly, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span
+                    className={cn(
+                      'mt-0.5 h-2 w-2 shrink-0 rounded-full',
+                      anomaly.severity === 'high'
+                        ? 'bg-red-500'
+                        : anomaly.severity === 'medium'
+                          ? 'bg-yellow-500'
+                          : 'bg-blue-500'
+                    )}
+                  />
+                  <div>
+                    <span className="font-medium">{anomaly.type}:</span>{' '}
+                    <span className="text-muted-foreground">
+                      {anomaly.description}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -259,29 +296,23 @@ export function JobResultsView({
 
       {reports && reports.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>{t.reports}</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {t.reports}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
-              {reports.map((r, idx) => (
-                <li key={idx} className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{r.report_type}</div>
-                    <div className="text-muted-foreground text-sm">
-                      {formatDate(r.generated_at, lang)}
-                    </div>
-                  </div>
-                  {r.download_url ? (
-                    <a
-                      href={r.download_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary"
-                    >
-                      {t.download}
-                    </a>
-                  ) : undefined}
+            <ul className="space-y-3">
+              {reports.map((report, idx) => (
+                <li key={idx} className="rounded-md border p-3">
+                  <p className="font-medium capitalize">
+                    {report.reportType.replaceAll('_', ' ')}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    {formatDate(report.periodStart, lang)} -{' '}
+                    {formatDate(report.periodEnd, lang)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -289,51 +320,65 @@ export function JobResultsView({
         </Card>
       )}
 
-      {journal_entries_preview && journal_entries_preview.length > 0 && (
+      {journalEntriesPreview && journalEntriesPreview.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t.journalEntriesPreview}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.date}</TableHead>
-                  <TableHead>{t.account}</TableHead>
-                  <TableHead className="text-right">{t.debit}</TableHead>
-                  <TableHead className="text-right">{t.credit}</TableHead>
-                  <TableHead>{t.descriptionColumn}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {journal_entries_preview.map((je, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{formatDate(je.date, lang)}</TableCell>
-                    <TableCell>{je.account}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(je.debit ?? 0)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(je.credit ?? 0)}
-                    </TableCell>
-                    <TableCell>{je.description}</TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t.date}</TableHead>
+                    <TableHead>{t.descriptionColumn}</TableHead>
+                    <TableHead className="text-right">{t.debit}</TableHead>
+                    <TableHead className="text-right">{t.credit}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {journalEntriesPreview.map((je, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        {je.date ? formatDate(je.date, lang) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {je.description}
+                        {je.account && (
+                          <span className="text-muted-foreground ml-1 text-xs">
+                            ({je.account})
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {je.debit === undefined
+                          ? '-'
+                          : formatCurrency(je.debit)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {je.credit === undefined
+                          ? '-'
+                          : formatCurrency(je.credit)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
+
       {recommendations && recommendations.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>{t.recommendations}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
               {recommendations.map((rec, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-500" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                   <span>{rec}</span>
                 </li>
               ))}

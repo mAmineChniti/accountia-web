@@ -518,6 +518,18 @@
         "cancel": "إلغاء",
         "confirm": "تأكيد الدفع",
         "errorMessage": "فشل تحديث حالة الفاتورة. يرجى المحاولة مرة أخرى."
+      },
+      "stripeConnect": {
+        "title": "Stripe Connect",
+        "description": "قم بتوصيل حساب Stripe الخاص بك لاستلام المدفوعات مقابل الفواتير التي تصدرها.",
+        "connected": "متصل",
+        "notConnected": "غير متصل",
+        "connectHint": "قم بتوصيل حساب Stripe الخاص بك لبدء استلام المدفوعات.",
+        "connectButton": "توصيل حساب Stripe",
+        "preparingLink": "جاري إعداد الرابط...",
+        "statusError": "تعذر التحقق من حالة Stripe.",
+        "error": "خطأ",
+        "onboardingUrlMissing": "لم يتم استلام رابط الإعداد. يرجى المحاولة مرة أخرى."
       }
     },
     "businessApplication": {
@@ -735,6 +747,8 @@
         "openButton": "فتح الدردشة",
         "closeButton": "إغلاق الدردشة",
         "online": "متصل",
+        "connecting": "جاري الاتصال...",
+        "failed": "غير متصل",
         "messagePlaceholder": "اكتب رسالتك...",
         "clearChat": "مسح",
         "disclaimer": "قد يرتكب Accountia AI أخطاء.",
@@ -790,8 +804,6 @@
       "overviewTitle": "نظرة عامة",
       "overviewDescription": "اختر مهمة مكتملة لعرض النتائج",
       "noCompletedJobs": "لا توجد مهام مكتملة بعد",
-      "journalEntries": "قيود يومية",
-      "reports": "تقارير",
       "jobsTitle": "المهام المحاسبية",
       "jobsDescription": "عرض وإدارة مهامك المحاسبية",
       "noJobs": "لا توجد مهام بعد. أنشئ أول مهمة محاسبية للبدء.",
@@ -857,7 +869,15 @@
       "date": "التاريخ",
       "account": "الحساب",
       "debit": "مدين",
-      "credit": "دائن"
+      "credit": "دائن",
+      "calculating": "جاري الحساب...",
+      "calculateTaxes": "حساب الضرائب",
+      "taxesCalculated": "تم حساب الضرائب بنجاح",
+      "calculateTaxesError": "فشل في حساب الضرائب",
+      "accountsReceivable": "الذمم المدينة",
+      "accountsPayable": "الذمم الدائنة",
+      "cashPosition": "الموقف النقدي",
+      "reports": "التقارير"
     },
     "businessProducts": {
       "title": "المنتجات",
