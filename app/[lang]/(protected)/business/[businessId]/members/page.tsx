@@ -1,4 +1,3 @@
-import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { BusinessMembers } from '@/components/app/business-members/BusinessMembers';
 

@@ -268,6 +268,18 @@ export default function UserSidebar({
                     const clientPortalHref = `/${lang}/business/${business.id}/client-portal`;
                     const accountantHref = `/${lang}/business/${business.id}/accountant`;
                     const productsHref = `/${lang}/business/${business.id}/products`;
+
+                    // Per-business role drives sidebar visibility.
+                    // CLIENT = customer of the business (sees only invoices issued to them).
+                    // MEMBER = internal team (read-only on members; no invite mgmt; no Client Portal).
+                    // OWNER/ADMIN = full access.
+                    const businessRole = (business.role ?? '').toUpperCase();
+                    const isClient = businessRole === 'CLIENT';
+                    const canManageBusiness =
+                      businessRole === 'OWNER' || businessRole === 'ADMIN';
+                    const canSeeClientPortal = canManageBusiness;
+                    const canSeeInternalOps = !isClient;
+
                     const isBusinessActive =
                       pathname === businessHref ||
                       pathname === invitesHref ||
@@ -329,163 +341,179 @@ export default function UserSidebar({
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === receivedInvoicesHref}
-                              >
-                                <Link href={receivedInvoicesHref}>
-                                  <FileText className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.invoices.receivedInvoices}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === invitesHref}
-                              >
-                                <Link href={invitesHref}>
-                                  <UserPlus className="h-4 w-4" />
-                                  <span>
-                                    {
-                                      dictionary.pages.business.invites
-                                        .sectionTitle
+                            {canSeeInternalOps && (
+                              <>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === receivedInvoicesHref}
+                                  >
+                                    <Link href={receivedInvoicesHref}>
+                                      <FileText className="h-4 w-4" />
+                                      <span>
+                                        {
+                                          dictionary.pages.invoices
+                                            .receivedInvoices
+                                        }
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === membersHref}
+                                  >
+                                    <Link href={membersHref}>
+                                      <Users className="h-4 w-4" />
+                                      <span>Team Members</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                {canManageBusiness && (
+                                  <SidebarMenuSubItem>
+                                    <SidebarMenuSubButton
+                                      asChild
+                                      isActive={pathname === invitesHref}
+                                    >
+                                      <Link href={invitesHref}>
+                                        <UserPlus className="h-4 w-4" />
+                                        <span>
+                                          {
+                                            dictionary.pages.business.invites
+                                              .sectionTitle
+                                          }
+                                        </span>
+                                      </Link>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                )}
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === productsHref}
+                                  >
+                                    <Link href={productsHref}>
+                                      <Package className="h-4 w-4" />
+                                      <span>
+                                        {dictionary.pages.business.viewProducts}
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === accountantHref}
+                                  >
+                                    <Link href={accountantHref}>
+                                      <Calculator className="h-4 w-4" />
+                                      <span>
+                                        {
+                                          dictionary.pages.businessAccountant
+                                            .title
+                                        }
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === statisticsHref}
+                                  >
+                                    <Link href={statisticsHref}>
+                                      <BarChart3 className="h-4 w-4" />
+                                      <span>
+                                        {dictionary.pages.business.statistics ||
+                                          'Statistics'}
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === expensesHref}
+                                  >
+                                    <Link href={expensesHref}>
+                                      <Receipt className="h-4 w-4" />
+                                      <span>Expenses</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === analyticsHref}
+                                  >
+                                    <Link href={analyticsHref}>
+                                      <TrendingUp className="h-4 w-4" />
+                                      <span>Analytics</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === reportsHref}
+                                  >
+                                    <Link href={reportsHref}>
+                                      <ClipboardList className="h-4 w-4" />
+                                      <span>VAT Reports</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === vendorsHref}
+                                  >
+                                    <Link href={vendorsHref}>
+                                      <Truck className="h-4 w-4" />
+                                      <span>Vendors</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={pathname === purchaseOrdersHref}
+                                  >
+                                    <Link href={purchaseOrdersHref}>
+                                      <ShoppingCart className="h-4 w-4" />
+                                      <span>Purchase Orders</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={
+                                      pathname === recurringInvoicesHref
                                     }
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === productsHref}
-                              >
-                                <Link href={productsHref}>
-                                  <Package className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.business.viewProducts}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === accountantHref}
-                              >
-                                <Link href={accountantHref}>
-                                  <Calculator className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.businessAccountant.title}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === statisticsHref}
-                              >
-                                <Link href={statisticsHref}>
-                                  <BarChart3 className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.business.statistics ||
-                                      'Statistics'}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === expensesHref}
-                              >
-                                <Link href={expensesHref}>
-                                  <Receipt className="h-4 w-4" />
-                                  <span>Expenses</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === analyticsHref}
-                              >
-                                <Link href={analyticsHref}>
-                                  <TrendingUp className="h-4 w-4" />
-                                  <span>Analytics</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === reportsHref}
-                              >
-                                <Link href={reportsHref}>
-                                  <ClipboardList className="h-4 w-4" />
-                                  <span>VAT Reports</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === vendorsHref}
-                              >
-                                <Link href={vendorsHref}>
-                                  <Truck className="h-4 w-4" />
-                                  <span>Vendors</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === purchaseOrdersHref}
-                              >
-                                <Link href={purchaseOrdersHref}>
-                                  <ShoppingCart className="h-4 w-4" />
-                                  <span>Purchase Orders</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === recurringInvoicesHref}
-                              >
-                                <Link href={recurringInvoicesHref}>
-                                  <RefreshCw className="h-4 w-4" />
-                                  <span>Recurring Invoices</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === membersHref}
-                              >
-                                <Link href={membersHref}>
-                                  <Users className="h-4 w-4" />
-                                  <span>Team Members</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === clientPortalHref}
-                              >
-                                <Link href={clientPortalHref}>
-                                  <Globe className="h-4 w-4" />
-                                  <span>Client Portal</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
+                                  >
+                                    <Link href={recurringInvoicesHref}>
+                                      <RefreshCw className="h-4 w-4" />
+                                      <span>Recurring Invoices</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              </>
+                            )}
+                            {canSeeClientPortal && (
+                              <SidebarMenuSubItem>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === clientPortalHref}
+                                >
+                                  <Link href={clientPortalHref}>
+                                    <Globe className="h-4 w-4" />
+                                    <span>Client Portal</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            )}
                           </SidebarMenuSub>
                         )}
                       </SidebarMenuItem>

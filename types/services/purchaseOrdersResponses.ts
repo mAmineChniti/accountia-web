@@ -17,7 +17,15 @@ export interface PurchaseOrder {
   poNumber: string;
   vendorId: string;
   vendorName: string;
-  status: 'draft' | 'pending_approval' | 'approved' | 'sent' | 'partially_received' | 'received' | 'closed' | 'cancelled';
+  status:
+    | 'draft'
+    | 'pending_approval'
+    | 'approved'
+    | 'sent'
+    | 'partially_received'
+    | 'received'
+    | 'closed'
+    | 'cancelled';
   lineItems: POLineItem[];
   totalAmount: number;
   currency: string;

@@ -215,7 +215,9 @@ export function BusinessAnalytics({
                   <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
-                    formatter={(v) => `${(v as number)?.toLocaleString() ?? 0} TND`}
+                    formatter={(v) =>
+                      `${(v as number)?.toLocaleString() ?? 0} TND`
+                    }
                   />
                   <Bar
                     dataKey="paid"

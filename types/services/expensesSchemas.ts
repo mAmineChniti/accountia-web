@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
 export const ExpenseCategoryEnum = z.enum([
-  'travel', 'meals', 'accommodation', 'office_supplies',
-  'software', 'hardware', 'marketing', 'utilities',
-  'professional_services', 'other',
+  'travel',
+  'meals',
+  'accommodation',
+  'office_supplies',
+  'software',
+  'hardware',
+  'marketing',
+  'utilities',
+  'professional_services',
+  'other',
 ]);
 
 export const CreateExpenseSchema = z.object({

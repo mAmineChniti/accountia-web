@@ -12,7 +12,11 @@ export const CommentsService = {
     try {
       return await client
         .get(API_CONFIG.COMMENTS.LIST, {
-          searchParams: { businessId: params.businessId, entityType: params.entityType, entityId: params.entityId },
+          searchParams: {
+            businessId: params.businessId,
+            entityType: params.entityType,
+            entityId: params.entityId,
+          },
         })
         .json<CommentListResponse>();
     } catch (error: unknown) {
@@ -30,16 +34,23 @@ export const CommentsService = {
   }): Promise<CommentResponse> {
     const client = createAuthenticatedClient();
     try {
-      return await client.post(API_CONFIG.COMMENTS.CREATE, { json: data }).json<CommentResponse>();
+      return await client
+        .post(API_CONFIG.COMMENTS.CREATE, { json: data })
+        .json<CommentResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async updateComment(id: string, data: { businessId: string; body: string }): Promise<CommentResponse> {
+  async updateComment(
+    id: string,
+    data: { businessId: string; body: string }
+  ): Promise<CommentResponse> {
     const client = createAuthenticatedClient();
     try {
-      return await client.patch(API_CONFIG.COMMENTS.UPDATE.replace('{id}', id), { json: data }).json<CommentResponse>();
+      return await client
+        .patch(API_CONFIG.COMMENTS.UPDATE.replace('{id}', id), { json: data })
+        .json<CommentResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
@@ -48,7 +59,10 @@ export const CommentsService = {
   async deleteComment(id: string, businessId: string): Promise<void> {
     const client = createAuthenticatedClient();
     try {
-      await client.delete(API_CONFIG.COMMENTS.DELETE.replace('{id}', id), { json: { businessId }, searchParams: { businessId } });
+      await client.delete(API_CONFIG.COMMENTS.DELETE.replace('{id}', id), {
+        json: { businessId },
+        searchParams: { businessId },
+      });
     } catch (error: unknown) {
       return handleServiceError(error);
     }

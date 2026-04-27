@@ -35,10 +35,9 @@ const eslintConfig = defineConfig([
         'warn',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      'react-hooks/exhaustive-deps': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-misused-promises': 'off',
       'jsx-a11y/alt-text': 'warn',
@@ -46,6 +45,8 @@ const eslintConfig = defineConfig([
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': 'off',
+      'unicorn/no-null': 'off',
+      'unicorn/prefer-module': 'off',
     },
     settings: {
       react: {

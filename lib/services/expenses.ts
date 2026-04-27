@@ -1,5 +1,14 @@
-import type { CreateExpenseInput, UpdateExpenseInput, ReviewExpenseInput } from '@/types/services';
-import type { ExpenseListResponse, ExpenseResponse, ExpenseSummaryResponse, ExtractedReceiptData } from '@/types/services';
+import type {
+  CreateExpenseInput,
+  UpdateExpenseInput,
+  ReviewExpenseInput,
+} from '@/types/services';
+import type {
+  ExpenseListResponse,
+  ExpenseResponse,
+  ExpenseSummaryResponse,
+  ExtractedReceiptData,
+} from '@/types/services';
 import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
 
@@ -20,7 +29,9 @@ export const ExpensesService = {
       };
       if (params.status) searchParams.status = params.status;
       if (params.category) searchParams.category = params.category;
-      return await client.get(API_CONFIG.EXPENSES.LIST, { searchParams }).json<ExpenseListResponse>();
+      return await client
+        .get(API_CONFIG.EXPENSES.LIST, { searchParams })
+        .json<ExpenseListResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
@@ -29,17 +40,24 @@ export const ExpensesService = {
   async getSummary(businessId: string): Promise<ExpenseSummaryResponse> {
     const client = createAuthenticatedClient();
     try {
-      return await client.get(API_CONFIG.EXPENSES.SUMMARY, { searchParams: { businessId } }).json<ExpenseSummaryResponse>();
+      return await client
+        .get(API_CONFIG.EXPENSES.SUMMARY, { searchParams: { businessId } })
+        .json<ExpenseSummaryResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async getExpenseById(id: string, businessId: string): Promise<ExpenseResponse> {
+  async getExpenseById(
+    id: string,
+    businessId: string
+  ): Promise<ExpenseResponse> {
     const client = createAuthenticatedClient();
     try {
       return await client
-        .get(API_CONFIG.EXPENSES.GET.replace('{id}', id), { searchParams: { businessId } })
+        .get(API_CONFIG.EXPENSES.GET.replace('{id}', id), {
+          searchParams: { businessId },
+        })
         .json<ExpenseResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -49,46 +67,68 @@ export const ExpensesService = {
   async createExpense(data: CreateExpenseInput): Promise<ExpenseResponse> {
     const client = createAuthenticatedClient();
     try {
-      return await client.post(API_CONFIG.EXPENSES.CREATE, { json: data }).json<ExpenseResponse>();
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
-
-  async updateExpense(id: string, data: UpdateExpenseInput): Promise<ExpenseResponse> {
-    const client = createAuthenticatedClient();
-    try {
-      return await client.patch(API_CONFIG.EXPENSES.UPDATE.replace('{id}', id), { json: data }).json<ExpenseResponse>();
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
-
-  async submitExpense(id: string, businessId: string): Promise<ExpenseResponse> {
-    const client = createAuthenticatedClient();
-    try {
       return await client
-        .patch(API_CONFIG.EXPENSES.SUBMIT.replace('{id}', id), { searchParams: { businessId } })
+        .post(API_CONFIG.EXPENSES.CREATE, { json: data })
         .json<ExpenseResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async reviewExpense(id: string, data: ReviewExpenseInput): Promise<ExpenseResponse> {
+  async updateExpense(
+    id: string,
+    data: UpdateExpenseInput
+  ): Promise<ExpenseResponse> {
     const client = createAuthenticatedClient();
     try {
-      return await client.patch(API_CONFIG.EXPENSES.REVIEW.replace('{id}', id), { json: data }).json<ExpenseResponse>();
+      return await client
+        .patch(API_CONFIG.EXPENSES.UPDATE.replace('{id}', id), { json: data })
+        .json<ExpenseResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async markReimbursed(id: string, businessId: string): Promise<ExpenseResponse> {
+  async submitExpense(
+    id: string,
+    businessId: string
+  ): Promise<ExpenseResponse> {
     const client = createAuthenticatedClient();
     try {
       return await client
-        .patch(API_CONFIG.EXPENSES.REIMBURSE.replace('{id}', id), { searchParams: { businessId } })
+        .patch(API_CONFIG.EXPENSES.SUBMIT.replace('{id}', id), {
+          searchParams: { businessId },
+        })
+        .json<ExpenseResponse>();
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async reviewExpense(
+    id: string,
+    data: ReviewExpenseInput
+  ): Promise<ExpenseResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      return await client
+        .patch(API_CONFIG.EXPENSES.REVIEW.replace('{id}', id), { json: data })
+        .json<ExpenseResponse>();
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async markReimbursed(
+    id: string,
+    businessId: string
+  ): Promise<ExpenseResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      return await client
+        .patch(API_CONFIG.EXPENSES.REIMBURSE.replace('{id}', id), {
+          searchParams: { businessId },
+        })
         .json<ExpenseResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -98,13 +138,18 @@ export const ExpensesService = {
   async deleteExpense(id: string, businessId: string): Promise<void> {
     const client = createAuthenticatedClient();
     try {
-      await client.delete(API_CONFIG.EXPENSES.DELETE.replace('{id}', id), { searchParams: { businessId } });
+      await client.delete(API_CONFIG.EXPENSES.DELETE.replace('{id}', id), {
+        searchParams: { businessId },
+      });
     } catch (error: unknown) {
       return handleServiceError(error);
     }
   },
 
-  async extractReceipt(file: File, businessId: string): Promise<ExtractedReceiptData> {
+  async extractReceipt(
+    file: File,
+    businessId: string
+  ): Promise<ExtractedReceiptData> {
     const client = createAuthenticatedClient();
     try {
       const formData = new FormData();

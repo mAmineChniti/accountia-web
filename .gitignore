@@ -31,7 +31,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-# .env and .env.local are intentionally tracked
+ .env
+.env.local
 
 
 # vercel

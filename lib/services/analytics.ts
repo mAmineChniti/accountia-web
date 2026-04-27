@@ -11,11 +11,15 @@ export const AnalyticsService = {
   }): Promise<AnalyticsDashboardResponse> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string> = { businessId: params.businessId };
+      const searchParams: Record<string, string> = {
+        businessId: params.businessId,
+      };
       if (params.startDate) searchParams.startDate = params.startDate;
       if (params.endDate) searchParams.endDate = params.endDate;
       if (params.groupBy) searchParams.groupBy = params.groupBy;
-      return await client.get(API_CONFIG.ANALYTICS.DASHBOARD, { searchParams }).json<AnalyticsDashboardResponse>();
+      return await client
+        .get(API_CONFIG.ANALYTICS.DASHBOARD, { searchParams })
+        .json<AnalyticsDashboardResponse>();
     } catch (error: unknown) {
       return handleServiceError(error);
     }
