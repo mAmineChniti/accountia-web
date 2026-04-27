@@ -40,6 +40,8 @@ import type {
   TwoFADisableResponse,
   BanUserResponse,
   UnbanUserResponse,
+  UserStripeOnboardingLinkResponse,
+  UserStripeConnectStatusResponse,
 } from '@/types/services';
 import {
   ApiError,
@@ -475,6 +477,30 @@ export const AuthService = {
     try {
       const endpoint = API_CONFIG.AUTH.UNBAN_USER.replace('{id}', userId);
       const result = await client.patch(endpoint).json<UnbanUserResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async getStripeOnboardingLink(): Promise<UserStripeOnboardingLinkResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .post(API_CONFIG.AUTH.STRIPE_ONBOARDING)
+        .json<UserStripeOnboardingLinkResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
+
+  async getStripeConnectStatus(): Promise<UserStripeConnectStatusResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const result = await client
+        .get(API_CONFIG.AUTH.STRIPE_STATUS)
+        .json<UserStripeConnectStatusResponse>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);

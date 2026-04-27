@@ -128,6 +128,18 @@ export type BanUserResponse = BaseResponse;
 export type UnbanUserResponse = BaseResponse;
 export type TwoFADisableResponse = BaseResponse;
 
+// Stripe Connect (Individual User)
+export interface UserStripeOnboardingLinkResponse {
+  onboardingUrl: string;
+  message: string;
+}
+
+export interface UserStripeConnectStatusResponse {
+  isConnected: boolean;
+  stripeConnectId?: string;
+  message: string;
+}
+
 // OpenAPI compatibility aliases
 export type RegistrationResponseDto = RegisterResponse;
 export type RefreshResponseDto = RefreshTokenResponse;

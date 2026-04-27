@@ -25,6 +25,7 @@ import { type Dictionary } from '@/get-dictionary';
 import { BusinessService, ProductsService } from '@/lib/requests';
 import { formatICU } from '@/lib/icu-formatter';
 import { Chatbot } from '@/components/app/business/Chatbot';
+import { BusinessStatisticsSkeleton } from './BusinessStatisticsSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Card,
@@ -254,20 +255,7 @@ export default function BusinessStatistics({
       </Alert>
     );
   } else if (loading) {
-    content = (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className="dark:bg-card/90 space-y-3 rounded-lg border-0 bg-white/90 p-4 shadow-sm"
-          >
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-        ))}
-      </div>
-    );
+    content = <BusinessStatisticsSkeleton />;
   } else if (statistics === undefined) {
     content = (
       <Alert>

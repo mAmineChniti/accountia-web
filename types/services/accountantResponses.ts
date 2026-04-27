@@ -1,279 +1,245 @@
-import type { ApiResponse } from './sharedTypes';
-
-// Accounting Job Status Types (API uses lowercase, includes cancelled)
-export type AccountingJobStatus =
+export type AccountantJobStatus =
   | 'pending'
   | 'processing'
   | 'completed'
-  | 'failed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'failed';
 
-// Tax Calculation (matches API docs)
-export interface TaxCalculation {
-  tax_type: string;
-  jurisdiction: string;
-  taxable_amount: number;
-  tax_rate: number;
-  tax_amount: number;
-}
-
-// Anomaly Detected (matches API docs)
-export interface AnomalyDetected {
-  type: string;
-  severity: 'low' | 'medium' | 'high';
-  description: string;
-  affected_transactions?: string[];
-}
-
-// Report from results
-export interface JobReport {
-  report_type: string;
-  generated_at?: string;
-  download_url?: string;
-  data?: Record<string, unknown>;
-}
-
-// Journal Entry Preview
-export interface JournalEntryPreview {
-  date: string;
-  account: string;
-  debit: number;
-  credit: number;
-  description?: string;
-}
-
-// Journal Entry (results)
-export interface JournalEntry {
-  date: string;
-  debit_account: string;
-  credit_account: string;
-  amount: number;
-  description?: string;
-  reference?: string;
-}
-
-// Transaction from results
-export interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category?: string;
-  account?: string;
-  currency?: string;
-}
-
-// Accounting Job Details (GET /jobs/{taskId}) - unwrapped
-export interface AccountingJobDetails {
-  task_id: string;
-  business_id: string;
-  period_start: string;
-  period_end: string;
-  status: AccountingJobStatus;
-  progress_percent: number;
-  started_at?: string | null;
-  completed_at?: string | null;
-  error_message?: string | null;
-  journal_entries_count?: number;
-  reports_generated?: number;
-}
-
-// Create Accounting Job Response (POST /jobs) - unwrapped
-export interface CreateAccountingJobResponse {
-  task_id: string;
-  status: AccountingJobStatus;
+export interface CreateAccountingJobResponseDto {
   message: string;
-  estimated_completion?: string;
-  business_id?: string;
-  period_start?: string;
-  period_end?: string;
-  created_at?: string;
-}
-
-// Wrapped response aliases using generic ApiResponse<T>
-export type CreateAccountingJobWrapper =
-  ApiResponse<CreateAccountingJobResponse>;
-export type AccountingJobDetailsWrapper = ApiResponse<AccountingJobDetails>;
-export type GetAccountingJobResultsWrapper =
-  ApiResponse<GetAccountingJobResultsResponse>;
-export type CancelJobWrapper = ApiResponse<CancelJobResponse>;
-export type AccountingHistoryWrapper = ApiResponse<AccountingHistoryResponse>;
-export type AccountingWorkLogWrapper = ApiResponse<AccountingWorkLogResponse>;
-export type TaxSummaryWrapper = ApiResponse<TaxSummaryResponse>;
-
-// Job list item with period info (used in list response)
-export interface AccountingJobListItemWithPeriod {
-  task_id: string;
-  period_start: string;
-  period_end: string;
-  status: AccountingJobStatus;
-  progress_percent?: number;
-  started_at?: string | null;
-  completed_at?: string | null;
-  business_id?: string;
-  error_message?: string | null;
-  journal_entries_count?: number;
-  reports_generated?: number;
-}
-
-// List Accounting Jobs Response (GET /jobs) — wrapped with success + meta
-export interface ListAccountingJobsResponse extends ApiResponse<
-  AccountingJobListItemWithPeriod[]
-> {
-  meta: { total: number };
-}
-
-// Get Accounting Job Results Response (GET /jobs/{taskId}/results) - unwrapped
-export interface GetAccountingJobResultsResponse {
-  task_id: string;
-  business_id: string;
-  period_start: string;
-  period_end: string;
-  status: AccountingJobStatus;
-  total_revenue?: number;
-  total_expenses?: number;
-  gross_profit?: number;
-  net_profit?: number;
-  tax_calculations?: TaxCalculation[];
-  ai_insights?: string;
-  recommendations?: string[];
-  anomalies_detected?: AnomalyDetected[];
-  reports?: JobReport[];
-  journal_entries_preview?: JournalEntryPreview[];
-  journal_entries?: JournalEntry[];
-  total_journal_entries?: number;
-  completed_at?: string | null;
-}
-
-// Cancel Job Response (DELETE /jobs/{taskId}) - unwrapped
-export interface CancelJobResponse {
-  task_id: string;
-  status: 'cancelled';
-  message: string;
-  previous_status?: string;
-}
-
-// Accounting History Task
-export interface AccountingHistoryTask {
-  task_id: string;
-  status: AccountingJobStatus;
-  period_start: string;
-  period_end: string;
-  completed_at?: string | null;
-}
-
-// Accounting History Response (GET /business/{businessId}/history) - unwrapped
-export interface AccountingHistoryResponse {
-  business_id: string;
-  tasks: AccountingHistoryTask[];
-}
-
-// Work Log Entry
-export interface WorkLogEntry {
-  date: string;
-  type: string;
-  description: string;
-  user_id?: string;
-  metadata?: Record<string, unknown>;
-}
-
-// Work Log Summary
-export interface WorkLogSummary {
-  total_accounting_periods: number;
-  completed: number;
-  pending: number;
-  processing: number;
-  failed: number;
-  total_journal_entries_generated?: number;
-  total_revenue_processed?: number;
-}
-
-// Accounting Period Detail
-export interface AccountingPeriodDetail {
-  task_id: string;
-  period_start: string;
-  period_end: string;
-  status: AccountingJobStatus;
-  created_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  journal_entries_count?: number;
-  tax_calculations_count?: number;
-  reports_count?: number;
-  has_ai_insights?: boolean;
-  recommendations_count?: number;
-  financial_summary?: {
-    total_revenue?: number;
-    total_expenses?: number;
-    gross_profit?: number;
-    net_profit?: number;
-    accounts_receivable?: number;
-    accounts_payable?: number;
-    cash_position?: number;
+  timestamp: string;
+  job: {
+    taskId: string;
+    status: AccountantJobStatus;
+    message?: string;
+    estimatedCompletion?: string;
   };
 }
 
-// Accounting Work Log Response (GET /business/{businessId}/work) - unwrapped
-export interface AccountingWorkLogResponse {
-  business_id: string;
-  database_name?: string;
-  summary: WorkLogSummary;
-  accounting_periods: AccountingPeriodDetail[];
+export interface AccountantJobSummaryDto {
+  taskId: string;
+  periodStart: string;
+  periodEnd: string;
+  status: AccountantJobStatus;
+  progressPercent?: number;
+  startedAt?: string;
+  completedAt?: string | null;
+  journalEntriesCount?: number;
+  reportsGenerated?: number;
 }
 
-// VAT Breakdown
-export interface VatBreakdown {
-  standard_rate_19_percent?: number;
-  reduced_rate_13_percent?: number;
-  reduced_rate_7_percent?: number;
+export interface ListAccountingJobsResponseDto {
+  message: string;
+  timestamp: string;
+  jobs: AccountantJobSummaryDto[];
+  total: number;
 }
 
-// Monthly Tax Detail
-export interface MonthlyTaxDetail {
-  month: number;
-  period?: string;
-  vat_standard_19?: number;
-  vat_reduced_13?: number;
-  vat_reduced_7?: number;
-  vat_total?: number;
-  taxable_income?: number;
-  corporate_tax_due?: number;
-  withholding_tax?: number;
-  total_tax_liability?: number;
-  due_date?: string;
+export interface GetJobStatusResponseDto {
+  message: string;
+  timestamp: string;
+  job: {
+    taskId: string;
+    businessId?: string;
+    periodStart: string;
+    periodEnd: string;
+    status: AccountantJobStatus;
+    progressPercent: number;
+    startedAt?: string;
+    completedAt?: string | null;
+    journalEntriesCount?: number;
+    reportsGenerated?: number;
+  };
 }
 
-// Tax Calendar Item
-export interface TaxCalendarItem {
-  period: string;
-  due_date: string;
+export interface TaxCalculationDto {
+  taxType: string;
+  jurisdiction?: string;
+  taxableAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  notes?: string;
+}
+
+export interface AnomalyDto {
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface ReportDto {
+  reportType: string;
+  periodStart: string;
+  periodEnd: string;
+  data: Record<string, unknown>;
+}
+
+export interface JournalEntryDto {
+  date?: string;
+  account?: string;
+  debit?: number;
+  credit?: number;
   description?: string;
 }
 
-// Tax Summary Data
-export interface TaxSummaryData {
-  annual_vat_total?: number;
-  annual_corporate_tax?: number;
-  annual_withholding_tax?: number;
-  total_tax_liability?: number;
+export interface GetJobResultsResponseDto {
+  message: string;
+  timestamp: string;
+  results: {
+    taskId: string;
+    businessId?: string;
+    status: AccountantJobStatus;
+    periodStart?: string;
+    periodEnd?: string;
+    totalRevenue?: number;
+    totalExpenses?: number;
+    grossProfit?: number;
+    netProfit?: number;
+    accountsReceivable?: number;
+    accountsPayable?: number;
+    cashPosition?: number;
+    taxCalculations?: TaxCalculationDto[];
+    aiInsights?: string;
+    recommendations?: string[];
+    anomaliesDetected?: AnomalyDto[];
+    reports?: ReportDto[];
+    journalEntriesPreview?: JournalEntryDto[];
+    totalJournalEntries?: number;
+  };
 }
 
-// Tax Summary Response (GET /business/{businessId}/taxes) - unwrapped
-export interface TaxSummaryResponse {
-  business_id: string;
-  business_name?: string;
-  year?: number;
-  currency?: string;
-  summary: TaxSummaryData;
-  vat_breakdown?: VatBreakdown;
-  monthly_details?: MonthlyTaxDetail[];
-  tax_calendar?: TaxCalendarItem[];
-  notes?: string[];
+export interface CancelAccountingJobResponseDto {
+  message: string;
+  timestamp: string;
+  result: {
+    taskId: string;
+    status: AccountantJobStatus;
+    message?: string;
+    previousStatus?: AccountantJobStatus;
+  };
 }
 
-// Health Check Response (kept wrapped)
-export interface AccountantHealthResponse {
+export interface AccountingHistoryTaskDto {
+  taskId: string;
+  periodStart: string;
+  periodEnd: string;
+  status: AccountantJobStatus;
+  completedAt?: string;
+}
+
+export interface GetAccountingHistoryResponseDto {
+  message: string;
+  timestamp: string;
+  businessId: string;
+  tasks: AccountingHistoryTaskDto[];
+}
+
+export interface FinancialSummaryDto {
+  totalRevenue?: number;
+  totalExpenses?: number;
+  grossProfit?: number;
+  netProfit?: number;
+  accountsReceivable?: number;
+  accountsPayable?: number;
+  cashPosition?: number;
+}
+
+export interface AccountantWorkPeriodDto {
+  taskId: string;
+  periodStart: string;
+  periodEnd: string;
+  status: AccountantJobStatus;
+  createdAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  journalEntriesCount?: number;
+  taxCalculationsCount?: number;
+  reportsCount?: number;
+  hasAiInsights?: boolean;
+  recommendationsCount?: number;
+  financialSummary?: FinancialSummaryDto;
+}
+
+export interface GetAllAccountantWorkResponseDto {
+  message: string;
+  timestamp: string;
+  work: {
+    businessId: string;
+    databaseName?: string;
+    summary?: {
+      totalAccountingPeriods?: number;
+      completed?: number;
+      pending?: number;
+      processing?: number;
+      failed?: number;
+      totalJournalEntriesGenerated?: number;
+      totalRevenueProcessed?: number;
+    };
+    accountingPeriods?: AccountantWorkPeriodDto[];
+  };
+}
+
+export interface MonthlyTaxDetailDto {
+  month: number;
+  period: string;
+  vatStandard19?: number;
+  vatReduced13?: number;
+  vatReduced7?: number;
+  vatTotal?: number;
+  taxableIncome?: number;
+  corporateTaxDue?: number;
+  withholdingTax?: number;
+  totalTaxLiability?: number;
+  dueDate?: string;
+}
+
+export interface TaxCalendarItemDto {
+  period: string;
+  dueDate?: string;
+  description?: string;
+}
+
+export interface TunisianTaxSummaryResponseDto {
+  message: string;
+  timestamp: string;
+  taxes: {
+    businessId: string;
+    businessName?: string;
+    year: number;
+    currency?: string;
+    summary?: {
+      annualVatTotal?: number;
+      annualCorporateTax?: number;
+      annualWithholdingTax?: number;
+      totalTaxLiability?: number;
+    };
+    vatBreakdown?: {
+      standardRate19Percent?: number;
+      reducedRate13Percent?: number;
+      reducedRate7Percent?: number;
+    };
+    monthlyDetails?: MonthlyTaxDetailDto[];
+    taxCalendar?: TaxCalendarItemDto[];
+    notes?: string[];
+  };
+}
+
+export type TaxSummaryDto = TunisianTaxSummaryResponseDto['taxes']['summary'];
+
+export interface CalculateTaxResponseDto {
+  message: string;
+  timestamp: string;
+  result: {
+    businessId: string;
+    businessName?: string;
+    year: number;
+    summary: TaxSummaryDto | undefined;
+    message?: string;
+  };
+}
+
+export interface AccountantHealthResponseDto {
   success: boolean;
   service: string;
-  status: 'available' | 'unavailable';
+  status: 'available' | 'unavailable' | (string & {});
 }

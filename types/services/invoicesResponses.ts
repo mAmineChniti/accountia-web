@@ -138,3 +138,8 @@ export interface InvoiceCheckoutSessionResponse {
   sessionId: string;
   checkoutUrl: string;
 }
+
+export interface InvoicePaymentConfirmResponse {
+  success: boolean;
+  status: 'complete' | 'open' | 'expired' | (string & {});
+}
