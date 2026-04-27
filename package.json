@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs}": "eslint --fix",
+    "*.{json,css,md,yml,yaml}": "prettier --write"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
