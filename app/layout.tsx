@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { defaultViewport } from '@/lib/seo/metadata';
 import { Geist, Geist_Mono, Noto_Sans_Arabic } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
@@ -28,9 +29,73 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: 'Accountia',
-  description: 'Multi-language accounting and finance management platform',
+  title: {
+    default: 'Accountia - AI-Powered Accounting & Business Management',
+    template: '%s | Accountia',
+  },
+  description:
+    'Transform your business with Accountia. AI-powered accounting automation, intelligent invoicing, tax preparation, and real-time financial insights for startups to enterprises.',
+  keywords: [
+    'accounting software',
+    'AI accounting',
+    'business management',
+    'invoicing',
+    'tax preparation',
+    'bookkeeping automation',
+    'financial management',
+  ],
+  authors: [{ name: 'Accountia Team' }],
+  creator: 'Accountia',
+  publisher: 'Accountia',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? 'https://accountia.io'
+  ),
+  alternates: {
+    canonical: '/',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
+  openGraph: {
+    type: 'website',
+    locale: 'en',
+    url: '/',
+    siteName: 'Accountia',
+    title: 'Accountia - AI-Powered Accounting & Business Management',
+    description:
+      'Transform your business with AI-powered accounting automation.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Accountia - AI-Powered Accounting Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Accountia - AI-Powered Accounting & Business Management',
+    description:
+      'Transform your business with AI-powered accounting automation.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
+
+export const viewport: Viewport = defaultViewport;
 
 export default async function RootLayout({
   children,

@@ -1,5 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
+import { generateHomeMetadata } from '@/lib/seo/metadata';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,6 +17,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
+  OrganizationSchemaScript,
+  SoftwareApplicationSchemaScript,
+  WebSiteSchemaScript,
+} from '@/lib/seo/schema';
+import {
   Bot,
   BarChart3,
   Shield,
@@ -29,6 +35,15 @@ import {
   Info,
 } from 'lucide-react';
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>;
+}) {
+  const { lang } = await params;
+  return generateHomeMetadata(lang);
+}
+
 export default async function IndexPage({
   params,
 }: {
@@ -40,6 +55,9 @@ export default async function IndexPage({
 
   return (
     <>
+      <OrganizationSchemaScript locale={lang} />
+      <SoftwareApplicationSchemaScript locale={lang} />
+      <WebSiteSchemaScript locale={lang} />
       <section className="container mx-auto max-w-7xl px-6 py-24 lg:px-8 xl:py-32">
         <div className="mx-auto max-w-4xl text-center">
           <Badge variant="secondary" className="mb-6 px-3 py-1 text-sm">

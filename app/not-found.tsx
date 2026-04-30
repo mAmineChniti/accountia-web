@@ -5,6 +5,17 @@ import Link from 'next/link';
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { cookies } from 'next/headers';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Page Not Found | Accountia',
+  description:
+    'The page you are looking for does not exist. Return to Accountia.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 async function getLocaleFromRequest(): Promise<Locale> {
   const cookieStore = await cookies();
