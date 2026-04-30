@@ -23,6 +23,11 @@ import {
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { AccountantService } from '@/lib/services';
+import type {
+  AccountantHealthResponseDto,
+  ReadinessResponseDto,
+  QuickHealthResponseDto,
+} from '@/types/services';
 import { cn } from '@/lib/utils';
 import { formatDate, dateToISOString } from '@/lib/date-utils';
 import { JobResultsView } from './JobResultsView';
@@ -147,7 +152,7 @@ export default function BusinessAccountant({
     enabled: !!businessId && !!selectedYear,
   });
 
-  const { data: healthData } = useQuery({
+  const { data: healthData } = useQuery<AccountantHealthResponseDto>({
     queryKey: ['accountant-health'],
     queryFn: () => AccountantService.health(),
     retry: 1,
@@ -225,8 +230,12 @@ export default function BusinessAccountant({
 
   const taxSummary = useMemo(() => taxData?.taxes, [taxData]);
   const selectedJobResults = useMemo(() => jobResults?.results, [jobResults]);
-  const isServiceAvailable =
-    healthData?.success && healthData?.status === 'available';
+  const isServiceAvailable = (() => {
+    if (!healthData) return false;
+    const status = (healthData as ReadinessResponseDto | QuickHealthResponseDto)
+      .status;
+    return status === 'ready' || status === 'healthy' || status === 'available';
+  })();
 
   const renderStatusBadge = (status: AccountantJobStatus) => {
     const Icon = statusIcons[status] || Clock; // Fallback to Clock for unknown statuses
