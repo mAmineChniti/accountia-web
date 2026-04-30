@@ -8,6 +8,7 @@ import { FocusRouteHandler } from '@/components/reusable/focus-route-handler';
 import { headers } from 'next/headers';
 import { cn } from '@/lib/utils';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -68,6 +69,7 @@ export default async function RootLayout({
           {children}
         </Providers>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
