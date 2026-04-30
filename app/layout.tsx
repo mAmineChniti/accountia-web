@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   title: 'Accountia',
   description: 'Multi-language accounting and finance management platform',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.ico?v=2',
   },
 };
 
