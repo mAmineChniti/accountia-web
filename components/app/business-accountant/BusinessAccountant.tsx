@@ -27,6 +27,7 @@ import type {
   AccountantHealthResponseDto,
   ReadinessResponseDto,
   QuickHealthResponseDto,
+  GetJobResultsResponseDto,
 } from '@/types/services';
 import { cn } from '@/lib/utils';
 import { formatDate, dateToISOString } from '@/lib/date-utils';
@@ -144,6 +145,25 @@ export default function BusinessAccountant({
             )
         : skipToken,
   });
+  const [fetchedJobResults, setFetchedJobResults] = useState<
+    GetJobResultsResponseDto['results'] | undefined
+  >();
+
+  const handleViewResults = async (taskId: string) => {
+    try {
+      setSelectedJobId(taskId);
+      setActiveTab('overview');
+      setFetchedJobResults(undefined);
+      const resp = await AccountantService.getJobResults(
+        { taskId },
+        { businessId }
+      );
+      setFetchedJobResults(resp.results);
+    } catch (error: unknown) {
+      const e = error as Error;
+      toast.error(e.message || t.loadError);
+    }
+  };
 
   const { data: taxData, isLoading: taxLoading } = useQuery({
     queryKey: ['accountant-taxes', businessId, selectedYear],
@@ -229,7 +249,10 @@ export default function BusinessAccountant({
   }, [jobsData]);
 
   const taxSummary = useMemo(() => taxData?.taxes, [taxData]);
-  const selectedJobResults = useMemo(() => jobResults?.results, [jobResults]);
+  const selectedJobResults = useMemo(
+    () => fetchedJobResults ?? jobResults?.results,
+    [fetchedJobResults, jobResults]
+  );
   const isServiceAvailable = (() => {
     if (!healthData) return false;
     const status = (healthData as ReadinessResponseDto | QuickHealthResponseDto)
@@ -393,10 +416,7 @@ export default function BusinessAccountant({
                           variant="ghost"
                           key={job.taskId}
                           className="hover:bg-muted flex h-auto w-full cursor-pointer items-center justify-between rounded-lg border p-4 text-left transition-colors"
-                          onClick={() => {
-                            setSelectedJobId(job.taskId);
-                            setActiveTab('overview');
-                          }}
+                          onClick={() => handleViewResults(job.taskId)}
                         >
                           <div className="space-y-1">
                             <p className="font-medium">
@@ -517,10 +537,7 @@ export default function BusinessAccountant({
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => {
-                                    setSelectedJobId(job.taskId);
-                                    setActiveTab('overview');
-                                  }}
+                                  onClick={() => handleViewResults(job.taskId)}
                                 >
                                   {t.viewResults}
                                 </Button>
