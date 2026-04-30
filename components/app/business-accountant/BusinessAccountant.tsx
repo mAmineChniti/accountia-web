@@ -148,17 +148,18 @@ export default function BusinessAccountant({
   const [fetchedJobResults, setFetchedJobResults] = useState<
     GetJobResultsResponseDto['results'] | undefined
   >();
+  const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false);
 
   const handleViewResults = async (taskId: string) => {
     try {
       setSelectedJobId(taskId);
-      setActiveTab('overview');
       setFetchedJobResults(undefined);
       const resp = await AccountantService.getJobResults(
         { taskId },
         { businessId }
       );
       setFetchedJobResults(resp.results);
+      setIsResultsDialogOpen(true);
     } catch (error: unknown) {
       const e = error as Error;
       toast.error(e.message || t.loadError);
@@ -380,14 +381,8 @@ export default function BusinessAccountant({
                 <Skeleton className="h-32 w-full" />
               </CardContent>
             </Card>
-          ) : selectedJobResults ? (
-            <JobResultsView
-              results={selectedJobResults}
-              t={t}
-              lang={lang}
-              formatCurrency={formatCurrency}
-              onClose={() => setSelectedJobId(undefined)}
-            />
+          ) : selectedJobResults && isResultsDialogOpen ? (
+            <></>
           ) : (
             <Card>
               <CardHeader>
@@ -825,6 +820,32 @@ export default function BusinessAccountant({
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isResultsDialogOpen}
+        onOpenChange={(open) => {
+          setIsResultsDialogOpen(open);
+          if (!open) {
+            setSelectedJobId(undefined);
+            setFetchedJobResults(undefined);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl">
+          {selectedJobResults ? (
+            <JobResultsView
+              results={selectedJobResults}
+              t={t}
+              lang={lang}
+              formatCurrency={formatCurrency}
+              onClose={() => setIsResultsDialogOpen(false)}
+            />
+          ) : (
+            <div className="p-6">
+              <p>{t.loading}</p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

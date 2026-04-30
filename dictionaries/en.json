@@ -786,6 +786,7 @@
     "businessAccountant": {
       "title": "AI Accountant",
       "description": "Automated accounting and tax management powered by AI",
+      "loading": "Loading...",
       "serviceAvailable": "Service Available",
       "serviceUnavailable": "Service Unavailable",
       "createJob": "Create Job",

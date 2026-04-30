@@ -778,6 +778,7 @@
     "businessAccountant": {
       "title": "المحاسب الذكي",
       "description": "المحاسبة الآلية وإدارة الضرائب المدعومة بالذكاء الاصطناعي",
+      "loading": "جارٍ التحميل...",
       "serviceAvailable": "الخدمة متاحة",
       "serviceUnavailable": "الخدمة غير متاحة",
       "createJob": "إنشاء مهمة",

@@ -307,7 +307,7 @@ export function JobResultsView({
               {reports.map((report, idx) => (
                 <li key={idx} className="rounded-md border p-3">
                   <p className="font-medium capitalize">
-                    {report.reportType.replaceAll('_', ' ')}
+                    {(report.reportType ?? '').replaceAll('_', ' ')}
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {formatDate(report.periodStart, lang)} -{' '}

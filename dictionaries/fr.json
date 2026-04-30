@@ -786,6 +786,7 @@
     "businessAccountant": {
       "title": "Comptable IA",
       "description": "Comptabilité automatisée et gestion fiscale pilotée par l'IA",
+      "loading": "Chargement...",
       "serviceAvailable": "Service Disponible",
       "serviceUnavailable": "Service Indisponible",
       "createJob": "Créer une tâche",
