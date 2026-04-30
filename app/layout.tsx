@@ -7,6 +7,7 @@ import { TokenExpiration } from '@/components/reusable/token-expiration';
 import { FocusRouteHandler } from '@/components/reusable/focus-route-handler';
 import { headers } from 'next/headers';
 import { cn } from '@/lib/utils';
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -66,6 +67,7 @@ export default async function RootLayout({
           <TokenExpiration />
           {children}
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
