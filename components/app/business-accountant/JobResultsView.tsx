@@ -62,7 +62,6 @@ export function JobResultsView({
     );
 
   const {
-    taskId,
     periodStart,
     periodEnd,
     totalRevenue,
