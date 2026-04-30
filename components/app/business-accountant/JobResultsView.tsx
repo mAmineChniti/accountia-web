@@ -86,7 +86,6 @@ export function JobResultsView({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">{t.jobResultsTitle}</h2>
-          <p className="text-muted-foreground font-mono text-sm">{taskId}</p>
           {(periodStart || periodEnd) && (
             <p className="text-muted-foreground text-sm">
               {periodStart && formatDate(periodStart, lang)}

@@ -31,7 +31,6 @@ import type {
 } from '@/types/services';
 import { cn } from '@/lib/utils';
 import { formatDate, dateToISOString } from '@/lib/date-utils';
-import { JobResultsView } from './JobResultsView';
 import { TaxSummaryView } from './TaxSummaryView';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -83,6 +82,7 @@ import type {
   AccountantJobStatus,
   CreateAccountingJobInput,
 } from '@/types/services';
+import { JobResultsView } from './JobResultsView';
 
 interface BusinessAccountantProps {
   businessId: string;
@@ -106,7 +106,6 @@ export default function BusinessAccountant({
   const queryClient = useQueryClient();
   const t = dictionary.pages.businessAccountant;
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), 0, 1),
@@ -134,35 +133,26 @@ export default function BusinessAccountant({
     retry: 1,
   });
 
-  const { data: jobResults, isLoading: jobResultsLoading } = useQuery({
-    queryKey: ['accountant-job-results', businessId, selectedJobId],
-    queryFn:
-      selectedJobId && businessId
-        ? () =>
-            AccountantService.getJobResults(
-              { taskId: selectedJobId },
-              { businessId }
-            )
-        : skipToken,
-  });
-  const [fetchedJobResults, setFetchedJobResults] = useState<
+  const [selectedJobResultsState, setSelectedJobResultsState] = useState<
     GetJobResultsResponseDto['results'] | undefined
   >();
-  const [isResultsDialogOpen, setIsResultsDialogOpen] = useState(false);
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   const handleViewResults = async (taskId: string) => {
     try {
-      setSelectedJobId(taskId);
-      setFetchedJobResults(undefined);
+      setSelectedJobResultsState(undefined);
+      setResultsLoading(true);
       const resp = await AccountantService.getJobResults(
         { taskId },
         { businessId }
       );
-      setFetchedJobResults(resp.results);
-      setIsResultsDialogOpen(true);
+      setSelectedJobResultsState(resp.results);
+      setActiveTab('overview');
     } catch (error: unknown) {
       const e = error as Error;
       toast.error(e.message || t.loadError);
+    } finally {
+      setResultsLoading(false);
     }
   };
 
@@ -250,10 +240,6 @@ export default function BusinessAccountant({
   }, [jobsData]);
 
   const taxSummary = useMemo(() => taxData?.taxes, [taxData]);
-  const selectedJobResults = useMemo(
-    () => fetchedJobResults ?? jobResults?.results,
-    [fetchedJobResults, jobResults]
-  );
   const isServiceAvailable = (() => {
     if (!healthData) return false;
     const status = (healthData as ReadinessResponseDto | QuickHealthResponseDto)
@@ -371,7 +357,7 @@ export default function BusinessAccountant({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {jobResultsLoading ? (
+          {resultsLoading ? (
             <Card>
               <CardHeader>
                 <Skeleton className="h-6 w-48" />
@@ -381,8 +367,14 @@ export default function BusinessAccountant({
                 <Skeleton className="h-32 w-full" />
               </CardContent>
             </Card>
-          ) : selectedJobResults && isResultsDialogOpen ? (
-            <></>
+          ) : selectedJobResultsState ? (
+            <JobResultsView
+              results={selectedJobResultsState}
+              t={t}
+              lang={lang}
+              formatCurrency={formatCurrency}
+              onClose={() => setSelectedJobResultsState(undefined)}
+            />
           ) : (
             <Card>
               <CardHeader>
@@ -822,32 +814,7 @@ export default function BusinessAccountant({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={isResultsDialogOpen}
-        onOpenChange={(open) => {
-          setIsResultsDialogOpen(open);
-          if (!open) {
-            setSelectedJobId(undefined);
-            setFetchedJobResults(undefined);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-3xl">
-          {selectedJobResults ? (
-            <JobResultsView
-              results={selectedJobResults}
-              t={t}
-              lang={lang}
-              formatCurrency={formatCurrency}
-              onClose={() => setIsResultsDialogOpen(false)}
-            />
-          ) : (
-            <div className="p-6">
-              <p>{t.loading}</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Results are now shown on their own page: /[lang]/business/[businessId]/accountant/results/[taskId] */}
     </div>
   );
 }
