@@ -238,8 +238,32 @@ export interface CalculateTaxResponseDto {
   };
 }
 
-export interface AccountantHealthResponseDto {
-  success: boolean;
-  service: string;
-  status: 'available' | 'unavailable' | (string & {});
+export interface QuickHealthResponseDto {
+  status: 'healthy' | 'ready' | string;
 }
+
+export interface ReadinessChecks {
+  mongodb?: boolean;
+  redis?: boolean;
+  model?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+export interface ModelInfoDto {
+  name?: string;
+  ready?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ReadinessResponseDto {
+  status: 'ready' | 'not_ready' | string;
+  checks?: ReadinessChecks;
+  worker_pid?: number;
+  model_info?: ModelInfoDto;
+  timestamp?: string;
+  [key: string]: unknown;
+}
+
+export type AccountantHealthResponseDto =
+  | QuickHealthResponseDto
+  | ReadinessResponseDto;

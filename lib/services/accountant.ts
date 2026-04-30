@@ -214,10 +214,34 @@ export const AccountantService = {
   },
   async health(): Promise<AccountantHealthResponseDto> {
     try {
-      const result = await publicClient
-        .get(API_CONFIG.ACCOUNTANT.HEALTH)
-        .json<AccountantHealthResponseDto>();
-      return result;
+      // Prefer the deep readiness probe
+      const readyResp = await publicClient.get(
+        API_CONFIG.ACCOUNTANT.HEALTH_READY,
+        {
+          throwHttpErrors: false,
+        }
+      );
+
+      if (readyResp.status === 200) {
+        const body = await readyResp.json<AccountantHealthResponseDto>();
+        return body;
+      }
+
+      if (readyResp.status === 503) {
+        const body = await readyResp
+          .json<AccountantHealthResponseDto>()
+          .catch(() => ({}) as AccountantHealthResponseDto);
+        return body;
+      }
+
+      // Fallback to quick health endpoint
+      const quickResp = await publicClient.get(API_CONFIG.ACCOUNTANT.HEALTH, {
+        throwHttpErrors: false,
+      });
+      const quickBody = await quickResp
+        .json<AccountantHealthResponseDto>()
+        .catch(() => ({}) as AccountantHealthResponseDto);
+      return quickBody;
     } catch (error: unknown) {
       return handleServiceError(error);
     }

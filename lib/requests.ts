@@ -175,6 +175,7 @@ export const API_CONFIG = {
     GET_TAXES: 'accountant/taxes',
     CALCULATE_TAXES: 'accountant/taxes/calculate',
     HEALTH: 'accountant/health',
+    HEALTH_READY: 'accountant/health/ready',
   },
 } as const;
 
