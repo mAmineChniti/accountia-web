@@ -137,6 +137,8 @@ export default function Invoices({
     InvoiceReceiptResponseDto | undefined
   >();
   const [paymentClientSecret, setPaymentClientSecret] = useState<string>();
+  const [paymentSessionId, setPaymentSessionId] = useState<string>();
+  const [paymentReceiptId, setPaymentReceiptId] = useState<string>();
   const [paymentInvoiceLabel, setPaymentInvoiceLabel] = useState<string>('');
   const [mockPaymentInvoice, setMockPaymentInvoice] = useState<
     InvoiceReceiptResponseDto | undefined
@@ -249,6 +251,8 @@ export default function Invoices({
       setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
       setPaymentClientSecret(data.clientSecret ?? '');
+      setPaymentSessionId(data.sessionId);
+      setPaymentReceiptId(data.receiptId);
       // Invalider la requête pour rafraîchir la liste
       await queryClient.invalidateQueries({ queryKey: ['received-invoices'] });
     },
@@ -1283,6 +1287,8 @@ export default function Invoices({
         onOpenChange={(open) => {
           if (!open) {
             setPaymentClientSecret(undefined);
+            setPaymentSessionId(undefined);
+            setPaymentReceiptId(undefined);
             setPaymentInvoiceLabel('');
           }
         }}
@@ -1302,15 +1308,42 @@ export default function Invoices({
                 options={{
                   clientSecret: paymentClientSecret,
                   onComplete: () => {
-                    setPaymentClientSecret(undefined);
-                    setPaymentInvoiceLabel('');
-                    void queryClient
-                      .invalidateQueries({
-                        queryKey: ['received-invoices'],
+                    if (paymentSessionId && paymentReceiptId) {
+                      InvoicesService.confirmPayment({
+                        sessionId: paymentSessionId,
+                        receiptId: paymentReceiptId,
                       })
-                      .then(() => {
-                        toast.success(t.payment.successful);
+                        .then(() => {
+                          setPaymentClientSecret(undefined);
+                          setPaymentSessionId(undefined);
+                          setPaymentReceiptId(undefined);
+                          setPaymentInvoiceLabel('');
+                          void queryClient
+                            .invalidateQueries({
+                              queryKey: ['received-invoices'],
+                            })
+                            .then(() => {
+                              toast.success(t.payment.successful);
+                            });
+                        })
+                        .catch((error: unknown) => {
+                          toast.error(
+                            localizeErrorMessage(
+                              error,
+                              dictionary,
+                              t.fetchError
+                            )
+                          );
+                        });
+                    } else {
+                      setPaymentClientSecret(undefined);
+                      setPaymentSessionId(undefined);
+                      setPaymentReceiptId(undefined);
+                      setPaymentInvoiceLabel('');
+                      void queryClient.invalidateQueries({
+                        queryKey: ['received-invoices'],
                       });
+                    }
                   },
                 }}
               >
