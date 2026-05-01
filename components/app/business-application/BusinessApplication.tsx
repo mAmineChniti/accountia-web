@@ -31,7 +31,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { BusinessService } from '@/lib/requests';
@@ -41,6 +40,7 @@ import {
   type CreateBusinessApplicationInput,
 } from '@/types/services';
 import { localizeErrorMessage } from '@/lib/error-localization';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function BusinessApplication({
   dictionary,
@@ -92,141 +92,146 @@ export default function BusinessApplication({
     applicationMutation.isPending || applicationMutation.isSuccess;
 
   return (
-    <main className="bg-muted/30 flex min-h-screen items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
-          <CardDescription className="text-base">
-            {t.description}
-          </CardDescription>
-        </CardHeader>
+    <main className="from-muted/60 to-background min-h-[90vh] bg-linear-to-br py-10">
+      <div className="mx-auto max-w-4xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <Card className="dark:bg-card/90 rounded-2xl border-0 bg-white/90 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl font-bold">{t.title}</CardTitle>
+            <CardDescription className="text-base">
+              {t.description}
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent className="space-y-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Business Name */}
-              <FormField
-                control={form.control}
-                name="businessName"
-                render={({ field }) => (
-                  <FormItem className="gap-1.5">
-                    <FormLabel htmlFor="businessName">
-                      {t.businessNameLabel}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        id="businessName"
-                        placeholder={t.businessNamePlaceholder}
-                        aria-invalid={!!form.formState.errors.businessName}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage role="alert" aria-live="polite" />
-                  </FormItem>
-                )}
-              />
+          <CardContent className="pt-6">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {/* Business Name */}
+                  <FormField
+                    control={form.control}
+                    name="businessName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="businessName">
+                          {t.businessNameLabel}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="businessName"
+                            placeholder={t.businessNamePlaceholder}
+                            aria-invalid={!!form.formState.errors.businessName}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage role="alert" aria-live="polite" />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Business Email */}
-              <FormField
-                control={form.control}
-                name="businessEmail"
-                render={({ field }) => (
-                  <FormItem className="gap-1.5">
-                    <FormLabel htmlFor="businessEmail">
-                      {t.businessEmailLabel}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        id="businessEmail"
-                        type="email"
-                        placeholder={t.businessEmailPlaceholder}
-                        aria-invalid={!!form.formState.errors.businessEmail}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage role="alert" aria-live="polite" />
-                  </FormItem>
-                )}
-              />
+                  {/* Business Email */}
+                  <FormField
+                    control={form.control}
+                    name="businessEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="businessEmail">
+                          {t.businessEmailLabel}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="businessEmail"
+                            type="email"
+                            placeholder={t.businessEmailPlaceholder}
+                            aria-invalid={!!form.formState.errors.businessEmail}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage role="alert" aria-live="polite" />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="gap-1.5">
-                    <FormLabel htmlFor="description">
-                      {t.descriptionLabel}
-                    </FormLabel>
-                    <FormControl>
-                      <textarea
-                        id="description"
-                        rows={4}
-                        placeholder={t.descriptionPlaceholder}
-                        aria-invalid={!!form.formState.errors.description}
-                        className={cn(
-                          'border-input placeholder:text-muted-foreground focus-visible:ring-ring/50 dark:bg-input/30 w-full resize-none rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none',
-                          'focus-visible:border-ring focus-visible:ring-[3px]',
-                          'aria-invalid:border-destructive aria-invalid:ring-destructive/20',
-                          'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50'
-                        )}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage role="alert" aria-live="polite" />
-                  </FormItem>
-                )}
-              />
+                  {/* Phone */}
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="phone">{t.phoneLabel}</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder={t.phonePlaceholder}
+                            aria-invalid={!!form.formState.errors.phone}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage role="alert" aria-live="polite" />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Phone */}
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="gap-1.5">
-                    <FormLabel htmlFor="phone">{t.phoneLabel}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder={t.phonePlaceholder}
-                        aria-invalid={!!form.formState.errors.phone}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage role="alert" aria-live="polite" />
-                  </FormItem>
-                )}
-              />
+                  {/* Website (optional) */}
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="website">
+                          {t.websiteLabel}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="website"
+                            type="url"
+                            placeholder={t.websitePlaceholder}
+                            aria-invalid={!!form.formState.errors.website}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage role="alert" aria-live="polite" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              {/* Website (optional) */}
-              <FormField
-                control={form.control}
-                name="website"
-                render={({ field }) => (
-                  <FormItem className="gap-1.5">
-                    <FormLabel htmlFor="website">{t.websiteLabel}</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="website"
-                        type="url"
-                        placeholder={t.websitePlaceholder}
-                        aria-invalid={!!form.formState.errors.website}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage role="alert" aria-live="polite" />
-                  </FormItem>
-                )}
-              />
+                {/* Description - Full width */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="description">
+                        {t.descriptionLabel}
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          id="description"
+                          rows={4}
+                          placeholder={t.descriptionPlaceholder}
+                          aria-invalid={!!form.formState.errors.description}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage role="alert" aria-live="polite" />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? t.submittingButton : t.submitButton}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <div className="flex justify-end">
+                  <Button type="submit" className="px-8" disabled={isPending}>
+                    {isPending ? t.submittingButton : t.submitButton}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Success dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>

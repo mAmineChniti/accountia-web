@@ -116,11 +116,14 @@ export default function UserSidebar({
   lang,
   dictionary,
   user,
+  side = 'left',
 }: {
   lang: Locale;
   dictionary: Dictionary;
   user: UserCookieData;
+  side?: 'left' | 'right';
 }) {
+  const tooltipSide = side === 'right' ? 'left' : 'right';
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathname = usePathname();
@@ -193,7 +196,10 @@ export default function UserSidebar({
   const businesses = businessesData?.businesses ?? [];
 
   return (
-    <Sidebar className="border-r">
+    <Sidebar
+      side={side}
+      className={cn(side === 'left' ? 'border-r' : 'border-l')}
+    >
       <SidebarContent>
         {/* Platform Navigation */}
         {isPlatformUser && (
@@ -565,7 +571,7 @@ export default function UserSidebar({
             <TooltipTrigger asChild>
               <LocaleSwitcher />
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side={tooltipSide}>
               <p>{dictionary.tooltips.changeLanguage}</p>
             </TooltipContent>
           </Tooltip>
@@ -573,7 +579,7 @@ export default function UserSidebar({
             <TooltipTrigger asChild>
               <Notifications lang={lang} dictionary={dictionary} />
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side={tooltipSide}>
               <p>{dictionary.tooltips.notifications}</p>
             </TooltipContent>
           </Tooltip>
@@ -581,7 +587,7 @@ export default function UserSidebar({
             <TooltipTrigger asChild>
               <ModeToggle />
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side={tooltipSide}>
               <p>{dictionary.tooltips.toggleTheme}</p>
             </TooltipContent>
           </Tooltip>

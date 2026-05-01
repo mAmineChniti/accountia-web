@@ -6,6 +6,9 @@ import { Providers } from '@/components/reusable/providers';
 import { TokenExpiration } from '@/components/reusable/token-expiration';
 import { FocusRouteHandler } from '@/components/reusable/focus-route-handler';
 import { headers } from 'next/headers';
+import { cn } from '@/lib/utils';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,6 +32,9 @@ const notoSansArabic = Noto_Sans_Arabic({
 export const metadata: Metadata = {
   title: 'Accountia',
   description: 'Multi-language accounting and finance management platform',
+  icons: {
+    icon: '/favicon.ico?v=2',
+  },
 };
 
 export default async function RootLayout({
@@ -49,13 +55,21 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoSansArabic.variable} h-full antialiased ${isArabic ? 'font-arabic' : 'font-sans'}`}
+        className={cn(
+          geistSans.variable,
+          geistMono.variable,
+          notoSansArabic.variable,
+          'h-full antialiased',
+          isArabic ? 'font-arabic' : 'font-sans'
+        )}
       >
         <Providers>
           <FocusRouteHandler />
           <TokenExpiration />
           {children}
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
