@@ -21,10 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { TunisianTaxSummaryResponseDto } from '@/types/services';
+import type {
+  TunisianTaxSummaryResponseDto,
+  TaxBreakdown,
+} from '@/types/services';
 
 interface TaxSummaryViewProps {
-  taxData: TunisianTaxSummaryResponseDto['taxes'] | undefined;
+  taxData: TunisianTaxSummaryResponseDto | undefined;
   t: Dictionary['pages']['businessAccountant'];
   lang: Locale;
   isLoading: boolean;
@@ -84,11 +87,46 @@ export function TaxSummaryView({
     );
   }
 
-  const currency = taxData.currency ?? 'TND';
-  const summary = taxData.summary ?? {};
-  const vatBreakdown = taxData.vatBreakdown ?? {};
-  const monthlyDetails = taxData.monthlyDetails ?? [];
-  const taxCalendar = taxData.taxCalendar ?? [];
+  const currency = 'TND';
+  const breakdown: Partial<TaxBreakdown> = taxData?.taxBreakdown ?? {};
+
+  type VatBreakdownView = {
+    standardRate19Percent?: number;
+    reducedRate13Percent?: number;
+    reducedRate7Percent?: number;
+  };
+
+  const vatBreakdown: VatBreakdownView = {
+    standardRate19Percent: breakdown.vat_standard_19 ?? 0,
+    reducedRate13Percent: breakdown.vat_reduced_13 ?? 0,
+    reducedRate7Percent: breakdown.vat_reduced_7 ?? 0,
+  };
+
+  type TaxCalendarItem = {
+    period?: string;
+    description?: string;
+    dueDate?: string;
+  };
+  const rawTaxCalendar = (taxData?.analysis as Record<string, unknown>)
+    ?.taxCalendar;
+  const taxCalendar: TaxCalendarItem[] = Array.isArray(rawTaxCalendar)
+    ? rawTaxCalendar
+    : [];
+
+  type MonthlyDetail = {
+    period?: string;
+    month?: string;
+    vatTotal?: number;
+    corporateTaxDue?: number;
+    withholdingTax?: number;
+    totalTaxLiability?: number;
+    dueDate?: string;
+  };
+  const rawMonthlyDetails = (taxData?.analysis as Record<string, unknown>)
+    ?.monthlyDetails;
+  const monthlyDetails: MonthlyDetail[] = Array.isArray(rawMonthlyDetails)
+    ? rawMonthlyDetails
+    : [];
 
   return (
     <div className="space-y-4">
@@ -116,29 +154,13 @@ export function TaxSummaryView({
         </div>
       )}
 
-      {/* Tax Summary Cards */}
+      {/* Tax breakdown summary (from backend `taxBreakdown`) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.annualVat}</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatCurrency(summary.annualVatTotal ?? 0, currency)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{t.corporateTax}</CardDescription>
             <CardTitle className="text-2xl">
-              {formatCurrency(summary.annualCorporateTax ?? 0, currency)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t.withholdingTax}</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatCurrency(summary.annualWithholdingTax ?? 0, currency)}
+              {formatCurrency(breakdown.corporate_tax_due ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -146,7 +168,23 @@ export function TaxSummaryView({
           <CardHeader className="pb-2">
             <CardDescription>{t.totalLiability}</CardDescription>
             <CardTitle className="text-2xl">
-              {formatCurrency(summary.totalTaxLiability ?? 0, currency)}
+              {formatCurrency(breakdown.total_tax_liability ?? 0, currency)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>{t.vatBreakdown}</CardDescription>
+            <CardTitle className="text-2xl">
+              {formatCurrency(breakdown.vat_total ?? 0, currency)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>{t.withholdingTax}</CardDescription>
+            <CardTitle className="text-2xl">
+              {formatCurrency(breakdown.withholding_tax ?? 0, currency)}
             </CardTitle>
           </CardHeader>
         </Card>

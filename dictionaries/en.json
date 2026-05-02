@@ -807,8 +807,7 @@
         "pending": "Pending",
         "processing": "Processing",
         "completed": "Completed",
-        "failed": "Failed",
-        "cancelled": "Cancelled"
+        "failed": "Failed"
       },
       "overviewTitle": "Overview",
       "overviewDescription": "Select a completed job to view results",
@@ -820,6 +819,7 @@
       "statusColumn": "Status",
       "progressColumn": "Progress",
       "entriesColumn": "Entries",
+      "launchedAtColumn": "Launched At",
       "actionsColumn": "Actions",
       "viewResults": "View Results",
       "createJobDialog": {
@@ -860,8 +860,7 @@
       "dueColumn": "Due",
       "retry": "Retry",
       "cancelling": "Cancelling...",
-      "jobCancelled": "Job cancelled successfully",
-      "cancelJobError": "Failed to cancel job",
+
       "grossProfit": "Gross Profit",
       "totalJournalEntries": "Total journal entries",
       "statusLabel": "Status",
@@ -875,6 +874,8 @@
       "anomalies": "Anomalies",
       "download": "Download",
       "journalEntriesPreview": "Journal Entries Preview",
+      "journalEntries": "Journal Entries",
+      "jobId": "Job ID",
       "date": "Date",
       "account": "Account",
       "debit": "Debit",
@@ -886,7 +887,9 @@
       "accountsReceivable": "Accounts Receivable",
       "accountsPayable": "Accounts Payable",
       "cashPosition": "Cash Position",
-      "reports": "Reports"
+      "reports": "Reports",
+      "revenue": "Revenue",
+      "invoicePrefix": "Inv"
     },
     "businessProducts": {
       "title": "Products",
