@@ -799,8 +799,7 @@
         "pending": "معلق",
         "processing": "قيد المعالجة",
         "completed": "مكتمل",
-        "failed": "فاشل",
-        "cancelled": "ملغى"
+        "failed": "فاشل"
       },
       "overviewTitle": "نظرة عامة",
       "overviewDescription": "اختر مهمة مكتملة لعرض النتائج",
@@ -812,6 +811,7 @@
       "statusColumn": "الحالة",
       "progressColumn": "التقدم",
       "entriesColumn": "القيود",
+      "launchedAtColumn": "تاريخ الإطلاق",
       "actionsColumn": "الإجراءات",
       "viewResults": "عرض النتائج",
       "createJobDialog": {
@@ -852,8 +852,7 @@
       "dueColumn": "الاستحقاق",
       "retry": "إعادة المحاولة",
       "cancelling": "جارٍ الإلغاء...",
-      "jobCancelled": "تم إلغاء المهمة بنجاح",
-      "cancelJobError": "فشل في إلغاء المهمة",
+
       "grossProfit": "الربح الإجمالي",
       "totalJournalEntries": "إجمالي القيود",
       "statusLabel": "الحالة",
@@ -867,6 +866,8 @@
       "anomalies": "شذوذات",
       "download": "تنزيل",
       "journalEntriesPreview": "معاينة القيود",
+      "journalEntries": "القيود المحاسبية",
+      "jobId": "معرف المهمة",
       "date": "التاريخ",
       "account": "الحساب",
       "debit": "مدين",
@@ -878,7 +879,9 @@
       "accountsReceivable": "الذمم المدينة",
       "accountsPayable": "الذمم الدائنة",
       "cashPosition": "الموقف النقدي",
-      "reports": "التقارير"
+      "reports": "التقارير",
+      "revenue": "الإيراد",
+      "invoicePrefix": "فات"
     },
     "businessProducts": {
       "title": "المنتجات",

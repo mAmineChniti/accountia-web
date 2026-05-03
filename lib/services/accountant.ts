@@ -1,35 +1,21 @@
 import type {
   CreateAccountingJobInput,
   ListAccountingJobsQuery,
-  GetJobStatusParams,
-  GetJobStatusQuery,
   GetJobResultsParams,
   GetJobResultsQuery,
-  CancelJobParams,
-  CancelJobQuery,
-  GetAccountingHistoryQuery,
-  GetAllAccountantWorkQuery,
   GetTaxesQuery,
   CalculateTaxesQuery,
 } from '@/types/services';
 import type {
   CreateAccountingJobResponseDto,
   ListAccountingJobsResponseDto,
-  GetJobStatusResponseDto,
   GetJobResultsResponseDto,
-  CancelAccountingJobResponseDto,
-  GetAccountingHistoryResponseDto,
-  GetAllAccountantWorkResponseDto,
   TunisianTaxSummaryResponseDto,
   CalculateTaxResponseDto,
   AccountantHealthResponseDto,
 } from '@/types/services';
 
-import {
-  createAuthenticatedClient,
-  publicClient,
-  API_CONFIG,
-} from '@/lib/requests';
+import { createAuthenticatedClient, API_CONFIG } from '@/lib/requests';
 import { handleServiceError } from '@/lib/services/service-error';
 
 export const AccountantService = {
@@ -53,8 +39,11 @@ export const AccountantService = {
     const client = createAuthenticatedClient();
     try {
       const searchParams: Record<string, string | number> = {};
-      if (params?.businessId != undefined)
-        searchParams.businessId = params.businessId;
+      if (!params?.businessId) {
+        throw new Error('businessId is required for listing jobs');
+      }
+      searchParams.businessId = params.businessId as string;
+      if (params?.status != undefined) searchParams.status = params.status;
       if (params?.limit != undefined) searchParams.limit = params.limit;
       const result = await client
         .get(API_CONFIG.ACCOUNTANT.LIST_JOBS, { searchParams })
@@ -65,27 +54,9 @@ export const AccountantService = {
     }
   },
 
-  async getJobStatus(
-    params: GetJobStatusParams,
-    query?: GetJobStatusQuery
-  ): Promise<GetJobStatusResponseDto> {
-    const client = createAuthenticatedClient();
-    try {
-      const endpoint = API_CONFIG.ACCOUNTANT.GET_JOB.replace(
-        '{taskId}',
-        encodeURIComponent(params.taskId)
-      );
-      const searchParams: Record<string, string> = {};
-      if (query?.businessId != undefined)
-        searchParams.businessId = query.businessId;
-      const result = await client
-        .get(endpoint, { searchParams })
-        .json<GetJobStatusResponseDto>();
-      return result;
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
+  // The backend exposes a single GET /accountant/jobs/:taskId route
+  // which returns either job status while processing or full results
+  // when completed. Use `getJobResults` for that purpose.
 
   async getJobResults(
     params: GetJobResultsParams,
@@ -98,79 +69,14 @@ export const AccountantService = {
         encodeURIComponent(params.taskId)
       );
       const searchParams: Record<string, string> = {};
-      if (query?.businessId != undefined)
+      if (query?.businessId == undefined) {
+        throw new Error('businessId is required for getting job results');
+      } else {
         searchParams.businessId = query.businessId;
+      }
       const result = await client
         .get(endpoint, { searchParams })
         .json<GetJobResultsResponseDto>();
-      return result;
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
-
-  async cancelJob(
-    params: CancelJobParams,
-    query?: CancelJobQuery
-  ): Promise<CancelAccountingJobResponseDto> {
-    const client = createAuthenticatedClient();
-    try {
-      const endpoint = API_CONFIG.ACCOUNTANT.CANCEL_JOB.replace(
-        '{taskId}',
-        encodeURIComponent(params.taskId)
-      );
-      const searchParams: Record<string, string> = {};
-      if (query?.businessId != undefined)
-        searchParams.businessId = query.businessId;
-      const result = await client
-        .delete(endpoint, { searchParams })
-        .json<CancelAccountingJobResponseDto>();
-      return result;
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
-
-  async getHistory(
-    params?: GetAccountingHistoryQuery
-  ): Promise<GetAccountingHistoryResponseDto> {
-    const client = createAuthenticatedClient();
-    try {
-      const searchParams: Record<string, string | number> = {};
-      if (params?.businessId != undefined)
-        searchParams.businessId = params.businessId;
-      if (params?.limit != undefined) searchParams.limit = params.limit;
-      const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_HISTORY, { searchParams })
-        .json<GetAccountingHistoryResponseDto>();
-      return result;
-    } catch (error: unknown) {
-      return handleServiceError(error);
-    }
-  },
-
-  async getWork(
-    params?: GetAllAccountantWorkQuery
-  ): Promise<GetAllAccountantWorkResponseDto> {
-    const client = createAuthenticatedClient();
-    try {
-      const searchParams: Record<string, string> = {};
-      if (params?.businessId != undefined)
-        searchParams.businessId = params.businessId;
-      if (params?.startDate != undefined)
-        searchParams.startDate =
-          params.startDate instanceof Date
-            ? params.startDate.toISOString()
-            : params.startDate;
-      if (params?.endDate != undefined)
-        searchParams.endDate =
-          params.endDate instanceof Date
-            ? params.endDate.toISOString()
-            : params.endDate;
-      if (params?.status != undefined) searchParams.status = params.status;
-      const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_WORK, { searchParams })
-        .json<GetAllAccountantWorkResponseDto>();
       return result;
     } catch (error: unknown) {
       return handleServiceError(error);
@@ -182,12 +88,19 @@ export const AccountantService = {
   ): Promise<TunisianTaxSummaryResponseDto> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string | number> = {};
-      if (params.businessId != undefined)
-        searchParams.businessId = params.businessId;
-      if (params.year != undefined) searchParams.year = params.year;
+      if (!params.businessId)
+        throw new Error('businessId is required for getting taxes');
+      if (params.year == undefined)
+        throw new Error('year is required for getting taxes');
+      const endpoint = API_CONFIG.ACCOUNTANT.GET_TAXES.replace(
+        '{year}',
+        encodeURIComponent(String(params.year))
+      );
+      const searchParams: Record<string, string | number> = {
+        businessId: params.businessId as string,
+      };
       const result = await client
-        .get(API_CONFIG.ACCOUNTANT.GET_TAXES, { searchParams })
+        .get(endpoint, { searchParams })
         .json<TunisianTaxSummaryResponseDto>();
       return result;
     } catch (error: unknown) {
@@ -200,12 +113,19 @@ export const AccountantService = {
   ): Promise<CalculateTaxResponseDto> {
     const client = createAuthenticatedClient();
     try {
-      const searchParams: Record<string, string | number> = {};
-      if (params.businessId != undefined)
-        searchParams.businessId = params.businessId;
-      if (params.year != undefined) searchParams.year = params.year;
+      if (!params.businessId)
+        throw new Error('businessId is required for calculating taxes');
+      if (params.year == undefined)
+        throw new Error('year is required for calculating taxes');
+      const endpoint = API_CONFIG.ACCOUNTANT.CALCULATE_TAXES.replace(
+        '{year}',
+        encodeURIComponent(String(params.year))
+      );
+      const searchParams: Record<string, string | number> = {
+        businessId: params.businessId as string,
+      };
       const result = await client
-        .post(API_CONFIG.ACCOUNTANT.CALCULATE_TAXES, { searchParams })
+        .post(endpoint, { searchParams })
         .json<CalculateTaxResponseDto>();
       return result;
     } catch (error: unknown) {
@@ -213,35 +133,15 @@ export const AccountantService = {
     }
   },
   async health(): Promise<AccountantHealthResponseDto> {
+    const client = createAuthenticatedClient();
     try {
-      // Prefer the deep readiness probe
-      const readyResp = await publicClient.get(
-        API_CONFIG.ACCOUNTANT.HEALTH_READY,
-        {
-          throwHttpErrors: false,
-        }
-      );
-
-      if (readyResp.status === 200) {
-        const body = await readyResp.json<AccountantHealthResponseDto>();
-        return body;
-      }
-
-      if (readyResp.status === 503) {
-        const body = await readyResp
-          .json<AccountantHealthResponseDto>()
-          .catch(() => ({}) as AccountantHealthResponseDto);
-        return body;
-      }
-
-      // Fallback to quick health endpoint
-      const quickResp = await publicClient.get(API_CONFIG.ACCOUNTANT.HEALTH, {
+      const resp = await client.get(API_CONFIG.ACCOUNTANT.HEALTH, {
         throwHttpErrors: false,
       });
-      const quickBody = await quickResp
+      const body = await resp
         .json<AccountantHealthResponseDto>()
         .catch(() => ({}) as AccountantHealthResponseDto);
-      return quickBody;
+      return body;
     } catch (error: unknown) {
       return handleServiceError(error);
     }

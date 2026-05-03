@@ -168,14 +168,10 @@ export const API_CONFIG = {
     CREATE_JOB: 'accountant/jobs',
     LIST_JOBS: 'accountant/jobs',
     GET_JOB: 'accountant/jobs/{taskId}',
-    CANCEL_JOB: 'accountant/jobs/{taskId}',
-    GET_JOB_RESULTS: 'accountant/jobs/{taskId}/results',
-    GET_HISTORY: 'accountant/history',
-    GET_WORK: 'accountant/work',
-    GET_TAXES: 'accountant/taxes',
-    CALCULATE_TAXES: 'accountant/taxes/calculate',
+    GET_JOB_RESULTS: 'accountant/jobs/{taskId}',
+    GET_TAXES: 'accountant/taxes/{year}',
+    CALCULATE_TAXES: 'accountant/taxes/{year}',
     HEALTH: 'accountant/health',
-    HEALTH_READY: 'accountant/health/ready',
   },
 } as const;
 
