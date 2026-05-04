@@ -183,6 +183,7 @@ export const API_CONFIG = {
     REVIEW: 'expenses/{id}/review',
     REIMBURSE: 'expenses/{id}/reimburse',
     DELETE: 'expenses/{id}',
+    EXTRACT_RECEIPT: 'expenses/extract-receipt',
   },
   RECURRING_INVOICES: {
     CREATE: 'recurring-invoices',

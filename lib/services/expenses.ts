@@ -155,9 +155,10 @@ export const ExpensesService = {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('businessId', businessId);
-      return await client
-        .post('expenses/extract-receipt', { body: formData })
+      const response = await client
+        .post(API_CONFIG.EXPENSES.EXTRACT_RECEIPT, { body: formData })
         .json<ExtractedReceiptData>();
+      return response;
     } catch (error: unknown) {
       return handleServiceError(error);
     }

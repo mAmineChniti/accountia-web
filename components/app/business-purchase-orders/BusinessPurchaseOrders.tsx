@@ -130,6 +130,7 @@ export function BusinessPurchaseOrders({
       businessId,
       currentPage,
       statusFilter,
+      search,
     ],
     queryFn: () =>
       PurchaseOrdersService.getPurchaseOrders({
@@ -298,25 +299,45 @@ export function BusinessPurchaseOrders({
       toast.error('Please select a product for every line item');
       return;
     }
-    if (lineItems.some((l) => !l.unitPrice)) {
-      toast.error('All line items need a unit price');
-      return;
+
+    // Validate and parse line items
+    const validatedLineItems = [];
+    let calculatedTotal = 0;
+
+    for (const [i, l] of lineItems.entries()) {
+      const qty = Number.parseFloat(l.orderedQuantity);
+      const price = Number.parseFloat(l.unitPrice);
+
+      if (Number.isNaN(qty) || qty <= 0) {
+        toast.error(
+          `Line item ${i + 1}: Ordered quantity must be a positive number`
+        );
+        return;
+      }
+      if (Number.isNaN(price) || price <= 0) {
+        toast.error(`Line item ${i + 1}: Unit price must be a positive number`);
+        return;
+      }
+
+      const amount = qty * price;
+      calculatedTotal += amount;
+
+      validatedLineItems.push({
+        productId: l.productId,
+        productName: l.productName.trim(),
+        orderedQuantity: qty,
+        unitPrice: price,
+        amount,
+      });
     }
+
     const payload: Record<string, unknown> = {
       businessId,
       vendorId,
       vendorName,
       orderDate: new Date().toISOString(),
-      lineItems: lineItems.map((l) => ({
-        productId: l.productId,
-        productName: l.productName.trim(),
-        orderedQuantity: Number.parseFloat(l.orderedQuantity) || 1,
-        unitPrice: Number.parseFloat(l.unitPrice) || 0,
-        amount:
-          (Number.parseFloat(l.orderedQuantity) || 1) *
-          (Number.parseFloat(l.unitPrice) || 0),
-      })),
-      totalAmount,
+      lineItems: validatedLineItems,
+      totalAmount: calculatedTotal,
       currency: 'TND',
     };
     if (expectedDelivery) payload.expectedDeliveryDate = expectedDelivery;
@@ -336,10 +357,40 @@ export function BusinessPurchaseOrders({
   function handleReceive() {
     if (!receiveDialog.po) return;
     const qtys: Record<string, number> = {};
+
     for (const item of receiveDialog.po.lineItems) {
-      if (item.id)
-        qtys[item.id] = Number.parseInt(receivedQtys[item.id] ?? '0') || 0;
+      if (!item.id) continue;
+
+      const inputValue = receivedQtys[item.id] ?? '0';
+      const parsedQty = Number.parseInt(inputValue, 10);
+
+      // Validate that the input is a valid integer
+      if (Number.isNaN(parsedQty)) {
+        toast.error(
+          `Invalid quantity for ${item.productName}: must be a number`
+        );
+        return;
+      }
+
+      // Calculate remaining quantity that can be received
+      const remainingQty = item.orderedQuantity - (item.receivedQuantity ?? 0);
+
+      // Clamp quantity to valid range [0, remainingQty]
+      let validatedQty = Math.max(0, Math.min(parsedQty, remainingQty));
+
+      // Ensure it's an integer
+      validatedQty = Math.floor(validatedQty);
+
+      if (validatedQty !== parsedQty) {
+        toast.error(
+          `Quantity for ${item.productName} adjusted to ${validatedQty} (must be between 0 and ${remainingQty})`
+        );
+        return;
+      }
+
+      qtys[item.id] = validatedQty;
     }
+
     receiveMutation.mutate({ id: receiveDialog.po.id, qtys });
   }
 

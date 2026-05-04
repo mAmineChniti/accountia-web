@@ -136,14 +136,11 @@ export function BusinessExpenses({
       setScanOpen(false);
       setCreateOpen(true);
       toast.success(
-        data.confidence === 'high'
-          ? 'Receipt scanned — please review the extracted data'
-          : 'Receipt partially extracted — please verify the fields',
+        data.confidence === 'high' ? d.receiptScanned : d.receiptPartial,
         { duration: 4000 }
       );
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to scan receipt'),
+    onError: (err: Error) => toast.error(err.message || d.scanFailed),
   });
 
   const [rejectDialog, setRejectDialog] = useState<{
@@ -193,7 +190,7 @@ export function BusinessExpenses({
     mutationFn: (data: CreateExpenseInput) =>
       ExpensesService.createExpense(data),
     onSuccess: () => {
-      toast.success('Expense created successfully');
+      toast.success(d.expenseCreated);
       queryClient.invalidateQueries({
         queryKey: ['business-expenses', businessId],
       });
@@ -212,19 +209,18 @@ export function BusinessExpenses({
         description: '',
       });
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to create expense'),
+    onError: (err: Error) => toast.error(err.message || d.failedToCreate),
   });
 
   const submitMutation = useMutation({
     mutationFn: (id: string) => ExpensesService.submitExpense(id, businessId),
     onSuccess: () => {
-      toast.success('Expense submitted for review');
+      toast.success(d.submittedForReview);
       queryClient.invalidateQueries({
         queryKey: ['business-expenses', businessId],
       });
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to submit'),
+    onError: (err: Error) => toast.error(err.message || d.failedToSubmit),
   });
 
   const reviewMutation = useMutation({
@@ -240,7 +236,7 @@ export function BusinessExpenses({
       ExpensesService.reviewExpense(id, { businessId, decision, reviewNotes }),
     onSuccess: (_, { decision }) => {
       toast.success(
-        decision === 'approved' ? 'Expense approved' : 'Expense rejected'
+        decision === 'approved' ? d.expenseApproved : d.expenseRejected
       );
       queryClient.invalidateQueries({
         queryKey: ['business-expenses', businessId],
@@ -249,13 +245,13 @@ export function BusinessExpenses({
         queryKey: ['expense-summary', businessId],
       });
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to review'),
+    onError: (err: Error) => toast.error(err.message || d.failedToReview),
   });
 
   const reimburseMutation = useMutation({
     mutationFn: (id: string) => ExpensesService.markReimbursed(id, businessId),
     onSuccess: () => {
-      toast.success('Expense marked as reimbursed');
+      toast.success(d.expenseReimbursed);
       queryClient.invalidateQueries({
         queryKey: ['business-expenses', businessId],
       });
@@ -263,18 +259,18 @@ export function BusinessExpenses({
         queryKey: ['expense-summary', businessId],
       });
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to reimburse'),
+    onError: (err: Error) => toast.error(err.message || d.failedToReimburse),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => ExpensesService.deleteExpense(id, businessId),
     onSuccess: () => {
-      toast.success('Expense deleted');
+      toast.success(d.expenseDeleted);
       queryClient.invalidateQueries({
         queryKey: ['business-expenses', businessId],
       });
     },
-    onError: (err: Error) => toast.error(err.message || 'Failed to delete'),
+    onError: (err: Error) => toast.error(err.message || d.failedToDelete),
   });
 
   const expenses = (expensesData as ExpenseListResponse)?.expenses ?? [];

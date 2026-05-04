@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   AlertTriangle,
   AlertCircle,
@@ -20,6 +21,7 @@ import type {
   RiskLevel,
   GenerateReminderResponse,
 } from '@/types/services';
+import { type Dictionary } from '@/get-dictionary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,12 +63,12 @@ const RISK_ICONS: Record<RiskLevel, React.ReactNode> = {
   CRITICAL: <AlertTriangle className="h-4 w-4 text-red-600" />,
 };
 
-const RISK_LABELS: Record<RiskLevel, string> = {
-  LOW: 'Faible',
-  MEDIUM: 'Moyen',
-  HIGH: 'Élevé',
-  CRITICAL: 'Critique',
-};
+const getRiskLabels = (d: Dictionary['pages']['collections']) => ({
+  LOW: d.riskLow,
+  MEDIUM: d.riskMedium,
+  HIGH: d.riskHigh,
+  CRITICAL: d.riskCritical,
+});
 
 function RiskBar({ score, level }: { score: number; level: RiskLevel }) {
   return (
@@ -114,26 +116,33 @@ function ReminderDialog({
   businessId,
   invoiceNumber,
   onClose,
+  dictionary,
 }: {
   invoiceId: string;
   businessId: string;
   invoiceNumber: string;
   onClose: () => void;
+  dictionary: Dictionary['pages']['collections'];
 }) {
   const [copied, setCopied] = useState(false);
+  const RISK_LABELS = getRiskLabels(dictionary);
 
   const { data, isPending, error } = useQuery<GenerateReminderResponse>({
     queryKey: ['collections-reminder', invoiceId, businessId],
     queryFn: () => CollectionsService.generateReminder(invoiceId, businessId),
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: false,
   });
 
-  const handleCopy = (text: string) => {
-    void navigator.clipboard.writeText(text).then(() => {
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch (error_) {
+      console.error('Failed to copy to clipboard:', error_);
+      toast.error(dictionary.copyFailed || 'Failed to copy to clipboard');
+    }
   };
 
   return (
@@ -147,7 +156,7 @@ function ReminderDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
-            Relance IA — Facture {invoiceNumber}
+            {dictionary.dialogTitle.replace('{number}', invoiceNumber)}
           </DialogTitle>
         </DialogHeader>
 
@@ -161,9 +170,7 @@ function ReminderDialog({
 
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error instanceof Error
-              ? error.message
-              : 'Erreur lors de la génération de la relance.'}
+            {error instanceof Error ? error.message : dictionary.dialogError}
           </div>
         )}
 
@@ -173,14 +180,17 @@ function ReminderDialog({
               <Badge className={RISK_COLORS[data.riskLevel]}>
                 {RISK_ICONS[data.riskLevel]}
                 <span className="ml-1">
-                  Risque {RISK_LABELS[data.riskLevel]}
+                  {dictionary.riskLabel.replace(
+                    '{level}',
+                    RISK_LABELS[data.riskLevel]
+                  )}
                 </span>
               </Badge>
             </div>
 
             <div>
               <p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
-                Objet
+                {dictionary.subject}
               </p>
               <div className="bg-muted/40 rounded-md border p-3 text-sm font-medium">
                 {data.subject}
@@ -190,7 +200,7 @@ function ReminderDialog({
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                  Corps du message
+                  {dictionary.messageBody}
                 </p>
                 <Button
                   size="sm"
@@ -199,7 +209,7 @@ function ReminderDialog({
                   onClick={() => handleCopy(data.reminderMessage)}
                 >
                   <Copy className="h-3 w-3" />
-                  {copied ? 'Copié !' : 'Copier'}
+                  {copied ? dictionary.copied : dictionary.copy}
                 </Button>
               </div>
               <pre className="bg-muted/40 rounded-md border p-3 text-sm leading-relaxed whitespace-pre-wrap">
@@ -209,14 +219,15 @@ function ReminderDialog({
 
             {data.recommendedAction && (
               <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-                <strong>Action recommandée :</strong> {data.recommendedAction}
+                <strong>{dictionary.recommendedAction}:</strong>{' '}
+                {data.recommendedAction}
               </div>
             )}
 
             <div className="flex justify-end pt-2">
               <DialogClose asChild>
                 <Button variant="outline" onClick={onClose}>
-                  Fermer
+                  {dictionary.close}
                 </Button>
               </DialogClose>
             </div>
@@ -227,7 +238,15 @@ function ReminderDialog({
   );
 }
 
-export function CollectionsDashboard({ businessId }: { businessId: string }) {
+export function CollectionsDashboard({
+  businessId,
+  dictionary,
+}: {
+  businessId: string;
+  dictionary: Dictionary;
+}) {
+  const d = dictionary.pages.collections;
+  const RISK_LABELS = getRiskLabels(d);
   const [filterLevel, setFilterLevel] = useState<RiskLevel | 'ALL'>('ALL');
   const [expandedRow, setExpandedRow] = useState<string | undefined>();
   const [reminderInvoice, setReminderInvoice] = useState<
@@ -264,12 +283,10 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
       <div className="flex flex-col items-center gap-4 py-16 text-center">
         <AlertTriangle className="h-10 w-10 text-red-400" />
         <p className="text-muted-foreground">
-          {error instanceof Error
-            ? error.message
-            : 'Erreur lors du chargement du dashboard.'}
+          {error instanceof Error ? error.message : d.errorLoading}
         </p>
         <Button variant="outline" onClick={() => void refetch()}>
-          Réessayer
+          {d.retry}
         </Button>
       </div>
     );
@@ -286,37 +303,35 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Suivi des Relances</h1>
-          <p className="text-muted-foreground text-sm">
-            Scoring IA du risque de retard de paiement
-          </p>
+          <h1 className="text-2xl font-bold">{d.title}</h1>
+          <p className="text-muted-foreground text-sm">{d.description}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void refetch()}>
-          Actualiser
+          {d.refresh}
         </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          title="Factures ouvertes"
+          title={d.statTotalOutstanding}
           value={data.totalOpenInvoices}
-          sub="en attente de paiement"
+          sub={d.statInvoices}
           icon={<TrendingUp className="text-muted-foreground h-5 w-5" />}
         />
         <StatCard
-          title="En cours"
+          title={d.statTotalOverdue}
           value={`${data.totalOutstandingAmount.toLocaleString('fr-FR')} ${data.currency}`}
-          sub="montant total dû"
+          sub={d.statInvoices}
           icon={<AlertCircle className="text-muted-foreground h-5 w-5" />}
         />
         <StatCard
-          title="Risque élevé / critique"
+          title={d.statHighRiskCount}
           value={data.riskBreakdown.HIGH + data.riskBreakdown.CRITICAL}
           sub={`${criticalAmount.toLocaleString('fr-FR')} ${data.currency}`}
           icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
         />
         <StatCard
-          title="Faible risque"
+          title={d.statLowRiskCount}
           value={data.riskBreakdown.LOW}
           sub={`${data.amountByRisk.LOW.toLocaleString('fr-FR')} ${data.currency}`}
           icon={<CheckCircle className="h-5 w-5 text-green-500" />}
@@ -325,9 +340,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            Répartition par niveau de risque
-          </CardTitle>
+          <CardTitle className="text-base">{d.chartTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-5 w-full overflow-hidden rounded-full">
@@ -378,7 +391,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              Factures à risque
+              {d.chartTitle}
               {filterLevel !== 'ALL' && (
                 <Badge className={`ml-2 ${RISK_COLORS[filterLevel]}`}>
                   {RISK_LABELS[filterLevel]}
@@ -386,8 +399,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
               )}
             </CardTitle>
             <span className="text-muted-foreground text-sm">
-              {filteredScores.length} facture
-              {filteredScores.length === 1 ? '' : 's'}
+              {d.invoiceCount.replace('{count}', String(filteredScores.length))}
             </span>
           </div>
         </CardHeader>
@@ -395,26 +407,27 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
           {filteredScores.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center gap-2 py-12 text-center">
               <CheckCircle className="h-8 w-8 text-green-400" />
-              <p>Aucune facture dans cette catégorie.</p>
+              <p>{d.emptyState}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Facture</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Montant dû</TableHead>
-                  <TableHead>Retard</TableHead>
-                  <TableHead>Score IA</TableHead>
-                  <TableHead>Niveau</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{d.columnInvoice}</TableHead>
+                  <TableHead>{d.columnClient}</TableHead>
+                  <TableHead>{d.columnAmount}</TableHead>
+                  <TableHead>{d.columnOverdue}</TableHead>
+                  <TableHead>{d.columnScore}</TableHead>
+                  <TableHead>{d.columnLevel}</TableHead>
+                  <TableHead className="text-right">
+                    {d.columnActions}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredScores.map((score) => (
-                  <>
+                  <Fragment key={score.invoiceId}>
                     <TableRow
-                      key={score.invoiceId}
                       className="hover:bg-muted/40 cursor-pointer"
                       onClick={() =>
                         setExpandedRow(
@@ -439,11 +452,14 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                       <TableCell>
                         {score.daysOverdue > 0 ? (
                           <span className="text-sm font-medium text-red-600">
-                            +{score.daysOverdue} j
+                            {d.daysOverdue.replace(
+                              '{days}',
+                              String(score.daysOverdue)
+                            )}
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            À venir
+                            {d.upcoming}
                           </span>
                         )}
                       </TableCell>
@@ -476,7 +492,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                             }}
                           >
                             <Sparkles className="h-3 w-3 text-purple-500" />
-                            Relance IA
+                            {d.aiReminder}
                           </Button>
                           {expandedRow === score.invoiceId ? (
                             <ChevronUp className="text-muted-foreground h-4 w-4" />
@@ -488,15 +504,12 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                     </TableRow>
 
                     {expandedRow === score.invoiceId && (
-                      <TableRow
-                        key={`${score.invoiceId}-details`}
-                        className="bg-muted/20"
-                      >
+                      <TableRow className="bg-muted/20">
                         <TableCell colSpan={7} className="py-3">
                           <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                             <div>
                               <p className="text-muted-foreground text-xs">
-                                Échéance
+                                {d.dueDate}
                               </p>
                               <p className="font-medium">
                                 {new Date(score.dueDate).toLocaleDateString(
@@ -506,27 +519,34 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                             </div>
                             <div>
                               <p className="text-muted-foreground text-xs">
-                                Historique client
+                                {d.paymentHistory}
                               </p>
                               <p className="font-medium">
-                                {score.historyCount} factures
+                                {d.invoiceCount.replace(
+                                  '{count}',
+                                  String(score.historyCount)
+                                )}
                               </p>
                             </div>
                             {score.avgHistoricalDelayDays !== undefined && (
                               <div>
                                 <p className="text-muted-foreground text-xs">
-                                  Délai moyen de paiement
+                                  {d.avgPaymentDelay}
                                 </p>
                                 <p className="font-medium">
-                                  {Math.round(score.avgHistoricalDelayDays)}{' '}
-                                  jours
+                                  {d.days.replace(
+                                    '{days}',
+                                    String(
+                                      Math.round(score.avgHistoricalDelayDays)
+                                    )
+                                  )}
                                 </p>
                               </div>
                             )}
                             {score.clientLatePaymentRate !== undefined && (
                               <div>
                                 <p className="text-muted-foreground text-xs">
-                                  Taux de retard historique
+                                  {d.latePaymentRate}
                                 </p>
                                 <p className="font-medium">
                                   {Math.round(
@@ -540,7 +560,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
@@ -554,6 +574,7 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
           businessId={businessId}
           invoiceNumber={reminderInvoice.number}
           onClose={() => setReminderInvoice(undefined)}
+          dictionary={d}
         />
       )}
     </div>

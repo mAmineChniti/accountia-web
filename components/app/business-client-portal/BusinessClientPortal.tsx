@@ -48,14 +48,22 @@ export function BusinessClientPortal({
     ? `${globalThis.window === undefined ? '' : globalThis.location.origin}/en/portal/${result.token}`
     : '';
 
+  const MIN_DAYS = 1;
+  const MAX_DAYS = 365;
+
   const generateMutation = useMutation({
-    mutationFn: () =>
-      ClientPortalAdminService.generateToken({
+    mutationFn: () => {
+      const parsedDays = Number.parseInt(expiryDays, 10);
+      let sanitizedDays = Number.isNaN(parsedDays) ? 30 : parsedDays;
+      sanitizedDays = Math.max(MIN_DAYS, Math.min(MAX_DAYS, sanitizedDays));
+
+      return ClientPortalAdminService.generateToken({
         businessId,
         clientEmail: email.trim(),
         clientName: name.trim() || undefined,
-        expiryDays: Number.parseInt(expiryDays) || 30,
-      }),
+        expiryDays: sanitizedDays,
+      });
+    },
     onSuccess: (data) => {
       setResult(data);
       toast.success(t.success);
