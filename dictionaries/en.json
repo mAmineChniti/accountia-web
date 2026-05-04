@@ -585,6 +585,8 @@
       "createInvoiceButton": "Create Invoice",
       "statistics": "Business Statistics",
       "statisticsDescription": "Products and invoices overview for your business",
+      "analytics": "Analytics",
+      "vatReports": "VAT Reports",
       "viewProducts": "View Products",
       "clientsSection": "Clients",
       "clientsDescription": "Users assigned to this business",

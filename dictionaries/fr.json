@@ -585,6 +585,8 @@
       "createInvoiceButton": "Créer une facture",
       "statistics": "Statistiques commerciales",
       "statisticsDescription": "Aperçu des produits et des factures de votre entreprise",
+      "analytics": "Analytique",
+      "vatReports": "Rapports TVA",
       "viewProducts": "Voir les produits",
       "clientsSection": "Clients",
       "clientsDescription": "Utilisateurs assignés à cette entreprise",
