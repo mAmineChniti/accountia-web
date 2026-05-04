@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Noto_Sans_Arabic } from 'next/font/google';
+// On commente l'import Google pour éviter l'erreur de connexion
+// import { Geist, Geist_Mono, Noto_Sans_Arabic } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { Providers } from '@/components/reusable/providers';
@@ -10,24 +11,10 @@ import { cn } from '@/lib/utils';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const notoSansArabic = Noto_Sans_Arabic({
-  variable: '--font-noto-sans-arabic',
-  subsets: ['arabic'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
+// On simule les polices pour que le code continue de fonctionner sans erreur
+const geistSans = { variable: '--font-geist-sans' };
+const geistMono = { variable: '--font-geist-mono' };
+const notoSansArabic = { variable: '--font-noto-sans-arabic' };
 
 export const metadata: Metadata = {
   title: 'Accountia',

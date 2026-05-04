@@ -5,5 +5,6 @@ const prettierConfig = {
   tabWidth: 2,
   semi: true,
   singleQuote: true,
+  endOfLine: 'auto',
 };
 export default prettierConfig;
