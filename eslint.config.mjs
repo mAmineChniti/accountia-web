@@ -30,23 +30,25 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/array-type': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
-      '@typescript-eslint/no-deprecated': 'off',
+      '@typescript-eslint/no-deprecated': 'warn',
       '@typescript-eslint/consistent-type-imports': [
         'warn',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
-      'react-hooks/exhaustive-deps': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-misused-promises': [
+        'error',
+        { checksVoidReturn: { attributes: false } },
+      ],
       'jsx-a11y/alt-text': 'warn',
       'jsx-a11y/anchor-is-valid': 'warn',
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': 'off',
-      'unicorn/no-null': 'off',
-      'unicorn/prefer-module': 'off',
     },
     settings: {
       react: {
@@ -61,6 +63,7 @@ const eslintConfig = defineConfig([
     languageOptions: {
       parser: parser,
       parserOptions: {
+        projectService: true,
         ecmaVersion: 'latest',
         sourceType: 'module',
         tsconfigRootDir: import.meta.dirname,
