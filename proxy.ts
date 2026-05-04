@@ -155,6 +155,7 @@ export async function proxy(request: NextRequest) {
 
   const response = NextResponse.next();
   response.headers.set('x-locale', locale);
+  response.headers.set('x-pathname', pathname);
   return response;
 }
 
