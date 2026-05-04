@@ -10,7 +10,6 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
-  Star,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +23,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -60,7 +58,7 @@ const CreateVendorSchema = z.object({
   businessId: z.string().min(1),
   name: z.string().min(1, 'Vendor name is required'),
   contactName: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.email().optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
   taxId: z.string().optional(),
@@ -80,13 +78,12 @@ const STATUS_COLORS: Record<string, string> = {
 export function BusinessVendors({
   businessId,
   dictionary,
-  canManage = true,
 }: {
   businessId: string;
   dictionary: Dictionary;
-  canManage?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const d = dictionary.pages.businessVendors;
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
@@ -144,9 +141,9 @@ export function BusinessVendors({
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
-          <span>Failed to load vendors</span>
+          <span>{d.failedToLoad}</span>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {d.retry}
           </Button>
         </div>
       </div>
@@ -157,33 +154,70 @@ export function BusinessVendors({
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Vendors</h1>
-          <p className="text-muted-foreground">
-            Manage your supplier and vendor catalog
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{d.title}</h1>
+          <p className="text-muted-foreground">{d.description}</p>
         </div>
-        {canManage && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <PlusCircle className="h-4 w-4" /> Add Vendor
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Add Vendor</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((d) => createMutation.mutate(d))}
-                  className="space-y-4"
-                >
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <PlusCircle className="h-4 w-4" /> {d.addVendor}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{d.dialogTitle}</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((d) => createMutation.mutate(d))}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{d.vendorName}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{d.contactName}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Vendor Name *</FormLabel>
+                        <FormLabel>{d.email}</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{d.phone}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -191,89 +225,14 @@ export function BusinessVendors({
                       </FormItem>
                     )}
                   />
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="contactName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="taxId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tax ID</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
-                    name="paymentTermsDays"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Payment Terms (days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(
-                                Number.parseInt(e.target.value) || 30
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes</FormLabel>
+                        <FormLabel>{d.address}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -281,33 +240,80 @@ export function BusinessVendors({
                       </FormItem>
                     )}
                   />
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCreateOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={createMutation.isPending}>
-                      {createMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Add Vendor'
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        )}
+                  <FormField
+                    control={form.control}
+                    name="taxId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{d.taxId}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="paymentTermsDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{d.paymentTerms}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(
+                              Number.parseInt(e.target.value) || 30
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{d.notes}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCreateOpen(false)}
+                  >
+                    {d.cancel}
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      d.addVendorButton
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
-          placeholder="Search vendors..."
+          placeholder={d.searchPlaceholder}
           className="pl-9"
           value={search}
           onChange={(e) => {
@@ -328,24 +334,32 @@ export function BusinessVendors({
           ) : vendors.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <Building2 className="text-muted-foreground h-12 w-12 opacity-50" />
-              <p className="text-lg font-medium">No vendors yet</p>
-              <p className="text-muted-foreground text-sm">
-                Add your first vendor to start creating purchase orders
-              </p>
+              <p className="text-lg font-medium">{d.noVendors}</p>
+              <p className="text-muted-foreground text-sm">{d.noVendorsHint}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50 border-b hover:bg-transparent">
-                    <TableHead className="font-semibold">Vendor</TableHead>
-                    <TableHead className="font-semibold">Contact</TableHead>
                     <TableHead className="font-semibold">
-                      Payment Terms
+                      {d.columnVendor}
                     </TableHead>
-                    <TableHead className="font-semibold">Orders</TableHead>
-                    <TableHead className="font-semibold">Total Spend</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnContact}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnPaymentTerms}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnOrders}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnTotalSpend}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnStatus}
+                    </TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -390,27 +404,25 @@ export function BusinessVendors({
                         </span>
                       </TableCell>
                       <TableCell>
-                        {canManage && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                className="text-destructive cursor-pointer gap-2"
-                                onClick={() => deleteMutation.mutate(vendor.id)}
-                              >
-                                <Trash2 className="h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="text-destructive cursor-pointer gap-2"
+                              onClick={() => deleteMutation.mutate(vendor.id)}
+                            >
+                              <Trash2 className="h-4 w-4" /> {d.delete}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -424,10 +436,12 @@ export function BusinessVendors({
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
-                    Previous
+                    {d.previous}
                   </Button>
                   <span className="text-sm">
-                    Page {currentPage} of {totalPages}
+                    {d.page
+                      .replace('{page}', String(currentPage))
+                      .replace('{totalPages}', String(totalPages))}
                   </span>
                   <Button
                     variant="outline"
@@ -435,7 +449,7 @@ export function BusinessVendors({
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >
-                    Next
+                    {d.next}
                   </Button>
                 </div>
               )}

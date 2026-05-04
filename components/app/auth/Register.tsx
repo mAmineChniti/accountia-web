@@ -166,6 +166,7 @@ export default function Register({
 
   const onSubmit = (data: RegisterFormInput) => {
     const { confirmPassword, ...registerData } = data;
+    void confirmPassword;
     registerMutation.mutate(registerData);
   };
 

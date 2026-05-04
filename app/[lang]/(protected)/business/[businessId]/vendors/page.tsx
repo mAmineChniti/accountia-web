@@ -1,7 +1,6 @@
 import { getDictionary } from '@/get-dictionary';
 import { type Locale } from '@/i18n-config';
 import { BusinessVendors } from '@/components/app/business-vendors/BusinessVendors';
-import { BusinessService } from '@/lib/services/business';
 
 export default async function VendorsPage({
   params,
@@ -9,24 +8,7 @@ export default async function VendorsPage({
   params: Promise<{ lang: Locale; businessId: string }>;
 }) {
   const { lang, businessId } = await params;
-  const [dictionary, businessesData] = await Promise.all([
-    getDictionary(lang),
-    BusinessService.getMyBusinesses().catch(() => ({ businesses: [] })),
-  ]);
+  const dictionary = await getDictionary(lang);
 
-  const myBusiness = businessesData.businesses.find((b) => b.id === businessId);
-  const role = myBusiness?.role ?? 'member';
-  const canManage =
-    role === 'owner' ||
-    role === 'OWNER' ||
-    role === 'admin' ||
-    role === 'ADMIN';
-
-  return (
-    <BusinessVendors
-      businessId={businessId}
-      dictionary={dictionary}
-      canManage={canManage}
-    />
-  );
+  return <BusinessVendors businessId={businessId} dictionary={dictionary} />;
 }

@@ -5,27 +5,41 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, Loader2, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AuthService } from '@/lib/services/auth';
 import { CommentsService } from '@/lib/requests';
 import type { Comment, CommentListResponse } from '@/types/services';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { type Dictionary } from '@/get-dictionary';
 
 export function CommentsSidebar({
   businessId,
   entityType,
   entityId,
-  currentUserId,
+  dictionary,
 }: {
   businessId: string;
   entityType: 'invoice' | 'expense' | 'purchase_order';
   entityId: string;
-  currentUserId: string;
+  dictionary: Dictionary;
 }) {
+  const t = dictionary.pages.comments;
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editBody, setEditBody] = useState('');
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const response = await AuthService.fetchUser();
+      return response.user;
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 45 * 60 * 1000,
+  });
+  const currentUserId = currentUser?.id;
 
   const { data, isLoading } = useQuery({
     queryKey: ['comments', businessId, entityType, entityId],
@@ -50,8 +64,7 @@ export function CommentsSidebar({
         queryKey: ['comments', businessId, entityType, entityId],
       });
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to post comment'),
+    onError: (err: Error) => toast.error(err.message || t.failedPost),
   });
 
   const updateMutation = useMutation({
@@ -63,8 +76,7 @@ export function CommentsSidebar({
         queryKey: ['comments', businessId, entityType, entityId],
       });
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to update comment'),
+    onError: (err: Error) => toast.error(err.message || t.failedUpdate),
   });
 
   const deleteMutation = useMutation({
@@ -74,15 +86,14 @@ export function CommentsSidebar({
         queryKey: ['comments', businessId, entityType, entityId],
       });
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to delete comment'),
+    onError: (err: Error) => toast.error(err.message || t.failedDelete),
   });
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b pb-3">
         <MessageSquare className="h-4 w-4" />
-        <span className="font-medium">Comments</span>
+        <span className="font-medium">{t.title}</span>
         <span className="text-muted-foreground text-sm">
           ({comments.length})
         </span>
@@ -98,7 +109,7 @@ export function CommentsSidebar({
           </div>
         ) : comments.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
-            No comments yet. Be the first to comment!
+            {t.noComments}
           </p>
         ) : (
           comments.map((comment: Comment) => (
@@ -116,7 +127,7 @@ export function CommentsSidebar({
                   </span>
                   {comment.isEdited && (
                     <span className="text-muted-foreground text-xs">
-                      (edited)
+                      {t.edited}
                     </span>
                   )}
                   {comment.authorId === currentUserId && !comment.isDeleted && (
@@ -166,7 +177,7 @@ export function CommentsSidebar({
                       {updateMutation.isPending ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        'Save'
+                        t.save
                       )}
                     </Button>
                     <Button
@@ -174,7 +185,7 @@ export function CommentsSidebar({
                       variant="outline"
                       onClick={() => setEditingId(undefined)}
                     >
-                      Cancel
+                      {t.cancel}
                     </Button>
                   </div>
                 </div>
@@ -193,7 +204,7 @@ export function CommentsSidebar({
       {/* New comment input */}
       <div className="space-y-2 border-t pt-3">
         <Textarea
-          placeholder="Write a comment... Use @name to mention someone"
+          placeholder={t.placeholder}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           rows={3}
@@ -220,7 +231,7 @@ export function CommentsSidebar({
           ) : (
             <Send className="h-4 w-4" />
           )}
-          Post Comment
+          {t.post}
         </Button>
       </div>
     </div>

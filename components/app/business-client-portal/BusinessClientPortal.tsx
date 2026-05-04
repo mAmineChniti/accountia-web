@@ -26,14 +26,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { type Dictionary } from '@/get-dictionary';
 
 export function BusinessClientPortal({
   businessId,
-  canManage = false,
+  dictionary,
 }: {
   businessId: string;
-  canManage?: boolean;
+  dictionary: Dictionary;
 }) {
+  const t = dictionary.pages.businessClientPortal;
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [expiryDays, setExpiryDays] = useState('30');
@@ -56,10 +58,9 @@ export function BusinessClientPortal({
       }),
     onSuccess: (data) => {
       setResult(data);
-      toast.success('Portal link generated successfully');
+      toast.success(t.success);
     },
-    onError: (err: Error) =>
-      toast.error(err.message || 'Failed to generate link'),
+    onError: (err: Error) => toast.error(err.message || t.error),
   });
 
   function handleCopy() {
@@ -71,7 +72,7 @@ export function BusinessClientPortal({
 
   function handleGenerate() {
     if (!email.trim()) {
-      toast.error('Client email is required');
+      toast.error(t.requiredEmail);
       return;
     }
     setResult(undefined);
@@ -82,11 +83,8 @@ export function BusinessClientPortal({
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Client Portal</h1>
-        <p className="text-muted-foreground">
-          Generate secure, time-limited links that let your clients view their
-          invoices without logging in.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+        <p className="text-muted-foreground">{t.description}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -95,39 +93,36 @@ export function BusinessClientPortal({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Link2 className="text-primary h-5 w-5" />
-              Generate Portal Link
+              {t.generateLinkTitle}
             </CardTitle>
-            <CardDescription>
-              The client will see all invoices your business has issued to their
-              email address.
-            </CardDescription>
+            <CardDescription>{t.generateLinkDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="client-email">
-                Client Email <span className="text-destructive">*</span>
+                {t.clientEmailLabel} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="client-email"
                 type="email"
-                placeholder="client@example.com"
+                placeholder={t.clientEmailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={!canManage}
+                disabled={generateMutation.isPending}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="client-name">Client Name (optional)</Label>
+              <Label htmlFor="client-name">{t.clientNameLabel}</Label>
               <Input
                 id="client-name"
-                placeholder="e.g. Ahmed Client"
+                placeholder={t.clientNamePlaceholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                disabled={!canManage}
+                disabled={generateMutation.isPending}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="expiry-days">Link valid for (days)</Label>
+              <Label htmlFor="expiry-days">{t.expiryDaysLabel}</Label>
               <Input
                 id="expiry-days"
                 type="number"
@@ -135,19 +130,13 @@ export function BusinessClientPortal({
                 max="365"
                 value={expiryDays}
                 onChange={(e) => setExpiryDays(e.target.value)}
-                disabled={!canManage}
+                disabled={generateMutation.isPending}
               />
             </div>
 
-            {!canManage && (
-              <p className="text-muted-foreground text-sm">
-                Only owners and admins can generate portal links.
-              </p>
-            )}
-
             <Button
               className="w-full gap-2"
-              disabled={!canManage || generateMutation.isPending}
+              disabled={generateMutation.isPending}
               onClick={handleGenerate}
             >
               {generateMutation.isPending ? (
@@ -155,7 +144,7 @@ export function BusinessClientPortal({
               ) : (
                 <Link2 className="h-4 w-4" />
               )}
-              Generate Link
+              {t.generateLinkButton}
             </Button>
           </CardContent>
         </Card>
@@ -167,10 +156,10 @@ export function BusinessClientPortal({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base text-green-700 dark:text-green-400">
                   <Check className="h-5 w-5" />
-                  Portal link ready
+                  {t.portalLinkReady}
                 </CardTitle>
                 <CardDescription>
-                  Expires:{' '}
+                  {t.expiresLabel}{' '}
                   <span className="font-medium">
                     {new Date(result.expiresAt).toLocaleDateString(undefined, {
                       day: 'numeric',
@@ -205,12 +194,10 @@ export function BusinessClientPortal({
                   onClick={() => window.open(fullPortalUrl, '_blank')}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  Open portal (preview as client)
+                  {t.openPortalButton}
                 </Button>
                 <p className="text-muted-foreground text-xs">
-                  Share this link with <strong>{email}</strong>. They can open
-                  it in any browser — no login required. Generating a new link
-                  for the same email invalidates the previous one.
+                  {t.shareHint.replace('{email}', email)}
                 </p>
               </CardContent>
             </Card>
@@ -219,34 +206,30 @@ export function BusinessClientPortal({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <ShieldCheck className="text-primary h-5 w-5" />
-                  How it works
+                  {t.howItWorksTitle}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ol className="text-muted-foreground space-y-2 text-sm">
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">1.</span>
-                    Enter the client&apos;s email and an optional display name.
+                    {t.step1}
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">2.</span>
-                    Click <strong>Generate Link</strong> — a secure token is
-                    created (or refreshed if one already exists for that email).
+                    {t.step2}
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">3.</span>
-                    Copy the URL and send it to your client via email or chat.
+                    {t.step3}
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">4.</span>
-                    The client opens the link in any browser — they see all
-                    invoices you&apos;ve issued to their email, can view
-                    details, and download PDFs.
+                    {t.step4}
                   </li>
                   <li className="flex gap-2">
                     <span className="text-primary shrink-0 font-bold">5.</span>
-                    The link auto-expires after the chosen number of days.
-                    Generate a new one anytime.
+                    {t.step5}
                   </li>
                 </ol>
               </CardContent>

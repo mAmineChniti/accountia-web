@@ -91,16 +91,13 @@ const EMPTY_LINE: LineItemRow = {
 
 export function BusinessPurchaseOrders({
   businessId,
-  dictionary: _dictionary,
-  canManage = true,
-  isOwner = false,
+  dictionary,
 }: {
   businessId: string;
   dictionary: Dictionary;
-  canManage?: boolean;
-  isOwner?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const d = dictionary.pages.businessPurchaseOrders;
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -351,9 +348,9 @@ export function BusinessPurchaseOrders({
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
-          <span>Failed to load purchase orders</span>
+          <span>{d.failedToLoad}</span>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {d.retry}
           </Button>
         </div>
       </div>
@@ -365,14 +362,11 @@ export function BusinessPurchaseOrders({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
-          <p className="text-muted-foreground">
-            Manage procurement with approval workflows and goods receipt
-            tracking
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{d.title}</h1>
+          <p className="text-muted-foreground">{d.description}</p>
         </div>
         <Button className="gap-2" onClick={() => setCreateOpen(true)}>
-          <PlusCircle className="h-4 w-4" /> New PO
+          <PlusCircle className="h-4 w-4" /> {d.newPO}
         </Button>
       </div>
 
@@ -381,7 +375,7 @@ export function BusinessPurchaseOrders({
         <div className="relative max-w-sm flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
-            placeholder="Search POs or vendors..."
+            placeholder={d.searchPlaceholder}
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -389,10 +383,10 @@ export function BusinessPurchaseOrders({
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={d.allStatuses} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{d.allStatuses}</SelectItem>
             {Object.keys(STATUS_COLORS).map((s) => (
               <SelectItem key={s} value={s}>
                 {s
@@ -416,10 +410,9 @@ export function BusinessPurchaseOrders({
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <ShoppingCart className="text-muted-foreground h-12 w-12 opacity-50" />
-              <p className="text-lg font-medium">No purchase orders found</p>
+              <p className="text-lg font-medium">{d.noPurchaseOrders}</p>
               <p className="text-muted-foreground text-sm">
-                Click <strong>New PO</strong> to create your first purchase
-                order
+                {d.noPurchaseOrdersHint}
               </p>
             </div>
           ) : (
@@ -427,14 +420,24 @@ export function BusinessPurchaseOrders({
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50 border-b hover:bg-transparent">
-                    <TableHead className="font-semibold">PO Number</TableHead>
-                    <TableHead className="font-semibold">Vendor</TableHead>
-                    <TableHead className="font-semibold">Order Date</TableHead>
-                    <TableHead className="font-semibold">Expected</TableHead>
-                    <TableHead className="text-right font-semibold">
-                      Total
+                    <TableHead className="font-semibold">
+                      {d.columnPONumber ?? 'PO Number'}
                     </TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnVendor ?? 'Vendor'}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnOrderDate ?? 'Order Date'}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnExpected ?? 'Expected'}
+                    </TableHead>
+                    <TableHead className="text-right font-semibold">
+                      {d.columnTotal}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnStatus ?? 'Status'}
+                    </TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -500,44 +503,42 @@ export function BusinessPurchaseOrders({
                                     className="cursor-pointer gap-2"
                                     onClick={() => submitMutation.mutate(po.id)}
                                   >
-                                    <Send className="h-4 w-4" /> Submit for
-                                    Approval
+                                    <Send className="h-4 w-4" />{' '}
+                                    {d.submitForApproval}
                                   </DropdownMenuItem>
                                 )}
-                                {po.status === 'pending_approval' &&
-                                  isOwner && (
-                                    <DropdownMenuItem
-                                      className="cursor-pointer gap-2 text-green-700"
-                                      onClick={() =>
-                                        approveMutation.mutate(po.id)
-                                      }
-                                    >
-                                      <CheckCircle className="h-4 w-4" />{' '}
-                                      Approve
-                                    </DropdownMenuItem>
-                                  )}
-                                {po.status === 'pending_approval' &&
-                                  isOwner && (
-                                    <DropdownMenuItem
-                                      className="text-destructive cursor-pointer gap-2"
-                                      onClick={() => {
-                                        setRejectReason('');
-                                        setRejectDialog({
-                                          open: true,
-                                          poId: po.id,
-                                        });
-                                      }}
-                                    >
-                                      <XCircle className="h-4 w-4" /> Reject
-                                    </DropdownMenuItem>
-                                  )}
+                                {po.status === 'pending_approval' && (
+                                  <DropdownMenuItem
+                                    className="cursor-pointer gap-2 text-green-700"
+                                    onClick={() =>
+                                      approveMutation.mutate(po.id)
+                                    }
+                                  >
+                                    <CheckCircle className="h-4 w-4" />{' '}
+                                    {d.approve}
+                                  </DropdownMenuItem>
+                                )}
+                                {po.status === 'pending_approval' && (
+                                  <DropdownMenuItem
+                                    className="text-destructive cursor-pointer gap-2"
+                                    onClick={() => {
+                                      setRejectReason('');
+                                      setRejectDialog({
+                                        open: true,
+                                        poId: po.id,
+                                      });
+                                    }}
+                                  >
+                                    <XCircle className="h-4 w-4" /> {d.reject}
+                                  </DropdownMenuItem>
+                                )}
                                 {canReceive && (
                                   <DropdownMenuItem
                                     className="cursor-pointer gap-2"
                                     onClick={() => openReceive(po)}
                                   >
-                                    <Package className="h-4 w-4" /> Receive
-                                    Goods
+                                    <Package className="h-4 w-4" />{' '}
+                                    {d.receiveGoods}
                                   </DropdownMenuItem>
                                 )}
                                 {po.status === 'draft' && (
@@ -545,7 +546,7 @@ export function BusinessPurchaseOrders({
                                     className="text-destructive cursor-pointer gap-2"
                                     onClick={() => deleteMutation.mutate(po.id)}
                                   >
-                                    <Trash2 className="h-4 w-4" /> Delete
+                                    <Trash2 className="h-4 w-4" /> {d.delete}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -565,10 +566,12 @@ export function BusinessPurchaseOrders({
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
-                    Previous
+                    {d.previous}
                   </Button>
                   <span className="text-sm">
-                    Page {currentPage} of {totalPages}
+                    {d.page
+                      .replace('{page}', String(currentPage))
+                      .replace('{totalPages}', String(totalPages))}
                   </span>
                   <Button
                     variant="outline"
@@ -576,7 +579,7 @@ export function BusinessPurchaseOrders({
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >
-                    Next
+                    {d.next}
                   </Button>
                 </div>
               )}
@@ -595,13 +598,13 @@ export function BusinessPurchaseOrders({
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>New Purchase Order</DialogTitle>
+            <DialogTitle>{d.dialogTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {/* Vendor */}
             <div className="space-y-1">
               <Label>
-                Vendor <span className="text-destructive">*</span>
+                {d.vendorLabel} <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={vendorId}
@@ -633,7 +636,7 @@ export function BusinessPurchaseOrders({
             {/* Delivery + Notes */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Expected Delivery</Label>
+                <Label>{d.expectedDelivery}</Label>
                 <Input
                   type="date"
                   value={expectedDelivery}
@@ -641,9 +644,9 @@ export function BusinessPurchaseOrders({
                 />
               </div>
               <div className="space-y-1">
-                <Label>Notes</Label>
+                <Label>{d.notes}</Label>
                 <Input
-                  placeholder="e.g. For new hires"
+                  placeholder={d.notesPlaceholder ?? 'e.g. For new hires'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -653,19 +656,23 @@ export function BusinessPurchaseOrders({
             {/* Line Items */}
             <div className="space-y-2">
               <Label>
-                Line Items <span className="text-destructive">*</span>
+                {d.lineItems} <span className="text-destructive">*</span>
               </Label>
               <div className="overflow-hidden rounded-md border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="p-2 text-left font-medium">Description</th>
-                      <th className="w-20 p-2 text-right font-medium">Qty</th>
+                      <th className="p-2 text-left font-medium">
+                        {d.lineItemDescription}
+                      </th>
+                      <th className="w-20 p-2 text-right font-medium">
+                        {d.qty}
+                      </th>
                       <th className="w-28 p-2 text-right font-medium">
-                        Unit Price
+                        {d.unitPrice}
                       </th>
                       <th className="w-24 p-2 text-right font-medium">
-                        Amount
+                        {d.amount}
                       </th>
                       <th className="w-8" />
                     </tr>
@@ -801,13 +808,13 @@ export function BusinessPurchaseOrders({
                 resetCreateForm();
               }}
             >
-              Cancel
+              {d.cancel}
             </Button>
             <Button disabled={createMutation.isPending} onClick={handleCreate}>
               {createMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Create PO'
+                d.createPO
               )}
             </Button>
           </DialogFooter>
@@ -823,14 +830,12 @@ export function BusinessPurchaseOrders({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject Purchase Order</DialogTitle>
+            <DialogTitle>{d.rejectTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-muted-foreground text-sm">
-              Provide a reason so the requester knows what to change.
-            </p>
+            <p className="text-muted-foreground text-sm">{d.rejectHint}</p>
             <Input
-              placeholder="e.g. Budget not approved yet"
+              placeholder={d.rejectPlaceholder}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               autoFocus
@@ -841,7 +846,7 @@ export function BusinessPurchaseOrders({
               variant="outline"
               onClick={() => setRejectDialog({ open: false, poId: undefined })}
             >
-              Cancel
+              {d.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -857,7 +862,7 @@ export function BusinessPurchaseOrders({
               {rejectMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Reject PO'
+                d.rejectPO
               )}
             </Button>
           </DialogFooter>
@@ -874,24 +879,26 @@ export function BusinessPurchaseOrders({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Receive Goods — {receiveDialog.po?.poNumber}
+              {d.receiveTitle} — {receiveDialog.po?.poNumber}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-muted-foreground text-sm">
-              Enter the quantity actually received for each line item.
-            </p>
+            <p className="text-muted-foreground text-sm">{d.receiveHint}</p>
             <div className="overflow-hidden rounded-md border">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="p-2 text-left font-medium">Item</th>
-                    <th className="w-20 p-2 text-right font-medium">Ordered</th>
-                    <th className="w-24 p-2 text-right font-medium">
-                      Already Rcvd
+                    <th className="p-2 text-left font-medium">
+                      {d.columnItem}
+                    </th>
+                    <th className="w-20 p-2 text-right font-medium">
+                      {d.columnOrdered}
                     </th>
                     <th className="w-24 p-2 text-right font-medium">
-                      Receiving Now
+                      {d.columnAlreadyRcvd}
+                    </th>
+                    <th className="w-24 p-2 text-right font-medium">
+                      {d.columnReceivingNow}
                     </th>
                   </tr>
                 </thead>
@@ -934,7 +941,7 @@ export function BusinessPurchaseOrders({
               variant="outline"
               onClick={() => setReceiveDialog({ open: false, po: undefined })}
             >
-              Cancel
+              {d.cancel}
             </Button>
             <Button
               disabled={receiveMutation.isPending}
@@ -943,7 +950,7 @@ export function BusinessPurchaseOrders({
               {receiveMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Save Receipt'
+                d.saveReceipt
               )}
             </Button>
           </DialogFooter>

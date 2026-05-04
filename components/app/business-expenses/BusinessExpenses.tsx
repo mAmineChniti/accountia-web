@@ -107,14 +107,15 @@ export function BusinessExpenses({
   dictionary: Dictionary;
 }) {
   const queryClient = useQueryClient();
+  const d = dictionary.pages.businessExpenses;
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [scanResult, setScanResult] = useState<ExtractedReceiptData | null>(
-    null
-  );
+  const [scanResult, setScanResult] = useState<
+    ExtractedReceiptData | undefined
+  >();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scanMutation = useMutation({
@@ -287,9 +288,9 @@ export function BusinessExpenses({
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
-          <span className="text-sm">Failed to load expenses</span>
+          <span className="text-sm">{d.failedToLoad}</span>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {d.retry}
           </Button>
         </div>
       </div>
@@ -301,10 +302,8 @@ export function BusinessExpenses({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
-          <p className="text-muted-foreground">
-            Track and manage business expenses with approval workflows
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{d.title}</h1>
+          <p className="text-muted-foreground">{d.description}</p>
         </div>
         <div className="flex gap-2">
           {/* Scan Receipt Dialog */}
@@ -312,20 +311,19 @@ export function BusinessExpenses({
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <ScanLine className="h-4 w-4" />
-                Scan Receipt
+                {d.scanReceipt}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-purple-500" />
-                  AI Receipt Scanner
+                  {d.aiReceiptScanner}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <p className="text-muted-foreground text-sm">
-                  Upload a photo or PDF of your receipt. AI will extract all
-                  fields and pre-fill the expense form.
+                  {d.aiScannerDescription}
                 </p>
                 <input
                   ref={fileInputRef}
@@ -346,30 +344,28 @@ export function BusinessExpenses({
                   {scanMutation.isPending ? (
                     <>
                       <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
-                      <span className="text-sm font-medium">
-                        AI is reading your receipt…
-                      </span>
+                      <span className="text-sm font-medium">{d.aiReading}</span>
                       <span className="text-muted-foreground text-xs">
-                        This takes a few seconds
+                        {d.aiReadingHint}
                       </span>
                     </>
                   ) : (
                     <>
                       <Upload className="text-muted-foreground h-10 w-10" />
                       <span className="text-sm font-medium">
-                        Click to upload receipt
+                        {d.clickToUpload}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        PNG, JPG, WEBP or PDF · max 10 MB
+                        {d.uploadFormats}
                       </span>
                     </>
                   )}
                 </button>
                 {scanResult && (
                   <div className="bg-muted/50 rounded-lg p-3 text-xs">
-                    <span className="font-medium">Last scan:</span>{' '}
-                    {scanResult.vendor || 'Unknown vendor'} ·{' '}
-                    {scanResult.amount} {scanResult.currency} ·{' '}
+                    <span className="font-medium">{d.lastScan}:</span>{' '}
+                    {scanResult.vendor || d.unknownVendor} · {scanResult.amount}{' '}
+                    {scanResult.currency} ·{' '}
                     <span
                       className={
                         scanResult.confidence === 'high'
@@ -379,7 +375,7 @@ export function BusinessExpenses({
                             : 'text-red-600'
                       }
                     >
-                      {scanResult.confidence} confidence
+                      {scanResult.confidence} {d.confidence}
                     </span>
                   </div>
                 )}
@@ -390,12 +386,12 @@ export function BusinessExpenses({
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
-                <PlusCircle className="h-4 w-4" /> New Expense
+                <PlusCircle className="h-4 w-4" /> {d.newExpense}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Create Expense</DialogTitle>
+                <DialogTitle>{d.createExpense}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form
@@ -407,9 +403,9 @@ export function BusinessExpenses({
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{d.titleLabel}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g. Team lunch" />
+                          <Input {...field} placeholder={d.titlePlaceholder} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -421,7 +417,7 @@ export function BusinessExpenses({
                       name="amount"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount (TND)</FormLabel>
+                          <FormLabel>{d.amountLabel}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -443,7 +439,7 @@ export function BusinessExpenses({
                       name="expenseDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date</FormLabel>
+                          <FormLabel>{d.dateLabel}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -457,7 +453,7 @@ export function BusinessExpenses({
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>{d.categoryLabel}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -486,12 +482,9 @@ export function BusinessExpenses({
                     name="vendor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Vendor (optional)</FormLabel>
+                        <FormLabel>{d.vendorOptional}</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="e.g. Restaurant Name"
-                          />
+                          <Input {...field} placeholder={d.vendorPlaceholder} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -502,9 +495,12 @@ export function BusinessExpenses({
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description (optional)</FormLabel>
+                        <FormLabel>{d.descriptionOptional}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Additional notes" />
+                          <Input
+                            {...field}
+                            placeholder={d.descriptionPlaceholder}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -516,13 +512,13 @@ export function BusinessExpenses({
                       variant="outline"
                       onClick={() => setCreateOpen(false)}
                     >
-                      Cancel
+                      {d.cancel}
                     </Button>
                     <Button type="submit" disabled={createMutation.isPending}>
                       {createMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        'Create Expense'
+                        d.createExpense
                       )}
                     </Button>
                   </DialogFooter>
@@ -540,7 +536,7 @@ export function BusinessExpenses({
             <CardContent className="p-4">
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <DollarSign className="h-4 w-4" />
-                Total Spend
+                {d.totalSpend}
               </div>
               <p className="mt-1 text-2xl font-bold">
                 {summaryData.totalAmount?.toLocaleString(undefined, {
@@ -554,7 +550,7 @@ export function BusinessExpenses({
             <CardContent className="p-4">
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4" />
-                Pending Review
+                {d.pendingReview}
               </div>
               <p className="mt-1 text-2xl font-bold">
                 {summaryData.pendingReview ?? 0}
@@ -565,7 +561,7 @@ export function BusinessExpenses({
             <CardContent className="p-4">
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Approved
+                {d.approved}
               </div>
               <p className="mt-1 text-2xl font-bold">
                 {summaryData.byStatus?.find((s) => s.status === 'approved')
@@ -597,7 +593,7 @@ export function BusinessExpenses({
         <div className="relative max-w-sm flex-1">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
-            placeholder="Search expenses..."
+            placeholder={d.searchPlaceholder}
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -605,10 +601,10 @@ export function BusinessExpenses({
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={d.allStatuses} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{d.allStatuses}</SelectItem>
             {['draft', 'submitted', 'approved', 'rejected', 'reimbursed'].map(
               (s) => (
                 <SelectItem key={s} value={s}>
@@ -632,9 +628,9 @@ export function BusinessExpenses({
           ) : expenses.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <Receipt className="text-muted-foreground h-12 w-12 opacity-50" />
-              <p className="text-lg font-medium">No expenses found</p>
+              <p className="text-lg font-medium">{d.noExpenses}</p>
               <p className="text-muted-foreground text-sm">
-                Create your first expense to get started
+                {d.noExpensesHint}
               </p>
             </div>
           ) : (
@@ -642,14 +638,24 @@ export function BusinessExpenses({
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50 border-b hover:bg-transparent">
-                    <TableHead className="font-semibold">Title</TableHead>
-                    <TableHead className="font-semibold">Category</TableHead>
-                    <TableHead className="font-semibold">Amount</TableHead>
-                    <TableHead className="font-semibold">Date</TableHead>
                     <TableHead className="font-semibold">
-                      Submitted By
+                      {d.columnTitle}
                     </TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnCategory}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnAmount}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnDate}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnSubmittedBy}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnStatus}
+                    </TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -724,7 +730,7 @@ export function BusinessExpenses({
                                     }
                                   >
                                     <CheckCircle className="h-4 w-4 text-green-500" />{' '}
-                                    Submit for Review
+                                    {d.submitForReview}
                                   </DropdownMenuItem>
                                 )}
                                 {expense.status === 'submitted' && (
@@ -737,7 +743,8 @@ export function BusinessExpenses({
                                       })
                                     }
                                   >
-                                    <CheckCircle className="h-4 w-4" /> Approve
+                                    <CheckCircle className="h-4 w-4" />{' '}
+                                    {d.approve}
                                   </DropdownMenuItem>
                                 )}
                                 {expense.status === 'submitted' && (
@@ -751,7 +758,7 @@ export function BusinessExpenses({
                                       });
                                     }}
                                   >
-                                    <XCircle className="h-4 w-4" /> Reject
+                                    <XCircle className="h-4 w-4" /> {d.reject}
                                   </DropdownMenuItem>
                                 )}
                                 {expense.status === 'approved' && (
@@ -761,8 +768,8 @@ export function BusinessExpenses({
                                       reimburseMutation.mutate(expense.id)
                                     }
                                   >
-                                    <TrendingUp className="h-4 w-4" /> Mark
-                                    Reimbursed
+                                    <TrendingUp className="h-4 w-4" />{' '}
+                                    {d.markReimbursed}
                                   </DropdownMenuItem>
                                 )}
                                 {expense.status === 'draft' && (
@@ -772,7 +779,7 @@ export function BusinessExpenses({
                                       deleteMutation.mutate(expense.id)
                                     }
                                   >
-                                    <Trash2 className="h-4 w-4" /> Delete
+                                    <Trash2 className="h-4 w-4" /> {d.delete}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -791,7 +798,7 @@ export function BusinessExpenses({
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
-                    Previous
+                    {d.previous}
                   </Button>
                   <span className="text-sm">
                     Page {currentPage} of {totalPages}
@@ -802,7 +809,7 @@ export function BusinessExpenses({
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >
-                    Next
+                    {d.next}
                   </Button>
                 </div>
               )}
@@ -823,14 +830,12 @@ export function BusinessExpenses({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject Expense</DialogTitle>
+            <DialogTitle>{d.rejectTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-muted-foreground text-sm">
-              Optionally provide a reason so the submitter knows what to fix.
-            </p>
+            <p className="text-muted-foreground text-sm">{d.rejectHint}</p>
             <Input
-              placeholder="e.g. Use company account instead"
+              placeholder={d.rejectPlaceholder}
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
               autoFocus
@@ -843,7 +848,7 @@ export function BusinessExpenses({
                 setRejectDialog({ open: false, expenseId: undefined })
               }
             >
-              Cancel
+              {d.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -866,7 +871,7 @@ export function BusinessExpenses({
               {reviewMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                'Reject Expense'
+                d.rejectExpense
               )}
             </Button>
           </DialogFooter>

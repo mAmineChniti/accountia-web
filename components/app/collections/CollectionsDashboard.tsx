@@ -40,8 +40,6 @@ import {
   TableCell,
 } from '@/components/ui/table';
 
-// ─── Colour helpers ──────────────────────────────────────────────────────────
-
 const RISK_COLORS: Record<RiskLevel, string> = {
   LOW: 'bg-green-100 text-green-800 border-green-200',
   MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -70,8 +68,6 @@ const RISK_LABELS: Record<RiskLevel, string> = {
   CRITICAL: 'Critique',
 };
 
-// ─── Risk score bar ──────────────────────────────────────────────────────────
-
 function RiskBar({ score, level }: { score: number; level: RiskLevel }) {
   return (
     <div className="flex items-center gap-2">
@@ -87,8 +83,6 @@ function RiskBar({ score, level }: { score: number; level: RiskLevel }) {
     </div>
   );
 }
-
-// ─── Stat card ───────────────────────────────────────────────────────────────
 
 function StatCard({
   title,
@@ -114,8 +108,6 @@ function StatCard({
     </Card>
   );
 }
-
-// ─── Reminder dialog ─────────────────────────────────────────────────────────
 
 function ReminderDialog({
   invoiceId,
@@ -186,7 +178,6 @@ function ReminderDialog({
               </Badge>
             </div>
 
-            {/* Subject */}
             <div>
               <p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                 Objet
@@ -196,7 +187,6 @@ function ReminderDialog({
               </div>
             </div>
 
-            {/* Body */}
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
@@ -236,8 +226,6 @@ function ReminderDialog({
     </Dialog>
   );
 }
-
-// ─── Main component ──────────────────────────────────────────────────────────
 
 export function CollectionsDashboard({ businessId }: { businessId: string }) {
   const [filterLevel, setFilterLevel] = useState<RiskLevel | 'ALL'>('ALL');
@@ -296,7 +284,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Suivi des Relances</h1>
@@ -309,7 +296,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
         </Button>
       </div>
 
-      {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           title="Factures ouvertes"
@@ -337,7 +323,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
         />
       </div>
 
-      {/* Risk breakdown bar */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
@@ -389,7 +374,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
         </CardContent>
       </Card>
 
-      {/* Scored invoices table */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -503,7 +487,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
                       </TableCell>
                     </TableRow>
 
-                    {/* Expanded details row */}
                     {expandedRow === score.invoiceId && (
                       <TableRow
                         key={`${score.invoiceId}-details`}
@@ -565,7 +548,6 @@ export function CollectionsDashboard({ businessId }: { businessId: string }) {
         </CardContent>
       </Card>
 
-      {/* Reminder dialog */}
       {reminderInvoice && (
         <ReminderDialog
           invoiceId={reminderInvoice.id}

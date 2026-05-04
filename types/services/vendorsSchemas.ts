@@ -4,7 +4,7 @@ export const CreateVendorSchema = z.object({
   businessId: z.string().min(1),
   name: z.string().min(1, 'Vendor name is required'),
   contactName: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.email().optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
   taxId: z.string().optional(),

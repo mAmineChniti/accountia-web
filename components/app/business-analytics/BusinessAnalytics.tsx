@@ -18,12 +18,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from 'recharts';
 
 import { type Dictionary } from '@/get-dictionary';
@@ -40,23 +34,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const PIE_COLORS = [
-  '#8a2222',
-  '#d44f4f',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#06b6d4',
-  '#6366f1',
-];
-
 export function BusinessAnalytics({
   businessId,
-  dictionary: _dictionary,
+  dictionary,
 }: {
   businessId: string;
   dictionary: Dictionary;
 }) {
+  const t = dictionary.pages.businessAnalytics;
   const [groupBy, setGroupBy] = useState<'monthly' | 'weekly' | 'yearly'>(
     'monthly'
   );
@@ -76,15 +61,23 @@ export function BusinessAnalytics({
   });
 
   const dashboard = data as AnalyticsDashboardResponse | undefined;
+  const currency = dashboard?.summary?.currency ?? 'TND';
+  const maxArAmount = Math.max(
+    ...(dashboard?.arAging ?? []).map((b) => b.amount),
+    1
+  );
+
+  const getForecastStatusLabel = (status: string) =>
+    status === 'overdue' ? t.statusOverdue : t.statusOnTrack;
 
   if (error) {
     return (
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
-          <span>Failed to load analytics</span>
+          <span>{t.failedLoad}</span>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {t.retry}
           </Button>
         </div>
       </div>
@@ -95,24 +88,20 @@ export function BusinessAnalytics({
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Analytics & Cash Flow
-          </h1>
-          <p className="text-muted-foreground">
-            Financial insights, AR aging, and 90-day cash flow forecast
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+          <p className="text-muted-foreground">{t.description}</p>
         </div>
         <Select
           value={groupBy}
           onValueChange={(v) => setGroupBy(v as typeof groupBy)}
         >
           <SelectTrigger className="w-36">
-            <SelectValue />
+            <SelectValue placeholder={t.groupBy.placeholder} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
+            <SelectItem value="monthly">{t.groupBy.monthly}</SelectItem>
+            <SelectItem value="weekly">{t.groupBy.weekly}</SelectItem>
+            <SelectItem value="yearly">{t.groupBy.yearly}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -131,32 +120,34 @@ export function BusinessAnalytics({
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <DollarSign className="h-4 w-4" />
-                  Total Revenue
+                  {t.totalRevenue}
                 </div>
                 <p className="mt-1 text-2xl font-bold">
                   {dashboard.summary.totalRevenue.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}{' '}
-                  TND
+                  {currency}
                 </p>
-                <p className="text-muted-foreground mt-1 text-xs">YTD {year}</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t.ytd} {year}
+                </p>
               </CardContent>
             </Card>
             <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm text-yellow-600">
                   <Clock className="h-4 w-4" />
-                  Outstanding
+                  {t.outstanding}
                 </div>
                 <p className="mt-1 text-2xl font-bold">
                   {dashboard.summary.totalOutstanding.toLocaleString(
                     undefined,
                     { minimumFractionDigits: 2 }
                   )}{' '}
-                  TND
+                  {currency}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Awaiting payment
+                  {t.awaitingPayment}
                 </p>
               </CardContent>
             </Card>
@@ -164,16 +155,16 @@ export function BusinessAnalytics({
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm text-red-600">
                   <AlertTriangle className="h-4 w-4" />
-                  Overdue
+                  {t.overdue}
                 </div>
                 <p className="mt-1 text-2xl font-bold">
                   {dashboard.summary.totalOverdue.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}{' '}
-                  TND
+                  {currency}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Past due date
+                  {t.pastDueDate}
                 </p>
               </CardContent>
             </Card>
@@ -181,14 +172,15 @@ export function BusinessAnalytics({
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm text-blue-600">
                   <TrendingUp className="h-4 w-4" />
-                  Collection Rate
+                  {t.collectionRate}
                 </div>
                 <p className="mt-1 text-2xl font-bold">
                   {dashboard.summary.collectionRate.toFixed(1)}%
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Avg {dashboard.summary.averageDaysToPay.toFixed(0)} days to
-                  pay
+                  {t.averageDaysToPayPrefix}{' '}
+                  {dashboard.summary.averageDaysToPay.toFixed(0)}{' '}
+                  {t.averageDaysToPaySuffix}
                 </p>
               </CardContent>
             </Card>
@@ -202,7 +194,7 @@ export function BusinessAnalytics({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Revenue Timeline
+              {t.revenueTimeline}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -216,18 +208,18 @@ export function BusinessAnalytics({
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
                     formatter={(v) =>
-                      `${(v as number)?.toLocaleString() ?? 0} TND`
+                      `${(v as number)?.toLocaleString() ?? 0} ${currency}`
                     }
                   />
                   <Bar
                     dataKey="paid"
-                    name="Paid"
+                    name={t.paid}
                     fill="#22c55e"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar
                     dataKey="unpaid"
-                    name="Unpaid"
+                    name={t.unpaid}
                     fill="#f97316"
                     radius={[4, 4, 0, 0]}
                   />
@@ -240,7 +232,7 @@ export function BusinessAnalytics({
         {/* AR Aging */}
         <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
           <CardHeader>
-            <CardTitle>Accounts Receivable Aging</CardTitle>
+            <CardTitle>{t.arAging}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -256,14 +248,14 @@ export function BusinessAnalytics({
                           {bucket.amount.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                           })}{' '}
-                          TND ({bucket.count})
+                          {currency} ({bucket.count})
                         </span>
                       </div>
                       <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                         <div
                           className={`h-full rounded-full transition-all ${i === 0 ? 'bg-green-500' : i === 1 ? 'bg-yellow-500' : i === 2 ? 'bg-orange-500' : 'bg-red-500'}`}
                           style={{
-                            width: `${Math.min(100, (bucket.amount / Math.max(...(dashboard?.arAging ?? []).map((b) => b.amount), 1)) * 100)}%`,
+                            width: `${Math.min(100, (bucket.amount / maxArAmount) * 100)}%`,
                           }}
                         />
                       </div>
@@ -272,7 +264,7 @@ export function BusinessAnalytics({
                 ))}
                 {(dashboard?.arAging?.every((b) => b.amount === 0) ?? true) && (
                   <p className="text-muted-foreground py-8 text-center text-sm">
-                    No outstanding receivables
+                    {t.noOutstandingReceivables}
                   </p>
                 )}
               </div>
@@ -284,7 +276,7 @@ export function BusinessAnalytics({
       {/* Cash Flow Forecast */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader>
-          <CardTitle>90-Day Cash Flow Forecast</CardTitle>
+          <CardTitle>{t.cashFlowForecast}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -295,13 +287,13 @@ export function BusinessAnalytics({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left">
-                    <th className="pb-2 font-semibold">Due Date</th>
-                    <th className="pb-2 font-semibold">Invoice</th>
-                    <th className="pb-2 font-semibold">Client</th>
+                    <th className="pb-2 font-semibold">{t.dueDate}</th>
+                    <th className="pb-2 font-semibold">{t.invoice}</th>
+                    <th className="pb-2 font-semibold">{t.client}</th>
                     <th className="pb-2 text-right font-semibold">
-                      Expected Inflow
+                      {t.expectedInflow}
                     </th>
-                    <th className="pb-2 font-semibold">Status</th>
+                    <th className="pb-2 font-semibold">{t.status}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -318,13 +310,13 @@ export function BusinessAnalytics({
                         {item.expectedInflow.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                         })}{' '}
-                        TND
+                        {currency}
                       </td>
                       <td className="py-2">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${item.status === 'overdue' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}
                         >
-                          {item.status}
+                          {getForecastStatusLabel(item.status)}
                         </span>
                       </td>
                     </tr>
@@ -334,7 +326,7 @@ export function BusinessAnalytics({
             </div>
           ) : (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              No outstanding invoices in the next 90 days
+              {t.noOutstandingInvoices}
             </p>
           )}
         </CardContent>
@@ -343,7 +335,7 @@ export function BusinessAnalytics({
       {/* Top Clients */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader>
-          <CardTitle>Top Clients by Revenue</CardTitle>
+          <CardTitle>{t.topClients}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -362,11 +354,11 @@ export function BusinessAnalytics({
                         {client.totalRevenue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                         })}{' '}
-                        TND
+                        {currency}
                       </span>
                     </div>
                     <div className="text-muted-foreground text-xs">
-                      {client.invoiceCount} invoices
+                      {client.invoiceCount} {t.invoices}
                     </div>
                   </div>
                 </div>
@@ -374,7 +366,7 @@ export function BusinessAnalytics({
             </div>
           ) : (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              No client data yet
+              {t.noClientDataYet}
             </p>
           )}
         </CardContent>

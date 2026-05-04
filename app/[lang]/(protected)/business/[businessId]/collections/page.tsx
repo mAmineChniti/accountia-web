@@ -1,5 +1,4 @@
-import { CollectionsDashboard } from '@/components/Collections/CollectionsDashboard';
-import { requireAuth } from '@/actions/session';
+import { CollectionsDashboard } from '@/components/app/collections/CollectionsDashboard';
 import { type Locale } from '@/i18n-config';
 
 export default async function CollectionsPage({
@@ -7,8 +6,7 @@ export default async function CollectionsPage({
 }: {
   params: Promise<{ lang: Locale; businessId: string }>;
 }) {
-  const { lang, businessId } = await params;
-  await requireAuth(`/${lang}/login`);
+  const { businessId } = await params;
 
   return <CollectionsDashboard businessId={businessId} />;
 }

@@ -18,7 +18,7 @@ import {
   Clock,
   Download,
 } from 'lucide-react';
-import { CommentsSidebar } from '@/components/Comments/CommentsSidebar';
+import { CommentsSidebar } from '@/components/app/business-invoices/CommentsSidebar';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { BusinessService, InvoicesService } from '@/lib/requests';
@@ -112,12 +112,10 @@ export function IssuedInvoices({
   lang,
   dictionary,
   businessId,
-  currentUserId,
 }: {
   lang: Locale;
   dictionary: Dictionary;
   businessId: string;
-  currentUserId: string;
 }) {
   const t = dictionary.pages.invoices;
   const queryClient = useQueryClient();
@@ -997,7 +995,7 @@ export function IssuedInvoices({
                 businessId={businessId}
                 entityType="invoice"
                 entityId={selectedInvoiceId}
-                currentUserId={currentUserId}
+                dictionary={dictionary}
               />
             </div>
           )}

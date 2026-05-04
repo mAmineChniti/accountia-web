@@ -115,6 +115,7 @@ export function RecurringInvoices({
   dictionary: Dictionary;
 }) {
   const queryClient = useQueryClient();
+  const d = dictionary.pages.recurringInvoices;
   const [currentPage, setCurrentPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -259,9 +260,9 @@ export function RecurringInvoices({
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
         <div className="bg-destructive/10 text-destructive flex items-center gap-3 rounded-lg p-4">
           <AlertCircle className="h-5 w-5" />
-          <span>Failed to load recurring invoices</span>
+          <span>{d.failedToLoad}</span>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            Retry
+            {d.retry}
           </Button>
         </div>
       </div>
@@ -272,29 +273,24 @@ export function RecurringInvoices({
     <div className="w-full space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Recurring Invoices
-          </h1>
-          <p className="text-muted-foreground">
-            Automated billing schedules — invoices are generated automatically
-            at each interval
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{d.title}</h1>
+          <p className="text-muted-foreground">{d.description}</p>
         </div>
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
-              <PlusCircle className="h-4 w-4" /> New Schedule
+              <PlusCircle className="h-4 w-4" /> {d.newSchedule}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>Create Recurring Schedule</DialogTitle>
+              <DialogTitle>{d.dialogTitle}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               {/* Name */}
               <div className="space-y-1">
-                <Label>Schedule Name</Label>
+                <Label>{d.scheduleName}</Label>
                 <Input
                   placeholder="e.g. Monthly SaaS subscription"
                   value={form.name}
@@ -305,7 +301,7 @@ export function RecurringInvoices({
               {/* Frequency + Start */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label>Frequency</Label>
+                  <Label>{d.frequency}</Label>
                   <Select
                     value={form.frequency}
                     onValueChange={(v) => set('frequency', v)}
@@ -323,7 +319,7 @@ export function RecurringInvoices({
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Start Date</Label>
+                  <Label>{d.startDate}</Label>
                   <Input
                     type="date"
                     value={form.startDate}
@@ -353,7 +349,7 @@ export function RecurringInvoices({
               </div>
               {form.endCondition === 'after_occurrences' && (
                 <div className="space-y-1">
-                  <Label>Max Invoices</Label>
+                  <Label>{d.maxInvoices}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -365,7 +361,7 @@ export function RecurringInvoices({
               )}
               {form.endCondition === 'by_date' && (
                 <div className="space-y-1">
-                  <Label>End Date</Label>
+                  <Label>{d.endDate}</Label>
                   <Input
                     type="date"
                     value={form.endDate}
@@ -377,7 +373,7 @@ export function RecurringInvoices({
               {/* Recipient */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label>Recipient Name</Label>
+                  <Label>{d.recipientName}</Label>
                   <Input
                     placeholder="Client company / person"
                     value={form.recipientName}
@@ -386,7 +382,8 @@ export function RecurringInvoices({
                 </div>
                 <div className="space-y-1">
                   <Label>
-                    Recipient Email <span className="text-destructive">*</span>
+                    {d.recipientEmail}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     type="email"
@@ -445,7 +442,7 @@ export function RecurringInvoices({
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label>Quantity</Label>
+                  <Label>{d.quantity}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -455,7 +452,7 @@ export function RecurringInvoices({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Unit Price (TND)</Label>
+                  <Label>{d.unitPrice}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -466,7 +463,7 @@ export function RecurringInvoices({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Amount</Label>
+                  <Label>{d.amount}</Label>
                   <Input
                     readOnly
                     value={lineAmount.toFixed(2)}
@@ -478,7 +475,7 @@ export function RecurringInvoices({
               {/* Settings */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label>Due Days After Issue</Label>
+                  <Label>{d.dueDays}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -498,13 +495,13 @@ export function RecurringInvoices({
                     htmlFor="autoIssue"
                     className="cursor-pointer leading-none"
                   >
-                    Auto-issue invoices
+                    {d.autoIssue}
                   </Label>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label>Description (optional)</Label>
+                <Label>{d.descriptionOptional}</Label>
                 <Input
                   placeholder="Internal notes..."
                   value={form.description}
@@ -521,7 +518,7 @@ export function RecurringInvoices({
                   setForm(EMPTY_FORM);
                 }}
               >
-                Cancel
+                {d.cancel}
               </Button>
               <Button
                 disabled={createMutation.isPending}
@@ -530,7 +527,7 @@ export function RecurringInvoices({
                 {createMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Create Schedule'
+                  d.createSchedule
                 )}
               </Button>
             </DialogFooter>
@@ -549,10 +546,9 @@ export function RecurringInvoices({
           ) : schedules.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <RefreshCw className="text-muted-foreground h-12 w-12 opacity-50" />
-              <p className="text-lg font-medium">No recurring schedules</p>
+              <p className="text-lg font-medium">{d.noSchedules}</p>
               <p className="text-muted-foreground text-sm">
-                Click <strong>New Schedule</strong> to set up your first
-                automated billing
+                {d.noSchedulesHint}
               </p>
             </div>
           ) : (
@@ -560,12 +556,24 @@ export function RecurringInvoices({
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50 border-b hover:bg-transparent">
-                    <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold">Frequency</TableHead>
-                    <TableHead className="font-semibold">Amount</TableHead>
-                    <TableHead className="font-semibold">Next Run</TableHead>
-                    <TableHead className="font-semibold">Generated</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnName}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnFrequency}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnAmount}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnNextRun}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnGenerated}
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      {d.columnStatus}
+                    </TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
@@ -630,7 +638,7 @@ export function RecurringInvoices({
                                   pauseMutation.mutate(schedule.id)
                                 }
                               >
-                                <PauseCircle className="h-4 w-4" /> Pause
+                                <PauseCircle className="h-4 w-4" /> {d.pause}
                               </DropdownMenuItem>
                             )}
                             {schedule.status === 'paused' && (
@@ -640,14 +648,14 @@ export function RecurringInvoices({
                                   resumeMutation.mutate(schedule.id)
                                 }
                               >
-                                <PlayCircle className="h-4 w-4" /> Resume
+                                <PlayCircle className="h-4 w-4" /> {d.resume}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
                               className="text-destructive cursor-pointer gap-2"
                               onClick={() => deleteMutation.mutate(schedule.id)}
                             >
-                              <Trash2 className="h-4 w-4" /> Delete Schedule
+                              <Trash2 className="h-4 w-4" /> {d.deleteSchedule}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -664,10 +672,12 @@ export function RecurringInvoices({
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
-                    Previous
+                    {d.previous}
                   </Button>
                   <span className="text-sm">
-                    Page {currentPage} of {totalPages}
+                    {d.page
+                      .replace('{page}', String(currentPage))
+                      .replace('{totalPages}', String(totalPages))}
                   </span>
                   <Button
                     variant="outline"
@@ -675,7 +685,7 @@ export function RecurringInvoices({
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >
-                    Next
+                    {d.next}
                   </Button>
                 </div>
               )}

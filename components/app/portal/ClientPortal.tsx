@@ -6,6 +6,7 @@ import { FileText, Download, Loader2, AlertCircle, Eye } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import { type Dictionary } from '@/get-dictionary';
 import { publicClient, API_CONFIG } from '@/lib/requests';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,14 @@ const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
 };
 
-export function ClientPortal({ token }: { token: string }) {
+export function ClientPortal({
+  token,
+  dictionary,
+}: {
+  token: string;
+  dictionary: Dictionary;
+}) {
+  const t = dictionary.pages.clientPortal;
   const [selectedInvoice, setSelectedInvoice] = useState<string | undefined>();
 
   const {
@@ -93,17 +101,17 @@ export function ClientPortal({ token }: { token: string }) {
     doc.text(inv.issuerBusinessName, 14, 20);
     doc.setFontSize(12);
     doc.setTextColor(50);
-    doc.text(`Invoice ${inv.invoiceNumber}`, 14, 30);
+    doc.text(`${t.invoiceLabel} ${inv.invoiceNumber}`, 14, 30);
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(
-      `Issued: ${new Date(inv.issuedDate).toLocaleDateString()}   Due: ${new Date(inv.dueDate).toLocaleDateString()}`,
+      `${t.issued}: ${new Date(inv.issuedDate).toLocaleDateString()}   ${t.due}: ${new Date(inv.dueDate).toLocaleDateString()}`,
       14,
       38
     );
     doc.line(14, 43, 196, 43);
     autoTable(doc, {
-      head: [['Item', 'Qty', 'Unit Price', 'Amount']],
+      head: [[t.item, t.qty, t.price, t.amount]],
       body: (
         inv as unknown as {
           lineItems: Array<{
@@ -128,7 +136,7 @@ export function ClientPortal({ token }: { token: string }) {
     doc.setFontSize(12);
     doc.setTextColor(50);
     doc.text(
-      `Total: ${inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${inv.currency}`,
+      `${t.total}: ${inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${inv.currency}`,
       130,
       finalY + 10
     );
@@ -149,11 +157,8 @@ export function ClientPortal({ token }: { token: string }) {
         <Card className="mx-4 w-full max-w-md">
           <CardContent className="space-y-3 p-8 text-center">
             <AlertCircle className="text-destructive mx-auto h-12 w-12" />
-            <h2 className="text-xl font-semibold">Access Denied</h2>
-            <p className="text-muted-foreground">
-              This portal link is invalid or has expired. Please contact your
-              service provider for a new link.
-            </p>
+            <h2 className="text-xl font-semibold">{t.accessDeniedTitle}</h2>
+            <p className="text-muted-foreground">{t.accessDeniedDescription}</p>
           </CardContent>
         </Card>
       </div>
@@ -162,19 +167,21 @@ export function ClientPortal({ token }: { token: string }) {
 
   return (
     <div className="bg-muted/30 min-h-screen">
-      {/* Header */}
       <div className="dark:bg-card border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-primary text-xl font-bold">Client Portal</h1>
+            <h1 className="text-primary text-xl font-bold">{t.title}</h1>
             <p className="text-muted-foreground text-sm">
-              Welcome, {portalInfo.clientName ?? portalInfo.clientEmail}
+              {t.welcome.replace(
+                '{name}',
+                portalInfo.clientName ?? portalInfo.clientEmail
+              )}
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm font-medium">{portalInfo.clientEmail}</p>
             <p className="text-muted-foreground text-xs">
-              Access expires:{' '}
+              {t.accessExpires}{' '}
               {new Date(portalInfo.expiresAt).toLocaleDateString()}
             </p>
           </div>
@@ -188,7 +195,7 @@ export function ClientPortal({ token }: { token: string }) {
               variant="outline"
               onClick={() => setSelectedInvoice(undefined)}
             >
-              ← Back to Invoices
+              ← {t.backToInvoices}
             </Button>
             {detailLoading ? (
               <Skeleton className="h-64 w-full" />
@@ -196,25 +203,27 @@ export function ClientPortal({ token }: { token: string }) {
               invoiceDetail && (
                 <Card>
                   <CardHeader className="flex-row items-center justify-between">
-                    <CardTitle>Invoice {invoiceDetail.invoiceNumber}</CardTitle>
+                    <CardTitle>
+                      {t.invoiceLabel} {invoiceDetail.invoiceNumber}
+                    </CardTitle>
                     <Button
                       variant="outline"
                       className="gap-2"
                       onClick={() => exportPDF(invoiceDetail)}
                     >
-                      <Download className="h-4 w-4" /> Download PDF
+                      <Download className="h-4 w-4" /> {t.downloadPdf}
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-muted-foreground">From</p>
+                        <p className="text-muted-foreground">{t.from}</p>
                         <p className="font-medium">
                           {invoiceDetail.issuerBusinessName}
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Status</p>
+                        <p className="text-muted-foreground">{t.status}</p>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[invoiceDetail.status] ?? ''}`}
                         >
@@ -222,7 +231,7 @@ export function ClientPortal({ token }: { token: string }) {
                         </span>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Issue Date</p>
+                        <p className="text-muted-foreground">{t.issueDate}</p>
                         <p>
                           {new Date(
                             invoiceDetail.issuedDate
@@ -230,7 +239,7 @@ export function ClientPortal({ token }: { token: string }) {
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Due Date</p>
+                        <p className="text-muted-foreground">{t.dueDate}</p>
                         <p>
                           {new Date(invoiceDetail.dueDate).toLocaleDateString()}
                         </p>
@@ -239,13 +248,17 @@ export function ClientPortal({ token }: { token: string }) {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="pb-2 text-left font-semibold">Item</th>
-                          <th className="pb-2 text-right font-semibold">Qty</th>
-                          <th className="pb-2 text-right font-semibold">
-                            Price
+                          <th className="pb-2 text-left font-semibold">
+                            {t.item}
                           </th>
                           <th className="pb-2 text-right font-semibold">
-                            Amount
+                            {t.qty}
+                          </th>
+                          <th className="pb-2 text-right font-semibold">
+                            {t.price}
+                          </th>
+                          <th className="pb-2 text-right font-semibold">
+                            {t.amount}
                           </th>
                         </tr>
                       </thead>
@@ -281,12 +294,14 @@ export function ClientPortal({ token }: { token: string }) {
                       <tfoot>
                         <tr>
                           <td colSpan={3} className="pt-3 font-bold">
-                            Total
+                            {t.total}
                           </td>
                           <td className="pt-3 text-right text-lg font-bold">
                             {invoiceDetail.totalAmount.toLocaleString(
                               undefined,
-                              { minimumFractionDigits: 2 }
+                              {
+                                minimumFractionDigits: 2,
+                              }
                             )}{' '}
                             {invoiceDetail.currency}
                           </td>
@@ -300,7 +315,7 @@ export function ClientPortal({ token }: { token: string }) {
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Your Invoices</h2>
+            <h2 className="text-2xl font-bold">{t.yourInvoices}</h2>
             {invoicesLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -311,9 +326,7 @@ export function ClientPortal({ token }: { token: string }) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <FileText className="text-muted-foreground mx-auto h-10 w-10 opacity-50" />
-                  <p className="text-muted-foreground mt-2">
-                    No invoices found
-                  </p>
+                  <p className="text-muted-foreground mt-2">{t.noInvoices}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -337,9 +350,9 @@ export function ClientPortal({ token }: { token: string }) {
                           </span>
                         </div>
                         <p className="text-muted-foreground text-sm">
-                          {inv.issuerBusinessName} · Issued{' '}
-                          {new Date(inv.issuedDate).toLocaleDateString()} · Due{' '}
-                          {new Date(inv.dueDate).toLocaleDateString()}
+                          {inv.issuerBusinessName} · {t.issued}{' '}
+                          {new Date(inv.issuedDate).toLocaleDateString()} ·{' '}
+                          {t.due} {new Date(inv.dueDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
