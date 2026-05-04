@@ -6,6 +6,25 @@ export interface BusinessItem {
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  role?: string;
+}
+
+export type TeamMemberRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'CLIENT';
+
+export interface TeamMember {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  role: TeamMemberRole;
+  createdAt: string;
+}
+
+export interface TeamMembersResponse {
+  message: string;
+  members: TeamMember[];
 }
 
 export interface BusinessDetailData {

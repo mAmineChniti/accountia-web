@@ -28,6 +28,7 @@ import type {
   StripeOnboardingLinkResponse,
   StripeConnectStatusResponse,
   GetOtherBusinessesResponse,
+  TeamMembersResponse,
 } from '@/types/services';
 import {
   ApiError,
@@ -573,9 +574,7 @@ export const BusinessService = {
     }
   },
 
-  async getTeamMembers(
-    businessId: string
-  ): Promise<{ message: string; members: unknown[] }> {
+  async getTeamMembers(businessId: string): Promise<TeamMembersResponse> {
     if (
       !businessId ||
       typeof businessId !== 'string' ||
@@ -589,7 +588,7 @@ export const BusinessService = {
       const searchParams: Record<string, string> = { businessId };
       const result = await client
         .get(endpoint, { searchParams })
-        .json<{ message: string; members: unknown[] }>();
+        .json<TeamMembersResponse>();
       return result;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

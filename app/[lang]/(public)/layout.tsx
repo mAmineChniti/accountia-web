@@ -13,6 +13,7 @@ export default async function PublicLayout({
 }) {
   const { lang } = await params;
   const locale = lang as Locale;
+
   const [dictionary, session] = await Promise.all([
     getDictionary(locale),
     getSession(),
