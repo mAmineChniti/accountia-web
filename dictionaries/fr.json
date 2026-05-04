@@ -821,7 +821,10 @@
       "yourInvoices": "Vos factures",
       "noInvoices": "Aucune facture trouvée",
       "issued": "Émise",
-      "due": "Échéance"
+      "due": "Échéance",
+      "failedToLoadInvoices": "Échec du chargement des factures",
+      "failedToLoadInvoice": "Échec du chargement des détails de la facture",
+      "retry": "Réessayer"
     },
     "comments": {
       "title": "Commentaires",

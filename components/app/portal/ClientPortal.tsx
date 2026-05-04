@@ -62,7 +62,12 @@ export function ClientPortal({
     retry: false,
   });
 
-  const { data: invoices, isLoading: invoicesLoading } = useQuery({
+  const {
+    data: invoices,
+    isLoading: invoicesLoading,
+    error: invoicesError,
+    refetch: invoicesRefetch,
+  } = useQuery({
     queryKey: ['portal-invoices', token],
     queryFn: async () => {
       const url = API_CONFIG.CLIENT_PORTAL.INVOICES.replace('{token}', token);
@@ -71,7 +76,12 @@ export function ClientPortal({
     enabled: !!portalInfo,
   });
 
-  const { data: invoiceDetail, isLoading: detailLoading } = useQuery({
+  const {
+    data: invoiceDetail,
+    isLoading: detailLoading,
+    error: detailError,
+    refetch: detailRefetch,
+  } = useQuery({
     queryKey: ['portal-invoice-detail', token, selectedInvoice],
     queryFn: async () => {
       const url = API_CONFIG.CLIENT_PORTAL.INVOICE_DETAIL.replace(
@@ -197,7 +207,24 @@ export function ClientPortal({
             >
               ← {t.backToInvoices}
             </Button>
-            {detailLoading ? (
+            {detailError ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <AlertCircle className="text-destructive mx-auto h-10 w-10 opacity-50" />
+                  <p className="text-destructive mt-2">
+                    {t.failedToLoadInvoice || 'Failed to load invoice details'}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => detailRefetch()}
+                  >
+                    {t.retry || 'Retry'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : detailLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
               invoiceDetail && (
@@ -316,7 +343,24 @@ export function ClientPortal({
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">{t.yourInvoices}</h2>
-            {invoicesLoading ? (
+            {invoicesError ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <AlertCircle className="text-destructive mx-auto h-10 w-10 opacity-50" />
+                  <p className="text-destructive mt-2">
+                    {t.failedToLoadInvoices || 'Failed to load invoices'}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => invoicesRefetch()}
+                  >
+                    {t.retry || 'Retry'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : invoicesLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-20 w-full" />
@@ -334,8 +378,16 @@ export function ClientPortal({
                 {invoices.map((inv: PortalInvoice) => (
                   <Card
                     key={inv.id}
+                    tabIndex={0}
+                    role="button"
                     className="hover:border-primary/30 cursor-pointer transition-colors"
                     onClick={() => setSelectedInvoice(inv.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedInvoice(inv.id);
+                      }
+                    }}
                   >
                     <CardContent className="flex items-center justify-between p-4">
                       <div className="space-y-1">
@@ -362,7 +414,15 @@ export function ClientPortal({
                           })}{' '}
                           {inv.currency}
                         </span>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`View invoice ${inv.invoiceNumber}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedInvoice(inv.id);
+                          }}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>

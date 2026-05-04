@@ -821,7 +821,10 @@
       "yourInvoices": "Your Invoices",
       "noInvoices": "No invoices found",
       "issued": "Issued",
-      "due": "Due"
+      "due": "Due",
+      "failedToLoadInvoices": "Failed to load invoices",
+      "failedToLoadInvoice": "Failed to load invoice details",
+      "retry": "Retry"
     },
     "comments": {
       "title": "Comments",

@@ -812,8 +812,11 @@
       "total": "الإجمالي",
       "yourInvoices": "فواتيرك",
       "noInvoices": "لم يتم العثور على فواتير",
-      "issued": "صادرة",
-      "due": "مستحقة"
+      "issued": "صدرت",
+      "due": "مستحقة",
+      "failedToLoadInvoices": "فشل في تحميل الفواتير",
+      "failedToLoadInvoice": "فشل في تحميل تفاصيل الفاتورة",
+      "retry": "إعادة المحاولة"
     },
     "comments": {
       "title": "التعليقات",
