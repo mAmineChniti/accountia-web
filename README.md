@@ -1,5 +1,8 @@
 # Accountia
 
+> 🚀 **Live Deployment:** [https://accountia.vercel.app](https://accountia.vercel.app)  
+> 📋 **Deliverables:** [`/deliverables`](./deliverables/)
+
 <p align="center"><img src="public/logo.png" alt="Accountia Logo" width="200" /></p>
 
 Accountia is a revolutionary multitenant business management platform that transforms how companies handle their financial and operational needs. By harnessing the power of artificial intelligence, we're building the future of business automation—augmenting traditional accounting workflows while providing smarter, faster, and more accurate financial management.

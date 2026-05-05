@@ -137,6 +137,7 @@ export interface InvoiceCheckoutSessionResponse {
   clientSecret: string;
   sessionId: string;
   checkoutUrl: string;
+  receiptId?: string;
 }
 
 export interface InvoicePaymentConfirmResponse {
