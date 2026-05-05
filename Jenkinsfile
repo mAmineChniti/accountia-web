@@ -14,13 +14,22 @@ pipeline {
     }
 
     stages {  // <--- Cette ligne était manquante !
-        stage('Clean & Copy') {
+                    stage('Clean & Copy') {
             steps {
-                echo 'Preparation rapide du dossier de build...'
+                echo 'Preparation du dossier de build...'
                 sh "rm -rf ${BUILD_DIR} && mkdir -p ${BUILD_DIR}"
-                sh "tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=coverage --exclude=jenkins_home -cf - . | tar -xf - -C ${BUILD_DIR}"
+                sh """
+                    cd ${SOURCE_DIR}
+                    # On copie tous les dossiers et fichiers importants (y compris Docker et Tests)
+                    cp -R app components actions lib hooks types public test dictionaries dictionaries \
+                          next.config.ts package.json tsconfig.json tsconfig.sonar.json sonar-project.properties \
+                          eslint.config.mjs vitest.config.ts vitest.setup.ts Dockerfile .dockerignore ${BUILD_DIR}/
+                """
             }
         }
+
+
+
 
 
         stage('Install Dependencies') {
