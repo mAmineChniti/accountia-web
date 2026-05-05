@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { publicClient, createAuthenticatedClient } from '@/lib/requests';
 
 /**

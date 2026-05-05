@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { env as defaultEnv } from '@/env';
 
 // Fallback for testing environments where env might be mocked or missing

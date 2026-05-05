@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use client';
 
 import { useFocusRoute } from '@/hooks/use-focus-route';

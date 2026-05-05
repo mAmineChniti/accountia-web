@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use client';
 
 import { TooltipProvider } from '@/components/ui/tooltip';

@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use client';
 
 import { useMemo } from 'react';

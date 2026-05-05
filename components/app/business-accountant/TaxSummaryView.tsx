@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use client';
 
 import { Calculator, Loader2 } from 'lucide-react';

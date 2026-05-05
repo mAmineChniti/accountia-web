@@ -1,4 +1,3 @@
-/* eslint-disable */
 jest.mock('@/lib/requests', () => {
   const mockMethod = () => jest.fn();
   return {

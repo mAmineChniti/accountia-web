@@ -8,9 +8,16 @@ import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import reactCompiler from 'eslint-plugin-react-compiler';
 import eslintPluginJsonc from 'eslint-plugin-jsonc';
+import * as jsxA11yPluginModule from 'eslint-plugin-jsx-a11y';
 
-const eslintConfig = defineConfig([
-  // unicornPlugin.configs.all,
+const jsxA11yPlugin = jsxA11yPluginModule.default || jsxA11yPluginModule;
+
+const basePlugins = {
+  unicorn: unicornPlugin,
+  'jsx-a11y': jsxA11yPlugin,
+};
+
+const rawConfigs = [
   ...nextVitals,
   ...nextTs,
   ...eslintPluginJsonc.configs['recommended-with-jsonc'],
@@ -23,12 +30,11 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
     'components/ui/**',
+    'scratch/**',
+    'test/mocks/**',
   ]),
   {
     files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
-    plugins: {
-      unicorn: unicornPlugin,
-    },
     rules: {
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/array-type': 'off',
@@ -38,10 +44,7 @@ const eslintConfig = defineConfig([
         'warn',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-misused-promises': [
         'error',
@@ -55,7 +58,6 @@ const eslintConfig = defineConfig([
       'unicorn/no-abusive-eslint-disable': 'off',
       'unicorn/consistent-function-scoping': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-deprecated': 'off',
     },
     settings: {
@@ -72,6 +74,7 @@ const eslintConfig = defineConfig([
       parser: parser,
       parserOptions: {
         projectService: true,
+        allowDefaultProject: true,
         ecmaVersion: 'latest',
         sourceType: 'module',
         tsconfigRootDir: import.meta.dirname,
@@ -79,6 +82,20 @@ const eslintConfig = defineConfig([
     },
   },
   ...pluginQuery.configs['flat/recommended'],
-]);
+];
+
+// Aggressively inject plugins into every config object that might need them
+const eslintConfig = rawConfigs.map((config) => {
+  if (config.rules || config.plugins) {
+    return {
+      ...config,
+      plugins: {
+        ...config.plugins,
+        ...basePlugins,
+      },
+    };
+  }
+  return config;
+});
 
 export default eslintConfig;
