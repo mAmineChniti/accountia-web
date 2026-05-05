@@ -91,5 +91,8 @@
     "core-js",
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "^1.0.0-rc.18"
+  }
 }
