@@ -56,7 +56,7 @@ pipeline {
 
                 stage('SonarQube Analysis') {
                     steps {
-                        sh 'sonar-scanner'
+                        sh 'sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300'
                     }
                 }
             }
@@ -89,6 +89,7 @@ pipeline {
         }
 
         cleanup {
+            archiveArtifacts artifacts: '.scannerwork/report-task.txt,coverage/**', allowEmptyArchive: true
             sh 'docker logout || true'
         }
     }
