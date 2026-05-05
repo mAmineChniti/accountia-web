@@ -33,9 +33,9 @@ pipeline {
             steps {
                 dir("${BUILD_DIR}") {
                     echo 'Installation des dependances Linux...'
+                    // Suppression du lockfile Windows pour forcer npm à installer les dépendances natives Linux
+                    sh 'rm -f package-lock.json'
                     sh 'npm install --legacy-peer-deps'
-                    // Force l'installation du binding Linux (contourne le bug npm avec les optionalDependencies)
-                    sh 'npm install @rolldown/binding-linux-x64-gnu --legacy-peer-deps --no-save'
                 }
             }
         }
