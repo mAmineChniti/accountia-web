@@ -22,7 +22,7 @@ export const env = createEnv({
       .enum(['true', 'false'])
       .optional()
       .transform((v) => v === 'true')
-      .pipe(z.boolean().default(false)),
+      .pipe(z.boolean()),
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
 

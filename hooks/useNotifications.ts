@@ -118,7 +118,7 @@ export function useNotifications({
         }
 
         // Get the backend URL from environment and derive socket URL safely
-        const backendUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789';
+        const backendUrl = env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4790';
 
         let socketUrl: string;
         try {

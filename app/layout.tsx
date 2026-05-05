@@ -5,7 +5,7 @@ import './globals.css';
 import { Providers } from '@/components/reusable/providers';
 import { TokenExpiration } from '@/components/reusable/token-expiration';
 import { FocusRouteHandler } from '@/components/reusable/focus-route-handler';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { cn } from '@/lib/utils';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -43,7 +43,9 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   const headersList = await headers();
-  const locale = headersList.get('x-locale') ?? 'en';
+  const cookieStore = await cookies();
+  const locale =
+    headersList.get('x-locale') ?? cookieStore.get('x-locale')?.value ?? 'en';
 
   const isArabic = locale.split('-')[0] === 'ar';
 
