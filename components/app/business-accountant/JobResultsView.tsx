@@ -76,6 +76,7 @@ export function JobResultsView({
     recommendations,
     anomaliesDetected,
     reports,
+    journalEntries,
     journalEntriesPreview,
     totalJournalEntries,
   } = results;
@@ -268,10 +269,10 @@ export function JobResultsView({
           <CardContent>
             <ul className="space-y-3">
               {anomaliesDetected.map((anomaly, idx) => (
-                <li key={idx} className="flex items-start gap-2">
+                <li key={idx} className="flex items-center gap-2">
                   <span
                     className={cn(
-                      'mt-0.5 h-2 w-2 shrink-0 rounded-full',
+                      'h-2 w-2 shrink-0 rounded-full',
                       anomaly.severity === 'high'
                         ? 'bg-red-500'
                         : anomaly.severity === 'medium'
@@ -280,9 +281,8 @@ export function JobResultsView({
                     )}
                   />
                   <div>
-                    <span className="font-medium">{anomaly.type}:</span>{' '}
                     <span className="text-muted-foreground">
-                      {anomaly.description}
+                      {anomaly.detail}
                     </span>
                   </div>
                 </li>
@@ -292,36 +292,90 @@ export function JobResultsView({
         </Card>
       )}
 
-      {reports && reports.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {t.reports}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {reports.map((report, idx) => (
-                <li key={idx} className="rounded-md border p-3">
-                  <p className="font-medium capitalize">
-                    {(report.reportType ?? '').replaceAll('_', ' ')}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {formatDate(report.periodStart, lang)} -{' '}
-                    {formatDate(report.periodEnd, lang)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      {reports &&
+        reports.some(
+          (r) =>
+            r.reportType ||
+            r.periodStart ||
+            r.periodEnd ||
+            r.data?.revenue !== undefined ||
+            r.data?.gross_profit !== undefined
+        ) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {t.reports}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {reports
+                  .filter(
+                    (r) =>
+                      r.reportType ||
+                      r.periodStart ||
+                      r.periodEnd ||
+                      r.data?.revenue !== undefined ||
+                      r.data?.gross_profit !== undefined
+                  )
+                  .map((report, idx) => (
+                    <li key={idx} className="rounded-md border p-3">
+                      <div className="flex flex-col gap-1">
+                        {report.reportType && (
+                          <p className="font-medium capitalize">
+                            {report.reportType.replaceAll('_', ' ')}
+                          </p>
+                        )}
+                        {(report.periodStart || report.periodEnd) && (
+                          <p className="text-muted-foreground text-sm">
+                            {report.periodStart &&
+                              formatDate(report.periodStart, lang)}
+                            {report.periodStart && report.periodEnd && ' - '}
+                            {report.periodEnd &&
+                              formatDate(report.periodEnd, lang)}
+                          </p>
+                        )}
+                        {report.data &&
+                          (report.data.revenue !== undefined ||
+                            report.data.gross_profit !== undefined) && (
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {report.data.revenue !== undefined && (
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    {t.revenue}:
+                                  </span>{' '}
+                                  <span className="font-medium">
+                                    {formatCurrency(report.data.revenue)}
+                                  </span>
+                                </div>
+                              )}
+                              {report.data.gross_profit !== undefined && (
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    {t.grossProfit}:
+                                  </span>{' '}
+                                  <span className="font-medium">
+                                    {formatCurrency(report.data.gross_profit)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
-      {journalEntriesPreview && journalEntriesPreview.length > 0 && (
+      {journalEntries && journalEntries.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t.journalEntriesPreview}</CardTitle>
+            <CardTitle>
+              {t.journalEntries} ({journalEntries.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -329,22 +383,24 @@ export function JobResultsView({
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t.date}</TableHead>
+                    <TableHead>{t.account}</TableHead>
                     <TableHead>{t.descriptionColumn}</TableHead>
                     <TableHead className="text-right">{t.debit}</TableHead>
                     <TableHead className="text-right">{t.credit}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {journalEntriesPreview.map((je, idx) => (
+                  {journalEntries.map((je, idx) => (
                     <TableRow key={idx}>
                       <TableCell>
                         {je.date ? formatDate(je.date, lang) : '-'}
                       </TableCell>
+                      <TableCell className="text-sm">{je.account}</TableCell>
                       <TableCell>
                         {je.description}
-                        {je.account && (
+                        {je.invoiceId && (
                           <span className="text-muted-foreground ml-1 text-xs">
-                            ({je.account})
+                            ({t.invoicePrefix}: {je.invoiceId})
                           </span>
                         )}
                       </TableCell>
@@ -366,6 +422,57 @@ export function JobResultsView({
           </CardContent>
         </Card>
       )}
+
+      {(!journalEntries || journalEntries.length === 0) &&
+        journalEntriesPreview &&
+        journalEntriesPreview.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.journalEntriesPreview}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t.date}</TableHead>
+                      <TableHead>{t.descriptionColumn}</TableHead>
+                      <TableHead className="text-right">{t.debit}</TableHead>
+                      <TableHead className="text-right">{t.credit}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {journalEntriesPreview.map((je, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          {je.date ? formatDate(je.date, lang) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {je.description}
+                          {je.account && (
+                            <span className="text-muted-foreground ml-1 text-xs">
+                              ({je.account})
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {je.debit === undefined
+                            ? '-'
+                            : formatCurrency(je.debit)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {je.credit === undefined
+                            ? '-'
+                            : formatCurrency(je.credit)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {recommendations && recommendations.length > 0 && (
         <Card>

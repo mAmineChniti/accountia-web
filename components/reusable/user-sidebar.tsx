@@ -12,6 +12,14 @@ import {
   Package,
   BarChart3,
   ScrollText,
+  Receipt,
+  TrendingUp,
+  ClipboardList,
+  Truck,
+  ShoppingCart,
+  RefreshCw,
+  Users,
+  Globe,
   UserPlus,
   Calculator,
 } from 'lucide-react';
@@ -101,6 +109,120 @@ const getClientNavigation = (
     label: dictionary.pages.home.navigation.invoices,
     tooltip: dictionary.tooltips.invoices,
     icon: <LayoutDashboard className="h-4 w-4 shrink-0" />,
+  },
+];
+
+// Navigation configuration for business sub-menu items
+interface BusinessNavItem {
+  id: string;
+  href: string;
+  label: string;
+  tooltip: string;
+  icon: React.ReactNode;
+}
+
+const getBusinessNavigation = (
+  lang: Locale,
+  dictionary: Dictionary,
+  businessId: string
+): BusinessNavItem[] => [
+  {
+    id: 'issued-invoices',
+    href: `/${lang}/business/${businessId}/invoices`,
+    label: dictionary.pages.invoices.issuedInvoices,
+    tooltip: dictionary.pages.invoices.issuedInvoices,
+    icon: <FileText className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'received-invoices',
+    href: `/${lang}/business/${businessId}/company-invoices`,
+    label: dictionary.pages.invoices.receivedInvoices,
+    tooltip: dictionary.pages.invoices.receivedInvoices,
+    icon: <FileText className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'members',
+    href: `/${lang}/business/${businessId}/members`,
+    label: dictionary.pages.businessMembers.title,
+    tooltip: dictionary.pages.businessMembers.title,
+    icon: <Users className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'invites',
+    href: `/${lang}/business/${businessId}/invites`,
+    label: dictionary.pages.business.invites.sectionTitle,
+    tooltip: dictionary.pages.business.invites.sectionTitle,
+    icon: <UserPlus className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'products',
+    href: `/${lang}/business/${businessId}/products`,
+    label: dictionary.pages.business.viewProducts,
+    tooltip: dictionary.pages.business.viewProducts,
+    icon: <Package className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'accountant',
+    href: `/${lang}/business/${businessId}/accountant`,
+    label: dictionary.pages.businessAccountant.title,
+    tooltip: dictionary.pages.businessAccountant.title,
+    icon: <Calculator className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'statistics',
+    href: `/${lang}/business/${businessId}/statistics`,
+    label: dictionary.pages.business.statistics,
+    tooltip: dictionary.pages.business.statistics,
+    icon: <BarChart3 className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'expenses',
+    href: `/${lang}/business/${businessId}/expenses`,
+    label: dictionary.pages.businessExpenses.title,
+    tooltip: dictionary.pages.businessExpenses.title,
+    icon: <Receipt className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'analytics',
+    href: `/${lang}/business/${businessId}/analytics`,
+    label: dictionary.pages.business.analytics,
+    tooltip: dictionary.pages.business.analytics,
+    icon: <TrendingUp className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'reports',
+    href: `/${lang}/business/${businessId}/reports`,
+    label: dictionary.pages.business.vatReports,
+    tooltip: dictionary.pages.business.vatReports,
+    icon: <ClipboardList className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'vendors',
+    href: `/${lang}/business/${businessId}/vendors`,
+    label: dictionary.pages.businessVendors.title,
+    tooltip: dictionary.pages.businessVendors.title,
+    icon: <Truck className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'purchase-orders',
+    href: `/${lang}/business/${businessId}/purchase-orders`,
+    label: dictionary.pages.businessPurchaseOrders.title,
+    tooltip: dictionary.pages.businessPurchaseOrders.title,
+    icon: <ShoppingCart className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'recurring-invoices',
+    href: `/${lang}/business/${businessId}/recurring-invoices`,
+    label: dictionary.pages.recurringInvoices.title,
+    tooltip: dictionary.pages.recurringInvoices.title,
+    icon: <RefreshCw className="h-4 w-4 shrink-0" />,
+  },
+  {
+    id: 'client-portal',
+    href: `/${lang}/business/${businessId}/client-portal`,
+    label: dictionary.pages.businessClientPortal.title,
+    tooltip: dictionary.pages.businessClientPortal.title,
+    icon: <Globe className="h-4 w-4 shrink-0" />,
   },
 ];
 
@@ -251,21 +373,15 @@ export default function UserSidebar({
                 </SidebarGroupLabel>
                 <SidebarMenu className="gap-2">
                   {businesses.map((business) => {
+                    const businessNav = getBusinessNavigation(
+                      lang,
+                      dictionary,
+                      business.id
+                    );
                     const businessHref = `/${lang}/business/${business.id}`;
-                    const invitesHref = `/${lang}/business/${business.id}/invites`;
-                    const issuedInvoicesHref = `/${lang}/business/${business.id}/invoices`;
-                    const receivedInvoicesHref = `/${lang}/business/${business.id}/company-invoices`;
-                    const statisticsHref = `/${lang}/business/${business.id}/statistics`;
-                    const accountantHref = `/${lang}/business/${business.id}/accountant`;
-                    const productsHref = `/${lang}/business/${business.id}/products`;
                     const isBusinessActive =
-                      pathname === businessHref ||
-                      pathname === invitesHref ||
-                      pathname === issuedInvoicesHref ||
-                      pathname === receivedInvoicesHref ||
-                      pathname === statisticsHref ||
-                      pathname === accountantHref ||
-                      pathname === productsHref;
+                      businessNav.some((item) => pathname === item.href) ||
+                      pathname === businessHref;
                     const isExpanded = expandedBusinesses.has(business.id);
 
                     return (
@@ -274,12 +390,13 @@ export default function UserSidebar({
                           <SidebarMenuButton
                             asChild
                             isActive={isBusinessActive}
+                            tooltip={business.name}
                             className={cn(
                               'hover:bg-accent hover:text-accent-foreground flex-1 transition-all'
                             )}
                           >
                             <Link href={businessHref}>
-                              <Building2 className="h-4 w-4" />
+                              <Building2 className="h-4 w-4 shrink-0" />
                               <span className="truncate">{business.name}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -298,88 +415,19 @@ export default function UserSidebar({
                         </div>
                         {isExpanded && (
                           <SidebarMenuSub>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === issuedInvoicesHref}
-                              >
-                                <Link href={issuedInvoicesHref}>
-                                  <FileText className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.invoices.issuedInvoices}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === receivedInvoicesHref}
-                              >
-                                <Link href={receivedInvoicesHref}>
-                                  <FileText className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.invoices.receivedInvoices}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === invitesHref}
-                              >
-                                <Link href={invitesHref}>
-                                  <UserPlus className="h-4 w-4" />
-                                  <span>
-                                    {
-                                      dictionary.pages.business.invites
-                                        .sectionTitle
-                                    }
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === productsHref}
-                              >
-                                <Link href={productsHref}>
-                                  <Package className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.business.viewProducts}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === accountantHref}
-                              >
-                                <Link href={accountantHref}>
-                                  <Calculator className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.businessAccountant.title}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === statisticsHref}
-                              >
-                                <Link href={statisticsHref}>
-                                  <BarChart3 className="h-4 w-4" />
-                                  <span>
-                                    {dictionary.pages.business.statistics ||
-                                      'Statistics'}
-                                  </span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
+                            {businessNav.map((item) => (
+                              <SidebarMenuSubItem key={item.id}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === item.href}
+                                >
+                                  <Link href={item.href}>
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
                           </SidebarMenuSub>
                         )}
                       </SidebarMenuItem>
