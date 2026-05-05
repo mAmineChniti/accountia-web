@@ -19,6 +19,11 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       reportsDirectory: 'coverage',
     },
+    server: {
+      deps: {
+        inline: ['html-encoding-sniffer', '@exodus/bytes'],
+      },
+    },
   },
   resolve: {
     alias: {
