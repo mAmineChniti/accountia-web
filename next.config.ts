@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-import './env.js';
+import './env';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,

@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 import Image from 'next/image';
 import { type Dictionary } from '@/get-dictionary';

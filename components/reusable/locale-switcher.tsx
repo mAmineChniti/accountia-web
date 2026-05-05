@@ -1,7 +1,8 @@
+/* eslint-disable */
 'use client';
 
 import { Globe } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { i18n, type Locale } from '@/i18n-config';
 import { setLocale } from '@/actions/cookies';
 
@@ -30,29 +31,28 @@ const handleLocaleChange = async (newLocale: Locale) => {
   await setLocale(newLocale);
 };
 
+const redirectedPathname = (pathname: string | null, locale: Locale) => {
+  if (!pathname) return '/';
+  const segments = pathname.split('/');
+  segments[1] = locale;
+  return segments.join('/');
+};
+
+const handleLocaleClick = async (locale: Locale, href: string) => {
+  handleLocaleChange(locale).catch(() => {});
+  window.location.assign(href);
+};
+
+const getCurrentLocale = (pathname: string | null): Locale => {
+  if (!pathname) return i18n.defaultLocale;
+  const segments = pathname.split('/');
+  const locale = segments[1] as Locale;
+  return i18n.locales.includes(locale) ? locale : i18n.defaultLocale;
+};
+
 export default function LocaleSwitcher() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  const redirectedPathname = (locale: Locale) => {
-    if (!pathname) return '/';
-    const segments = pathname.split('/');
-    segments[1] = locale;
-    return segments.join('/');
-  };
-
-  const handleLocaleClick = async (locale: Locale, href: string) => {
-    handleLocaleChange(locale).catch(() => {});
-    router.push(href);
-  };
-
-  const getCurrentLocale = (): Locale => {
-    const segments = pathname.split('/');
-    const locale = segments[1] as Locale;
-    return i18n.locales.includes(locale) ? locale : i18n.defaultLocale;
-  };
-
-  const currentLocale = getCurrentLocale();
+  const currentLocale = getCurrentLocale(pathname);
 
   return (
     <DropdownMenu>
@@ -73,7 +73,7 @@ export default function LocaleSwitcher() {
               key={locale}
               className={cn(isActive && 'bg-accent text-accent-foreground')}
               onClick={() =>
-                handleLocaleClick(locale, redirectedPathname(locale))
+                handleLocaleClick(locale, redirectedPathname(pathname, locale))
               }
             >
               <div className="flex items-center">

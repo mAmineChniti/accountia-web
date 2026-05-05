@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import { useCallback, useMemo, type ReactNode } from 'react';

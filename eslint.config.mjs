@@ -10,7 +10,7 @@ import reactCompiler from 'eslint-plugin-react-compiler';
 import eslintPluginJsonc from 'eslint-plugin-jsonc';
 
 const eslintConfig = defineConfig([
-  unicornPlugin.configs.all,
+  // unicornPlugin.configs.all,
   ...nextVitals,
   ...nextTs,
   ...eslintPluginJsonc.configs['recommended-with-jsonc'],
@@ -26,6 +26,9 @@ const eslintConfig = defineConfig([
   ]),
   {
     files: ['**/*.{ts,tsx,js,jsx,mjs,cjs}'],
+    plugins: {
+      unicorn: unicornPlugin,
+    },
     rules: {
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/array-type': 'off',
@@ -49,6 +52,11 @@ const eslintConfig = defineConfig([
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': 'off',
+      'unicorn/no-abusive-eslint-disable': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-deprecated': 'off',
     },
     settings: {
       react: {

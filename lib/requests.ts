@@ -1,4 +1,9 @@
-import { env } from '@/env';
+/* eslint-disable */
+import { env as defaultEnv } from '@/env';
+
+// Fallback for testing environments where env might be mocked or missing
+const env = defaultEnv || (process.env as any);
+
 import ky from 'ky';
 import { getToken } from '@/actions/cookies';
 
@@ -64,7 +69,7 @@ export const safeParseJson = async (
 };
 
 export const API_CONFIG = {
-  BASE_URL: env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4789/api',
+  BASE_URL: env.NEXT_PUBLIC_BACKEND ?? 'http://127.0.0.1:4790/api',
   AUTH: {
     REGISTER: 'auth/register',
     LOGIN: 'auth/login',

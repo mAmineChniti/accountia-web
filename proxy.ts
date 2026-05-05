@@ -34,6 +34,7 @@ function getLocale(request: NextRequest): string | undefined {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -153,9 +154,17 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  const response = NextResponse.next();
-  response.headers.set('x-locale', locale);
-  response.headers.set('x-pathname', pathname);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-locale', locale);
+  requestHeaders.set('x-pathname', pathname);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  response.cookies.set('x-locale', locale, { path: '/' });
   return response;
 }
 
