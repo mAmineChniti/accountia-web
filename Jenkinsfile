@@ -16,17 +16,17 @@ pipeline {
     stages {
         stage('Clean & Copy') {
             steps {
-                echo 'Préparation du dossier de build...'
+                echo 'Preparation du dossier de build...'
                 sh "rm -rf ${BUILD_DIR} && mkdir -p ${BUILD_DIR}"
-                // Copie instantanée en ignorant les gros dossiers (node_modules, .next, .git)
-                sh "cd ${SOURCE_DIR} && tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=coverage --exclude=jenkins_home -cf - . | tar -xf - -C ${BUILD_DIR}"
+                sh "cp -R . ${BUILD_DIR}"
+                sh "rm -rf ${BUILD_DIR}/node_modules ${BUILD_DIR}/.next ${BUILD_DIR}/.git ${BUILD_DIR}/coverage"
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 dir("${BUILD_DIR}") {
-                    echo 'Installation des dépendances Linux...'
+                    echo 'Installation des dependances Linux...'
                     sh 'npm install --legacy-peer-deps'
                 }
             }
@@ -35,7 +35,7 @@ pipeline {
         stage('Lint Check') {
             steps {
                 dir("${BUILD_DIR}") {
-                    echo 'Vérification du style de code (ESLint)...'
+                    echo 'Verification du style de code (ESLint)...'
                     sh 'npm run lint:check || true'
                 }
             }
@@ -44,7 +44,7 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 dir("${BUILD_DIR}") {
-                    echo 'Exécution des tests unitaires (Vitest)...'
+                    echo 'Execution des tests unitaires (Vitest)...'
                     sh 'npm run test:cov || true'
                 }
             }
@@ -53,7 +53,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir("${BUILD_DIR}") {
-                    echo 'Analyse de la qualité du code (SonarQube)...'
+                    echo 'Analyse de la qualite du code (SonarQube)...'
                     withSonarQubeEnv('SonarQube') {
                         sh "${SCANNER_HOME}/bin/sonar-scanner"
                     }
@@ -74,12 +74,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 dir("${SOURCE_DIR}") {
-                    echo 'Déploiement...'
-                    // Arrête et supprime l'ancien conteneur s'il existe
+                    echo 'Deploiement...'
                     sh "docker stop accountia-web-app || true"
                     sh "docker rm accountia-web-app || true"
-                    // Lance le nouveau conteneur
-                    sh "docker run -d --name accountia-web-app -p 3000:3000 accountia-web-app:latest"
+                    // Deploiement sur le port 3001
+                    sh "docker run -d --name accountia-web-app -p 3001:3000 accountia-web-app:latest"
                 }
             }
         }
@@ -87,10 +86,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline Accountia terminé avec succès ! ✅'
+            echo 'Pipeline Accountia termine avec succes !'
         }
         failure {
-            echo 'Le pipeline a échoué. Vérifie les logs ci-dessus. ❌'
+            echo 'Le pipeline a echoue. Verifie les logs ci-dessus.'
         }
     }
 }
