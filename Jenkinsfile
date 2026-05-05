@@ -47,17 +47,20 @@ pipeline {
             }
         }
 
-                stage('Unit Tests') {
+                       stage('Unit Tests') {
             steps {
                 dir("${BUILD_DIR}") {
                     echo 'Execution des tests unitaires...'
-                    // On enlève le "|| true" pour voir si ça plante vraiment
-                    sh 'npm run test:cov' 
-                    // On vérifie si le fichier a été créé
+                    // On active le mode expérimental de Node pour éviter l'erreur ESM
+                    withEnv(["NODE_OPTIONS=--experimental-require-module"]) {
+                        sh 'npm run test:cov'
+                    }
+                    // On vérifie que le fichier est bien créé
                     sh 'ls -la coverage/lcov.info'
                 }
             }
         }
+
 
 
         stage('SonarQube Analysis') {
