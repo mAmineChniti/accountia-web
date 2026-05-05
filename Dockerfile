@@ -1,26 +1,54 @@
-# Étape 1 : Build
-FROM node:20-alpine AS builder
-WORKDIR /app
+FROM node:20-bookworm-slim AS base
+
+WORKDIR /usr/src/app
+
+ENV npm_config_fund=false \
+    npm_config_update_notifier=false \
+    NEXT_TELEMETRY_DISABLED=1
+
+FROM base AS deps
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    g++ \
+    make \
+    ghostscript \
+    graphicsmagick \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+
+RUN npm i --legacy-peer-deps
+
+FROM base AS build
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
-# --- AJOUT ICI ---
-# Désactive la télémétrie et évite les blocages liés aux polices Google
-ENV NEXT_TELEMETRY_DISABLED=1
-# -----------------
+RUN npm run build \
+    && npm cache clean --force
 
-RUN npm run build
+FROM node:20-bookworm-slim AS runtime
 
-# Étape 2 : Run
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    npm_config_fund=false \
+    npm_config_update_notifier=false \
+    NEXT_TELEMETRY_DISABLED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ghostscript \
+    graphicsmagick \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build --chown=node:node /usr/src/app/public ./public
+COPY --from=build --chown=node:node /usr/src/app/.next/standalone ./
+COPY --from=build --chown=node:node /usr/src/app/.next/static ./.next/static
+
+USER node
 
 EXPOSE 3000
-CMD ["npm", "start"]
+
+CMD ["node", "server.js"]

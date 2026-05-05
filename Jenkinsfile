@@ -5,91 +5,78 @@ pipeline {
         nodejs 'node'
     }
 
-       environment {
-        DOCKER_IMAGE = "accountia-web-app"
-        SCANNER_HOME = tool 'SonarScanner'
-        SOURCE_DIR = "/var/jenkins_home/workspace/accountia-web"
-        BUILD_DIR = "/tmp/accountia_build"
-        NODE_OPTIONS = "--max-old-space-size=4096"
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
-    stages {  // <--- Cette ligne était manquante !
-                       stage('Clean & Copy') {
+    environment {
+        DOCKER_IMAGE = 'mAmineChniti/accountia-web'
+        IMAGE_TAG = '1.0'
+        NODE_OPTIONS = '--max-old-space-size=4096'
+        NEXT_TELEMETRY_DISABLED = '1'
+        npm_config_fund = 'false'
+        npm_config_update_notifier = 'false'
+        DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
+        VERCEL_WEBHOOK_CREDENTIALS_ID = 'vercel-deploy-webhook'
+    }
+
+    stages {
+        stage('Checkout') {
             steps {
-                echo 'Preparation du dossier de build...'
-                sh "rm -rf ${BUILD_DIR} && mkdir -p ${BUILD_DIR}"
-                // On copie TOUT sauf les dossiers node_modules, .next et .git
-                sh """
-                    cd ${SOURCE_DIR}
-                    tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=coverage --exclude=jenkins_home -cf - . | tar -xf - -C ${BUILD_DIR}
-                """
+                checkout scm
             }
         }
 
-
-
-
-        stage('Install Dependencies') {
-            steps {
-                dir("${BUILD_DIR}") {
-                    echo 'Installation des dependances Linux...'
-                    // Suppression du lockfile Windows pour forcer npm à installer les dépendances natives Linux
-                    sh 'rm -f package-lock.json'
-                    sh 'npm install --legacy-peer-deps'
+        stage('CI') {
+            stages {
+                stage('Install Dependencies') {
+                    steps {
+                        sh 'npm ci --legacy-peer-deps'
+                    }
                 }
-            }
-        }
 
-        stage('Lint Check') {
-            steps {
-                dir("${BUILD_DIR}") {
-                    echo 'Verification du style de code (ESLint)...'
-                    sh 'npm run lint:check || true'
+                stage('Lint') {
+                    steps {
+                        sh 'npm run lint:check'
+                    }
                 }
-            }
-        }
 
-        stage('Unit Tests') {
-            steps {
-                dir("${BUILD_DIR}") {
-                    echo 'Execution des tests unitaires...'
-                    sh 'npm run test:cov'
-                    sh 'ls -la coverage/lcov.info'
+                stage('Format') {
+                    steps {
+                        sh 'npm run format:check'
+                    }
                 }
-            }
-        }
 
-
-
-        stage('SonarQube Analysis') {
-            steps {
-                dir("${BUILD_DIR}") {
-                    echo 'Analyse de la qualite du code (SonarQube)...'
-                    withSonarQubeEnv('SonarQube') {
-                        sh "${SCANNER_HOME}/bin/sonar-scanner"
+                stage('Build') {
+                    steps {
+                        sh 'npm run build'
                     }
                 }
             }
         }
 
-        stage('Docker Build') {
+        stage('CI - Docker Hub Push') {
             steps {
-                dir("${BUILD_DIR}") {
-                    echo 'Construction de l\'image Docker...'
-                    sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
-                    sh "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                script {
+                    sh 'docker build -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .'
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
+                        sh '''
+                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+                            docker push "$DOCKER_IMAGE:$IMAGE_TAG"
+                            docker push "$DOCKER_IMAGE:latest"
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('CD - Vercel Deploy') {
             steps {
-                dir("${SOURCE_DIR}") {
-                    echo 'Deploiement...'
-                    sh "docker stop accountia-web-app || true"
-                    sh "docker rm accountia-web-app || true"
-                    // Deploiement sur le port 3001
-                    sh "docker run -d --name accountia-web-app -p 3001:3000 accountia-web-app:latest"
+                echo 'Triggering the Vercel deploy webhook only after CI and Docker Hub publish succeeded.'
+                withCredentials([string(credentialsId: VERCEL_WEBHOOK_CREDENTIALS_ID, variable: 'VERCEL_WEBHOOK_URL')]) {
+                    sh 'curl -fsSL -X POST "$VERCEL_WEBHOOK_URL"'
                 }
             }
         }
@@ -97,10 +84,15 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline Accountia termine avec succes !'
+            echo 'CI/CD pipeline completed successfully.'
         }
+
         failure {
-            echo 'Le pipeline a echoue. Verifie les logs ci-dessus.'
+            echo 'Pipeline failed. Check the stage logs above.'
+        }
+
+        cleanup {
+            sh 'docker logout || true'
         }
     }
 }
