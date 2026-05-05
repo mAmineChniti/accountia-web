@@ -14,18 +14,18 @@ pipeline {
     }
 
     stages {  // <--- Cette ligne était manquante !
-               stage('Clean & Copy') {
+                       stage('Clean & Copy') {
             steps {
-                echo 'Preparation complete et rapide du dossier de build...'
+                echo 'Preparation du dossier de build...'
                 sh "rm -rf ${BUILD_DIR} && mkdir -p ${BUILD_DIR}"
+                // On copie TOUT sauf les dossiers node_modules, .next et .git
                 sh """
                     cd ${SOURCE_DIR}
-                    # On utilise rsync (plus rapide et intelligent) s'il est dispo, 
-                    # sinon on utilise tar qui est la méthode standard Jenkins.
                     tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=coverage --exclude=jenkins_home -cf - . | tar -xf - -C ${BUILD_DIR}
                 """
             }
         }
+
 
 
 
