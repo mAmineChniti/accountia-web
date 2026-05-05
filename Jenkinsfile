@@ -34,6 +34,8 @@ pipeline {
                 dir("${BUILD_DIR}") {
                     echo 'Installation des dependances Linux...'
                     sh 'npm install --legacy-peer-deps'
+                    // Force l'installation du binding Linux (contourne le bug npm avec les optionalDependencies)
+                    sh 'npm install @rolldown/binding-linux-x64-gnu --legacy-peer-deps --no-save'
                 }
             }
         }
