@@ -2,14 +2,39 @@ global:
   resolve_timeout: 5m
 
 route:
-  receiver: accountia-webhook
+  receiver: default-webhook
   group_by: ['alertname', 'job']
   group_wait: 10s
   group_interval: 1m
   repeat_interval: 4h
+  routes:
+    - match:
+        job: accountia-api
+      receiver: accountia-api-webhook
+    - match:
+        job: accountia-web
+      receiver: accountia-web-webhook
+    - match:
+        job: accountia-ai
+      receiver: accountia-ai-webhook
 
 receivers:
-  - name: accountia-webhook
+  - name: default-webhook
+    webhook_configs:
+      - url: http://localhost:4789/api/alerts
+        send_resolved: true
+
+  - name: accountia-api-webhook
+    webhook_configs:
+      - url: http://localhost:4789/api/alerts
+        send_resolved: true
+
+  - name: accountia-web-webhook
     webhook_configs:
       - url: http://localhost:3000/api/alerts
+        send_resolved: true
+
+  - name: accountia-ai-webhook
+    webhook_configs:
+      - url: http://localhost:8000/api/alerts
         send_resolved: true
