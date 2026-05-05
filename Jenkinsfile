@@ -12,6 +12,7 @@ pipeline {
         IMAGE_TAG = '1.0'
         NODE_OPTIONS = '--max-old-space-size=4096'
         NEXT_TELEMETRY_DISABLED = '1'
+        NEXT_PUBLIC_BACKEND = 'http://127.0.0.1:4789/api'
         npm_config_fund = 'false'
         npm_config_update_notifier = 'false'
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
