@@ -7,7 +7,7 @@ const __dirname = import.meta.dirname;
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom',
     globals: true,
     setupFiles: './vitest.setup.ts',
     include: [
@@ -18,11 +18,6 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       reportsDirectory: 'coverage',
-    },
-    server: {
-      deps: {
-        inline: ['html-encoding-sniffer', '@exodus/bytes'],
-      },
     },
   },
   resolve: {

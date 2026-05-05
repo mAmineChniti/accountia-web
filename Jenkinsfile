@@ -47,15 +47,11 @@ pipeline {
             }
         }
 
-                       stage('Unit Tests') {
+        stage('Unit Tests') {
             steps {
                 dir("${BUILD_DIR}") {
                     echo 'Execution des tests unitaires...'
-                    // On active le mode expérimental de Node pour éviter l'erreur ESM
-                    withEnv(["NODE_OPTIONS=--experimental-require-module"]) {
-                        sh 'npm run test:cov'
-                    }
-                    // On vérifie que le fichier est bien créé
+                    sh 'npm run test:cov'
                     sh 'ls -la coverage/lcov.info'
                 }
             }
