@@ -5,7 +5,7 @@ pipeline {
         nodejs 'node'
     }
 
-    environment {
+       environment {
         DOCKER_IMAGE = "accountia-web-app"
         SCANNER_HOME = tool 'SonarScanner'
         SOURCE_DIR = "/var/jenkins_home/workspace/accountia-web"
@@ -13,15 +13,15 @@ pipeline {
         NODE_OPTIONS = "--max-old-space-size=4096"
     }
 
-    stages {
+    stages {  // <--- Cette ligne était manquante !
         stage('Clean & Copy') {
             steps {
-                echo 'Preparation du dossier de build...'
+                echo 'Preparation rapide du dossier de build...'
                 sh "rm -rf ${BUILD_DIR} && mkdir -p ${BUILD_DIR}"
-                sh "cp -R . ${BUILD_DIR}"
-                sh "rm -rf ${BUILD_DIR}/node_modules ${BUILD_DIR}/.next ${BUILD_DIR}/.git ${BUILD_DIR}/coverage"
+                sh "tar --exclude=node_modules --exclude=.next --exclude=.git --exclude=coverage --exclude=jenkins_home -cf - . | tar -xf - -C ${BUILD_DIR}"
             }
         }
+
 
         stage('Install Dependencies') {
             steps {
