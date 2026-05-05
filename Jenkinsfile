@@ -47,14 +47,18 @@ pipeline {
             }
         }
 
-        stage('Unit Tests') {
+                stage('Unit Tests') {
             steps {
                 dir("${BUILD_DIR}") {
-                    echo 'Execution des tests unitaires (Vitest)...'
-                    sh 'npm run test:cov || true'
+                    echo 'Execution des tests unitaires...'
+                    // On enlève le "|| true" pour voir si ça plante vraiment
+                    sh 'npm run test:cov' 
+                    // On vérifie si le fichier a été créé
+                    sh 'ls -la coverage/lcov.info'
                 }
             }
         }
+
 
         stage('SonarQube Analysis') {
             steps {
