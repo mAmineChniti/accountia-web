@@ -9,3 +9,12 @@ groups:
         annotations:
           summary: 'Instance {{ $labels.instance }} down'
           description: "{{ $labels.job }} a cessé de répondre depuis plus d'une minute."
+
+      - alert: HighProcessMemoryUsage
+        expr: process_resident_memory_bytes > 200000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High memory usage on {{ $labels.job }}'
+          description: 'Process memory is above 200MB for more than 5 minutes.'

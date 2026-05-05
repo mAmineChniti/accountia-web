@@ -19,7 +19,6 @@ pipeline {
         npm_config_fund = 'false'
         npm_config_update_notifier = 'false'
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
-        VERCEL_WEBHOOK_CREDENTIALS_ID = 'vercel-deploy-webhook'
     }
 
     stages {
@@ -54,6 +53,12 @@ pipeline {
                         sh 'npm run build'
                     }
                 }
+
+                stage('SonarQube Analysis') {
+                    steps {
+                        sh 'sonar-scanner'
+                    }
+                }
             }
         }
 
@@ -72,14 +77,6 @@ pipeline {
             }
         }
 
-        stage('CD - Vercel Deploy') {
-            steps {
-                echo 'Triggering the Vercel deploy webhook only after CI and Docker Hub publish succeeded.'
-                withCredentials([string(credentialsId: VERCEL_WEBHOOK_CREDENTIALS_ID, variable: 'VERCEL_WEBHOOK_URL')]) {
-                    sh 'curl -fsSL -X POST "$VERCEL_WEBHOOK_URL"'
-                }
-            }
-        }
     }
 
     post {

@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Accountia Dashboards
+    orgId: 1
+    folder: Accountia
+    type: file
+    disableDeletion: false
+    editable: false
+    options:
+      path: /etc/grafana/dashboards
