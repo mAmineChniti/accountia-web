@@ -58,16 +58,16 @@ pipeline {
                             sh '''
                                 if ! command -v sonar-scanner &> /dev/null; then
                                     echo "Installing sonar-scanner..."
-                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
-                                    unzip -qo sonar-scanner-cli-4.7.0.2747-linux.zip
-                                    chmod +x sonar-scanner-4.7.0.2747-linux/bin/sonar-scanner
-                                    echo "export PATH=\$PWD/sonar-scanner-4.7.0.2747-linux/bin:\$PATH" >> ~/.bashrc
-                                    export PATH=$PWD/sonar-scanner-4.7.0.2747-linux/bin:$PATH
+                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+                                    unzip -qo sonar-scanner-cli-4.6.2.2472-linux.zip
+                                    chmod +x sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner
+                                    echo "export PATH=\$PWD/sonar-scanner-4.6.2.2472-linux/bin:\$PATH" >> ~/.bashrc
+                                    export PATH=$PWD/sonar-scanner-4.6.2.2472-linux/bin:$PATH
                                 fi
                             '''
                             withSonarQubeEnv('SonarQube') {
                                 sh '''
-                                    export PATH=$PWD/sonar-scanner-4.7.0.2747-linux/bin:$PATH
+                                    export PATH=$PWD/sonar-scanner-4.6.2.2472-linux/bin:$PATH
                                     sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
                                 '''
                             }
