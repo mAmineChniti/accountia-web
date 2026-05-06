@@ -66,7 +66,7 @@ pipeline {
                             withSonarQubeEnv('SonarQube') {
                                 sh '''
                                     export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
-                                    sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
+                                    sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
                                 '''
                             }
                         }
