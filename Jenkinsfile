@@ -54,22 +54,29 @@ pipeline {
                 stage('SonarQube Analysis') {
                     steps {
                         script {
+                            // Set Java 17 environment early to ensure sonar-scanner uses correct JVM
+                            sh '''
+                                export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+                                export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
+                            '''
                             // Install sonar-scanner if not available
                             sh '''
+                                export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+                                export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
                                 if ! command -v sonar-scanner &> /dev/null; then
                                     echo "Installing sonar-scanner..."
                                     wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
                                     unzip -qo sonar-scanner-cli-4.8.0.2856-linux.zip
                                     chmod +x sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner
-                                    echo "export PATH=\$PWD/sonar-scanner-4.8.0.2856-linux/bin:\$PATH" >> ~/.bashrc
                                     export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
                                 fi
                             '''
                             withSonarQubeEnv('SonarQube') {
                                 sh '''
-                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
                                     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
                                     export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
+                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+                                    java -version
                                     sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
                                 '''
                             }
