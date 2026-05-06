@@ -69,10 +69,12 @@ pipeline {
                                         echo "sonar-scanner installed successfully"
                                     fi
                                 '''
-                                withSonarQubeEnv('SonarQube') {
+                                withCredentials([string(credentialsId: 'sonar', variable: 'SONAR_TOKEN')]) {
                                     sh '''
                                         export PATH=$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH
-                                        sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300 || {
+                                        SONAR_HOST_URL=${SONAR_HOST_URL:-http://localhost:9000}
+                                        echo "Running SonarQube analysis with token..."
+                                        sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.token=$SONAR_TOKEN -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300 || {
                                             echo "WARNING: SonarQube analysis failed. Continuing pipeline..."
                                             exit 0
                                         }
