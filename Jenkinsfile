@@ -16,6 +16,7 @@ pipeline {
         npm_config_fund = 'false'
         npm_config_update_notifier = 'false'
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
+        SONAR_HOST_URL = 'http://localhost:9000'
     }
 
     stages {
