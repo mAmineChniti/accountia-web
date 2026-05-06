@@ -98,12 +98,24 @@ pipeline {
                             echo "Docker daemon is not accessible for Jenkins user. Skipping Docker build & push."
                             exit 0
                         fi
+                        
+                        # Create isolated Docker config without credential helpers
                         mkdir -p .docker-ci
+                        cat > .docker-ci/config.json << 'EOF'
+{
+  "auths": {}
+}
+EOF
                     '''
                     try {
-                        sh 'DOCKER_CONFIG="$PWD/.docker-ci" docker build -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .'
+                        sh '''
+                            # Build without authentication (public image)
+                            DOCKER_CONFIG="$PWD/.docker-ci" docker build -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .
+                        '''
+                        
                         withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                             sh '''
+                                # Now login with credentials and push
                                 printf '%s' "$DOCKERHUB_PASSWORD" | DOCKER_CONFIG="$PWD/.docker-ci" docker login -u "$DOCKERHUB_USERNAME" --password-stdin
                                 DOCKER_CONFIG="$PWD/.docker-ci" docker push "$DOCKER_IMAGE:$IMAGE_TAG"
                                 DOCKER_CONFIG="$PWD/.docker-ci" docker push "$DOCKER_IMAGE:latest"
