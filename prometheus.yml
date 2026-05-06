@@ -8,20 +8,20 @@ alerting:
   alertmanagers:
     - static_configs:
         - targets:
-            - 'localhost:9093'
+            - '127.0.0.1:9093'
 
 scrape_configs:
   - job_name: 'accountia-api'
     metrics_path: '/api/metrics'
     static_configs:
-      - targets: ['localhost:4789']
+      - targets: ['127.0.0.1:4789']
 
   - job_name: 'accountia-web'
     metrics_path: '/api/metrics'
     static_configs:
-      - targets: ['localhost:3000']
+      - targets: ['127.0.0.1:3000']
 
   - job_name: 'accountia-ai'
     metrics_path: '/api/metrics'
     static_configs:
-      - targets: ['localhost:8000']
+      - targets: ['127.0.0.1:8000']

@@ -1,20 +1,32 @@
 groups:
-  - name: accountia_alerts
+  - name: accountia_web_alerts
     rules:
-      - alert: InstanceDown
-        expr: up == 0
+      - alert: AccountiaWebDown
+        expr: up{job="accountia-web"} == 0
         for: 1m
         labels:
           severity: critical
+          service: accountia-web
         annotations:
-          summary: 'Instance {{ $labels.instance }} down'
-          description: "{{ $labels.job }} a cessé de répondre depuis plus d'une minute."
+          summary: 'Accountia Web is down'
+          description: 'Prometheus cannot scrape the web metrics endpoint for more than one minute.'
 
-      - alert: HighProcessMemoryUsage
-        expr: process_resident_memory_bytes > 200000000
+      - alert: AccountiaWebHighMemory
+        expr: process_resident_memory_bytes{job="accountia-web"} > 200000000
         for: 5m
         labels:
           severity: warning
+          service: accountia-web
         annotations:
-          summary: 'High memory usage on {{ $labels.job }}'
-          description: 'Process memory is above 200MB for more than 5 minutes.'
+          summary: 'High memory usage on Accountia Web'
+          description: 'Web process memory is above 200MB for more than 5 minutes.'
+
+      - alert: AccountiaWebHighCPU
+        expr: rate(process_cpu_seconds_total{job="accountia-web"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: accountia-web
+        annotations:
+          summary: 'High CPU usage on Accountia Web'
+          description: 'Web CPU usage is above 80% for more than 5 minutes.'
