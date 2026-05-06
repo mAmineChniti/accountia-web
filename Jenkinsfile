@@ -58,9 +58,13 @@ pipeline {
                             sh '''
                                 if ! command -v sonar-scanner &> /dev/null; then
                                     echo "Installing sonar-scanner 6.1.0..."
-                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.1.0.4477-linux.zip
-                                    unzip -qo sonar-scanner-cli-6.1.0.4477-linux.zip
+                                    wget --timeout=30 --tries=3 -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.1.0.4477-linux.zip || {
+                                        echo "Failed to download sonar-scanner. Attempting alternative download..."
+                                        curl -L --connect-timeout 30 --max-time 300 -o sonar-scanner-cli-6.1.0.4477-linux.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.1.0.4477-linux.zip
+                                    }
+                                    unzip -qo sonar-scanner-cli-6.1.0.4477-linux.zip || { echo "Failed to extract sonar-scanner"; exit 1; }
                                     chmod +x sonar-scanner-6.1.0.4477-linux/bin/sonar-scanner
+                                    echo "sonar-scanner installed successfully"
                                 fi
                             '''
                             withSonarQubeEnv('SonarQube') {
