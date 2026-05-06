@@ -100,17 +100,18 @@ pipeline {
                         fi
                         
                         # Create isolated Docker config without credential helpers
-                        mkdir -p .docker-ci
-                        cat > .docker-ci/config.json << 'EOF'
+                                                mkdir -p .docker-ci
+                                                cat > .docker-ci/config.json << 'EOF'
 {
-  "auths": {}
+    "auths": {},
+    "credHelpers": {}
 }
 EOF
                     '''
                     try {
                         sh '''
                             # Build without authentication (public image)
-                            DOCKER_CONFIG="$PWD/.docker-ci" docker build -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .
+                            DOCKER_BUILDKIT=0 DOCKER_CONFIG="$PWD/.docker-ci" docker build --pull -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .
                         '''
                         
                         withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
