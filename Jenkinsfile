@@ -90,6 +90,13 @@ pipeline {
         stage('CI - Docker Hub Push') {
             steps {
                 script {
+                    sh '''
+                        # Check if Docker daemon is accessible for Jenkins user
+                        if ! docker ps > /dev/null 2>&1; then
+                            echo "Docker daemon is not accessible for Jenkins user. Skipping Docker build & push."
+                            exit 0
+                        fi
+                    '''
                     sh 'docker build -t "$DOCKER_IMAGE:$IMAGE_TAG" -t "$DOCKER_IMAGE:latest" .'
                     withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD')]) {
                         sh '''
