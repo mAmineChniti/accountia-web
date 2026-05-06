@@ -53,8 +53,22 @@ pipeline {
 
                 stage('SonarQube Analysis') {
                     steps {
-                        withSonarQubeEnv('SonarQube') {
-                            sh 'sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300'
+                        script {
+                            // Install sonar-scanner if not available
+                            sh '''
+                                if ! command -v sonar-scanner &> /dev/null; then
+                                    echo "Installing sonar-scanner..."
+                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+                                    unzip -q sonar-scanner-cli-4.8.0.2856-linux.zip
+                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+                                fi
+                            '''
+                            withSonarQubeEnv('SonarQube') {
+                                sh '''
+                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+                                    sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
+                                '''
+                            }
                         }
                     }
                 }
