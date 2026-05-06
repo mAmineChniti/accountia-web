@@ -54,28 +54,20 @@ pipeline {
                 stage('SonarQube Analysis') {
                     steps {
                         script {
-                            // Set Java 17 environment early to ensure sonar-scanner uses correct JVM
+                            // Install sonar-scanner 6.1.0 (Java 17 compatible, no embedded JRE)
                             sh '''
-                                export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-                                export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
-                            '''
-                            // Install sonar-scanner if not available
-                            sh '''
-                                export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-                                export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
                                 if ! command -v sonar-scanner &> /dev/null; then
-                                    echo "Installing sonar-scanner..."
-                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-                                    unzip -qo sonar-scanner-cli-4.8.0.2856-linux.zip
-                                    chmod +x sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner
-                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+                                    echo "Installing sonar-scanner 6.1.0..."
+                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.1.0.4477-linux.zip
+                                    unzip -qo sonar-scanner-cli-6.1.0.4477-linux.zip
+                                    chmod +x sonar-scanner-6.1.0.4477-linux/bin/sonar-scanner
                                 fi
                             '''
                             withSonarQubeEnv('SonarQube') {
                                 sh '''
                                     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
                                     export PATH=/usr/lib/jvm/java-17-openjdk/bin:$PATH
-                                    export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+                                    export PATH=$PWD/sonar-scanner-6.1.0.4477-linux/bin:$PATH
                                     java -version
                                     sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
                                 '''
@@ -114,7 +106,7 @@ pipeline {
 
         cleanup {
             archiveArtifacts artifacts: '.scannerwork/report-task.txt,coverage/**', allowEmptyArchive: true
-            sh 'rm -rf sonar-scanner-* .scannerwork/ || true'
+            sh 'rm -rf sonar-scanner-* sonar-scanner-cli-*.zip .scannerwork/ || true'
             sh 'docker logout || true'
         }
     }
