@@ -31,7 +31,12 @@ describe('ProductsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = createAuthenticatedClient();
+    mockClient = createAuthenticatedClient() as unknown as {
+      get: jest.Mock;
+      post: jest.Mock;
+      patch: jest.Mock;
+      delete: jest.Mock;
+    };
   });
 
   describe('getProducts', () => {

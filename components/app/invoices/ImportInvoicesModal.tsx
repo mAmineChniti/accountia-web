@@ -95,7 +95,6 @@ export function ImportInvoicesModal({
               itemNumber: 1,
               success: true,
               itemId: invoice.id,
-              invoiceNumber: invoice.invoiceNumber,
               status: 'success',
               message: 'Invoice extracted and imported successfully via AI',
             },

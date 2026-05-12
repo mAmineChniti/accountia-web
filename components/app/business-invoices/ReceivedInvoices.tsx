@@ -202,7 +202,6 @@ export function ReceivedInvoices({
     },
     onSuccess: async (data) => {
       setActiveSessionId(data.sessionId);
-      setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
       setPaymentClientSecret(data.clientSecret ?? '');
       await queryClient.invalidateQueries({

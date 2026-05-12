@@ -22,7 +22,7 @@ jest.mock('@/lib/requests', () => {
 });
 
 describe('ExpensesService', () => {
-  const mockClient = createAuthenticatedClient() as {
+  const mockClient = createAuthenticatedClient() as unknown as {
     get: jest.Mock;
     post: jest.Mock;
     patch: jest.Mock;
@@ -57,7 +57,9 @@ describe('ExpensesService', () => {
       });
 
       await ExpensesService.createExpense(
-        mockData as Parameters<typeof ExpensesService.createExpense>[0]
+        mockData as unknown as Parameters<
+          typeof ExpensesService.createExpense
+        >[0]
       );
       expect(mockClient.post).toHaveBeenCalledWith(
         API_CONFIG.EXPENSES.CREATE,

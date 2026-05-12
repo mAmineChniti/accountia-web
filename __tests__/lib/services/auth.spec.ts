@@ -42,7 +42,7 @@ jest.mock('@/actions/cookies', () => ({
 }));
 
 describe('AuthService', () => {
-  const mockAuthClient = createAuthenticatedClient() as {
+  const mockAuthClient = createAuthenticatedClient() as unknown as {
     post: jest.Mock;
     get: jest.Mock;
     patch: jest.Mock;
