@@ -7,6 +7,7 @@ export interface BusinessItem {
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   role?: string;
+  stripeConnectId?: string;
 }
 
 export type TeamMemberRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'CLIENT';

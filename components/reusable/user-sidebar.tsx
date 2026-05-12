@@ -377,7 +377,41 @@ export default function UserSidebar({
                       lang,
                       dictionary,
                       business.id
-                    );
+                    ).filter((item) => {
+                      // Role-based visibility logic
+                      const role = (
+                        business.role ?? (isPlatformUser ? 'OWNER' : 'MEMBER')
+                      ).toUpperCase();
+
+                      // Owners and Admins see everything
+                      if (role === 'OWNER' || role === 'ADMIN') return true;
+
+                      // Members see operational items but not management/financial ones
+                      if (role === 'MEMBER') {
+                        const restrictedForMembers = [
+                          'members',
+                          'invites',
+                          'statistics',
+                          'reports',
+                          'purchase-orders',
+                          'client-portal',
+                          'accountant',
+                          'analytics',
+                        ];
+                        return !restrictedForMembers.includes(item.id);
+                      }
+
+                      // Clients only see specific portal-related items
+                      if (role === 'CLIENT') {
+                        const allowedForClients = [
+                          'received-invoices',
+                          'client-portal',
+                        ];
+                        return allowedForClients.includes(item.id);
+                      }
+
+                      return true;
+                    });
                     const businessHref = `/${lang}/business/${business.id}`;
                     const isBusinessActive =
                       businessNav.some((item) => pathname === item.href) ||

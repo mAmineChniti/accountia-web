@@ -66,7 +66,7 @@ import { type Locale } from '@/i18n-config';
 import { type Dictionary } from '@/get-dictionary';
 import { formatDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
-import { InvoicesService, AuthService } from '@/lib/requests';
+import { InvoicesService, AuthService, BusinessService } from '@/lib/requests';
 import { getStatusLabel } from '@/lib/status-labels';
 import { toast } from 'sonner';
 import type {
@@ -142,6 +142,8 @@ export default function Invoices({
     InvoiceReceiptResponseDto | undefined
   >();
   const queryClient = useQueryClient();
+  const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
+  const [activeReceiptId, setActiveReceiptId] = useState<string | undefined>();
   const [showMockConfirm, setShowMockConfirm] = useState(false);
 
   const [mockPaymentForm, setMockPaymentForm] = useState({
@@ -180,14 +182,45 @@ export default function Invoices({
 
   // Stripe Connect status for individual users
   const {
-    data: stripeStatus,
-    isLoading: isStripeStatusLoading,
-    isError: isStripeStatusError,
+    data: individualStripeStatus,
+    isLoading: isIndividualStripeStatusLoading,
+    isError: isIndividualStripeStatusError,
   } = useQuery<UserStripeConnectStatusResponse>({
     queryKey: ['user-stripe-status'],
     queryFn: () => AuthService.getStripeConnectStatus(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
+
+  // Check if user has any businesses with Stripe connected
+  const { data: myBusinesses } = useQuery({
+    queryKey: ['my-businesses'],
+    queryFn: () => BusinessService.getMyBusinesses(),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Combined Stripe status: Individual takes precedence, then Business
+  const stripeStatus = useMemo(() => {
+    if (individualStripeStatus?.stripeConnectId) {
+      return individualStripeStatus;
+    }
+
+    // Find first business with Stripe connected
+    const businessWithStripe = myBusinesses?.businesses?.find(
+      (b) => b.stripeConnectId
+    );
+    if (businessWithStripe) {
+      return {
+        isConnected: businessWithStripe.status === 'approved', // Or check actual status if available
+        stripeConnectId: businessWithStripe.stripeConnectId,
+        message: `Connected via ${businessWithStripe.name}`,
+      };
+    }
+
+    return individualStripeStatus;
+  }, [individualStripeStatus, myBusinesses]);
+
+  const isStripeStatusLoading = isIndividualStripeStatusLoading;
+  const isStripeStatusError = isIndividualStripeStatusError;
 
   const router = useRouter();
 
@@ -241,10 +274,14 @@ export default function Invoices({
 
   const { mutate: startCheckout, isPending: isStartingCheckout } = useMutation({
     mutationFn: async (invoice: InvoiceReceiptResponseDto) => {
+      // Store receiptId to confirm payment later
+      setActiveReceiptId(invoice.id);
       // Appel du backend pour obtenir la session Stripe
       return InvoicesService.createIndividualCheckoutSession(invoice.id);
     },
     onSuccess: async (data) => {
+      // Store sessionId for confirmation
+      setActiveSessionId(data.sessionId);
       // Stripe Embedded Checkout gère l'affichage du succès/échec
       setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
@@ -418,7 +455,12 @@ export default function Invoices({
             type="button"
             variant="outline"
             disabled={isFetching}
-            onClick={() => refetch()}
+            onClick={() => {
+              void refetch();
+              void queryClient.invalidateQueries({
+                queryKey: ['user-stripe-status'],
+              });
+            }}
             size="sm"
           >
             {isFetching ? (
@@ -507,6 +549,14 @@ export default function Invoices({
                   <CheckCircle className="mr-1 h-3 w-3" />
                   {t.stripeConnect.connected}
                 </Badge>
+              ) : stripeStatus?.stripeConnectId ? (
+                <Badge
+                  variant="secondary"
+                  className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+                >
+                  <AlertCircle className="mr-1 h-3 w-3" />
+                  {stripeStatus.message || t.stripeConnect.setupIncomplete}
+                </Badge>
               ) : (
                 <Badge
                   variant="secondary"
@@ -556,7 +606,7 @@ export default function Invoices({
             ) : (
               !stripeStatus?.isConnected && (
                 <p className="text-muted-foreground mt-2 text-sm">
-                  {t.stripeConnect.connectHint}
+                  {stripeStatus?.message || t.stripeConnect.connectHint}
                 </p>
               )
             ))}
@@ -1302,15 +1352,40 @@ export default function Invoices({
                 options={{
                   clientSecret: paymentClientSecret,
                   onComplete: () => {
-                    setPaymentClientSecret(undefined);
-                    setPaymentInvoiceLabel('');
-                    void queryClient
-                      .invalidateQueries({
-                        queryKey: ['received-invoices'],
-                      })
-                      .then(() => {
-                        toast.success(t.payment.successful);
-                      });
+                    void (async () => {
+                      const sessionId = activeSessionId;
+                      const receiptId = activeReceiptId;
+
+                      // Cleanup state immediately for better UI response
+                      setPaymentClientSecret(undefined);
+                      setPaymentInvoiceLabel('');
+                      setActiveSessionId(undefined);
+                      setActiveReceiptId(undefined);
+
+                      // Manually confirm payment with backend (fallback for local development without webhooks)
+                      if (sessionId && receiptId) {
+                        try {
+                          await InvoicesService.confirmPayment({
+                            sessionId,
+                            receiptId,
+                          });
+                        } catch (error_) {
+                          console.error(
+                            'Manual payment confirmation failed:',
+                            error_
+                          );
+                        }
+                      }
+
+                      // Refresh list and show success message
+                      void queryClient
+                        .invalidateQueries({
+                          queryKey: ['received-invoices'],
+                        })
+                        .then(() => {
+                          toast.success(t.payment.successful);
+                        });
+                    })();
                   },
                 }}
               >
