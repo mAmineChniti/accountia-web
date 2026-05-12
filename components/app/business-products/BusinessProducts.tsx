@@ -812,9 +812,11 @@ export function BusinessProducts({
                       <p className="text-muted-foreground text-xs">
                         {t.stockInsights?.unitsToReorder?.replace(
                           '{count}',
-                          stockInsights.summary.totalRecommendedUnits.toString()
+                          (
+                            stockInsights.summary?.totalRecommendedUnits ?? 0
+                          ).toString()
                         ) ||
-                          `+ ${stockInsights.summary.totalRecommendedUnits} units to reorder`}
+                          `+ ${stockInsights.summary?.totalRecommendedUnits ?? 0} units to reorder`}
                       </p>
                     </div>
                   </div>
@@ -829,8 +831,9 @@ export function BusinessProducts({
                         <span className="text-muted-foreground text-xs">
                           {t.stockInsights?.horizon?.replace(
                             '{days}',
-                            stockInsights.planningHorizonDays.toString()
-                          ) || `horizon ${stockInsights.planningHorizonDays}d`}
+                            (stockInsights.planningHorizonDays ?? 0).toString()
+                          ) ||
+                            `horizon ${stockInsights.planningHorizonDays ?? 0}d`}
                         </span>
                       </div>
                       <div className="space-y-3">
@@ -854,7 +857,7 @@ export function BusinessProducts({
                                   {item.productName}
                                 </span>
                                 <span className="text-muted-foreground">
-                                  {item.estimatedDaysUntilStockout === null
+                                  {item.estimatedDaysUntilStockout == undefined
                                     ? t.stockInsights?.noStockoutTrend ||
                                       'No stockout trend'
                                     : t.stockInsights?.days?.replace(

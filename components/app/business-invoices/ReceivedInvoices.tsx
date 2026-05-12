@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Clock,
   Download,
+  CreditCard,
+  Loader2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -30,6 +32,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -47,9 +51,30 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { useQuery } from '@tanstack/react-query';
-import type { InvoiceStatus, InvoiceResponse } from '@/types/services';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type {
+  InvoiceStatus,
+  InvoiceResponse,
+  InvoiceReceiptResponseDto,
+} from '@/types/services';
 import { cn } from '@/lib/utils';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  EmbeddedCheckout,
+  EmbeddedCheckoutProvider,
+} from '@stripe/react-stripe-js';
+import { toast } from 'sonner';
+import { localizeErrorMessage } from '@/lib/error-localization';
+import { env } from '@/env';
 
 type FilterStatus = 'ALL' | InvoiceStatus;
 
@@ -79,6 +104,21 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
   ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
 };
 
+const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
+  'ISSUED',
+  'VIEWED',
+  'PARTIAL',
+  'OVERDUE',
+  'DISPUTED',
+]);
+
+const stripePublishableKey = env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripePublishableKey
+  ? loadStripe(stripePublishableKey)
+  : undefined;
+const mockInvoicePaymentsEnabled =
+  String(env.NEXT_PUBLIC_MOCK_INVOICE_PAYMENTS ?? '').toLowerCase() === 'true';
+
 export function ReceivedInvoices({
   lang,
   dictionary,
@@ -89,6 +129,7 @@ export function ReceivedInvoices({
   businessId: string;
 }) {
   const t = dictionary.pages.invoices;
+  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<
@@ -96,18 +137,45 @@ export function ReceivedInvoices({
   >();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
+  // Payment state
+  const [paymentClientSecret, setPaymentClientSecret] = useState<
+    string | undefined
+  >();
+  const [paymentInvoiceLabel, setPaymentInvoiceLabel] = useState<string>('');
+  const [mockPaymentInvoice, setMockPaymentInvoice] = useState<
+    InvoiceReceiptResponseDto | undefined
+  >();
+  const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
+  const [activeReceiptId, setActiveReceiptId] = useState<string | undefined>();
+  const [showMockConfirm, setShowMockConfirm] = useState(false);
+  const [mockPaymentForm, setMockPaymentForm] = useState({
+    cardholderName: '',
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    country: 'Tunisia',
+  });
+  const [mockPaymentErrors, setMockPaymentErrors] = useState({
+    cardholderName: '',
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    country: '',
+  });
+
   const {
     data: invoicesResponse,
     isLoading,
     isFetching,
+    refetch,
   } = useQuery({
     queryKey: ['invoices-received-business', businessId],
     queryFn: () =>
       InvoicesService.getReceivedInvoicesByBusiness({
         businessId: businessId,
       }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Fetch invoice details when a specific invoice is selected
@@ -125,6 +193,93 @@ export function ReceivedInvoices({
       staleTime: 10 * 60 * 1000, // 10 minutes
       gcTime: 60 * 60 * 1000, // 1 hour
     });
+
+  // Stripe checkout mutation
+  const { mutate: startCheckout, isPending: isStartingCheckout } = useMutation({
+    mutationFn: async (invoice: InvoiceReceiptResponseDto) => {
+      setActiveReceiptId(invoice.id);
+      return InvoicesService.createIndividualCheckoutSession(invoice.id);
+    },
+    onSuccess: async (data) => {
+      setActiveSessionId(data.sessionId);
+      setPaymentInvoiceLabel('');
+      setPaymentClientSecret(data.clientSecret ?? '');
+      await queryClient.invalidateQueries({
+        queryKey: ['invoices-received-business'],
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error(localizeErrorMessage(error, dictionary, t.fetchError));
+    },
+  });
+
+  // Mock payment mutation
+  const { mutate: submitMockPayment, isPending: isSubmittingMockPayment } =
+    useMutation({
+      mutationFn: () => {
+        if (!mockPaymentInvoice) throw new Error('No invoice selected');
+        return InvoicesService.createIndividualMockPayment(
+          mockPaymentInvoice.id,
+          {
+            cardholderName: mockPaymentForm.cardholderName,
+            cardNumber: mockPaymentForm.cardNumber,
+            expiry: mockPaymentForm.expiry,
+            cvc: mockPaymentForm.cvc,
+          }
+        );
+      },
+      onSuccess: () => {
+        const receiptId = mockPaymentInvoice?.id;
+        setMockPaymentInvoice(undefined);
+        setMockPaymentForm({
+          cardholderName: '',
+          cardNumber: '',
+          expiry: '',
+          cvc: '',
+          country: 'Tunisia',
+        });
+        setMockPaymentErrors({
+          cardholderName: '',
+          cardNumber: '',
+          expiry: '',
+          cvc: '',
+          country: '',
+        });
+        if (receiptId) {
+          void queryClient.invalidateQueries({
+            queryKey: ['invoice-received-details', receiptId, businessId],
+          });
+        }
+        void refetch();
+      },
+      onError: (error: unknown) => {
+        toast.error(localizeErrorMessage(error, dictionary, t.fetchError));
+      },
+    });
+
+  const validateMockPaymentForm = (): boolean => {
+    const errors = {
+      cardholderName: '',
+      cardNumber: '',
+      expiry: '',
+      cvc: '',
+      country: '',
+    };
+    const v = t.payment.validation;
+    if (!mockPaymentForm.cardholderName.trim())
+      errors.cardholderName = v.nameRequired;
+    if (!/^\d{4}(?:\s\d{4}){3}$/.test(mockPaymentForm.cardNumber))
+      errors.cardNumber = v.numberInvalid;
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(mockPaymentForm.expiry))
+      errors.expiry = v.expiryInvalid;
+    if (!/^\d{3,4}$/.test(mockPaymentForm.cvc)) errors.cvc = v.cvcInvalid;
+    if (!mockPaymentForm.country.trim()) errors.country = v.countryRequired;
+    setMockPaymentErrors(errors);
+    return !Object.values(errors).some(Boolean);
+  };
+
+  const canPayInvoice = (invoice: InvoiceReceiptResponseDto): boolean =>
+    PAYABLE_INVOICE_STATUSES.has(invoice.invoiceStatus);
 
   // Export Invoice to PDF
   const exportToPDF = () => {
@@ -548,9 +703,7 @@ export function ReceivedInvoices({
                 {isLoadingDetails ? t.creatingLabel : t.invoiceDetailsTitle}
               </DialogTitle>
               <DialogDescription className="text-primary/80 mt-1 font-mono text-sm">
-                {invoiceDetails?.invoiceNumber || (
-                  <Skeleton className="h-4 w-32" />
-                )}
+                {invoiceDetails?.invoiceNumber || '...'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -717,17 +870,447 @@ export function ReceivedInvoices({
                 <Download className="h-4 w-4" />
                 {t.exportPDF}
               </Button>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="default"
-                  className="shadow-md transition-shadow hover:shadow-lg"
-                >
-                  {t.closeButtonLabel}
-                </Button>
-              </DialogClose>
+              <div className="flex gap-2">
+                {invoiceDetails &&
+                  canPayInvoice({
+                    invoiceStatus: invoiceDetails.status,
+                  } as InvoiceReceiptResponseDto) && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      disabled={isStartingCheckout}
+                      onClick={() => {
+                        if (!invoiceDetails) return;
+                        // Build a minimal InvoiceReceiptResponseDto from details
+                        const receiptInvoice = {
+                          id: selectedInvoiceId ?? '',
+                          invoiceStatus: invoiceDetails.status,
+                          invoiceNumber: invoiceDetails.invoiceNumber,
+                          totalAmount: invoiceDetails.totalAmount,
+                          currency: invoiceDetails.currency,
+                        } as InvoiceReceiptResponseDto;
+                        if (mockInvoicePaymentsEnabled) {
+                          setIsDetailsOpen(false);
+                          setMockPaymentInvoice(receiptInvoice);
+                          return;
+                        }
+                        setIsDetailsOpen(false);
+                        startCheckout(receiptInvoice);
+                      }}
+                    >
+                      {isStartingCheckout ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t.payment.processing}
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          {mockInvoicePaymentsEnabled
+                            ? t.payNowDemo
+                            : t.payment.payNow}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shadow-md transition-shadow hover:shadow-lg"
+                  >
+                    {t.closeButtonLabel}
+                  </Button>
+                </DialogClose>
+              </div>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mock Payment Dialog */}
+      <Dialog
+        open={Boolean(mockPaymentInvoice)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMockPaymentInvoice(undefined);
+            setMockPaymentErrors({
+              cardholderName: '',
+              cardNumber: '',
+              expiry: '',
+              cvc: '',
+              country: '',
+            });
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t.payment.securePayment}</DialogTitle>
+            <DialogDescription>{t.payment.completeCardInfo}</DialogDescription>
+          </DialogHeader>
+
+          <div className="dark:bg-card space-y-6 rounded-xl border bg-white p-6 shadow-sm">
+            {/* Demo Cards */}
+            <div className="space-y-3">
+              <Label className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">
+                {t.payment.demoCardLabel}
+              </Label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {[
+                  {
+                    name: t.payment.demoCardSuccess,
+                    number: '4242 4242 4242 4242',
+                    expiry: '12/29',
+                    cvc: '123',
+                  },
+                  {
+                    name: t.payment.demoCardDeclined,
+                    number: '4000 4000 4000 0002',
+                    expiry: '12/29',
+                    cvc: '123',
+                  },
+                  {
+                    name: t.payment.demoCardExpired,
+                    number: '4000 4000 4000 0003',
+                    expiry: '01/20',
+                    cvc: '123',
+                  },
+                ].map((card) => (
+                  <Button
+                    key={card.number}
+                    type="button"
+                    variant="outline"
+                    className="hover:border-primary hover:bg-primary/5 flex h-auto flex-col items-start px-4 py-3 transition-all"
+                    onClick={() =>
+                      setMockPaymentForm((prev) => ({
+                        ...prev,
+                        cardNumber: card.number,
+                        expiry: card.expiry,
+                        cvc: card.cvc,
+                      }))
+                    }
+                  >
+                    <span className="text-sm font-bold">{card.name}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {card.number}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <Separator />
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="text-muted-foreground dark:bg-card bg-white px-2 font-medium">
+                  {t.payment.cardInfo}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label
+                  htmlFor="biz-cardholderName"
+                  className="text-sm font-semibold"
+                >
+                  {t.payment.cardholderName}
+                </Label>
+                <Input
+                  id="biz-cardholderName"
+                  value={mockPaymentForm.cardholderName}
+                  onChange={(e) =>
+                    setMockPaymentForm((prev) => ({
+                      ...prev,
+                      cardholderName: e.target.value,
+                    }))
+                  }
+                  placeholder={t.payment.cardholderPlaceholder}
+                  className={cn(
+                    mockPaymentErrors.cardholderName && 'border-red-500'
+                  )}
+                />
+                {mockPaymentErrors.cardholderName && (
+                  <p className="text-xs text-red-600">
+                    {mockPaymentErrors.cardholderName}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">
+                  {t.payment.cardInfo}
+                </Label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+                  <div className="sm:col-span-2">
+                    <Input
+                      value={mockPaymentForm.cardNumber}
+                      readOnly
+                      placeholder="4242 4242 4242 4242"
+                      className={cn(
+                        mockPaymentErrors.cardNumber && 'border-red-500'
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      value={mockPaymentForm.expiry}
+                      readOnly
+                      placeholder="12/29"
+                      className={cn(
+                        mockPaymentErrors.expiry && 'border-red-500'
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      value={mockPaymentForm.cvc}
+                      readOnly
+                      placeholder="123"
+                      className={cn(mockPaymentErrors.cvc && 'border-red-500')}
+                    />
+                  </div>
+                </div>
+                {(mockPaymentErrors.cardNumber ||
+                  mockPaymentErrors.expiry ||
+                  mockPaymentErrors.cvc) && (
+                  <p className="text-xs text-red-600">
+                    {mockPaymentErrors.cardNumber ||
+                      mockPaymentErrors.expiry ||
+                      mockPaymentErrors.cvc}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm font-semibold">
+                  {t.payment.country}
+                </Label>
+                <Select
+                  value={mockPaymentForm.country}
+                  onValueChange={(value) =>
+                    setMockPaymentForm((prev) => ({ ...prev, country: value }))
+                  }
+                >
+                  <SelectTrigger
+                    className={cn(
+                      mockPaymentErrors.country && 'border-red-500'
+                    )}
+                  >
+                    <SelectValue
+                      placeholder={t.payment.selectCountryPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAfrica}
+                      </SelectLabel>
+                      <SelectItem value="Tunisia">Tunisia</SelectItem>
+                      <SelectItem value="Algeria">Algeria</SelectItem>
+                      <SelectItem value="Morocco">Morocco</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.europe}
+                      </SelectLabel>
+                      <SelectItem value="France">France</SelectItem>
+                      <SelectItem value="Germany">Germany</SelectItem>
+                      <SelectItem value="United Kingdom">
+                        United Kingdom
+                      </SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t.payment.countryGroups.northAmerica}
+                      </SelectLabel>
+                      <SelectItem value="United States">
+                        United States
+                      </SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>{t.payment.countryGroups.other}</SelectLabel>
+                      <SelectItem value="Australia">Australia</SelectItem>
+                      <SelectItem value="Brazil">Brazil</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {mockPaymentErrors.country && (
+                  <p className="text-xs text-red-600">
+                    {mockPaymentErrors.country}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setMockPaymentInvoice(undefined)}
+              >
+                {t.payment.cancel}
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={isSubmittingMockPayment}
+                onClick={() => {
+                  if (!validateMockPaymentForm()) {
+                    toast.error(t.payment.requiredFieldsError);
+                    return;
+                  }
+                  setShowMockConfirm(true);
+                }}
+              >
+                {isSubmittingMockPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t.payment.processing}
+                  </>
+                ) : (
+                  t.payment.payNow
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Embedded Stripe Checkout Dialog */}
+      <Dialog
+        open={Boolean(paymentClientSecret)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPaymentClientSecret(undefined);
+            setPaymentInvoiceLabel('');
+          }
+        }}
+      >
+        <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t.payment.completeYourPayment}</DialogTitle>
+            <DialogDescription>
+              {paymentInvoiceLabel || t.payment.secureCardPayment}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-background min-h-[720px] rounded-lg border p-3">
+            {paymentClientSecret && stripePromise ? (
+              <EmbeddedCheckoutProvider
+                stripe={stripePromise}
+                options={{
+                  clientSecret: paymentClientSecret,
+                  onComplete: () => {
+                    void (async () => {
+                      const sessionId = activeSessionId;
+                      const receiptId = activeReceiptId;
+                      if (!sessionId || !receiptId) {
+                        toast.error(
+                          'Unable to confirm payment. Missing session data.'
+                        );
+                        return;
+                      }
+                      try {
+                        await InvoicesService.confirmPayment({
+                          sessionId,
+                          receiptId,
+                        });
+                        setPaymentClientSecret(undefined);
+                        setPaymentInvoiceLabel('');
+                        setActiveSessionId(undefined);
+                        setActiveReceiptId(undefined);
+                        await queryClient.invalidateQueries({
+                          queryKey: ['invoices-received-business'],
+                        });
+                        await queryClient.invalidateQueries({
+                          queryKey: [
+                            'invoice-received-details',
+                            receiptId,
+                            businessId,
+                          ],
+                        });
+                        toast.success(t.payment.successful);
+                      } catch (error) {
+                        console.error(
+                          'Manual payment confirmation failed:',
+                          error
+                        );
+                        toast.error(
+                          localizeErrorMessage(error, dictionary, t.fetchError)
+                        );
+                      }
+                    })();
+                  },
+                }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            ) : (
+              <div className="text-muted-foreground flex min-h-[400px] items-center justify-center text-sm">
+                {t.payment.loadingForm}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mock Confirm Dialog */}
+      <Dialog
+        open={showMockConfirm}
+        onOpenChange={(open) => {
+          if (!open) setShowMockConfirm(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mb-4 flex justify-center">
+              <CreditCard className="text-primary h-16 w-16" />
+            </div>
+            <DialogTitle className="text-center text-xl">
+              {t.payment.confirmTitle}
+            </DialogTitle>
+            <div className="text-muted-foreground space-y-1 text-center text-sm">
+              <p>{t.payment.confirmQuestion}</p>
+              <p className="text-primary text-lg font-bold">
+                {mockPaymentInvoice?.totalAmount?.toLocaleString(lang, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                {mockPaymentInvoice?.currency}
+              </p>
+              <p className="text-sm">{mockPaymentInvoice?.invoiceNumber}</p>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMockConfirm(false)}
+            >
+              {t.payment.cancel}
+            </Button>
+            <Button
+              type="button"
+              disabled={isSubmittingMockPayment}
+              onClick={() => {
+                setShowMockConfirm(false);
+                submitMockPayment();
+              }}
+            >
+              {isSubmittingMockPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t.payment.processing}
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  {t.payment.confirmAction}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

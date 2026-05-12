@@ -323,6 +323,11 @@ export function Business({
                         <CircleCheck className="h-4 w-4 text-emerald-600" />
                         {t.stripe?.connected || 'Connected'}
                       </>
+                    ) : stripeStatus?.stripeConnectId ? (
+                      <>
+                        <CircleAlert className="h-4 w-4 text-amber-600" />
+                        {t.stripe?.setupIncomplete || 'Setup incomplete'}
+                      </>
                     ) : (
                       <>
                         <CircleAlert className="h-4 w-4 text-amber-600" />
@@ -362,7 +367,7 @@ export function Business({
         </CardContent>
       </Card>
 
-      {/* Clients Section */}
+      {/* Clients Section — only shown to OWNER/ADMIN */}
       <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -372,27 +377,25 @@ export function Business({
           <CardDescription>{t.clientsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingUsers ? (
+          {isClientsError ? (
+            <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-3 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                {t.failedToLoadDetails || 'Unable to load clients.'}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => refetchClients()}
+              >
+                {t.retry}
+              </Button>
+            </div>
+          ) : isLoadingUsers ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
-            </div>
-          ) : isClientsError ? (
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <AlertCircle className="text-destructive h-10 w-10" />
-              <p className="text-foreground font-medium">
-                {t.failedToLoadClients}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  void refetchClients();
-                }}
-              >
-                {t.retry}
-              </Button>
             </div>
           ) : clients.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">

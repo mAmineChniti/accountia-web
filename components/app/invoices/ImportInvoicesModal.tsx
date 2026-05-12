@@ -34,9 +34,10 @@ const ACCEPTED_FILE_TYPES = new Set([
   'text/csv',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/pdf',
 ]);
 
-const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx'];
+const ACCEPTED_EXTENSIONS = ['.csv', '.xls', '.xlsx', '.pdf'];
 
 const isValidFile = (file: File): boolean => {
   // Check MIME type
@@ -73,8 +74,44 @@ export function ImportInvoicesModal({
     : 'idle';
 
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
-    mutationFn: (file: File): Promise<BulkImportInvoicesResponseDto> =>
-      InvoicesService.importInvoices(file, businessId),
+    mutationFn: async (file: File): Promise<BulkImportInvoicesResponseDto> => {
+      const fileName = file.name.toLowerCase();
+      const isPdf =
+        file.type === 'application/pdf' || fileName.endsWith('.pdf');
+
+      if (isPdf) {
+        // Use AI extraction for PDF
+        const invoice = await InvoicesService.importInvoiceFromDocument(
+          file,
+          businessId
+        );
+        // Simulate a bulk import result with 1 record
+        return {
+          totalRecords: 1,
+          successCount: 1,
+          failedCount: 0,
+          warningCount: 0,
+          results: [
+            {
+              itemNumber: 1,
+              success: true,
+              itemId: invoice.id,
+              message: formatICU(
+                t.importSuccessWithCount ||
+                  'Invoice extracted and imported successfully via AI',
+                { count: 1 }
+              ),
+            },
+          ],
+          importStartedAt: new Date().toISOString(),
+          importCompletedAt: new Date().toISOString(),
+          processingTimeMs: 0,
+        };
+      } else {
+        // Use standard CSV/Excel import
+        return InvoicesService.importInvoices(file, businessId);
+      }
+    },
     onSuccess: (data: BulkImportInvoicesResponseDto) => {
       // Invalidate all invoice queries (both issued and received) across all scopes
       queryClient.invalidateQueries({
@@ -139,7 +176,9 @@ export function ImportInvoicesModal({
       setFileError(undefined);
     } else {
       setSelectedFile(undefined);
-      setFileError(t.invalidFileType || 'Please upload a CSV or Excel file');
+      setFileError(
+        t.invalidFileType || 'Please upload a CSV, Excel or PDF file'
+      );
     }
   };
 
@@ -313,7 +352,7 @@ export function ImportInvoicesModal({
           // File Upload Form
           <div className="space-y-4 py-4">
             <FileUpload
-              accept=".csv,.xls,.xlsx"
+              accept=".csv,.xls,.xlsx,.pdf"
               maxSize={10}
               selectedFile={selectedFile}
               onFileSelect={handleFileSelect}
@@ -336,6 +375,7 @@ export function ImportInvoicesModal({
                     <ul className="space-y-1 text-xs">
                       <li>• {t.csvFormat || 'CSV (.csv)'}</li>
                       <li>• {t.excelFormat || 'Excel (.xls, .xlsx)'}</li>
+                      <li>• PDF (.pdf)</li>
                     </ul>
                     <p className="mt-2 text-xs font-semibold">
                       {t.requiredColumnsLabel || 'Required columns:'}

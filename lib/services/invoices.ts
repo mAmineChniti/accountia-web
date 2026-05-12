@@ -316,4 +316,26 @@ export const InvoicesService = {
       return handleServiceError(error);
     }
   },
+
+  // 12. Import Invoice from Document (AI Extraction)
+  async importInvoiceFromDocument(
+    file: File,
+    businessId: string
+  ): Promise<InvoiceResponse> {
+    const client = createAuthenticatedClient();
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const searchParams: Record<string, string> = { businessId };
+      const result = await client
+        .post(API_CONFIG.INVOICES.IMPORT_DOCUMENT, {
+          body: formData,
+          searchParams,
+        })
+        .json<InvoiceResponse>();
+      return result;
+    } catch (error: unknown) {
+      return handleServiceError(error);
+    }
+  },
 };
