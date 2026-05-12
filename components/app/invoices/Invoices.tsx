@@ -137,6 +137,8 @@ export default function Invoices({
     InvoiceReceiptResponseDto | undefined
   >();
   const [paymentClientSecret, setPaymentClientSecret] = useState<string>();
+  const [paymentSessionId, setPaymentSessionId] = useState<string>();
+  const [paymentReceiptId, setPaymentReceiptId] = useState<string>();
   const [paymentInvoiceLabel, setPaymentInvoiceLabel] = useState<string>('');
   const [mockPaymentInvoice, setMockPaymentInvoice] = useState<
     InvoiceReceiptResponseDto | undefined
@@ -295,6 +297,8 @@ export default function Invoices({
       setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
       setPaymentClientSecret(data.clientSecret ?? '');
+      setPaymentSessionId(data.sessionId);
+      setPaymentReceiptId(data.receiptId);
       // Invalider la requête pour rafraîchir la liste
       await queryClient.invalidateQueries({ queryKey: ['received-invoices'] });
     },
@@ -1345,6 +1349,8 @@ export default function Invoices({
         onOpenChange={(open) => {
           if (!open) {
             setPaymentClientSecret(undefined);
+            setPaymentSessionId(undefined);
+            setPaymentReceiptId(undefined);
             setPaymentInvoiceLabel('');
           }
         }}
@@ -1364,40 +1370,42 @@ export default function Invoices({
                 options={{
                   clientSecret: paymentClientSecret,
                   onComplete: () => {
-                    void (async () => {
-                      const sessionId = activeSessionId;
-                      const receiptId = activeReceiptId;
-
-                      // Cleanup state immediately for better UI response
-                      setPaymentClientSecret(undefined);
-                      setPaymentInvoiceLabel('');
-                      setActiveSessionId(undefined);
-                      setActiveReceiptId(undefined);
-
-                      // Manually confirm payment with backend (fallback for local development without webhooks)
-                      if (sessionId && receiptId) {
-                        try {
-                          await InvoicesService.confirmPayment({
-                            sessionId,
-                            receiptId,
-                          });
-                        } catch (error_) {
-                          console.error(
-                            'Manual payment confirmation failed:',
-                            error_
-                          );
-                        }
-                      }
-
-                      // Refresh list and show success message
-                      void queryClient
-                        .invalidateQueries({
-                          queryKey: ['received-invoices'],
-                        })
+                    if (paymentSessionId && paymentReceiptId) {
+                      InvoicesService.confirmPayment({
+                        sessionId: paymentSessionId,
+                        receiptId: paymentReceiptId,
+                      })
                         .then(() => {
-                          toast.success(t.payment.successful);
+                          setPaymentClientSecret(undefined);
+                          setPaymentSessionId(undefined);
+                          setPaymentReceiptId(undefined);
+                          setPaymentInvoiceLabel('');
+                          void queryClient
+                            .invalidateQueries({
+                              queryKey: ['received-invoices'],
+                            })
+                            .then(() => {
+                              toast.success(t.payment.successful);
+                            });
+                        })
+                        .catch((error: unknown) => {
+                          toast.error(
+                            localizeErrorMessage(
+                              error,
+                              dictionary,
+                              t.fetchError
+                            )
+                          );
                         });
-                    })();
+                    } else {
+                      setPaymentClientSecret(undefined);
+                      setPaymentSessionId(undefined);
+                      setPaymentReceiptId(undefined);
+                      setPaymentInvoiceLabel('');
+                      void queryClient.invalidateQueries({
+                        queryKey: ['received-invoices'],
+                      });
+                    }
                   },
                 }}
               >

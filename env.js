@@ -16,7 +16,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_BACKEND: z.url(),
+    NEXT_PUBLIC_BACKEND: z.url().default('http://localhost:4789/api'),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
     NEXT_PUBLIC_MOCK_INVOICE_PAYMENTS: z
       .enum(['true', 'false'])

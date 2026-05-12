@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: accountia-web-webhook
+  group_by: ['alertname', 'job', 'severity']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: accountia-web-webhook
+    webhook_configs:
+      - url: http://127.0.0.1:3000/api/alerts
+        send_resolved: true
