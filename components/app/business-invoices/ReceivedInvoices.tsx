@@ -229,6 +229,7 @@ export function ReceivedInvoices({
         );
       },
       onSuccess: () => {
+        const receiptId = mockPaymentInvoice?.id;
         setMockPaymentInvoice(undefined);
         setMockPaymentForm({
           cardholderName: '',
@@ -244,6 +245,11 @@ export function ReceivedInvoices({
           cvc: '',
           country: '',
         });
+        if (receiptId) {
+          void queryClient.invalidateQueries({
+            queryKey: ['invoice-received-details', receiptId, businessId],
+          });
+        }
         void refetch();
       },
       onError: (error: unknown) => {
@@ -879,6 +885,9 @@ export function ReceivedInvoices({
                         const receiptInvoice = {
                           id: selectedInvoiceId ?? '',
                           invoiceStatus: invoiceDetails.status,
+                          invoiceNumber: invoiceDetails.invoiceNumber,
+                          totalAmount: invoiceDetails.totalAmount,
+                          currency: invoiceDetails.currency,
                         } as InvoiceReceiptResponseDto;
                         if (mockInvoicePaymentsEnabled) {
                           setIsDetailsOpen(false);
@@ -1196,30 +1205,41 @@ export function ReceivedInvoices({
                     void (async () => {
                       const sessionId = activeSessionId;
                       const receiptId = activeReceiptId;
-                      setPaymentClientSecret(undefined);
-                      setPaymentInvoiceLabel('');
-                      setActiveSessionId(undefined);
-                      setActiveReceiptId(undefined);
-                      if (sessionId && receiptId) {
-                        try {
-                          await InvoicesService.confirmPayment({
-                            sessionId,
-                            receiptId,
-                          });
-                        } catch (error) {
-                          console.error(
-                            'Manual payment confirmation failed:',
-                            error
-                          );
-                        }
+                      if (!sessionId || !receiptId) {
+                        toast.error(
+                          'Unable to confirm payment. Missing session data.'
+                        );
+                        return;
                       }
-                      void queryClient
-                        .invalidateQueries({
-                          queryKey: ['invoices-received-business'],
-                        })
-                        .then(() => {
-                          toast.success(t.payment.successful);
+                      try {
+                        await InvoicesService.confirmPayment({
+                          sessionId,
+                          receiptId,
                         });
+                        setPaymentClientSecret(undefined);
+                        setPaymentInvoiceLabel('');
+                        setActiveSessionId(undefined);
+                        setActiveReceiptId(undefined);
+                        await queryClient.invalidateQueries({
+                          queryKey: ['invoices-received-business'],
+                        });
+                        await queryClient.invalidateQueries({
+                          queryKey: [
+                            'invoice-received-details',
+                            receiptId,
+                            businessId,
+                          ],
+                        });
+                        toast.success(t.payment.successful);
+                      } catch (error) {
+                        console.error(
+                          'Manual payment confirmation failed:',
+                          error
+                        );
+                        toast.error(
+                          localizeErrorMessage(error, dictionary, t.fetchError)
+                        );
+                      }
                     })();
                   },
                 }}

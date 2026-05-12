@@ -56,6 +56,7 @@ export function Business({
     data: clientsData,
     isLoading: isLoadingUsers,
     isError: isClientsError,
+    refetch: refetchClients,
   } = useQuery({
     queryKey: ['business-clients', businessId],
     queryFn: () => BusinessService.getBusinessClients(businessId),
@@ -367,57 +368,69 @@ export function Business({
       </Card>
 
       {/* Clients Section — only shown to OWNER/ADMIN */}
-      {!isClientsError && (
-        <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {t.clientsSection} ({clients.length})
-            </CardTitle>
-            <CardDescription>{t.clientsDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingUsers ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
+      <Card className="dark:bg-card/90 border-0 bg-white/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {t.clientsSection} ({clients.length})
+          </CardTitle>
+          <CardDescription>{t.clientsDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isClientsError ? (
+            <div className="bg-destructive/10 text-destructive flex items-center justify-between gap-3 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                {t.failedToLoadDetails || 'Unable to load clients.'}
               </div>
-            ) : clients.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <Users className="text-muted-foreground h-12 w-12" />
-                <p className="text-foreground font-medium">
-                  {t.noClientsAssigned}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {t.noClientsAssignedHint}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {clients.map((client) => (
-                  <button
-                    key={client.id}
-                    onClick={() => setSelectedClient(client)}
-                    className="border-border hover:bg-accent hover:text-accent-foreground focus:ring-ring w-full rounded-lg border p-3 text-left transition-colors focus:ring-2 focus:outline-none"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">
-                          {client.firstName} {client.lastName}
-                        </p>
-                        <p className="text-muted-foreground text-sm">
-                          {client.email}
-                        </p>
-                      </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => refetchClients()}
+              >
+                {t.retry}
+              </Button>
+            </div>
+          ) : isLoadingUsers ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <Users className="text-muted-foreground h-12 w-12" />
+              <p className="text-foreground font-medium">
+                {t.noClientsAssigned}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {t.noClientsAssignedHint}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {clients.map((client) => (
+                <button
+                  key={client.id}
+                  onClick={() => setSelectedClient(client)}
+                  className="border-border hover:bg-accent hover:text-accent-foreground focus:ring-ring w-full rounded-lg border p-3 text-left transition-colors focus:ring-2 focus:outline-none"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">
+                        {client.firstName} {client.lastName}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        {client.email}
+                      </p>
                     </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Client Details Dialog */}
       <Dialog

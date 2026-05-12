@@ -192,7 +192,12 @@ export default function Invoices({
   });
 
   // Check if user has any businesses with Stripe connected
-  const { data: myBusinesses } = useQuery({
+  const {
+    data: myBusinesses,
+    isLoading: isMyBusinessesLoading,
+    isError: isMyBusinessesError,
+    isFetching: isMyBusinessesFetching,
+  } = useQuery({
     queryKey: ['my-businesses'],
     queryFn: () => BusinessService.getMyBusinesses(),
     staleTime: 10 * 60 * 1000,
@@ -219,8 +224,12 @@ export default function Invoices({
     return individualStripeStatus;
   }, [individualStripeStatus, myBusinesses]);
 
-  const isStripeStatusLoading = isIndividualStripeStatusLoading;
-  const isStripeStatusError = isIndividualStripeStatusError;
+  const isStripeStatusLoading =
+    isIndividualStripeStatusLoading ||
+    isMyBusinessesLoading ||
+    isMyBusinessesFetching;
+  const isStripeStatusError =
+    isIndividualStripeStatusError || isMyBusinessesError;
 
   const router = useRouter();
 
@@ -459,6 +468,9 @@ export default function Invoices({
               void refetch();
               void queryClient.invalidateQueries({
                 queryKey: ['user-stripe-status'],
+              });
+              void queryClient.invalidateQueries({
+                queryKey: ['my-businesses'],
               });
             }}
             size="sm"

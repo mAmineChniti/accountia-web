@@ -76,7 +76,8 @@ export function ImportInvoicesModal({
   const { mutate: importInvoices, isPending: isImporting } = useMutation({
     mutationFn: async (file: File): Promise<BulkImportInvoicesResponseDto> => {
       const fileName = file.name.toLowerCase();
-      const isPdf = fileName.endsWith('.pdf');
+      const isPdf =
+        file.type === 'application/pdf' || fileName.endsWith('.pdf');
 
       if (isPdf) {
         // Use AI extraction for PDF
@@ -95,8 +96,11 @@ export function ImportInvoicesModal({
               itemNumber: 1,
               success: true,
               itemId: invoice.id,
-              status: 'success',
-              message: 'Invoice extracted and imported successfully via AI',
+              message: formatICU(
+                t.importSuccessWithCount ||
+                  'Invoice extracted and imported successfully via AI',
+                { count: 1 }
+              ),
             },
           ],
           importStartedAt: new Date().toISOString(),

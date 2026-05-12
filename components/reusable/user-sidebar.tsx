@@ -379,9 +379,7 @@ export default function UserSidebar({
                       business.id
                     ).filter((item) => {
                       // Role-based visibility logic
-                      const role = (
-                        business.role ?? (isPlatformUser ? 'OWNER' : 'MEMBER')
-                      ).toUpperCase();
+                      const role = (business.role ?? 'UNKNOWN').toUpperCase();
 
                       // Owners and Admins see everything
                       if (role === 'OWNER' || role === 'ADMIN') return true;
@@ -410,7 +408,7 @@ export default function UserSidebar({
                         return allowedForClients.includes(item.id);
                       }
 
-                      return true;
+                      return false;
                     });
                     const businessHref = `/${lang}/business/${business.id}`;
                     const isBusinessActive =

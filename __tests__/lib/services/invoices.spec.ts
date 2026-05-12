@@ -1,6 +1,7 @@
 import { InvoicesService } from '@/lib/services/invoices';
 import { API_CONFIG } from '@/lib/api-config';
 import { createAuthenticatedClient } from '@/lib/requests';
+import { handleServiceError } from '@/lib/services/service-error';
 
 jest.mock('@/env', () => ({
   env: {
@@ -20,6 +21,10 @@ jest.mock('@/lib/requests', () => {
     API_CONFIG: jest.requireActual('@/lib/api-config').API_CONFIG,
   };
 });
+
+jest.mock('@/lib/services/service-error', () => ({
+  handleServiceError: jest.fn(),
+}));
 
 describe('InvoicesService', () => {
   const mockClient = createAuthenticatedClient() as unknown as {
@@ -90,6 +95,54 @@ describe('InvoicesService', () => {
           searchParams: { businessId: 'b1' },
         })
       );
+    });
+  });
+
+  describe('importInvoiceFromDocument', () => {
+    it('should post the document with businessId', async () => {
+      const file = new File(['pdf'], 'invoice.pdf', {
+        type: 'application/pdf',
+      });
+      const mockResponse = { id: 'i1' };
+      mockClient.post.mockReturnValue({
+        json: jest.fn().mockResolvedValue(mockResponse),
+      });
+
+      const result = await InvoicesService.importInvoiceFromDocument(
+        file,
+        'b1'
+      );
+
+      expect(mockClient.post).toHaveBeenCalledWith(
+        API_CONFIG.INVOICES.IMPORT_DOCUMENT,
+        expect.objectContaining({
+          searchParams: { businessId: 'b1' },
+          body: expect.any(FormData),
+        })
+      );
+      const body = mockClient.post.mock.calls[0][1].body as FormData;
+      expect(body.get('file')).toBe(file);
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should handle errors from the client', async () => {
+      const file = new File(['pdf'], 'invoice.pdf', {
+        type: 'application/pdf',
+      });
+      const mockError = new Error('boom');
+      const handledError = { error: 'handled' };
+      mockClient.post.mockImplementation(() => {
+        throw mockError;
+      });
+      (handleServiceError as jest.Mock).mockReturnValue(handledError);
+
+      const result = await InvoicesService.importInvoiceFromDocument(
+        file,
+        'b1'
+      );
+
+      expect(handleServiceError).toHaveBeenCalledWith(mockError);
+      expect(result).toEqual(handledError);
     });
   });
 });
