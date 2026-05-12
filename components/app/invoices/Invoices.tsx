@@ -144,8 +144,6 @@ export default function Invoices({
     InvoiceReceiptResponseDto | undefined
   >();
   const queryClient = useQueryClient();
-  const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
-  const [activeReceiptId, setActiveReceiptId] = useState<string | undefined>();
   const [showMockConfirm, setShowMockConfirm] = useState(false);
 
   const [mockPaymentForm, setMockPaymentForm] = useState({
@@ -286,13 +284,11 @@ export default function Invoices({
   const { mutate: startCheckout, isPending: isStartingCheckout } = useMutation({
     mutationFn: async (invoice: InvoiceReceiptResponseDto) => {
       // Store receiptId to confirm payment later
-      setActiveReceiptId(invoice.id);
       // Appel du backend pour obtenir la session Stripe
       return InvoicesService.createIndividualCheckoutSession(invoice.id);
     },
     onSuccess: async (data) => {
       // Store sessionId for confirmation
-      setActiveSessionId(data.sessionId);
       // Stripe Embedded Checkout gère l'affichage du succès/échec
       setSelectedInvoice(undefined);
       setPaymentInvoiceLabel('');
