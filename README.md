@@ -1,7 +1,6 @@
 # Accountia
 
-> 🚀 **Live Deployment:** [https://accountia.vercel.app](https://accountia.vercel.app)  
-> 📋 **Deliverables:** [`/deliverables`](./deliverables/)
+> 🚀 **Live Deployment:** [https://accountia.vercel.app](https://accountia.vercel.app)
 
 <p align="center"><img src="public/logo.png" alt="Accountia Logo" width="200" /></p>
 
