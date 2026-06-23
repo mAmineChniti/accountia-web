@@ -16,7 +16,7 @@
         "@stripe/react-stripe-js": "^6.1.0",
         "@stripe/stripe-js": "^9.1.0",
         "@t3-oss/env-nextjs": "^0.13.10",
-        "@tanstack/react-query": "^5.96.2",
+        "@tanstack/react-query": "^5.100.6",
         "@vercel/analytics": "^2.0.1",
         "@vercel/speed-insights": "^2.0.0",
         "class-variance-authority": "^0.7.1",
@@ -673,9 +673,9 @@
 
     "@tanstack/eslint-plugin-query": ["@tanstack/eslint-plugin-query@5.96.2", "", { "dependencies": { "@typescript-eslint/utils": "^8.48.0" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0", "typescript": "^5.4.0" }, "optionalPeers": ["typescript"] }, "sha512-OsXCATZ+YmG8TyHrunfYy2IDB+dqY87en2im2A60JPgDAg66cCoHTzJWbe9uH8Cw9/K3NiKYlyyo1erVFu3qFw=="],
 
-    "@tanstack/query-core": ["@tanstack/query-core@5.96.2", "", {}, "sha512-hzI6cTVh4KNRk8UtoIBS7Lv9g6BnJPXvBKsvYH1aGWvv0347jT3BnSvztOE+kD76XGvZnRC/t6qdW1CaIfwCeA=="],
+    "@tanstack/query-core": ["@tanstack/query-core@5.100.6", "", {}, "sha512-Os2CPUr98to98RYm+D4qGqGkiffn7MGSyl2547a4MljVkHE30AMJRqTiyCqBfMwzAx/I91vCkAxp5tHSla6Twg=="],
 
-    "@tanstack/react-query": ["@tanstack/react-query@5.96.2", "", { "dependencies": { "@tanstack/query-core": "5.96.2" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-sYyzzJT4G0g02azzJ8o55VFFV31XvFpdUpG+unxS0vSaYsJnSPKGoI6WdPwUucJL1wpgGfwfmntNX/Ub1uOViA=="],
+    "@tanstack/react-query": ["@tanstack/react-query@5.100.6", "", { "dependencies": { "@tanstack/query-core": "5.100.6" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-uVSrps0PV16Cxmcn2rvL+dUhwTpTUtiRW347AEeYxMZXO2pZe9ja7E24PAMGoQ5u2g89DD8u4QhOviBk+RN8RA=="],
 
     "@testing-library/dom": ["@testing-library/dom@10.4.1", "", { "dependencies": { "@babel/code-frame": "^7.10.4", "@babel/runtime": "^7.12.5", "@types/aria-query": "^5.0.1", "aria-query": "5.3.0", "dom-accessibility-api": "^0.5.9", "lz-string": "^1.5.0", "picocolors": "1.1.1", "pretty-format": "^27.0.2" } }, "sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg=="],
 
